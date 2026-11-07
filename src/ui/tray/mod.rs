@@ -297,11 +297,11 @@ mod tests {
         assert_eq!(
             snapshot_with_agent(AgentStatus::Waiting).tooltip(),
             format!(
-                "hitty — 1 {}",
+                "Hitty — 1 {}",
                 t(crate::ui::i18n::L10nKey::PanelAgentWaiting)
             )
         );
-        assert_eq!(TraySnapshot::default().tooltip(), "hitty");
+        assert_eq!(TraySnapshot::default().tooltip(), "Hitty");
     }
 
     #[test]

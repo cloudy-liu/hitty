@@ -8453,7 +8453,7 @@ mod tests {
             ssh_group_label(crate::core::ssh_config::IMPORTED_GROUP),
             "~/.ssh/config"
         );
-        assert_eq!(ssh_group_label(""), "In hitty");
+        assert_eq!(ssh_group_label(""), "In Hitty");
         assert_eq!(ssh_group_label("Work"), "Work");
     }
 

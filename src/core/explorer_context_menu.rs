@@ -370,7 +370,7 @@ mod tests {
         let [directory, background] = registrations(app);
 
         assert_eq!(directory.location.key(), DIRECTORY_KEY);
-        assert_eq!(directory.location.label(), "Open in hitty");
+        assert_eq!(directory.location.label(), "Open in Hitty");
         assert_eq!(directory.icon, app.as_os_str());
         assert_eq!(
             directory.command,
@@ -378,7 +378,7 @@ mod tests {
         );
 
         assert_eq!(background.location.key(), BACKGROUND_KEY);
-        assert_eq!(background.location.label(), "Open hitty here");
+        assert_eq!(background.location.label(), "Open Hitty here");
         assert_eq!(background.icon, app.as_os_str());
         assert_eq!(
             background.command,
@@ -393,16 +393,16 @@ mod tests {
     #[test]
     fn the_verb_labels_follow_the_ui_language() {
         crate::ui::i18n::set_locale("zh-CN");
-        assert_eq!(Location::Directory.label(), "在 hitty 中打开");
-        assert_eq!(Location::Background.label(), "在此处打开 hitty");
+        assert_eq!(Location::Directory.label(), "在 Hitty 中打开");
+        assert_eq!(Location::Background.label(), "在此处打开 Hitty");
 
         crate::ui::i18n::set_locale("ja-JP");
-        assert_eq!(Location::Directory.label(), "hitty で開く");
-        assert_eq!(Location::Background.label(), "ここで hitty を開く");
+        assert_eq!(Location::Directory.label(), "Hitty で開く");
+        assert_eq!(Location::Background.label(), "ここで Hitty を開く");
 
         crate::ui::i18n::set_locale("en");
-        assert_eq!(Location::Directory.label(), "Open in hitty");
-        assert_eq!(Location::Background.label(), "Open hitty here");
+        assert_eq!(Location::Directory.label(), "Open in Hitty");
+        assert_eq!(Location::Background.label(), "Open Hitty here");
     }
 
     #[test]

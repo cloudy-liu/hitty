@@ -86,3 +86,7 @@ There are no independent fixed-mode editor choices. The retired `editor_theme`
 configuration key is ignored on load and omitted on save.
 Font family, font size and line height remain independent user preferences;
 their instance-local styles do not change the component's global mono font.
+
+The captured Rust color sample uses the neutral `demo_core` crate name. It has
+the same byte length as the original source identifier, preserving the captured
+token offsets and colors while keeping product naming out of the fixture.
