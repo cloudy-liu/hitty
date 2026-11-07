@@ -11117,6 +11117,21 @@ pub(crate) mod test_window {
     use crate::ui::app::HittyApp;
     use gpui::{AppContext, Entity, TestAppContext, VisualTestContext};
 
+    pub(crate) fn finish_entrance_animation(cx: &mut VisualTestContext) {
+        cx.run_until_parked();
+        cx.update(|window, cx| {
+            let _ = window.draw(cx);
+        });
+        // Dialogs and notifications animate for 250 ms using wall-clock Instant,
+        // so advancing the test executor alone cannot settle their hit targets.
+        std::thread::sleep(std::time::Duration::from_millis(300));
+        cx.update(|window, cx| {
+            window.refresh();
+            let _ = window.draw(cx);
+        });
+        cx.run_until_parked();
+    }
+
     pub(crate) fn harness(cx: &mut TestAppContext) -> (Entity<HittyApp>, VisualTestContext) {
         crate::core::config::pin_test_config_dir();
 

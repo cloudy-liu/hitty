@@ -2929,8 +2929,10 @@ mod tests {
                 move |_, _, _| calls.set(calls.get() + 1),
             );
         });
-        vcx.run_until_parked();
+        crate::ui::app::test_window::finish_entrance_animation(&mut vcx);
         let check = vcx.debug_bounds("file-delete-opt-out").unwrap();
+        // Model a busy event loop between measuring the target and clicking it.
+        std::thread::sleep(std::time::Duration::from_millis(100));
         vcx.simulate_click(check.center(), gpui::Modifiers::none());
         vcx.run_until_parked();
         assert!(vcx.read(|cx| cx.global::<Config>().confirm_file_delete));
@@ -2948,8 +2950,10 @@ mod tests {
                 move |_, _, _| calls.set(calls.get() + 1),
             );
         });
-        vcx.run_until_parked();
+        crate::ui::app::test_window::finish_entrance_animation(&mut vcx);
         let check = vcx.debug_bounds("file-delete-opt-out").unwrap();
+        // The same delay must remain safe when a new dialog replaces the first.
+        std::thread::sleep(std::time::Duration::from_millis(100));
         vcx.simulate_click(check.center(), gpui::Modifiers::none());
         vcx.run_until_parked();
         let confirm = vcx.debug_bounds("file-delete-confirm").unwrap();

@@ -3155,6 +3155,7 @@ mod tests {
         vcx.update(|window, cx| {
             let _ = window.draw(cx);
         });
+        crate::ui::app::test_window::finish_entrance_animation(&mut vcx);
         let mute = vcx.debug_bounds("editor-hide-binary-notice").unwrap();
         vcx.simulate_click(mute.center(), gpui::Modifiers::none());
         vcx.run_until_parked();

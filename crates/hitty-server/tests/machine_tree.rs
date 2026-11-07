@@ -465,11 +465,7 @@ fn attachment_rides_the_tree_when_no_record_store_is_served() {
     );
 }
 
-/// Start a server the way an upgraded install starts, and let it exit.
-///
-/// `HOME` is a scratch directory of the test's own, which is the whole reason
-/// this case can exist: the legacy path is derived from `HOME`, so a test that
-/// borrowed the developer's would be reaching for their real `machine.json`.
+/// Start a server with an isolated home directory and let it exit.
 /// stdin is closed, so the link is at EOF before it is read — the startup work
 /// this test is about has already run by then, and the process leaves rather
 /// than serving nothing.
@@ -490,7 +486,10 @@ fn started_once(home: &Path, extra: &[&str]) {
     let deadline = Instant::now() + Duration::from_secs(10);
     loop {
         match child.try_wait().expect("waiting on hitty-server") {
-            Some(_) => return,
+            Some(status) => {
+                assert!(status.success(), "stdio server failed to start: {status}");
+                return;
+            }
             None if Instant::now() >= deadline => {
                 let _ = child.kill();
                 let _ = child.wait();
@@ -501,56 +500,48 @@ fn started_once(home: &Path, extra: &[&str]) {
     }
 }
 
-fn seed_legacy_tree(home: &Path) -> PathBuf {
-    let legacy = home.join(".local").join("share").join("hitty");
-    std::fs::create_dir_all(&legacy).unwrap();
-    let file = legacy.join(MACHINE_FILE);
+fn seed_unrelated_tree(home: &Path) -> PathBuf {
+    let data = home.join(".local").join("share").join("hitty");
+    std::fs::create_dir_all(&data).unwrap();
+    let file = data.join(MACHINE_FILE);
     std::fs::write(&file, br#"{"workspaces":[],"panes":[]}"#).unwrap();
     file
 }
 
-/// The upgrade, end to end: the daemon moves the tree the old build left in the
-/// data directory into the config directory before it opens the store, so a
-/// machine's workspaces survive the release that changed where they live.
+/// A fresh installation reads only its own configuration directory.
 #[test]
-fn a_server_started_after_the_upgrade_carries_the_legacy_tree_in() {
+fn a_fresh_server_leaves_other_data_untouched() {
     let home = tempfile::TempDir::new().unwrap();
-    let legacy = seed_legacy_tree(home.path());
+    let unrelated = seed_unrelated_tree(home.path());
+    let original = std::fs::read(&unrelated).unwrap();
 
     started_once(home.path(), &[]);
 
     assert!(
-        home.path()
+        !home
+            .path()
             .join(".config/hitty")
             .join(MACHINE_FILE)
             .exists(),
-        "the tree must arrive beside the rest of the config directory"
+        "a fresh instance must not adopt a tree from another directory"
     );
-    assert!(
-        !legacy.exists(),
-        "a move leaves nothing to be adopted twice"
-    );
+    assert_eq!(std::fs::read(&unrelated).unwrap(), original);
 }
 
-/// And the half that keeps the upgrade from becoming the bug: a second hitty on
-/// a config directory of its own must not rename the machine's tree into it.
-/// Whichever instance happened to start first would otherwise decide, and the
-/// primary would come up owning nothing.
+/// An explicitly selected profile has the same fresh-install behavior.
 #[test]
-fn a_config_dir_of_its_own_leaves_the_machines_tree_alone() {
+fn an_explicit_config_dir_leaves_other_data_untouched() {
     let home = tempfile::TempDir::new().unwrap();
     let other = tempfile::TempDir::new().unwrap();
-    let legacy = seed_legacy_tree(home.path());
+    let unrelated = seed_unrelated_tree(home.path());
+    let original = std::fs::read(&unrelated).unwrap();
 
     started_once(
         home.path(),
         &["--config-dir", &other.path().to_string_lossy()],
     );
 
-    assert!(
-        legacy.exists(),
-        "the machine's tree belongs to the instance running out of its config directory"
-    );
+    assert_eq!(std::fs::read(&unrelated).unwrap(), original);
     assert!(
         !other.path().join(MACHINE_FILE).exists(),
         "a second instance starts on an empty tree, not on somebody else's"

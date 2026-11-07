@@ -13,6 +13,9 @@ work; it does not claim that the first release is ready or published.
 - The baseline Windows workspace build passed.
 - `cargo build --locked --workspace --bins --features updater` passed for Hitty
   on Windows x86_64, including GUI, CLI, server, and updater.
+- `cargo test --locked --workspace --features updater` passed on Windows:
+  3,280 tests passed across the standard Rust test summaries, with 13 existing
+  ignores. The separate CLI end-to-end harness also passed.
 - `cargo metadata --locked --offline --no-deps --format-version 1` resolves all
   four workspace packages at version `0.1.0`.
 - All 1,268 external lockfile entries retain their source, version, and checksum.
@@ -53,7 +56,6 @@ python scripts/bootstrap-native-smoke.py target/debug/hitty-app.exe target/debug
 
 ## Pending acceptance
 
-- The full Windows workspace/updater test run is in progress.
 - macOS ARM64, macOS x86_64, and Linux builds/tests and native runtime evidence
   require their respective runners.
 - The selected source had two macOS Intel CI failures: Markdown partial
@@ -63,3 +65,27 @@ python scripts/bootstrap-native-smoke.py target/debug/hitty-app.exe target/debug
 - Final installer execution, remote SSH/WSL services, and updates between actual
   Hitty packages remain unverified. Inno Setup is unavailable on this host.
 - No tag, public release, signing claim, or three-platform completion is made.
+
+## Follow-up regression checks
+
+The rename initially exposed capitalization expectations and a color fixture
+whose crate name changed byte length. Expectations now use the displayed Hitty
+name; the captured color fixture uses an equal-width neutral name so all
+original token offsets and colors remain valid.
+
+The complete test run also exposed intermittent clicks on animated dialogs and
+notifications. The file-tree subset reproduced the failure under parallel
+execution; the individual test and serial subset passed. Adding a 100 ms gap
+between reading a checkbox's bounds and clicking made the same assertion fail
+deterministically. The component uses a 250 ms wall-clock entrance animation,
+so advancing the test executor does not finish the movement. The affected tests
+now complete the animation and redraw before measuring click targets. The delay
+remains in the regression test, and 10 parallel subset runs (310 executions)
+passed after the correction. Production animation behavior is unchanged.
+
+Linux CI also found an inherited integration test that still required old-data
+adoption, which is explicitly outside Hitty's scope. It now verifies that a
+successful fresh server startup leaves data in other directories untouched,
+for both default and explicitly selected profiles. That Unix-only correction
+awaits the next platform CI run. A local WSL offline attempt could not resolve
+the uncached pinned framework checkout and did not execute the test.
