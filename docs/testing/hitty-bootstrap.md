@@ -54,6 +54,16 @@ the images. Reproduce the current application check with:
 python scripts/bootstrap-native-smoke.py target/debug/hitty-app.exe target/debug/hitty.exe docs/testing/images/hitty-bootstrap --phase after
 ```
 
+## Final brand presentation
+
+The README and documentation use the exact approved icon-plus-wordmark paths
+in separate light and dark variants. The SVGs parsed successfully, the copies
+used by the documentation match the source assets, and a local headless Chrome
+render was inspected against the supplied reference. This is brand-asset
+evidence; the native application screenshots above remain the application proof.
+
+![Approved light and dark logos](images/hitty-bootstrap/final-brand.png)
+
 ## Pending acceptance
 
 - macOS ARM64, macOS x86_64, and Linux builds/tests and native runtime evidence

@@ -1,6 +1,9 @@
 # Hitty
 
-<img src="assets/app-icon.svg" width="80" alt="Hitty application icon"> <img src="assets/hitty-wordmark.svg" width="150" alt="Hitty">
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/hitty-logo-dark.svg">
+  <img src="assets/hitty-logo-light.svg" width="440" alt="Hitty">
+</picture>
 
 A terminal workspace for coding agents.
 

@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Hitty — approved brand logo</title>
+<style>
+  * { box-sizing: border-box }
+  body { margin: 0; padding: 20px; background: #faf9f6; font: 12px monospace; color: #17171f }
+  main { display: grid; grid-template-columns: 1fr 1fr; gap: 20px }
+  figure { margin: 0; height: 210px; display: grid; place-content: center; position: relative; border: 1px solid #deddd7; border-radius: 8px; background: #f5f1e8 }
+  figure.dark { background: #17171f; border-color: #35353d; color: #f5f1e8 }
+  img { width: 360px; max-width: 90%; margin: auto }
+  figcaption { position: absolute; left: 18px; bottom: 14px; opacity: .65 }
+  @media (max-width: 700px) { main { grid-template-columns: 1fr } }
+</style>
+<main>
+  <figure><img src="../../logo/hitty-light.svg" alt="Hitty light logo"><figcaption>LIGHT / Icon + wordmark</figcaption></figure>
+  <figure class="dark"><img src="../../logo/hitty-dark.svg" alt="Hitty dark logo"><figcaption>DARK / Icon + wordmark</figcaption></figure>
+</main>
+</html>

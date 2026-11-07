@@ -10,8 +10,8 @@
   },
   "favicon": "/favicon.ico",
   "logo": {
-    "light": "/logo/logo.svg",
-    "dark": "/logo/logo.svg",
+    "light": "/logo/hitty-light.svg",
+    "dark": "/logo/hitty-dark.svg",
     "href": "https://github.com/cloudy-liu/hitty"
   },
   "navigation": {

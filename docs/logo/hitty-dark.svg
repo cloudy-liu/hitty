@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="295" height="118" viewBox="0 0 295 118" role="img" aria-label="Hitty">
+  <title>Hitty</title>
+  <svg x="8" y="27" width="64" height="64" viewBox="100 100 824 824"><rect x="100" y="100" width="824" height="824" rx="185" fill="#F5F1E8"/><g transform="translate(512 512) scale(1.333333333) translate(-467 -521)"><rect x="302" y="306" width="420" height="340" rx="64" fill="#FF5FA2"/><rect x="212" y="396" width="420" height="340" rx="64" fill="#17171F"/><path d="M280 498 L348 566 L280 634" fill="none" stroke="#3FDD8C" stroke-width="44" stroke-linecap="round" stroke-linejoin="round"/><rect x="390" y="606" width="150" height="40" rx="20" fill="#F5F1E8"/></g></svg>
+  <svg x="97" y="8" width="190" height="102" viewBox="-6 -176 482 258">
+    <g fill="none" stroke="#F5F1E8" stroke-width="26" stroke-linejoin="round" stroke-linecap="round"><path d="M13 -160V0M13 -55C13 -85 35 -100 60 -100C88 -100 105 -82 105 -52V0M158 -100V0M218 -150V-30Q218 0 248 0H262M296 -150V-30Q296 0 326 0H340M196 -100H340M382 -100V-50Q382 -14 416 -14Q450 -14 450 -50M450 -100V22Q450 62 410 62H390"/></g>
+    <circle cx="158" cy="-146" r="17" fill="#E0628E"/>
+  </svg>
+</svg>
