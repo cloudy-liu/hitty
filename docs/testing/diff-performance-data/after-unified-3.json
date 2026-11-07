@@ -1,0 +1,12 @@
+{
+  "mode": "Unified",
+  "files": 24,
+  "retained_lines": 7200,
+  "git_probe_ms": 199.00490000000002,
+  "first_frame_ms": 29.025599999999997,
+  "scroll_samples": 35,
+  "scroll_median_ms": 9.380899999999999,
+  "scroll_p95_ms": 10.4113,
+  "min_offset": -2400.0,
+  "measurement": "native text, event dispatch and GPUI CPU layout/prepaint/paint; excludes GPU and presentation"
+}

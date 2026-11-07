@@ -1,0 +1,9 @@
+# ctty7 extension: a live prompt with the shortcuts footer is positive idle
+# evidence. Upstream working and approval rules still win while a turn is active.
+[[rules]]
+id = "ready_prompt"
+state = "idle"
+priority = 100
+region = "whole_recent"
+visible_idle = true
+regex = ['(?m)^›(?: [^\r\n]*)?\r?\n(?:[^›•■✗✓\r\n]*\r?\n)*[^›•■✗✓\r\n]*\? for shortcuts[^\r\n]*\s*\z']

@@ -1,0 +1,11 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+  <!-- Two Session Stack panes, enlarged and centered on the macOS icon grid.
+       Windows ICO frames crop the outer grid margin in scripts/brand/render.py. -->
+  <rect x="100" y="100" width="824" height="824" rx="185" fill="#F5F1E8"/>
+  <g transform="translate(512 512) scale(1.333333333) translate(-467 -521)">
+  <rect x="302" y="306" width="420" height="340" rx="64" fill="#FF5FA2"/>
+  <rect x="212" y="396" width="420" height="340" rx="64" fill="#17171F"/>
+  <path d="M280 498 L348 566 L280 634" fill="none" stroke="#3FDD8C" stroke-width="44" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="390" y="606" width="150" height="40" rx="20" fill="#F5F1E8"/>
+  </g>
+</svg>

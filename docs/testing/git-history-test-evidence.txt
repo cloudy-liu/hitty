@@ -1,0 +1,96 @@
+RED: row selection
+running 1 test
+
+thread 'ui::scm::graph::tests::selecting_history_opens_the_existing_diff_without_replacing_history' (31104) panicked at
+ src\ui\scm\graph.rs:1954:18:
+selecting a commit opens the existing Git Diff View
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test ui::scm::graph::tests::selecting_history_opens_the_existing_diff_without_replacing_history ... FAILED
+
+failures:
+
+failures:
+    ui::scm::graph::tests::selecting_history_opens_the_existing_diff_without_replacing_history
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 1803 filtered out; finished in 0.02s
+
+error: test failed, to rerun pass `-p tty7 --bin tty7-app`
+
+
+GREEN: shared diff route
+running 1 test
+test ui::scm::graph::tests::selecting_history_opens_the_existing_diff_without_replacing_history ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 1803 filtered out; finished in 0.04s
+
+
+
+RED: author photo
+running 1 test
+
+thread 'ui::scm::avatars::tests::author_photo_is_shared_and_survives_an_offline_restart' (15884) panicked at src\ui\scm
+\avatars.rs:61:14:
+the author photo loads asynchronously
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test ui::scm::avatars::tests::author_photo_is_shared_and_survives_an_offline_restart ... FAILED
+
+failures:
+
+failures:
+    ui::scm::avatars::tests::author_photo_is_shared_and_survives_an_offline_restart
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 1801 filtered out; finished in 0.00s
+
+error: test failed, to rerun pass `-p tty7 --bin tty7-app`
+
+
+GREEN: memory and disk photo
+running 1 test
+test ui::scm::avatars::tests::author_photo_is_shared_and_survives_an_offline_restart ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 1801 filtered out; finished in 0.02s
+
+FINAL SCM REGRESSIONS
+test ui::scm::avatars::tests::image_work_is_bounded_and_repeated_history_has_no_warm_requests ... AVATAR_REQUEST_METRICS {"rows":5000,"authors":3,"cold_requests":3,"memory_warm_requests":0,"disk_warm_requests":0,"peak_concurrency":4}
+test ui::scm::graph::tests::narrow_rendered_rows_keep_metadata_and_click_the_correct_commit ... ok
+test ui::scm::graph::tests::selecting_history_opens_the_existing_diff_without_replacing_history ... ok
+test result: ok. 71 passed; 0 failed; 0 ignored; 0 measured; 1735 filtered out; finished in 0.47s
+
+WORKSPACE
+3168 passed; 0 failed; 12 ignored (17 targets).
+
+FINAL COMMIT-DOCUMENT FOLLOW-UP (2026-10-26, verified after the last Rust edit)
+test ui::code_editor::tests::commit_changes_is_a_separate_document_tab_beside_open_files ... ok
+test ui::code_editor::tests::selected_commit_tab_is_revealed_after_many_open_files ... ok
+test ui::scm::graph::tests::selected_commit_shows_message_details_above_the_existing_diff ... ok
+test core::date::tests::dates_respect_the_authored_timezone_and_calendar_boundaries ... ok
+Workspace: 3172 passed; 0 failed; 12 ignored (17 targets).
+Native fixture build: release / locked / markdown-visual-tests, same final Rust source.
+rustfmt, host-boundary guard, Python syntax and whitespace checks passed again on resume.
+
+AFTER INTEGRATING fork/main 98aa012e (2026-10-27)
+cargo test --release --locked --workspace --features markdown-visual-tests
+  --config 'profile.release.package.tty7.opt-level=0'
+  --config 'profile.release.package.tty7.codegen-units=16'
+Workspace: 3176 passed; 0 failed; 12 ignored (17 targets).
+
+Verified integrated workspace output (17 targets):
+test result: ok. 1805 passed; 0 failed; 7 ignored; 0 measured; 0 filtered out; finished in 24.52s
+test result: ok. 138 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.41s
+test result: ok. 1214 passed; 0 failed; 5 ignored; 0 measured; 0 filtered out; finished in 31.20s
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.80s
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 6.77s
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 3.21s
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 5.47s
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+Integrated native build completed after the workspace run, using the same Rust source and locked dependencies.

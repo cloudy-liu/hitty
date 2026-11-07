@@ -1,0 +1,18 @@
+{
+  "unit": "milliseconds",
+  "stages": [
+    "first view, warm profile",
+    "refresh",
+    "navigate next.htm",
+    "navigate report.html",
+    "refresh after click"
+  ],
+  "values": [
+    2555.88,
+    517.28,
+    451.96,
+    580.91,
+    507.77
+  ],
+  "cdp_enabled": false
+}

@@ -1,0 +1,151 @@
+{
+  "label": "Baseline f16436fa: HTML source, DirectComposition",
+  "root_process_id": 29520,
+  "samples": [
+    {
+      "utc": "2026-10-20T05:04:55.6526995Z",
+      "processes": [
+        {
+          "id": 29520,
+          "parent": 34160,
+          "name": "tty7-app.exe",
+          "private_working_set_bytes": 30986240,
+          "working_set_bytes": 108380160,
+          "private_committed_bytes": 190222336,
+          "cpu_one_core_percent": 4,
+          "cpu_seconds": 10.546875
+        },
+        {
+          "id": 30792,
+          "parent": 29520,
+          "name": "conhost.exe",
+          "private_working_set_bytes": 8249344,
+          "working_set_bytes": 25530368,
+          "private_committed_bytes": 9416704,
+          "cpu_one_core_percent": 0,
+          "cpu_seconds": 2.421875
+        }
+      ],
+      "private_working_set_mib": 37.42,
+      "working_set_mib": 127.71,
+      "private_committed_mib": 190.39,
+      "cpu_one_core_percent": null
+    },
+    {
+      "utc": "2026-10-20T05:04:57.9015657Z",
+      "processes": [
+        {
+          "id": 29520,
+          "parent": 34160,
+          "name": "tty7-app.exe",
+          "private_working_set_bytes": 30986240,
+          "working_set_bytes": 108380160,
+          "private_committed_bytes": 190222336,
+          "cpu_one_core_percent": 21,
+          "cpu_seconds": 10.796875
+        },
+        {
+          "id": 30792,
+          "parent": 29520,
+          "name": "conhost.exe",
+          "private_working_set_bytes": 8249344,
+          "working_set_bytes": 25530368,
+          "private_committed_bytes": 9416704,
+          "cpu_one_core_percent": 0,
+          "cpu_seconds": 2.421875
+        }
+      ],
+      "private_working_set_mib": 37.42,
+      "working_set_mib": 127.71,
+      "private_committed_mib": 190.39,
+      "cpu_one_core_percent": 0
+    },
+    {
+      "utc": "2026-10-20T05:05:00.0944643Z",
+      "processes": [
+        {
+          "id": 29520,
+          "parent": 34160,
+          "name": "tty7-app.exe",
+          "private_working_set_bytes": 31002624,
+          "working_set_bytes": 108396544,
+          "private_committed_bytes": 190263296,
+          "cpu_one_core_percent": 8,
+          "cpu_seconds": 11.078125
+        },
+        {
+          "id": 30792,
+          "parent": 29520,
+          "name": "conhost.exe",
+          "private_working_set_bytes": 8249344,
+          "working_set_bytes": 25530368,
+          "private_committed_bytes": 9416704,
+          "cpu_one_core_percent": 0,
+          "cpu_seconds": 2.421875
+        }
+      ],
+      "private_working_set_mib": 37.43,
+      "working_set_mib": 127.72,
+      "private_committed_mib": 190.43,
+      "cpu_one_core_percent": 0
+    },
+    {
+      "utc": "2026-10-20T05:05:01.9975484Z",
+      "processes": [
+        {
+          "id": 29520,
+          "parent": 34160,
+          "name": "tty7-app.exe",
+          "private_working_set_bytes": 31002624,
+          "working_set_bytes": 108396544,
+          "private_committed_bytes": 190279680,
+          "cpu_one_core_percent": 4,
+          "cpu_seconds": 11.3125
+        },
+        {
+          "id": 30792,
+          "parent": 29520,
+          "name": "conhost.exe",
+          "private_working_set_bytes": 8249344,
+          "working_set_bytes": 25530368,
+          "private_committed_bytes": 9416704,
+          "cpu_one_core_percent": 0,
+          "cpu_seconds": 2.421875
+        }
+      ],
+      "private_working_set_mib": 37.43,
+      "working_set_mib": 127.72,
+      "private_committed_mib": 190.45,
+      "cpu_one_core_percent": 0
+    },
+    {
+      "utc": "2026-10-20T05:05:03.9597744Z",
+      "processes": [
+        {
+          "id": 29520,
+          "parent": 34160,
+          "name": "tty7-app.exe",
+          "private_working_set_bytes": 30769152,
+          "working_set_bytes": 108167168,
+          "private_committed_bytes": 189956096,
+          "cpu_one_core_percent": 9,
+          "cpu_seconds": 11.453125
+        },
+        {
+          "id": 30792,
+          "parent": 29520,
+          "name": "conhost.exe",
+          "private_working_set_bytes": 8183808,
+          "working_set_bytes": 25473024,
+          "private_committed_bytes": 9297920,
+          "cpu_one_core_percent": 0,
+          "cpu_seconds": 2.421875
+        }
+      ],
+      "private_working_set_mib": 37.15,
+      "working_set_mib": 127.45,
+      "private_committed_mib": 190.02,
+      "cpu_one_core_percent": 0
+    }
+  ]
+}

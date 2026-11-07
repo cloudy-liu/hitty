@@ -1,0 +1,1483 @@
+[
+  {
+    "mode": "dark",
+    "language": "python",
+    "source": "import json\nfrom pathlib import Path\nDEST = Path(__file__).parent\ndef main(root: Path, count=2):\n    version = json.loads(root.read_text())\n    return len(version) + count\n",
+    "tokens": [
+      {
+        "text": "import",
+        "start": 0,
+        "end": 6,
+        "color": "#C678DD"
+      },
+      {
+        "text": "json",
+        "start": 7,
+        "end": 11,
+        "color": "#ABB2BF"
+      },
+      {
+        "text": "pathlib",
+        "start": 17,
+        "end": 24,
+        "color": "#ABB2BF"
+      },
+      {
+        "text": "import",
+        "start": 25,
+        "end": 31,
+        "color": "#C678DD"
+      },
+      {
+        "text": "DEST",
+        "start": 37,
+        "end": 41,
+        "color": "#ABB2BF"
+      },
+      {
+        "text": "__file__",
+        "start": 49,
+        "end": 57,
+        "color": "#E06C75"
+      },
+      {
+        "text": "parent",
+        "start": 59,
+        "end": 65,
+        "color": "#ABB2BF"
+      },
+      {
+        "text": "def",
+        "start": 66,
+        "end": 69,
+        "color": "#C678DD"
+      },
+      {
+        "text": "main",
+        "start": 70,
+        "end": 74,
+        "color": "#61AFEF"
+      },
+      {
+        "text": "root",
+        "start": 75,
+        "end": 79,
+        "color": "#D19A66"
+      },
+      {
+        "text": "count",
+        "start": 87,
+        "end": 92,
+        "color": "#D19A66"
+      },
+      {
+        "text": "2",
+        "start": 93,
+        "end": 94,
+        "color": "#D19A66"
+      },
+      {
+        "text": "version",
+        "start": 101,
+        "end": 108,
+        "color": "#ABB2BF"
+      },
+      {
+        "text": "json",
+        "start": 111,
+        "end": 115,
+        "color": "#ABB2BF"
+      },
+      {
+        "text": "root",
+        "start": 122,
+        "end": 126,
+        "color": "#ABB2BF"
+      },
+      {
+        "text": "len",
+        "start": 151,
+        "end": 154,
+        "color": "#56B6C2"
+      },
+      {
+        "text": "version",
+        "start": 155,
+        "end": 162,
+        "color": "#ABB2BF"
+      },
+      {
+        "text": "count",
+        "start": 166,
+        "end": 171,
+        "color": "#ABB2BF"
+      }
+    ]
+  },
+  {
+    "mode": "dark",
+    "language": "javascript",
+    "source": "const root = obj.parent + 2;\nfunction main(arg) { return arg + root; }\nconst [item] = list;\nconst text = `${root}`;\n",
+    "tokens": [
+      {
+        "text": "const",
+        "start": 0,
+        "end": 5,
+        "color": "#C678DD"
+      },
+      {
+        "text": "root",
+        "start": 6,
+        "end": 10,
+        "color": "#D19A66"
+      },
+      {
+        "text": "=",
+        "start": 11,
+        "end": 12,
+        "color": "#56B6C2"
+      },
+      {
+        "text": "obj",
+        "start": 13,
+        "end": 16,
+        "color": "#ABB2BF"
+      },
+      {
+        "text": "parent",
+        "start": 17,
+        "end": 23,
+        "color": "#E06C75"
+      },
+      {
+        "text": "+",
+        "start": 24,
+        "end": 25,
+        "color": "#56B6C2"
+      },
+      {
+        "text": "2",
+        "start": 26,
+        "end": 27,
+        "color": "#D19A66"
+      },
+      {
+        "text": "function",
+        "start": 29,
+        "end": 37,
+        "color": "#C678DD"
+      },
+      {
+        "text": "main",
+        "start": 38,
+        "end": 42,
+        "color": "#61AFEF"
+      },
+      {
+        "text": "arg",
+        "start": 43,
+        "end": 46,
+        "color": "#ABB2BF"
+      },
+      {
+        "text": "arg",
+        "start": 57,
+        "end": 60,
+        "color": "#ABB2BF"
+      },
+      {
+        "text": "+",
+        "start": 61,
+        "end": 62,
+        "color": "#56B6C2"
+      },
+      {
+        "text": "root",
+        "start": 63,
+        "end": 67,
+        "color": "#ABB2BF"
+      },
+      {
+        "text": "const",
+        "start": 71,
+        "end": 76,
+        "color": "#C678DD"
+      },
+      {
+        "text": "item",
+        "start": 78,
+        "end": 82,
+        "color": "#D19A66"
+      },
+      {
+        "text": "=",
+        "start": 84,
+        "end": 85,
+        "color": "#56B6C2"
+      },
+      {
+        "text": "list",
+        "start": 86,
+        "end": 90,
+        "color": "#ABB2BF"
+      },
+      {
+        "text": "const",
+        "start": 92,
+        "end": 97,
+        "color": "#C678DD"
+      },
+      {
+        "text": "text",
+        "start": 98,
+        "end": 102,
+        "color": "#D19A66"
+      },
+      {
+        "text": "=",
+        "start": 103,
+        "end": 104,
+        "color": "#56B6C2"
+      },
+      {
+        "text": "root",
+        "start": 108,
+        "end": 112,
+        "color": "#ABB2BF"
+      }
+    ]
+  },
+  {
+    "mode": "dark",
+    "language": "typescript",
+    "source": "const root: string = obj.parent + 2;\nfunction main(arg: number): string { return String(arg); }\nconst [item] = list;\n",
+    "tokens": [
+      {
+        "text": "const",
+        "start": 0,
+        "end": 5,
+        "color": "#C678DD"
+      },
+      {
+        "text": "root",
+        "start": 6,
+        "end": 10,
+        "color": "#D19A66"
+      },
+      {
+        "text": "string",
+        "start": 12,
+        "end": 18,
+        "color": "#56B6C2"
+      },
+      {
+        "text": "=",
+        "start": 19,
+        "end": 20,
+        "color": "#56B6C2"
+      },
+      {
+        "text": "obj",
+        "start": 21,
+        "end": 24,
+        "color": "#ABB2BF"
+      },
+      {
+        "text": "parent",
+        "start": 25,
+        "end": 31,
+        "color": "#E06C75"
+      },
+      {
+        "text": "+",
+        "start": 32,
+        "end": 33,
+        "color": "#56B6C2"
+      },
+      {
+        "text": "2",
+        "start": 34,
+        "end": 35,
+        "color": "#D19A66"
+      },
+      {
+        "text": "function",
+        "start": 37,
+        "end": 45,
+        "color": "#C678DD"
+      },
+      {
+        "text": "main",
+        "start": 46,
+        "end": 50,
+        "color": "#61AFEF"
+      },
+      {
+        "text": "arg",
+        "start": 51,
+        "end": 54,
+        "color": "#ABB2BF"
+      },
+      {
+        "text": "number",
+        "start": 56,
+        "end": 62,
+        "color": "#56B6C2"
+      },
+      {
+        "text": "string",
+        "start": 65,
+        "end": 71,
+        "color": "#56B6C2"
+      },
+      {
+        "text": "String",
+        "start": 81,
+        "end": 87,
+        "color": "#61AFEF"
+      },
+      {
+        "text": "arg",
+        "start": 88,
+        "end": 91,
+        "color": "#ABB2BF"
+      },
+      {
+        "text": "const",
+        "start": 96,
+        "end": 101,
+        "color": "#C678DD"
+      },
+      {
+        "text": "item",
+        "start": 103,
+        "end": 107,
+        "color": "#D19A66"
+      },
+      {
+        "text": "=",
+        "start": 109,
+        "end": 110,
+        "color": "#56B6C2"
+      },
+      {
+        "text": "list",
+        "start": 111,
+        "end": 115,
+        "color": "#ABB2BF"
+      }
+    ]
+  },
+  {
+    "mode": "dark",
+    "language": "json",
+    "source": "{\"name\": \"ok\", \"active\": true, \"empty\": null, \"count\": 2}",
+    "tokens": [
+      {
+        "text": "name",
+        "start": 2,
+        "end": 6,
+        "color": "#E06C75"
+      },
+      {
+        "text": "ok",
+        "start": 10,
+        "end": 12,
+        "color": "#98C379"
+      },
+      {
+        "text": "active",
+        "start": 16,
+        "end": 22,
+        "color": "#E06C75"
+      },
+      {
+        "text": "true",
+        "start": 25,
+        "end": 29,
+        "color": "#56B6C2"
+      },
+      {
+        "text": "empty",
+        "start": 32,
+        "end": 37,
+        "color": "#E06C75"
+      },
+      {
+        "text": "null",
+        "start": 40,
+        "end": 44,
+        "color": "#56B6C2"
+      },
+      {
+        "text": "count",
+        "start": 47,
+        "end": 52,
+        "color": "#E06C75"
+      },
+      {
+        "text": "2",
+        "start": 55,
+        "end": 56,
+        "color": "#D19A66"
+      }
+    ]
+  },
+  {
+    "mode": "dark",
+    "language": "rust",
+    "source": "use std::path::Path;\nfn main<'a>(root: &'a Path) { let item = root.parent(); }\n",
+    "tokens": [
+      {
+        "text": "use",
+        "start": 0,
+        "end": 3,
+        "color": "#C678DD"
+      },
+      {
+        "text": "std",
+        "start": 4,
+        "end": 7,
+        "color": "#ABB2BF"
+      },
+      {
+        "text": "path",
+        "start": 9,
+        "end": 13,
+        "color": "#ABB2BF"
+      },
+      {
+        "text": "Path",
+        "start": 15,
+        "end": 19,
+        "color": "#56B6C2"
+      },
+      {
+        "text": "fn",
+        "start": 21,
+        "end": 23,
+        "color": "#C678DD"
+      },
+      {
+        "text": "main",
+        "start": 24,
+        "end": 28,
+        "color": "#61AFEF"
+      },
+      {
+        "text": "root",
+        "start": 33,
+        "end": 37,
+        "color": "#E06C75"
+      },
+      {
+        "text": "Path",
+        "start": 43,
+        "end": 47,
+        "color": "#56B6C2"
+      },
+      {
+        "text": "let",
+        "start": 51,
+        "end": 54,
+        "color": "#C678DD"
+      },
+      {
+        "text": "item",
+        "start": 55,
+        "end": 59,
+        "color": "#E06C75"
+      },
+      {
+        "text": "root",
+        "start": 62,
+        "end": 66,
+        "color": "#E06C75"
+      },
+      {
+        "text": "parent",
+        "start": 67,
+        "end": 73,
+        "color": "#61AFEF"
+      }
+    ]
+  },
+  {
+    "mode": "dark",
+    "language": "css",
+    "source": ".item { color: red; margin: 2px; display: block; }",
+    "tokens": [
+      {
+        "text": "item",
+        "start": 1,
+        "end": 5,
+        "color": "#D19A66"
+      },
+      {
+        "text": "color",
+        "start": 8,
+        "end": 13,
+        "color": "#ABB2BF"
+      },
+      {
+        "text": "red",
+        "start": 15,
+        "end": 18,
+        "color": "#D19A66"
+      },
+      {
+        "text": "margin",
+        "start": 20,
+        "end": 26,
+        "color": "#ABB2BF"
+      },
+      {
+        "text": "2",
+        "start": 28,
+        "end": 29,
+        "color": "#D19A66"
+      },
+      {
+        "text": "px",
+        "start": 29,
+        "end": 31,
+        "color": "#D19A66"
+      },
+      {
+        "text": "display",
+        "start": 33,
+        "end": 40,
+        "color": "#ABB2BF"
+      },
+      {
+        "text": "block",
+        "start": 42,
+        "end": 47,
+        "color": "#ABB2BF"
+      }
+    ]
+  },
+  {
+    "mode": "dark",
+    "language": "java",
+    "source": "import java.nio.Path;\nclass Main { int value = 2; void main(String arg) { System.out.println(arg); } }",
+    "tokens": [
+      {
+        "text": "class",
+        "start": 22,
+        "end": 27,
+        "color": "#C678DD"
+      },
+      {
+        "text": "Main",
+        "start": 28,
+        "end": 32,
+        "color": "#E5C07B"
+      },
+      {
+        "text": "int",
+        "start": 35,
+        "end": 38,
+        "color": "#C678DD"
+      },
+      {
+        "text": "value",
+        "start": 39,
+        "end": 44,
+        "color": "#E06C75"
+      },
+      {
+        "text": "2",
+        "start": 47,
+        "end": 48,
+        "color": "#D19A66"
+      },
+      {
+        "text": "void",
+        "start": 50,
+        "end": 54,
+        "color": "#C678DD"
+      },
+      {
+        "text": "main",
+        "start": 55,
+        "end": 59,
+        "color": "#61AFEF"
+      },
+      {
+        "text": "String",
+        "start": 60,
+        "end": 66,
+        "color": "#E5C07B"
+      },
+      {
+        "text": "arg",
+        "start": 67,
+        "end": 70,
+        "color": "#ABB2BF"
+      },
+      {
+        "text": "println",
+        "start": 85,
+        "end": 92,
+        "color": "#61AFEF"
+      },
+      {
+        "text": "arg",
+        "start": 93,
+        "end": 96,
+        "color": "#ABB2BF"
+      }
+    ]
+  },
+  {
+    "mode": "dark",
+    "language": "c",
+    "source": "int main(int arg) { int value = arg + 2; return value; }",
+    "tokens": [
+      {
+        "text": "int",
+        "start": 0,
+        "end": 3,
+        "color": "#C678DD"
+      },
+      {
+        "text": "main",
+        "start": 4,
+        "end": 8,
+        "color": "#61AFEF"
+      },
+      {
+        "text": "int",
+        "start": 9,
+        "end": 12,
+        "color": "#C678DD"
+      },
+      {
+        "text": "arg",
+        "start": 13,
+        "end": 16,
+        "color": "#ABB2BF"
+      },
+      {
+        "text": "int",
+        "start": 20,
+        "end": 23,
+        "color": "#C678DD"
+      },
+      {
+        "text": " value ",
+        "start": 23,
+        "end": 30,
+        "color": "#ABB2BF"
+      },
+      {
+        "text": " arg ",
+        "start": 31,
+        "end": 36,
+        "color": "#ABB2BF"
+      },
+      {
+        "text": "+",
+        "start": 36,
+        "end": 37,
+        "color": "#C678DD"
+      },
+      {
+        "text": "2",
+        "start": 38,
+        "end": 39,
+        "color": "#D19A66"
+      },
+      {
+        "text": "return",
+        "start": 41,
+        "end": 47,
+        "color": "#C678DD"
+      },
+      {
+        "text": " value",
+        "start": 47,
+        "end": 53,
+        "color": "#ABB2BF"
+      }
+    ]
+  },
+  {
+    "mode": "dark",
+    "language": "cpp",
+    "source": "class Main { int value; };\nint main(int arg) { Main item; return arg + 2; }",
+    "tokens": [
+      {
+        "text": "class",
+        "start": 0,
+        "end": 5,
+        "color": "#C678DD"
+      },
+      {
+        "text": "int",
+        "start": 13,
+        "end": 16,
+        "color": "#C678DD"
+      },
+      {
+        "text": "int",
+        "start": 27,
+        "end": 30,
+        "color": "#C678DD"
+      },
+      {
+        "text": "main",
+        "start": 31,
+        "end": 35,
+        "color": "#61AFEF"
+      },
+      {
+        "text": "int",
+        "start": 36,
+        "end": 39,
+        "color": "#C678DD"
+      },
+      {
+        "text": "arg",
+        "start": 40,
+        "end": 43,
+        "color": "#ABB2BF"
+      },
+      {
+        "text": "return",
+        "start": 58,
+        "end": 64,
+        "color": "#C678DD"
+      },
+      {
+        "text": " arg ",
+        "start": 64,
+        "end": 69,
+        "color": "#ABB2BF"
+      },
+      {
+        "text": "+",
+        "start": 69,
+        "end": 70,
+        "color": "#C678DD"
+      },
+      {
+        "text": "2",
+        "start": 71,
+        "end": 72,
+        "color": "#D19A66"
+      }
+    ]
+  },
+  {
+    "mode": "dark",
+    "language": "go",
+    "source": "package main\nfunc main() { value := 2; fmt.Println(value) }",
+    "tokens": [
+      {
+        "text": "package",
+        "start": 0,
+        "end": 7,
+        "color": "#C678DD"
+      },
+      {
+        "text": "main",
+        "start": 8,
+        "end": 12,
+        "color": "#E5C07B"
+      },
+      {
+        "text": "func",
+        "start": 13,
+        "end": 17,
+        "color": "#C678DD"
+      },
+      {
+        "text": "main",
+        "start": 18,
+        "end": 22,
+        "color": "#61AFEF"
+      },
+      {
+        "text": "value",
+        "start": 27,
+        "end": 32,
+        "color": "#E06C75"
+      },
+      {
+        "text": ":=",
+        "start": 33,
+        "end": 35,
+        "color": "#C678DD"
+      },
+      {
+        "text": "2",
+        "start": 36,
+        "end": 37,
+        "color": "#D19A66"
+      },
+      {
+        "text": "Println",
+        "start": 43,
+        "end": 50,
+        "color": "#61AFEF"
+      },
+      {
+        "text": "value",
+        "start": 51,
+        "end": 56,
+        "color": "#E06C75"
+      }
+    ]
+  },
+  {
+    "mode": "dark",
+    "language": "ruby",
+    "source": "class Main\n def main(arg)\n   value = arg + 2\n   puts value\n end\nend",
+    "tokens": [
+      {
+        "text": "class",
+        "start": 0,
+        "end": 5,
+        "color": "#C678DD"
+      },
+      {
+        "text": "Main",
+        "start": 6,
+        "end": 10,
+        "color": "#E5C07B"
+      },
+      {
+        "text": "def",
+        "start": 12,
+        "end": 15,
+        "color": "#C678DD"
+      },
+      {
+        "text": "main",
+        "start": 16,
+        "end": 20,
+        "color": "#61AFEF"
+      },
+      {
+        "text": "arg",
+        "start": 21,
+        "end": 24,
+        "color": "#ABB2BF"
+      },
+      {
+        "text": "value",
+        "start": 29,
+        "end": 34,
+        "color": "#E06C75"
+      },
+      {
+        "text": " arg ",
+        "start": 36,
+        "end": 41,
+        "color": "#ABB2BF"
+      },
+      {
+        "text": "2",
+        "start": 43,
+        "end": 44,
+        "color": "#D19A66"
+      },
+      {
+        "text": "puts",
+        "start": 48,
+        "end": 52,
+        "color": "#56B6C2"
+      },
+      {
+        "text": " value",
+        "start": 52,
+        "end": 58,
+        "color": "#ABB2BF"
+      },
+      {
+        "text": "end",
+        "start": 60,
+        "end": 63,
+        "color": "#C678DD"
+      },
+      {
+        "text": "end",
+        "start": 64,
+        "end": 67,
+        "color": "#C678DD"
+      }
+    ]
+  },
+  {
+    "mode": "dark",
+    "language": "bash",
+    "source": "value=\"ok\"\necho \"$value\" ${HOME}\n",
+    "tokens": [
+      {
+        "text": "value",
+        "start": 0,
+        "end": 5,
+        "color": "#E06C75"
+      },
+      {
+        "text": "ok",
+        "start": 7,
+        "end": 9,
+        "color": "#98C379"
+      },
+      {
+        "text": "echo",
+        "start": 11,
+        "end": 15,
+        "color": "#56B6C2"
+      },
+      {
+        "text": "value",
+        "start": 18,
+        "end": 23,
+        "color": "#E06C75"
+      },
+      {
+        "text": "HOME",
+        "start": 27,
+        "end": 31,
+        "color": "#E06C75"
+      }
+    ]
+  },
+  {
+    "mode": "dark",
+    "language": "html",
+    "source": "<div id=\"main\" class=\"item\">hello</div>",
+    "tokens": [
+      {
+        "text": "div",
+        "start": 1,
+        "end": 4,
+        "color": "#E06C75"
+      },
+      {
+        "text": "id",
+        "start": 5,
+        "end": 7,
+        "color": "#D19A66"
+      },
+      {
+        "text": "main",
+        "start": 9,
+        "end": 13,
+        "color": "#98C379"
+      },
+      {
+        "text": "class",
+        "start": 15,
+        "end": 20,
+        "color": "#D19A66"
+      },
+      {
+        "text": "item",
+        "start": 22,
+        "end": 26,
+        "color": "#98C379"
+      },
+      {
+        "text": "hello",
+        "start": 28,
+        "end": 33,
+        "color": "#ABB2BF"
+      },
+      {
+        "text": "div",
+        "start": 35,
+        "end": 38,
+        "color": "#E06C75"
+      }
+    ]
+  },
+  {
+    "mode": "dark",
+    "language": "yaml",
+    "source": "name: ok\nactive: true\ncount: 2\n",
+    "tokens": [
+      {
+        "text": "name",
+        "start": 0,
+        "end": 4,
+        "color": "#E06C75"
+      },
+      {
+        "text": "ok",
+        "start": 6,
+        "end": 8,
+        "color": "#98C379"
+      },
+      {
+        "text": "active",
+        "start": 9,
+        "end": 15,
+        "color": "#E06C75"
+      },
+      {
+        "text": "true",
+        "start": 17,
+        "end": 21,
+        "color": "#D19A66"
+      },
+      {
+        "text": "count",
+        "start": 22,
+        "end": 27,
+        "color": "#E06C75"
+      },
+      {
+        "text": "2",
+        "start": 29,
+        "end": 30,
+        "color": "#D19A66"
+      }
+    ]
+  },
+  {
+    "mode": "dark",
+    "language": "markdown",
+    "source": "# Heading\n\n**bold** and *italic* [link](https://example.org)\n\n- item\n\n```rust\nlet value = 2;\n```\n",
+    "tokens": [
+      {
+        "text": "#",
+        "start": 0,
+        "end": 1,
+        "color": "#E06C75"
+      },
+      {
+        "text": "Heading",
+        "start": 2,
+        "end": 9,
+        "color": "#E06C75"
+      },
+      {
+        "text": "bold",
+        "start": 13,
+        "end": 17,
+        "color": "#D19A66"
+      },
+      {
+        "text": "italic",
+        "start": 25,
+        "end": 31,
+        "color": "#C678DD"
+      },
+      {
+        "text": "link",
+        "start": 34,
+        "end": 38,
+        "color": "#61AFEF"
+      },
+      {
+        "text": "https://example.org",
+        "start": 40,
+        "end": 59,
+        "color": "#C678DD"
+      }
+    ]
+  },
+  {
+    "mode": "dark",
+    "language": "diff",
+    "source": "diff --git a/x b/x\n--- a/x\n+++ b/x\n@@ -1 +1 @@\n-old\n+new\n",
+    "tokens": [
+      {
+        "text": "old",
+        "start": 48,
+        "end": 51,
+        "color": "#E06C75"
+      },
+      {
+        "text": "new",
+        "start": 53,
+        "end": 56,
+        "color": "#98C379"
+      }
+    ]
+  },
+  {
+    "mode": "dark",
+    "language": "sql",
+    "source": "SELECT name FROM users WHERE active = true AND count > 2;",
+    "tokens": [
+      {
+        "text": "SELECT",
+        "start": 0,
+        "end": 6,
+        "color": "#C678DD"
+      },
+      {
+        "text": "FROM",
+        "start": 12,
+        "end": 16,
+        "color": "#C678DD"
+      },
+      {
+        "text": " users ",
+        "start": 16,
+        "end": 23,
+        "color": "#ABB2BF"
+      },
+      {
+        "text": "WHERE",
+        "start": 23,
+        "end": 28,
+        "color": "#C678DD"
+      },
+      {
+        "text": " active ",
+        "start": 28,
+        "end": 36,
+        "color": "#ABB2BF"
+      },
+      {
+        "text": "AND",
+        "start": 43,
+        "end": 46,
+        "color": "#C678DD"
+      },
+      {
+        "text": " count ",
+        "start": 46,
+        "end": 53,
+        "color": "#ABB2BF"
+      },
+      {
+        "text": "2",
+        "start": 55,
+        "end": 56,
+        "color": "#D19A66"
+      }
+    ]
+  },
+  {
+    "mode": "dark",
+    "language": "lua",
+    "source": "local root = \"ok\"\nfunction main(arg)\n  return root .. arg\nend\n",
+    "tokens": [
+      {
+        "text": "local",
+        "start": 0,
+        "end": 5,
+        "color": "#C678DD"
+      },
+      {
+        "text": "root",
+        "start": 6,
+        "end": 10,
+        "color": "#E06C75"
+      },
+      {
+        "text": "ok",
+        "start": 14,
+        "end": 16,
+        "color": "#98C379"
+      },
+      {
+        "text": "function",
+        "start": 18,
+        "end": 26,
+        "color": "#C678DD"
+      },
+      {
+        "text": "main",
+        "start": 27,
+        "end": 31,
+        "color": "#61AFEF"
+      },
+      {
+        "text": "arg",
+        "start": 32,
+        "end": 35,
+        "color": "#ABB2BF"
+      },
+      {
+        "text": "return",
+        "start": 39,
+        "end": 45,
+        "color": "#C678DD"
+      },
+      {
+        "text": "root",
+        "start": 46,
+        "end": 50,
+        "color": "#E06C75"
+      },
+      {
+        "text": "..",
+        "start": 51,
+        "end": 53,
+        "color": "#C678DD"
+      },
+      {
+        "text": "arg",
+        "start": 54,
+        "end": 57,
+        "color": "#E06C75"
+      },
+      {
+        "text": "end",
+        "start": 58,
+        "end": 61,
+        "color": "#C678DD"
+      }
+    ]
+  },
+  {
+    "mode": "dark",
+    "language": "make",
+    "source": "NAME = value\nall: main.o\n\tgcc -o main main.o\n",
+    "tokens": [
+      {
+        "text": "NAME",
+        "start": 0,
+        "end": 4,
+        "color": "#E06C75"
+      },
+      {
+        "text": "=",
+        "start": 5,
+        "end": 6,
+        "color": "#ABB2BF"
+      },
+      {
+        "text": " value",
+        "start": 6,
+        "end": 12,
+        "color": "#ABB2BF"
+      },
+      {
+        "text": "all",
+        "start": 13,
+        "end": 16,
+        "color": "#61AFEF"
+      },
+      {
+        "text": ":",
+        "start": 16,
+        "end": 17,
+        "color": "#ABB2BF"
+      },
+      {
+        "text": " main.o",
+        "start": 17,
+        "end": 24,
+        "color": "#ABB2BF"
+      }
+    ]
+  },
+  {
+    "mode": "dark",
+    "language": "toml",
+    "source": "name = \"ok\"\nactive = true\ncount = 2\n",
+    "tokens": [
+      {
+        "text": "name",
+        "start": 0,
+        "end": 4,
+        "color": "#ABB2BF"
+      },
+      {
+        "text": "=",
+        "start": 5,
+        "end": 6,
+        "color": "#ABB2BF"
+      },
+      {
+        "text": "ok",
+        "start": 8,
+        "end": 10,
+        "color": "#98C379"
+      },
+      {
+        "text": "active",
+        "start": 12,
+        "end": 18,
+        "color": "#ABB2BF"
+      },
+      {
+        "text": "=",
+        "start": 19,
+        "end": 20,
+        "color": "#ABB2BF"
+      },
+      {
+        "text": "true",
+        "start": 21,
+        "end": 25,
+        "color": "#D19A66"
+      },
+      {
+        "text": "count",
+        "start": 26,
+        "end": 31,
+        "color": "#ABB2BF"
+      },
+      {
+        "text": "=",
+        "start": 32,
+        "end": 33,
+        "color": "#ABB2BF"
+      },
+      {
+        "text": "2",
+        "start": 34,
+        "end": 35,
+        "color": "#D19A66"
+      }
+    ]
+  },
+  {
+    "mode": "dark",
+    "language": "javascript",
+    "source": "typeof obj; void obj; delete obj.item; let yes = obj instanceof Thing; let found = \"x\" in obj; let item = new Thing(); for (const item of list) {}",
+    "tokens": [
+      {
+        "text": "typeof",
+        "start": 0,
+        "end": 6,
+        "color": "#56B6C2"
+      },
+      {
+        "text": "void",
+        "start": 12,
+        "end": 16,
+        "color": "#56B6C2"
+      },
+      {
+        "text": "delete",
+        "start": 22,
+        "end": 28,
+        "color": "#56B6C2"
+      },
+      {
+        "text": "instanceof",
+        "start": 53,
+        "end": 63,
+        "color": "#C678DD"
+      },
+      {
+        "text": "in",
+        "start": 87,
+        "end": 89,
+        "color": "#C678DD"
+      },
+      {
+        "text": "new",
+        "start": 106,
+        "end": 109,
+        "color": "#C678DD"
+      },
+      {
+        "text": "of",
+        "start": 135,
+        "end": 137,
+        "color": "#C678DD"
+      }
+    ]
+  },
+  {
+    "mode": "dark",
+    "language": "typescript",
+    "source": "typeof obj; void obj; delete obj.item; let yes = obj instanceof Thing; let found = \"x\" in obj; let item = new Thing(); for (const item of list) {}",
+    "tokens": [
+      {
+        "text": "typeof",
+        "start": 0,
+        "end": 6,
+        "color": "#56B6C2"
+      },
+      {
+        "text": "void",
+        "start": 12,
+        "end": 16,
+        "color": "#56B6C2"
+      },
+      {
+        "text": "delete",
+        "start": 22,
+        "end": 28,
+        "color": "#56B6C2"
+      },
+      {
+        "text": "instanceof",
+        "start": 53,
+        "end": 63,
+        "color": "#C678DD"
+      },
+      {
+        "text": "in",
+        "start": 87,
+        "end": 89,
+        "color": "#C678DD"
+      },
+      {
+        "text": "new",
+        "start": 106,
+        "end": 109,
+        "color": "#C678DD"
+      },
+      {
+        "text": "of",
+        "start": 135,
+        "end": 137,
+        "color": "#C678DD"
+      }
+    ]
+  },
+  {
+    "mode": "dark",
+    "language": "tsx",
+    "source": "typeof obj; void obj; delete obj.item; let yes = obj instanceof Thing; let found = \"x\" in obj; let item = new Thing(); for (const item of list) {}",
+    "tokens": [
+      {
+        "text": "typeof",
+        "start": 0,
+        "end": 6,
+        "color": "#56B6C2"
+      },
+      {
+        "text": "void",
+        "start": 12,
+        "end": 16,
+        "color": "#56B6C2"
+      },
+      {
+        "text": "delete",
+        "start": 22,
+        "end": 28,
+        "color": "#56B6C2"
+      },
+      {
+        "text": "instanceof",
+        "start": 53,
+        "end": 63,
+        "color": "#C678DD"
+      },
+      {
+        "text": "in",
+        "start": 87,
+        "end": 89,
+        "color": "#C678DD"
+      },
+      {
+        "text": "new",
+        "start": 106,
+        "end": 109,
+        "color": "#C678DD"
+      },
+      {
+        "text": "of",
+        "start": 135,
+        "end": 137,
+        "color": "#C678DD"
+      }
+    ]
+  }
+]

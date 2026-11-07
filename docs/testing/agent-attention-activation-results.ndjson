@@ -1,0 +1,26 @@
+{"case": "unrelated tab must retain unread completion", "result": "PASS", "actual": {"attention": true, "windows.1.panes.0.unread": true, "windows.1.panes.2.focused": true}}
+{"case": "view completed tab clears reminder", "result": "PASS", "actual": {"attention": false, "windows.1.panes.0.unread": false}}
+{"case": "manual unread restores actual terminal focus and retains done", "result": "PASS", "actual": {"attention": true, "windows.1.panes.0.unread": true, "windows.1.panes.0.focused": true}}
+{"case": "manual unread clears on first return", "result": "PASS", "actual": {"attention": false, "windows.1.panes.0.unread": false, "windows.1.panes.0.focused": true}}
+{"case": "watching focused Agent finish does not badge", "result": "PASS", "actual": {"attention": false, "windows.1.panes.0.unread": false}}
+{"case": "minimized selected Agent completion stays unread", "result": "PASS", "actual": {"attention": true, "windows.1.active": false, "windows.1.panes.0.focused": true, "windows.1.panes.0.unread": true}}
+{"case": "restoring selected result clears reminder", "result": "PASS", "actual": {"attention": false, "windows.1.active": true, "windows.1.panes.0.unread": false}}
+{"case": "other active window must not read source result", "result": "PASS", "actual": {"attention": true, "windows.0.active": true, "windows.1.panes.0.unread": true}}
+{"case": "return to source window reads its result", "result": "PASS", "actual": {"attention": false, "windows.1.panes.0.unread": false}}
+{"case": "two hidden results remain independently unread", "result": "PASS", "actual": {"attention": true, "windows.1.panes.0.unread": true, "windows.1.panes.1.unread": true}}
+{"case": "reading one result keeps reminder for the other", "result": "PASS", "actual": {"attention": true, "windows.1.panes.0.unread": false, "windows.1.panes.1.unread": true}}
+{"case": "last unread result clears aggregate reminder", "result": "PASS", "actual": {"attention": false, "windows.1.panes.0.unread": false, "windows.1.panes.1.unread": false}}
+{"case": "input wait retains attention even when result was read", "result": "PASS", "actual": {"attention": true, "windows.1.panes.1.status": "waiting"}}
+{"case": "viewing input wait does not dismiss input attention", "result": "PASS", "actual": {"attention": true, "windows.1.panes.1.focused": true, "windows.1.panes.1.status": "waiting"}}
+{"case": "resuming work clears input attention", "result": "PASS", "actual": {"attention": false}}
+{"case": "hidden result is unread before new work", "result": "PASS", "actual": {"attention": true, "windows.1.panes.0.unread": true}}
+{"case": "new work clears obsolete unread completion", "result": "PASS", "actual": {"attention": false, "windows.1.panes.0.unread": false}}
+{"case": "native taskbar proof after reading result", "result": "PASS", "actual": {"attention": false, "windows.1.panes.0.unread": false}}
+{"case": "both split panes remain unread before selection", "result": "PASS", "actual": {"attention": true, "windows.0.panes.0.unread": true, "windows.0.panes.1.unread": true}}
+{"case": "reading left split preserves right split unread", "result": "PASS", "actual": {"attention": true, "windows.0.panes.0.unread": false, "windows.0.panes.0.focused": true, "windows.0.panes.1.unread": true}}
+{"case": "viewing right split clears last reminder", "result": "PASS", "actual": {"attention": false, "windows.0.panes.1.unread": false, "windows.0.panes.1.focused": true}}
+{"case": "duplicate done report does not rebadge a read result", "result": "PASS", "actual": {"attention": false, "windows.0.panes.1.unread": false}}
+{"case": "top bar and disabled tray still retain taskbar attention", "result": "PASS", "actual": {"attention": true, "windows.1.panes.0.unread": true}}
+{"case": "top bar viewing clears taskbar attention with tray disabled", "result": "PASS", "actual": {"attention": false, "windows.1.panes.0.unread": false}}
+{"case": "top bar manual unread preserves reminder and returns focus", "result": "PASS", "actual": {"attention": true, "windows.1.panes.0.unread": true, "windows.1.panes.0.focused": true}}
+{"case": "top bar manual unread clears on first restore", "result": "PASS", "actual": {"attention": false, "windows.1.panes.0.unread": false}}

@@ -1,0 +1,81 @@
+{
+  "method": "Computer Use skill, @oai/sky.get_window_state",
+  "platform": "Windows / native GPUI",
+  "capture_date": "2026-10-10",
+  "logical_content_size": [
+    1200,
+    660
+  ],
+  "theme": "light",
+  "cases": [
+    "local shell",
+    "local Codex",
+    "local Claude Code",
+    "native SSH shell",
+    "terminal SSH with detected Codex",
+    "native SSH with detected Claude Code"
+  ],
+  "fixture": "Deterministic daemon messages over loopback. No live SSH connection.",
+  "composition": {
+    "top_crop": [
+      1,
+      30,
+      801,
+      70
+    ],
+    "sidebar_crop": [
+      1,
+      30,
+      261,
+      450
+    ],
+    "resized": false,
+    "labels": "Outside application pixels"
+  },
+  "captures": [
+    {
+      "file": "images/ssh-tabs-windows-before-top.png",
+      "revision": "90d9a3cb564c63824d15547eaef1f9a4aa4762b2",
+      "captured_at": "2026-10-09T17:00:22.961Z",
+      "fixture_overlay": "PR fixture with hold_seconds=90",
+      "sha256": "6da949336fa809773cb04aafcf3aa056ccd231a98c22c25f7eae7280612004fd",
+      "image_size": [
+        1202,
+        691
+      ]
+    },
+    {
+      "file": "images/ssh-tabs-windows-before-sidebar.png",
+      "revision": "90d9a3cb564c63824d15547eaef1f9a4aa4762b2",
+      "captured_at": "2026-10-09T17:01:21.101Z",
+      "fixture_overlay": "PR fixture with hold_seconds=90",
+      "sha256": "ac5463f06dfeac6ae75165561649cf5bbaad3fc685c4a17c6cbfa35d37ffc045",
+      "image_size": [
+        1202,
+        691
+      ]
+    },
+    {
+      "file": "images/ssh-tabs-windows-after-top.png",
+      "revision": "5a74d3064d36685210b7e133ed38284b9a5bbc47",
+      "captured_at": "2026-10-09T17:04:52.300Z",
+      "fixture_overlay": "Optional hold_seconds only; set to 180",
+      "sha256": "967636f734c513a3e1547c42484f8de6791d08638f9973141ae0449541bee4d2",
+      "image_size": [
+        1202,
+        691
+      ]
+    },
+    {
+      "file": "images/ssh-tabs-windows-after-sidebar.png",
+      "revision": "5a74d3064d36685210b7e133ed38284b9a5bbc47",
+      "captured_at": "2026-10-09T17:05:51.344Z",
+      "fixture_overlay": "Optional hold_seconds only; set to 180",
+      "sha256": "6ba319243016ffc4d429000826d7ad6503c619c794eb0f67807f9df642daa089",
+      "image_size": [
+        1202,
+        691
+      ]
+    }
+  ]
+}

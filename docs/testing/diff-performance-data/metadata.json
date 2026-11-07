@@ -1,0 +1,11 @@
+{
+  "ordering": "Three before/after process pairs per mode; no Cargo builds active during measurement.",
+  "cpu": "AMD Ryzen 7 5800H with Radeon Graphics",
+  "date": "2026-10-15",
+  "after_exe_sha256": "DEE20DBE06CB0E21881BD049E3796630533D4C00C5D5ABE986D6D2D0909A10EA",
+  "source_file_sha256": "FA7EE977B8A53E315B135AB413CA64962D468CD8C0BC12C4646A55AE1B79234B",
+  "baseline_commit": "90bc795c653f40f6d29d3fa9be932b7bf1af160a",
+  "os_version": "10.0.22000",
+  "before_exe_sha256": "A516A731D8F2B98E2275A2FF4D6AE821B709F8B6FCE5CCE47B39AC5232C43C38",
+  "rust": "rustc 1.97.1 (8bab26f4f 2026-07-14)"
+}

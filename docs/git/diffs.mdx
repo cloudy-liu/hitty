@@ -1,0 +1,107 @@
+---
+title: "Diffs"
+description: "The diff overlay: side-by-side or unified, from the sidebar or the panel."
+---
+
+## Opening one
+
+| From | How |
+|---|---|
+| The sidebar | Click a row's `+N −M` counts |
+| Source Control | **Open Changes** on a file, or click the row |
+| History | Click a file inside a commit's detail view |
+
+For a managed native SSH tab, sidebar counts and the opened diff belong to that
+pane's remote repository. Tracked changes, untracked previews, and expanded file
+context use its existing SSH connection. Changes made outside the app refresh
+while the tab is active; disconnecting clears stale remote results. This path
+is read-only. A manually nested `ssh` command does not supply remote Git routing.
+
+Commit documents keep diff actions beside fill/restore in the top document strip.
+Drag the separator between the message and diff to resize their independent
+scroll regions. Diff-only controls hide when an ordinary file is active.
+
+A diff docks beside the terminal, in the same column an open file uses, so the
+pane you were reading stays on screen. <kbd>Esc</kbd> closes it, and its header
+right-clicks to a menu that fills the window with it if you prefer that —
+[more about the column →](/window/side-panel#where-it-opens)
+
+<Frame caption="Placeholder — screenshot: the diff overlay, side-by-side, several files">
+  <img src="/images/placeholder.svg" alt="The tty7 diff overlay" />
+</Frame>
+
+## Side-by-side or unified
+
+**Toggle Unified / Side-by-Side Diff** in the command palette switches between
+the two. The choice is global — one setting for every diff, the same call VS
+Code's `diffEditor.renderSideBySide` makes — and persists as `diff_view` in
+`config.json`.
+
+## Full-file context
+
+The unfold icon beside a file's counts opens that file in place with all
+unchanged lines included. Other file cards stay visible, and expanding one
+does not move the review focus to another file. Additions, deletions and both
+versions' line numbers remain visible. The fold icon returns to changed
+regions. Hover or keyboard focus shows each icon's action; the controls have
+no persistent text labels.
+
+The focused file's toolbar also offers previous/next change arrows. Layout
+and context are independent: the existing unified/side-by-side button keeps
+the chosen context. Expanding, collapsing and changing layout preserve the
+source line being read when it remains available; collapsed context returns
+to the nearest retained line.
+
+At a gap, the up/down arrows reveal up to 20 more unchanged lines on that
+edge. A short gap uses one combined control to reveal all remaining lines.
+Each hunk header keeps its background across the full column as you scroll.
+The diff's background, text and borders follow the application theme;
+additions, deletions and hunk headers keep GitHub's light or dark colors.
+Full-file reads use the original worktree, index, commit or range
+comparison on the file's host. They do not read historical files from the
+current working tree. Only the selected file is fetched, with a 50,000-line
+retention limit and an explicit truncation notice. Binary files have no
+context toggle. A failed read keeps the compact diff available and shows an
+error.
+
+## Selecting and copying code
+
+File names in Diff headers are selectable too. Drag across the name and copy
+with <kbd>Ctrl</kbd>+<kbd>C</kbd> or <kbd>Cmd</kbd>+<kbd>C</kbd>; the same selection
+works in docked and expanded views without selecting the header's controls.
+
+Code can be selected at any character boundary, including across lines, and
+copied with <kbd>Ctrl</kbd>+<kbd>C</kbd> or <kbd>Cmd</kbd>+<kbd>C</kbd> on macOS.
+Right-click the code for **Copy** and **Select All**. In a side-by-side diff,
+the selection stays in the column where the drag started and within one file.
+
+Shift-click extends the selection. Double-click selects a word, triple-click
+selects a line, and Shift with the arrow keys, Home, or End adjusts the range.
+Dragging past the viewport scrolls the code to continue selecting.
+
+Copied text contains the original code, including tabs. Line numbers, diff
+markers, hunk headers, and empty padding cells are excluded. Switching view
+mode or changing the displayed code clears the selection.
+
+## What it shows
+
+- Every changed file, with its status and `+N −M`
+- **Untracked files** as a preview of their contents, up to 4 MB — past that the
+  card says the read failed rather than showing a silently cut-off file
+- A commit's files, when the diff came from the history
+
+Two limits keep a huge diff from becoming a huge wait:
+
+| Limit | Value | What happens |
+|---|---|---|
+| Files rendered | 300 | *"… and N more changed files — run git diff in the terminal to see them."* |
+| Lines before auto-collapse | 400 per file | Big files start collapsed; expand the ones you care about |
+
+Both are stated in the overlay when they apply — nothing is dropped silently.
+
+## Turning the sidebar shortcut off
+
+If you would rather the sidebar's counts not be clickable, turn off **Settings →
+Window & Tabs → Open diff preview from sidebar counts**
+(`sidebar_diff_preview: false`). The branch and counts stay on the row; they
+just stop opening the overlay.

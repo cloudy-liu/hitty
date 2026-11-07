@@ -1,0 +1,47 @@
+[
+  {
+    "name": "baseline-final-source",
+    "label": "Baseline f16436fa: HTML source, DirectComposition",
+    "webview_process_count": 0,
+    "private_working_set_mib": 37.42,
+    "working_set_mib": 127.71,
+    "private_committed_mib": 190.39,
+    "cpu_one_core_percent": 0
+  },
+  {
+    "name": "composition-source",
+    "label": "Final: HTML source, DirectComposition",
+    "webview_process_count": 0,
+    "private_working_set_mib": 37.03,
+    "working_set_mib": 119.64,
+    "private_committed_mib": 190.28,
+    "cpu_one_core_percent": 0
+  },
+  {
+    "name": "composition-active",
+    "label": "Final: active HTML preview, no CDP",
+    "webview_process_count": 6,
+    "private_working_set_mib": 163.62,
+    "working_set_mib": 481.61,
+    "private_committed_mib": 404.28,
+    "cpu_one_core_percent": 0
+  },
+  {
+    "name": "composition-repeated",
+    "label": "Final: refresh and report-to-next-to-report navigation",
+    "webview_process_count": 6,
+    "private_working_set_mib": 168.23,
+    "working_set_mib": 496.44,
+    "private_committed_mib": 421.71,
+    "cpu_one_core_percent": 0
+  },
+  {
+    "name": "composition-closed",
+    "label": "Final: closed HTML preview, source restored",
+    "webview_process_count": 0,
+    "private_working_set_mib": 37.4,
+    "working_set_mib": 125.5,
+    "private_committed_mib": 190.62,
+    "cpu_one_core_percent": 0
+  }
+]

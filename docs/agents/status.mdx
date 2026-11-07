@@ -1,0 +1,170 @@
+---
+title: "Status and notifications"
+description: "Installing the hooks, reading the status symbols, and being told when an agent needs you."
+---
+
+An agent working for two minutes and an agent that stopped ninety seconds ago
+waiting for permission look identical from outside. tty7 tells them apart two
+ways: the agent's hooks report what it is doing, and tty7 reads the agent's own
+screen the way [herdr](https://herdr.dev) does.
+
+## Installing the hooks
+
+**Settings → Agents** lists every agent that can report status, with an
+**Install** button beside each:
+
+| Agent | |
+|---|---|
+| Claude Code · Codex · Copilot CLI · OpenCode · Pi · Grok Build · Oh My Pi · Gemini · Droid · Qwen Code · Goose · Kimi Code · Qoder · Qoder CN · CodeBuddy | Hooks available |
+| Amp · Cursor · Hermes · Antigravity | No hook installer; status comes from the screen by default |
+| Aider · Auggie · Vibe | Detected and labelled, but no status channel yet |
+
+Installing writes into that agent's own configuration directory. Once installed
+the row grows a second **Uninstall** button beside the first, which itself
+becomes **Reinstall** — or **Update**, against an **Outdated** state, when tty7
+ships a newer hook.
+
+<Note>
+  The hooks only do anything inside tty7. Running the same agent in another
+  terminal is unaffected.
+</Note>
+
+Cursor Agent also imports compatible hooks from Claude settings. If tty7's
+Claude hooks are installed, Cursor's native hook payload keeps those events
+attributed to Cursor. It has no separate hook install button.
+
+Hooks are installed per machine. Once a second
+[machine](/remote/workspaces) is linked, a row of chips appears above the table
+to pick which one you are looking at, and the table then shows that machine's
+agents — so a dev box gets its hooks installed the same way, from the same
+screen.
+
+## Reading the screen
+
+Hooks only report what an agent chooses to announce. Codex's hooks, for one,
+never mention a permission prompt, and Cursor and Antigravity have no hooks to
+install. So tty7 also reads the bottom of each agent's pane with
+[herdr's detection manifests](https://herdr.dev/docs/agents/): per-agent rules
+that recognise a spinner, an approval prompt or an idle input box.
+
+The window also reads the agent's current terminal title and OSC 9;4 progress
+reports. Antigravity's live spinner can contain a thought summary, and its
+permission, question and project-trust dialogs are recognized as waiting for
+input. Background task counts alone do not keep Antigravity or Grok marked
+as working after the foreground turn returns to its prompt.
+
+Claude Code, Codex, Gemini, Amp, OpenCode, Copilot CLI, Cursor, Droid, Pi,
+Hermes, Antigravity, Grok Build, Qwen Code, Kimi Code and Qoder have
+manifests; Qoder's manifest also covers its China build. CodeBuddy has none,
+so its status comes from its hooks alone. When
+the screen shows clear evidence of a state, the screen wins; when it shows none,
+the hooks decide. The exception is Pi, Oh My Pi, Kimi Code and OpenCode, whose
+hooks cover the whole turn: once those report, they are trusted over the screen,
+as herdr trusts them. Codex's ready prompt is recognized as idle. When neither
+the screen nor a hook reports a state, the status stays unknown.
+
+The screen is read by the window showing the pane. `tty7 agents` and
+[`tty7 wait`](/agents/orchestration) still go by the hooks alone.
+
+## The status symbol
+
+Every tab chip and sidebar row carries herdr's status symbol, in herdr's
+colours:
+
+| Symbol | Meaning |
+|---|---|
+| **×** red | Blocked — a permission prompt, a question |
+| **◐** yellow | Working |
+| **✓** teal | Done with this turn, and you have not looked yet |
+| **○** green | Idle — waiting for your next prompt |
+| **·** grey | Status unknown — no hooks installed, and nothing on screen names a state |
+
+<Frame caption="Placeholder — screenshot: sidebar rows showing blocked, working, done and idle agents">
+  <img src="/images/placeholder.svg" alt="Agent status symbols" />
+</Frame>
+
+A finished turn keeps its check until you look at the pane, then reads as idle.
+
+The yellow working half-circle rotates clockwise once per second, in twelve
+steps, in both the sidebar and the top tab bar. Its background, the agent logo
+and the `run` text stay still. Other states keep their static symbols.
+
+Working badges share one refresh clock per window. Filtering them out,
+collapsing the sidebar or scrolling them out of view stops animation refreshes;
+showing them again resumes rotation. An unfocused visible window still animates.
+The current UI framework does not expose the system's reduced-motion preference,
+so this animation does not yet follow that preference.
+
+A sidebar row also shows a compact rounded tag at the start of its second line,
+using the same state colour with a stronger fill. Semibold text
+uses deeper ink in light themes. The labels stay lowercase and in
+English whatever the interface language:
+
+| Tag | Meaning |
+|---|---|
+| **idle** | Waiting for your next prompt, or a finished result you have read |
+| **run** | Working on a turn |
+| **input** | Needs your reply or permission |
+| **done** | Finished this turn, with an unread result |
+
+A gap separates the tag from the branch or working directory. Unknown status
+adds no tag; the tab avatar keeps its grey status symbol and hover explanation.
+Turn tags off with **Settings → Window & Tabs → Show agent status text in sidebar**
+(`sidebar_agent_status_text: false`) to keep only the avatar's status symbol.
+
+The hooks' three turn states are what `tty7 agents` reports as `working` /
+`waiting` / `done`, and what [`tty7 wait`](/agents/orchestration) blocks on.
+
+## Notifications
+
+Agent alerts follow the same observed states as the pane's status marks:
+
+- Entering **input** produces an alert when the Agent needs your reply or permission.
+- Entering **done** produces an alert when a live turn finishes.
+
+Open **Settings → Window & Tabs → Notifications** to control desktop
+notifications and Agent notification sound independently. Each offers
+**Never**, **When unfocused**, and **Always**. Both default to **When unfocused**:
+if any tty7 window is active, including a separate settings window, Agent
+alerts stay quiet. Existing desktop notification preferences survive upgrades.
+
+Sounds use the bundled Codex Default WAV on Windows, macOS and Linux. You can
+enable sound without desktop banners, enable banners without sound, enable
+both, or disable both. **Preview** plays the sound even while the app is focused
+or automatic sound is disabled. Agent banners are silent so they do not add a
+second notification sound.
+
+Alerts cover states reported by hooks and states detected on an Agent's screen.
+Repeated observations stay quiet, restored sessions do not replay old alerts,
+and simultaneous events do not queue or overlap sounds. Playing a sound keeps
+the result's unread **done** mark until you view it. Normal command completion
+and terminal BEL use their separate existing rules.
+
+Linux playback needs a running PulseAudio server or PipeWire's PulseAudio
+compatibility service. See [installation requirements](/getting-started/installation#building-from-source).
+
+## The tray icon
+
+tty7 keeps a status item in the system tray (menu bar on macOS). It flips to an
+attention state the moment *any* agent anywhere needs input, so you can see it
+without the window in front of you.
+
+Its menu lists every agent pane with its brand avatar and status symbol — click one
+to reveal it — and also holds the notification policy switch and **Quit and Stop
+Server…**.
+
+Turn it off with **Settings → Window & Tabs → Show tray icon**
+(`show_tray_icon: false`).
+
+## Sending an agent some context
+
+Two command-palette entries hand what is in front of you to the agent running in
+the pane, as a ready-made prompt:
+
+| Command | Sends |
+|---|---|
+| **Agent: Send Selection** | The current terminal selection |
+| **Agent: Send Git Diff for Review** | The repository's `git diff` |
+
+If nothing recognisable is running, tty7 says *"No running coding agent found"*
+rather than typing into your shell.

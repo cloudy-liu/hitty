@@ -1,0 +1,149 @@
+diff --git a/src/document_visual.rs b/src/document_visual.rs
+index 53163ad0..89dda6b0 100644
+--- a/src/document_visual.rs
++++ b/src/document_visual.rs
+@@ -48,6 +48,14 @@ struct Options {
+     #[serde(default)]
+     readme: bool,
+     #[serde(default)]
++    history: bool,
++    #[serde(default)]
++    history_width: Option<f32>,
++    #[serde(default)]
++    history_height: Option<f32>,
++    #[serde(default)]
++    history_profile: bool,
++    #[serde(default)]
+     hover_at: Option<[f32; 2]>,
+     #[serde(default)]
+     assert_native_clear: Option<[f32; 2]>,
+@@ -131,6 +139,13 @@ pub(crate) fn run(path: &std::ffi::OsStr) {
+             } else {
+                 DocumentLayout::Fill
+             };
++            if options.history {
++                config.right_panel_visible = true;
++                config.right_panel_tab = RightPanelTab::Scm;
++                config.scm_graph_expanded = true;
++                config.right_panel_width = options.history_width.unwrap_or(320.);
++                config.sidebar_width = 210.;
++            }
+             if options.readme {
+                 config.sidebar_width = 278.;
+                 config.sidebar_grouping = SidebarGrouping::RepoOrDirectory;
+@@ -154,6 +169,9 @@ pub(crate) fn run(path: &std::ffi::OsStr) {
+                 config.sidebar_collapsed_groups.insert(archive);
+             }
+             cx.set_global(config);
++            if options.history {
++                crate::core::http::init(cx, None).expect("history image client");
++            }
+             cx.set_global(FillTarget::default());
+             WorkspaceStore::init(cx);
+             WindowRegistry::init(cx);
+@@ -197,6 +215,18 @@ pub(crate) fn run(path: &std::ffi::OsStr) {
+                                 .unwrap()
+                                 .roots
+                                 .push(options.root.clone());
++                            if options.history {
++                                app.scm.repo_override = Some(crate::ui::scm::state::RepoKey {
++                                    host: crate::ui::host_ops::HostId::LOCAL,
++                                    root: options.root.clone(),
++                                });
++                                app.scm.override_tab = Some(app.active);
++                                app.scm.graph.expanded = true;
++                                app.scm.graph.height.set(options.history_height.unwrap_or(400.));
++                                if options.history_profile {
++                                    app.scm.graph.requested = 5_000;
++                                }
++                            }
+                             cx.notify();
+                         });
+                         owner = Some(app.clone());
+@@ -382,9 +412,62 @@ pub(crate) fn run(path: &std::ffi::OsStr) {
+                     }
+                     cx.background_executor().timer(Duration::from_millis(250)).await;
+                 }
++                if options.history {
++                    let deadline = Instant::now() + Duration::from_secs(30);
++                    while app.read_with(cx, |app, _| app.scm.graph.page.is_none()) {
++                        assert!(Instant::now() < deadline, "history did not finish loading");
++                        cx.background_executor().timer(Duration::from_millis(50)).await;
++                    }
++                    cx.background_executor().timer(Duration::from_millis(500)).await;
++                }
++                let history_profile = if options.history_profile {
++                    let mut samples = Vec::new();
++                    let mut min_offset = 0_f32;
++                    for frame in 0..140 {
++                        let elapsed = cx.update_window(handle.into(), |_, window, cx| {
++                            let viewport = window.viewport_size();
++                            let started = Instant::now();
++                            window.dispatch_event(PlatformInput::ScrollWheel(ScrollWheelEvent {
++                                position: point(
++                                    viewport.width - px(options.history_width.unwrap_or(320.) / 2.),
++                                    viewport.height - px(160.),
++                                ),
++                                delta: ScrollDelta::Pixels(point(px(0.), px(if frame < 80 { -120. } else { 120. }))),
++                                ..Default::default()
++                            }), cx);
++                            window.refresh();
++                            let _ = window.draw(cx);
++                            min_offset = min_offset.min(app.read(cx).scm.graph.scroll.offset().y.as_f32());
++                            started.elapsed().as_secs_f64() * 1000.
++                        }).unwrap();
++                        if frame >= 20 {
++                            samples.push(elapsed);
++                        }
++                    }
++                    assert!(min_offset < -500., "profile must scroll the real History list");
++                    samples.sort_by(f64::total_cmp);
++                    let result = serde_json::json!({
++                        "scroll_samples": samples.len(),
++                        "scroll_cpu_median_ms": samples[samples.len() / 2],
++                        "scroll_cpu_p95_ms": samples[samples.len() * 95 / 100],
++                        "scroll_cpu_max_ms": samples[samples.len() - 1],
++                        "min_scroll_offset": min_offset,
++                        "measurement": "native event dispatch and GPUI CPU layout/prepaint/paint; excludes GPU execution and presentation",
++                        "warmup_frames": 20,
++                        "scroll_step_px": 120,
++                    });
++                    eprintln!("NATIVE_HISTORY_PROFILE {result}");
++                    Some(result)
++                } else {
++                    None
++                };
+                 let evidence = cx
+                     .update_window(handle.into(), |_, window, cx| {
+-                        window.set_window_title("ctty7 document acceptance");
++                        window.set_window_title(if options.history {
++                            "ctty7 Git History acceptance"
++                        } else {
++                            "ctty7 document acceptance"
++                        });
+                         window.refresh();
+                         let _ = window.draw(cx);
+                         #[cfg(windows)]
+@@ -435,15 +518,20 @@ pub(crate) fn run(path: &std::ffi::OsStr) {
+                         };
+                         serde_json::json!({
+                             "ready": true,
+-                            "title": "ctty7 document acceptance",
++                            "title": if options.history { "ctty7 Git History acceptance" } else { "ctty7 document acceptance" },
+                             "os": std::env::consts::OS,
+                             "scale_factor": window.scale_factor(),
+                             "width": f32::from(window.viewport_size().width),
+                             "height": f32::from(window.viewport_size().height),
+                             "dark": options.dark,
+                             "dock": options.dock,
+-                            "right_panel": options.right_panel,
++                            "right_panel": options.right_panel || options.history,
+                             "readme": options.readme,
++                            "history": options.history,
++                            "history_width": options.history_width,
++                            "history_height": options.history_height,
++                            "history_profile": history_profile,
++                            "history_commits": app.read(cx).scm.graph.page.as_ref().map(|p| p.commits.len()),
+                             "files": files,
+                             "active": file.path,
+                             "preview": file.preview,

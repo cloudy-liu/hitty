@@ -1,0 +1,114 @@
+{
+  "platform": "Windows",
+  "scale_factor": 1.75,
+  "viewport": [
+    1000,
+    660
+  ],
+  "theme": "built-in dark",
+  "method": "LCU Alt+Print; clipboard image exported as PNG without cropping or retouching",
+  "before_source": "9e8d1661 (v0.9.0) with the same document fixture options overlay and an inert workspace avatar debug selector",
+  "after_source": "PR236: 13px titles and leading icon alignment",
+  "binaries": {
+    "before": {
+      "sha256": "072ab4014417692b5c184dcf5b0c32a9b675cd053a030862bf3c272eb72ae7b2"
+    },
+    "after": {
+      "sha256": "f61dc44a8b15d7a761a0052df73a13b2dacb96af2ee90e46764134e699e6d268"
+    }
+  },
+  "scenes": {
+    "folder": {
+      "arrows": false,
+      "folders": true,
+      "sidebar_width": 260,
+      "captures": {
+        "before": {
+          "path": "before-folder.png",
+          "size": [
+            1754,
+            1157
+          ],
+          "sha256": "72a9195fe2d3f9087665b89534d493e554757383f22c57bd8be77e295f309054"
+        },
+        "after": {
+          "path": "after-folder.png",
+          "size": [
+            1754,
+            1157
+          ],
+          "sha256": "ba5cfb2c4ad9dee11842ab47e343096d02265205c158caed510e6169f92195b3"
+        }
+      }
+    },
+    "arrow": {
+      "arrows": true,
+      "folders": false,
+      "sidebar_width": 260,
+      "captures": {
+        "before": {
+          "path": "before-arrow.png",
+          "size": [
+            1754,
+            1157
+          ],
+          "sha256": "7018becb68da26850280419f974f3f2b4a91d53cf049609f4047b69ba1b1865f"
+        },
+        "after": {
+          "path": "after-arrow.png",
+          "size": [
+            1754,
+            1157
+          ],
+          "sha256": "ab5b6759ab16cd568826bf0f8d29fc762bd4b70ebd943d4d4b813341326749b1"
+        }
+      }
+    },
+    "both": {
+      "arrows": true,
+      "folders": true,
+      "sidebar_width": 260,
+      "captures": {
+        "before": {
+          "path": "before-both.png",
+          "size": [
+            1754,
+            1157
+          ],
+          "sha256": "384d72c1c575d0d30173b2475a295b09d80de8692d6edb0ad56cf2f5b4e60ba1"
+        },
+        "after": {
+          "path": "after-both.png",
+          "size": [
+            1754,
+            1157
+          ],
+          "sha256": "6306bd682cb235609a7acf79d66ed4b34b71a0dfbe2b13ef3a0497039dbec8b5"
+        }
+      }
+    },
+    "narrow": {
+      "arrows": false,
+      "folders": true,
+      "sidebar_width": 180,
+      "captures": {
+        "before": {
+          "path": "before-narrow.png",
+          "size": [
+            1754,
+            1157
+          ],
+          "sha256": "4b363b67a0ca8b7bf9a8781b1cc80aa1b5bdd266d9cb1759c68e6e51ee73528c"
+        },
+        "after": {
+          "path": "after-narrow.png",
+          "size": [
+            1754,
+            1157
+          ],
+          "sha256": "e55bf020a829ef9ade68b950b9161bbb79d3873d6e07690a28889136aa07f06a"
+        }
+      }
+    }
+  }
+}

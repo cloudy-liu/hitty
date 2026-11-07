@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="164" viewBox="0 0 640 164" role="img" aria-labelledby="title desc">
+  <title id="title">Scratch group inbox icon prototype</title>
+  <desc id="desc">Dark sidebar headers showing a project folder and the Scratch inbox glyph at the same size.</desc>
+  <rect width="640" height="164" fill="#141518"/>
+  <g font-family="Segoe UI, Inter, system-ui, sans-serif" font-size="16" font-weight="500" fill="#a1a8c5">
+    <rect x="20" y="18" width="600" height="56" rx="7" fill="#242633" stroke="#343746"/>
+    <path d="m43 38 5 5-5 5" fill="none" stroke="#9298b7" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+    <g transform="translate(65 39) scale(.54)" fill="none" stroke="#9298b7" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M3.4 7.2A2.8 2.8 0 0 1 6.2 4.4h3a2.8 2.8 0 0 1 2.24 1.12l.74.99a1.7 1.7 0 0 0 1.36.69h4.26a2.8 2.8 0 0 1 2.8 2.8v6.8a2.8 2.8 0 0 1-2.8 2.8H6.2a2.8 2.8 0 0 1-2.8-2.8Z"/>
+    </g>
+    <text x="91" y="53">ctty7</text>
+
+    <rect x="20" y="90" width="600" height="56" rx="7" fill="#242633" stroke="#343746"/>
+    <path d="m43 110 5 5-5 5" fill="none" stroke="#9298b7" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+    <g transform="translate(65 111) scale(.54)" fill="none" stroke="#9298b7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/>
+      <path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/>
+    </g>
+    <text x="91" y="125">Scratch 1</text>
+  </g>
+  <text x="540" y="157" text-anchor="end" font-family="Segoe UI, Inter, system-ui, sans-serif" font-size="10" fill="#777e9c">folder 13px · inbox 13px</text>
+</svg>

@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Questions & ideas
+    url: https://github.com/cloudy-liu/ctty7/issues
+    about: Ask ctty7 usage questions and suggest improvements in this repository.
+  - name: Security vulnerabilities
+    url: https://github.com/cloudy-liu/ctty7/security/advisories/new
+    about: Please report security issues privately, not as public issues.

@@ -1,0 +1,735 @@
+[
+  {
+    "mode": "light",
+    "language": "python",
+    "source": "import json\nfrom pathlib import Path\nDEST = Path(__file__).parent\ndef main(root: Path, count=2):\n    version = json.loads(root.read_text())\n    return len(version) + count\n",
+    "tokens": [
+      {
+        "text": "import",
+        "start": 0,
+        "end": 6,
+        "color": "#CF222E"
+      },
+      {
+        "text": "json",
+        "start": 7,
+        "end": 11,
+        "color": "#1F2328"
+      },
+      {
+        "text": "main",
+        "start": 70,
+        "end": 74,
+        "color": "#6639BA"
+      },
+      {
+        "text": "2",
+        "start": 93,
+        "end": 94,
+        "color": "#0550AE"
+      },
+      {
+        "text": "__file__",
+        "start": 49,
+        "end": 57,
+        "color": "#0550AE"
+      }
+    ]
+  },
+  {
+    "mode": "light",
+    "language": "javascript",
+    "source": "const root = obj.parent + 2;\nfunction main(arg) { return arg + root; }\nconst [item] = list;\nconst text = `${root}`;\n",
+    "tokens": [
+      {
+        "text": "const",
+        "start": 0,
+        "end": 5,
+        "color": "#CF222E"
+      },
+      {
+        "text": "obj",
+        "start": 13,
+        "end": 16,
+        "color": "#1F2328"
+      },
+      {
+        "text": "parent",
+        "start": 17,
+        "end": 23,
+        "color": "#953800"
+      },
+      {
+        "text": "2",
+        "start": 26,
+        "end": 27,
+        "color": "#0550AE"
+      },
+      {
+        "text": "main",
+        "start": 38,
+        "end": 42,
+        "color": "#6639BA"
+      }
+    ]
+  },
+  {
+    "mode": "light",
+    "language": "typescript",
+    "source": "const root: string = obj.parent + 2;\nfunction main(arg: number): string { return String(arg); }\nconst [item] = list;\n",
+    "tokens": [
+      {
+        "text": "const",
+        "start": 0,
+        "end": 5,
+        "color": "#CF222E"
+      },
+      {
+        "text": "string",
+        "start": 12,
+        "end": 18,
+        "color": "#0550AE"
+      },
+      {
+        "text": "obj",
+        "start": 21,
+        "end": 24,
+        "color": "#1F2328"
+      },
+      {
+        "text": "main",
+        "start": 46,
+        "end": 50,
+        "color": "#6639BA"
+      }
+    ]
+  },
+  {
+    "mode": "light",
+    "language": "json",
+    "source": "{\"name\": \"ok\", \"active\": true, \"empty\": null, \"count\": 2}",
+    "tokens": [
+      {
+        "text": "true",
+        "start": 25,
+        "end": 29,
+        "color": "#0550AE"
+      },
+      {
+        "text": "null",
+        "start": 40,
+        "end": 44,
+        "color": "#0550AE"
+      },
+      {
+        "text": "ok",
+        "start": 10,
+        "end": 12,
+        "color": "#0A3069"
+      },
+      {
+        "text": "2",
+        "start": 55,
+        "end": 56,
+        "color": "#0550AE"
+      }
+    ]
+  },
+  {
+    "mode": "light",
+    "language": "rust",
+    "source": "use std::path::Path;\nfn main<'a>(root: &'a Path) { let item = root.parent(); }\n",
+    "tokens": [
+      {
+        "text": "use",
+        "start": 0,
+        "end": 3,
+        "color": "#CF222E"
+      },
+      {
+        "text": "std",
+        "start": 4,
+        "end": 7,
+        "color": "#1F2328"
+      },
+      {
+        "text": "Path",
+        "start": 15,
+        "end": 19,
+        "color": "#1F2328"
+      },
+      {
+        "text": "main",
+        "start": 24,
+        "end": 28,
+        "color": "#6639BA"
+      },
+      {
+        "text": "item",
+        "start": 55,
+        "end": 59,
+        "color": "#1F2328"
+      }
+    ]
+  },
+  {
+    "mode": "light",
+    "language": "css",
+    "source": ".item { color: red; margin: 2px; display: block; }",
+    "tokens": [
+      {
+        "text": "color",
+        "start": 8,
+        "end": 13,
+        "color": "#0550AE"
+      },
+      {
+        "text": "2",
+        "start": 28,
+        "end": 29,
+        "color": "#0550AE"
+      },
+      {
+        "text": "px",
+        "start": 29,
+        "end": 31,
+        "color": "#0550AE"
+      }
+    ]
+  },
+  {
+    "mode": "light",
+    "language": "java",
+    "source": "import java.nio.Path;\nclass Main { int value = 2; void main(String arg) { System.out.println(arg); } }",
+    "tokens": [
+      {
+        "text": "class",
+        "start": 22,
+        "end": 27,
+        "color": "#CF222E"
+      },
+      {
+        "text": "Main",
+        "start": 28,
+        "end": 32,
+        "color": "#953800"
+      },
+      {
+        "text": "int",
+        "start": 35,
+        "end": 38,
+        "color": "#CF222E"
+      },
+      {
+        "text": "main",
+        "start": 55,
+        "end": 59,
+        "color": "#6639BA"
+      },
+      {
+        "text": "2",
+        "start": 47,
+        "end": 48,
+        "color": "#0550AE"
+      }
+    ]
+  },
+  {
+    "mode": "light",
+    "language": "c",
+    "source": "int main(int arg) { int value = arg + 2; return value; }",
+    "tokens": [
+      {
+        "text": "int",
+        "start": 0,
+        "end": 3,
+        "color": "#CF222E"
+      },
+      {
+        "text": "main",
+        "start": 4,
+        "end": 8,
+        "color": "#6639BA"
+      },
+      {
+        "text": "return",
+        "start": 41,
+        "end": 47,
+        "color": "#CF222E"
+      },
+      {
+        "text": "2",
+        "start": 38,
+        "end": 39,
+        "color": "#0550AE"
+      }
+    ]
+  },
+  {
+    "mode": "light",
+    "language": "cpp",
+    "source": "class Main { int value; };\nint main(int arg) { Main item; return arg + 2; }",
+    "tokens": [
+      {
+        "text": "class",
+        "start": 0,
+        "end": 5,
+        "color": "#CF222E"
+      },
+      {
+        "text": "int",
+        "start": 13,
+        "end": 16,
+        "color": "#CF222E"
+      },
+      {
+        "text": "main",
+        "start": 31,
+        "end": 35,
+        "color": "#6639BA"
+      },
+      {
+        "text": "2",
+        "start": 71,
+        "end": 72,
+        "color": "#0550AE"
+      }
+    ]
+  },
+  {
+    "mode": "light",
+    "language": "go",
+    "source": "package main\nfunc main() { value := 2; fmt.Println(value) }",
+    "tokens": [
+      {
+        "text": "package",
+        "start": 0,
+        "end": 7,
+        "color": "#CF222E"
+      },
+      {
+        "text": "func",
+        "start": 13,
+        "end": 17,
+        "color": "#CF222E"
+      },
+      {
+        "text": "Println",
+        "start": 43,
+        "end": 50,
+        "color": "#6639BA"
+      },
+      {
+        "text": "2",
+        "start": 36,
+        "end": 37,
+        "color": "#0550AE"
+      }
+    ]
+  },
+  {
+    "mode": "light",
+    "language": "ruby",
+    "source": "class Main\n def main(arg)\n   value = arg + 2\n   puts value\n end\nend",
+    "tokens": [
+      {
+        "text": "class",
+        "start": 0,
+        "end": 5,
+        "color": "#CF222E"
+      },
+      {
+        "text": "Main",
+        "start": 6,
+        "end": 10,
+        "color": "#953800"
+      },
+      {
+        "text": "def",
+        "start": 12,
+        "end": 15,
+        "color": "#CF222E"
+      },
+      {
+        "text": "main",
+        "start": 16,
+        "end": 20,
+        "color": "#6639BA"
+      },
+      {
+        "text": "2",
+        "start": 43,
+        "end": 44,
+        "color": "#0550AE"
+      }
+    ]
+  },
+  {
+    "mode": "light",
+    "language": "bash",
+    "source": "value=\"ok\"\necho \"$value\" ${HOME}\n",
+    "tokens": [
+      {
+        "text": "value",
+        "start": 0,
+        "end": 5,
+        "color": "#953800"
+      },
+      {
+        "text": "ok",
+        "start": 7,
+        "end": 9,
+        "color": "#0A3069"
+      },
+      {
+        "text": "echo",
+        "start": 11,
+        "end": 15,
+        "color": "#6639BA"
+      }
+    ]
+  },
+  {
+    "mode": "light",
+    "language": "html",
+    "source": "<div id=\"main\" class=\"item\">hello</div>",
+    "tokens": [
+      {
+        "text": "div",
+        "start": 1,
+        "end": 4,
+        "color": "#0550AE"
+      },
+      {
+        "text": "id",
+        "start": 5,
+        "end": 7,
+        "color": "#0550AE"
+      },
+      {
+        "text": "main",
+        "start": 9,
+        "end": 13,
+        "color": "#0A3069"
+      },
+      {
+        "text": "hello",
+        "start": 28,
+        "end": 33,
+        "color": "#1F2328"
+      }
+    ]
+  },
+  {
+    "mode": "light",
+    "language": "yaml",
+    "source": "name: ok\nactive: true\ncount: 2\n",
+    "tokens": [
+      {
+        "text": "name",
+        "start": 0,
+        "end": 4,
+        "color": "#953800"
+      },
+      {
+        "text": "ok",
+        "start": 6,
+        "end": 8,
+        "color": "#0A3069"
+      },
+      {
+        "text": "true",
+        "start": 17,
+        "end": 21,
+        "color": "#0550AE"
+      },
+      {
+        "text": "2",
+        "start": 29,
+        "end": 30,
+        "color": "#0550AE"
+      }
+    ]
+  },
+  {
+    "mode": "light",
+    "language": "markdown",
+    "source": "# Heading\n\n**bold** and *italic* [link](https://example.org)\n\n- item\n\n```rust\nlet value = 2;\n```\n",
+    "tokens": [
+      {
+        "text": "#",
+        "start": 0,
+        "end": 1,
+        "color": "#0550AE"
+      },
+      {
+        "text": "Heading",
+        "start": 2,
+        "end": 9,
+        "color": "#0550AE"
+      },
+      {
+        "text": "bold",
+        "start": 13,
+        "end": 17,
+        "color": "#1F2328"
+      },
+      {
+        "text": "italic",
+        "start": 25,
+        "end": 31,
+        "color": "#1F2328"
+      },
+      {
+        "text": "link",
+        "start": 34,
+        "end": 38,
+        "color": "#0969DA"
+      }
+    ]
+  },
+  {
+    "mode": "light",
+    "language": "diff",
+    "source": "diff --git a/x b/x\n--- a/x\n+++ b/x\n@@ -1 +1 @@\n-old\n+new\n",
+    "tokens": [
+      {
+        "text": "old",
+        "start": 48,
+        "end": 51,
+        "color": "#82071E"
+      },
+      {
+        "text": "new",
+        "start": 53,
+        "end": 56,
+        "color": "#116329"
+      }
+    ]
+  },
+  {
+    "mode": "light",
+    "language": "sql",
+    "source": "SELECT name FROM users WHERE active = true AND count > 2;",
+    "tokens": [
+      {
+        "text": "SELECT",
+        "start": 0,
+        "end": 6,
+        "color": "#CF222E"
+      },
+      {
+        "text": "FROM",
+        "start": 12,
+        "end": 16,
+        "color": "#CF222E"
+      },
+      {
+        "text": "WHERE",
+        "start": 23,
+        "end": 28,
+        "color": "#CF222E"
+      },
+      {
+        "text": "2",
+        "start": 55,
+        "end": 56,
+        "color": "#0550AE"
+      }
+    ]
+  },
+  {
+    "mode": "light",
+    "language": "lua",
+    "source": "local root = \"ok\"\nfunction main(arg)\n  return root .. arg\nend\n",
+    "tokens": [
+      {
+        "text": "local",
+        "start": 0,
+        "end": 5,
+        "color": "#CF222E"
+      },
+      {
+        "text": "root",
+        "start": 6,
+        "end": 10,
+        "color": "#953800"
+      },
+      {
+        "text": "ok",
+        "start": 14,
+        "end": 16,
+        "color": "#0A3069"
+      },
+      {
+        "text": "main",
+        "start": 27,
+        "end": 31,
+        "color": "#6639BA"
+      }
+    ]
+  },
+  {
+    "mode": "light",
+    "language": "make",
+    "source": "NAME = value\nall: main.o\n\tgcc -o main main.o\n",
+    "tokens": [
+      {
+        "text": "NAME",
+        "start": 0,
+        "end": 4,
+        "color": "#953800"
+      },
+      {
+        "text": "all",
+        "start": 13,
+        "end": 16,
+        "color": "#6639BA"
+      }
+    ]
+  },
+  {
+    "mode": "light",
+    "language": "toml",
+    "source": "name = \"ok\"\nactive = true\ncount = 2\n",
+    "tokens": [
+      {
+        "text": "name",
+        "start": 0,
+        "end": 4,
+        "color": "#0550AE"
+      },
+      {
+        "text": "ok",
+        "start": 8,
+        "end": 10,
+        "color": "#0A3069"
+      },
+      {
+        "text": "true",
+        "start": 21,
+        "end": 25,
+        "color": "#0550AE"
+      },
+      {
+        "text": "2",
+        "start": 34,
+        "end": 35,
+        "color": "#0550AE"
+      }
+    ]
+  },
+  {
+    "mode": "light",
+    "language": "tsx",
+    "source": "typeof obj; void obj; delete obj.item; let yes = obj instanceof Thing; let found = \"x\" in obj; let item = new Thing(); for (const item of list) {}",
+    "tokens": [
+      {
+        "text": "typeof",
+        "start": 0,
+        "end": 6,
+        "color": "#CF222E"
+      },
+      {
+        "text": "void",
+        "start": 12,
+        "end": 16,
+        "color": "#CF222E"
+      },
+      {
+        "text": "instanceof",
+        "start": 53,
+        "end": 63,
+        "color": "#CF222E"
+      }
+    ]
+  },
+  {
+    "mode": "light",
+    "language": "javascript",
+    "source": "// comment\nfunction greet() { return \"hello\"; }\n",
+    "tokens": [
+      {
+        "text": "// comment",
+        "start": 0,
+        "end": 10,
+        "color": "#59636E"
+      },
+      {
+        "text": "hello",
+        "start": 38,
+        "end": 43,
+        "color": "#0A3069"
+      }
+    ]
+  },
+  {
+    "mode": "light",
+    "language": "rust",
+    "source": "// Reading a file can itself emit an event on Linux.\n/* block comment */\n/// Documentation comment\n/** Block documentation */\nfn main() {}\n",
+    "tokens": [
+      {
+        "text": "// Reading a file can itself emit an event on Linux.",
+        "start": 0,
+        "end": 52,
+        "color": "#59636E"
+      },
+      {
+        "text": "/* block comment */",
+        "start": 53,
+        "end": 72,
+        "color": "#59636E"
+      },
+      {
+        "text": "/// Documentation comment",
+        "start": 73,
+        "end": 98,
+        "color": "#59636E"
+      },
+      {
+        "text": "/** Block documentation */",
+        "start": 99,
+        "end": 125,
+        "color": "#59636E"
+      }
+    ]
+  },
+  {
+    "mode": "light",
+    "language": "javascript",
+    "source": "// line comment\n/* block comment */\n/** Documentation comment */\nfunction main() {}\n",
+    "tokens": [
+      {
+        "text": "// line comment",
+        "start": 0,
+        "end": 15,
+        "color": "#59636E"
+      },
+      {
+        "text": "/* block comment */",
+        "start": 16,
+        "end": 35,
+        "color": "#59636E"
+      },
+      {
+        "text": "/** Documentation comment */",
+        "start": 36,
+        "end": 64,
+        "color": "#59636E"
+      }
+    ]
+  },
+  {
+    "mode": "light",
+    "language": "python",
+    "source": "# line comment\ndef main():\n    pass\n",
+    "tokens": [
+      {
+        "text": "# line comment",
+        "start": 0,
+        "end": 14,
+        "color": "#59636E"
+      }
+    ]
+  }
+]

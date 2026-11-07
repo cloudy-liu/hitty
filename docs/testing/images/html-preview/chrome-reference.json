@@ -1,0 +1,134 @@
+{
+  "url": "file:///D:/gh-prj/ctty7-html-preview/tests/fixtures/html-preview/report.html",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36",
+  "viewport": {
+    "width": 961,
+    "height": 835,
+    "dpr": 1.75
+  },
+  "resources": "All loaded",
+  "clicks": "0",
+  "imageLoaded": true,
+  "elements": {
+    "main": {
+      "x": 60.57143020629883,
+      "y": 0,
+      "width": 840.0000610351562,
+      "height": 721.0089721679688,
+      "font": "16px \"Segoe UI\", sans-serif",
+      "color": "rgb(25, 56, 43)",
+      "background": "rgba(0, 0, 0, 0)",
+      "display": "block"
+    },
+    "header": {
+      "x": 96.5714340209961,
+      "y": 40,
+      "width": 768.0000610351562,
+      "height": 183.9107208251953,
+      "font": "16px \"Segoe UI\", sans-serif",
+      "color": "rgb(25, 56, 43)",
+      "background": "rgba(0, 0, 0, 0)",
+      "display": "block"
+    },
+    "h1": {
+      "x": 96.5714340209961,
+      "y": 77.14286041259766,
+      "width": 768.0000610351562,
+      "height": 84.5714340209961,
+      "font": "700 38.4457px / 42.2903px \"Segoe UI\", sans-serif",
+      "color": "rgb(25, 56, 43)",
+      "background": "rgba(0, 0, 0, 0)",
+      "display": "block"
+    },
+    "p": {
+      "x": 96.5714340209961,
+      "y": 177.71429443359375,
+      "width": 590,
+      "height": 46.19643020629883,
+      "font": "14px / 23.1px \"Segoe UI\", sans-serif",
+      "color": "rgb(96, 121, 109)",
+      "background": "rgba(0, 0, 0, 0)",
+      "display": "block"
+    },
+    ".metrics": {
+      "x": 96.5714340209961,
+      "y": 250.9107208251953,
+      "width": 768.0000610351562,
+      "height": 114.00000762939453,
+      "font": "16px \"Segoe UI\", sans-serif",
+      "color": "rgb(25, 56, 43)",
+      "background": "rgba(0, 0, 0, 0)",
+      "display": "grid"
+    },
+    ".metrics article": {
+      "x": 96.5714340209961,
+      "y": 250.9107208251953,
+      "width": 376.5000305175781,
+      "height": 114.00000762939453,
+      "font": "16px \"Segoe UI\", sans-serif",
+      "color": "rgb(25, 56, 43)",
+      "background": "rgb(255, 255, 255)",
+      "display": "flex"
+    },
+    "#resources": {
+      "x": 508.64288330078125,
+      "y": 292.4821472167969,
+      "width": 335.3571472167969,
+      "height": 32,
+      "font": "700 24px \"Segoe UI\", sans-serif",
+      "color": "rgb(25, 56, 43)",
+      "background": "rgba(0, 0, 0, 0)",
+      "display": "block"
+    },
+    ".interactive": {
+      "x": 96.5714340209961,
+      "y": 382.9107360839844,
+      "width": 768.0000610351562,
+      "height": 131.0982208251953,
+      "font": "16px \"Segoe UI\", sans-serif",
+      "color": "rgb(25, 56, 43)",
+      "background": "rgb(225, 240, 231)",
+      "display": "flex"
+    },
+    "#counter": {
+      "x": 755.0178833007812,
+      "y": 426.3125305175781,
+      "width": 86.98214721679688,
+      "height": 44.28571701049805,
+      "font": "600 14px \"Segoe UI\", sans-serif",
+      "color": "rgb(255, 255, 255)",
+      "background": "rgb(33, 108, 77)",
+      "display": "block"
+    },
+    ".chart": {
+      "x": 96.5714340209961,
+      "y": 532.0089721679688,
+      "width": 768.0000610351562,
+      "height": 128.85714721679688,
+      "font": "16px \"Segoe UI\", sans-serif",
+      "color": "rgb(25, 56, 43)",
+      "background": "rgb(255, 255, 255)",
+      "display": "flex"
+    },
+    ".chart svg": {
+      "x": 291.9910888671875,
+      "y": 551.5803833007812,
+      "width": 340,
+      "height": 89.71428680419922,
+      "font": "16px \"Segoe UI\", sans-serif",
+      "color": "rgb(25, 56, 43)",
+      "background": "rgba(0, 0, 0, 0)",
+      "display": "block"
+    },
+    "footer": {
+      "x": 96.5714340209961,
+      "y": 679.8660888671875,
+      "width": 768.0000610351562,
+      "height": 13.142857551574707,
+      "font": "10px \"Segoe UI\", sans-serif",
+      "color": "rgb(96, 121, 109)",
+      "background": "rgba(0, 0, 0, 0)",
+      "display": "block"
+    }
+  }
+}

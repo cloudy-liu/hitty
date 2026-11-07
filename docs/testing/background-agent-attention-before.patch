@@ -1,0 +1,12 @@
+diff --git a/src/ui/tray/taskbar.rs b/src/ui/tray/taskbar.rs
+--- a/src/ui/tray/taskbar.rs
++++ b/src/ui/tray/taskbar.rs
+@@ -72,7 +72,7 @@ impl Taskbar {
+         // AppUserModelID, ignoring WM_SETICON on the grouped taskbar button.
+         // Keep the upper-right artwork for windows/Alt+Tab and dev builds;
+         // only shortcut-backed groups also need the shell's status overlay.
+-        let overlay = if std::env::current_exe()
++        let overlay = if false && std::env::current_exe()
+             .is_ok_and(|exe| crate::core::aumid::taskbar_app_id(&exe) == crate::core::aumid::AUMID)
+         {
+             // GPUI initializes COM on its Windows UI thread. Keep the window

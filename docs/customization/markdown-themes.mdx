@@ -1,0 +1,119 @@
+---
+title: "Markdown 阅读主题"
+description: "GitHub 默认预览、v2 自定义主题、旧主题升级和热加载。"
+---
+
+打开 `.md` 或 `.markdown` 文件会直接显示预览，扩展名不区分大小写。点击文档状态栏的“编辑”进入源码，再点击“预览”查看当前缓冲区，包括尚未保存的修改。两种模式共用同一个缓冲区，保留撤销历史、保存和冲突处理。
+
+GitHub 是唯一内置主题，使用 GitHub Light default / Dark default 的文字、元素颜色与排版。内置主题的正文背景跟随当前应用背景，减少阅读区与界面的色差；代码块、行内代码、引用、告警和表格仍保留各自的 GitHub 样式，不增加背景开关。自定义主题继续使用包内的 `background` 和 `paper` 配置。所选主题不可用时，阅读区回退到 GitHub，配置仍保留原 ID；在设置中选择 GitHub 后才保存新选择。应用实际深浅模式、主题临时预览及取消会同步到阅读区。
+
+文档开头由 `---` 包围的有效 YAML 元数据会显示为键值表格，包括 Skill 文件的 `name`、`description` 等字段。字段名居中加粗，偶数行使用主题的条纹背景，长字段自动换行。字段内容按纯文本显示，嵌套对象和数组保留为 YAML 文本；无效或未闭合的元数据保留普通 Markdown 显示。预览转换不修改源码，支持 LF 和 Windows CRLF 换行。
+
+## 安装与选择
+
+1. 打开 **设置 → 外观 → Markdown 阅读主题**。
+2. 点击该区域的“打开主题目录”。目录是当前有效配置目录下的 `markdown-themes`，使用 `--config-dir` 启动时也跟随该目录。
+3. 把 UTF-8 编码的 `.yaml` 或 `.yml` 文件直接放入目录。
+4. 有有效自定义主题时，在下拉菜单中选择主题；GitHub 排在首位。只有内置主题时直接显示 GitHub，不显示单选项下拉。选择立即应用并保存到 `config.json` 的 `markdown_theme` 字段。
+
+只扫描目录的直接子文件，文件名不决定主题身份，文件中的 `id` 才是稳定标识。新增文件不会自动切换当前主题。若选中的自定义主题不可用且没有其他有效自定义主题，会显示“使用 GitHub”按钮；点击后才将保存的选择改为 GitHub。
+
+## 从一个小主题开始
+
+```yaml
+schema_version: 2
+id: blue-links
+name: 蓝色链接
+author: Your name
+description: GitHub 排版与自定义链接颜色
+license: CC0-1.0
+light:
+  link: '#2456a6'
+  link_hover: '#183f80'
+dark:
+  link: '#a1c2ff'
+  link_hover: '#c6dbff'
+```
+
+`schema_version`、`id`、`name`、`light` 和 `dark` 必填。两个配色映射都必须存在，可以用 `{}` 表示全部采用默认值。省略的字段分别从内置 GitHub 的浅色、深色和共用排版补齐；作者、说明和许可不会继承。
+
+`id` 只能包含小写 ASCII 字母、数字、`-`、`_`，不能为空。`github` 是唯一保留 ID，不能用于自定义主题。显示名称可以使用中文；同名主题会额外显示 ID。多个文件声明相同 ID 时，全部冲突文件都被排除，设置会列出来源。
+
+## 完整格式
+
+可直接复制 [Blue Links 示例](https://github.com/cloudy-liu/ctty7/blob/main/docs/examples/markdown-themes/blue-links.yaml)，或参考 [GitHub 全量默认值](https://github.com/cloudy-liu/ctty7/blob/main/assets/markdown-themes/github.yaml)。复制内置文件时必须修改 `id`。只有 `light: {}` 和 `dark: {}` 的 v2 用户包继承完整 GitHub 参数，包括官网的白色／深色背景；内置主题跟随应用背景的处理不覆盖用户包。对象逐字段覆盖，数组整体替换；省略字段采用 GitHub 值，显式 `null` 仅用于可空字段，并不等同于省略。
+
+尺寸默认采用应用缩放 100% 时的逻辑像素；行高和 `_em` 字段是倍数。系统 DPI 由 GPUI 处理，无需把配置值再乘以屏幕缩放比例。
+
+GitHub 默认正文最大宽度为 1012px，`max_width: 1076` 包含左右各 32px 的留白。内置主题按阅读区宽度调整左右留白：小于 600px 时各 16px，600–900px 时各 24px，大于 900px 时各 32px；上下留白不变。自定义主题继续使用自己的 `padding`、`compact_padding`。正文链接默认始终带下划线。`heading_code_padding_x_em` 和 `heading_code_padding_y_em` 控制标题代码相对于标题字号的内边距，默认分别为 0.2 和 0；设为 `null` 时使用正文代码的固定内边距。
+
+| 分组 | 字段与作用 |
+|---|---|
+| `typography` | `fonts` 正文字体回退列表；`heading_fonts` 标题字体列表，省略或为空时沿用正文；`code_fonts` 代码字体列表，空列表沿用应用等宽字体；`font_size`、`code_size`、`line_height`；六项 `heading_sizes`、`heading_weights`；`heading_line_height`、`paragraph_gap`、`heading_gap` |
+| `layout` | `max_width`、`compact_below`、`outer_padding`、`padding`、`compact_padding`；`radius`、`shadow_blur`、`shadow_offset`；`code_padding`、`code_radius`；`quote_padding`、`quote_border`、`quote_radius`；`table_padding`、`list_gap` |
+| `light` / `dark` 基础颜色 | `background`、`paper`、`paper_border`、`shadow`、`foreground`、`heading`、`muted`、`border`、`accent`、`link`、`link_hover`、`selection` |
+| 代码颜色 | `inline_code_background`、`inline_code_foreground`、`code_background`、`code_foreground`、`code_border` |
+| 引用颜色 | `quote_background`、`quote_foreground`、`quote_border`、`quote_link`、`quote_code_background`、`quote_code_foreground`、`nested_quote_background`、`nested_quote_border` |
+| 提示块与表格颜色 | `alert_background`、`alert_foreground`、`alert_border`、`table_code_background`、`table_hover` |
+| 每个变体中的 `syntax` | `keyword`、`number`、`function`、`variable`、`variable_special`、`type`、`comment`、`string`、`tag` |
+
+颜色接受带引号的 `#RRGGBB`、`#RRGGBBAA` 和 `rgba(r,g,b,a)`。RGBA 的 RGB 分量范围为 0–255，透明度范围为 0–1。字号、行高、宽度和断点必须是有限正数；边距、圆角等允许为零，不允许负数；标题字重范围为 100–900。
+
+以下字段补充 GitHub 所需的样式能力。省略时采用 GitHub 的值。可空字段的 `null` 按字段语义处理，例如 `inline_code_border` 取消边框，`table_stripe` 取消斑马纹，`table_hover` 取消悬停底色，`alert_foreground` 继承正文色；语法颜色槽位的 `null` 回退到原有通用槽位。其他可空排版字段回退到渲染器通用行为，而非 GitHub 值；字号和倍数行高使用有限正数，字重范围为 100–900，间距与边框宽度允许零。
+
+| 分组 | 可选字段 |
+|---|---|
+| `typography` | `resolve_font_stack`（按本机可用字体依次选择，GitHub 默认开启）；`bold_weight`；`heading_bottom_gap`、六项 `heading_padding` 与 `heading_borders`；`code_line_height`、`inline_code_size`、`kbd_size` |
+| `layout` 边框与代码 | `paper_border_width`、`code_border_width`；`inline_code_radius`、`inline_code_padding_x/y`；`kbd_padding`、`kbd_radius`、`kbd_line_height`（按键行高为像素） |
+| `layout` 表格、引用与分隔线 | `table_fill`、`table_radius`、`table_gap`、`table_padding_x/y`；`quote_padding_y`；`rule_height`、`rule_gap` |
+| `layout` 链接与列表 | `link_underline: always / hover / never`；`roman_ordered_lists`（启用后嵌套有序列表为 1 → i → a）；`list_indent`、`list_paragraph_gap` |
+| `layout` 提示块 | `alert_padding_x/y`、`alert_title_weight`、`alert_title_line_height` |
+| `light` / `dark` | 六项 `heading_colors`；`heading_border`、`rule`、`inline_code_border`；`kbd_background`、`kbd_border`、`kbd_shadow`；`table_stripe`、`table_row_border`；`table_hover: null` 禁用悬停底色 |
+| `light.alerts` / `dark.alerts` | 按 NOTE、TIP、IMPORTANT、WARNING、CAUTION 顺序的五项数组；每项包含 `border`、`title`、`icon`（应用已有的图标资源路径）；`alert_foreground: null` 沿用正文颜色 |
+| `syntax` | `constant`、`entity`、`tag_name`、`escape`、`markup_heading`、`markup_list`、`link_uri`、`diff_hunk`；`diff_added/deleted/changed` 各包含 `foreground` 与可选 `background` |
+
+GitHub 采用 16px 系统字体、1.5 倍正文行高、600 加粗字重、默认链接下划线、五色提示块、斑马纹表格，以及独立的行内代码和按键外观。正文最大宽度为 1012px，左右留白随阅读区宽度调整。原生字体栅格化与 tree-sitter 的语法分类尚未完成官网一致性验收。
+
+未知字段、类型错误、不支持的版本、非法颜色和超过 256 KiB 的主题文件会显示为加载错误。所有字体都从本机选择，字体缺失时使用离线回退。
+
+## 热加载与恢复
+
+保存主题文件后，应用对目录事件做 200ms 防抖，再加载整份主题。浅色和深色都校验成功才发布新版本。已打开的文档会更新正文与代码颜色，保留缓冲区、当前模式、选择和阅读位置。修改字号或留白会重新排版。
+
+保存 Markdown 主题文件不会重新应用 tty7 的界面主题，因此不会打断应用主题选择器中正在试用的配色。
+
+| 情况 | 行为 |
+|---|---|
+| 当前主题文件损坏、删除或出现重复 ID | 本次运行保留最近有效的主题，设置显示错误 |
+| 启动时所选主题不可用，包括 v1 | 使用 GitHub，并提示原选择不可用及原因；保留原 ID |
+| 文件修复，原 ID 恢复有效 | 自动恢复，无需重新选择 |
+| 文件重命名，ID 不变 | 保留选择 |
+| 文件改为新 ID | 视为删除旧主题和安装新主题 |
+
+自定义主题回退不会改写 `markdown_theme`。最近有效的主题只保留在内存中；把当前有效 v2 改成 v1 也属于无效编辑，本次运行保留旧版本，重启后回退 GitHub。只有在设置中明确选择其他主题后，才保存新的 ID。
+
+## 从 v1 升级
+
+v1 主题不再加载。设置会显示文件来源和升级提示，原文件不会被修改。将 `schema_version` 改为 `2` 表示接受 GitHub 缺省值，不能保证原外观不变。要保留原外观，需要把原先省略的颜色、字体和布局显式写入文件。修复为有效 v2 后，仍被选中的原 ID 自动恢复；本次不提供自动转换工具或 v1 兼容运行时。
+
+## 阅读与导航
+
+表格优先适应阅读区宽度，长单元格自动换行。列数过多、无法保持可读列宽时，表格底部提供横向滚动条，也可用 Shift+滚轮横向移动；普通滚轮继续滚动文档。文档的纵向滚动条统一位于阅读区右边缘，滑块与最右侧 Files 栏分割线保留 6px 间隔，停靠、平铺以及长文阅读采用相同位置。
+
+正文支持选择、全选和复制，代码块有单独的“复制代码”按钮。方向键、Page Up、Page Down、空格、Home 和 End 可以滚动。预览持有焦点，普通输入或粘贴不会编辑隐藏的源码。明确指定行列号的文件链接会进入源码定位。
+
+支持常规 GFM、五种 GitHub 提示块，以及 README 常用 HTML 展示子集：`p`、`div` 的对齐，`br`、`img`、`a`、`strong`、`b`、`em`、`i`、`code`、`kbd`。任务项只展示状态。
+
+相对图片和文件链接使用文档所属的 Host 和父目录，本地、SSH 和 SFTP 文档采用同一路径。HTTP(S) 图片使用应用资源加载器，网页链接交给浏览器；标题链接在预览中定位，重复标题依次使用 `标题`、`标题-1` 等 ID。图片加载失败时保留替代文本，文档仍可编辑。每篇文档最多缓存 64 个同主机图片地址，单张读取上限 8 MiB，总编码缓存上限 32 MiB。
+
+图片地址上限包含加载中和失败的地址，不限制 HTTP(S) 图片。编辑内容后再次预览会释放旧缓存并重新计算额度，上一版内容尚未完成的加载结果会被丢弃。超过上限的图片显示失败占位，正文仍可阅读和编辑。
+
+阅读区支持方向键、PageUp/PageDown、空格和 Shift+空格滚动，以及 Home/End。Windows/Linux 可用 Ctrl+Home/Ctrl+End，macOS 可用 Cmd+Up/Cmd+Down 跳到文档首尾；复制和全选沿用平台快捷键。
+
+## 转换 Typora CSS
+
+主题包只描述原生渲染器支持的数据。把 Typora 的正文颜色映射到 `foreground`，纸张背景映射到 `paper`，链接颜色映射到 `link`，代码语法颜色映射到 `syntax`，再把字号与留白写入共用排版。
+
+任意 CSS 选择器、脚本、网页字体、可执行插件、主题商店和多层继承不在第一版范围。Mermaid、数学公式、打印与 PDF 导出也不由阅读主题包提供。
+
+当前布局、链接与标题代码参数以 2026-10-05 官网实测为依据；[github-markdown-css 5.9.0](https://github.com/sindresorhus/github-markdown-css/tree/v5.9.0)、Primer 和 Octicons 保留为辅助来源。来源与许可保存在 `assets/markdown-themes/GITHUB-NOTICE` 及对应许可文件中。实测记录与尚未完成的对齐项见 [GitHub 主题验证记录](https://github.com/cloudy-liu/ctty7/blob/main/docs/testing/markdown-github-theme.md)。

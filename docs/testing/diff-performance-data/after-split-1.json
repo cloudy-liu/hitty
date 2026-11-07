@@ -1,0 +1,12 @@
+{
+  "mode": "Split",
+  "files": 24,
+  "retained_lines": 7200,
+  "git_probe_ms": 194.2533,
+  "first_frame_ms": 30.496599999999997,
+  "scroll_samples": 35,
+  "scroll_median_ms": 8.7823,
+  "scroll_p95_ms": 9.904,
+  "min_offset": -2400.0,
+  "measurement": "native text, event dispatch and GPUI CPU layout/prepaint/paint; excludes GPU and presentation"
+}

@@ -1,0 +1,23 @@
+{
+  "feature": "ssh-host-groups",
+  "captured_on": "2026-10-30",
+  "note": "efd79855 is the pre-rebase revision of the feature commit; the branch was rebased onto #227 and #229 as 947de8fe with no behaviour change",
+  "platform": "Windows 11, production GPUI application, Local Computer Use window capture",
+  "window": { "title": "SSH tab visual acceptance", "logical_size": [1200, 660], "image_size": [1202, 661], "display_scale": "100%" },
+  "fixture": { "entry": "--ssh-tab-visual", "options": { "sidebar": true, "hold_seconds": 7200 }, "sessions": ["Local terminal", "Local Codex", "Local Claude", "prod-web (native SSH)", "Fix login (terminal SSH, dev-box)", "Deploy check (native SSH, dev-box)"] },
+  "before": {
+    "source_revision": "f8b9afcd21710200c99e79c517929d8e18e87d65",
+    "fixture_overlay": "src/ssh_tab_visual.rs from this branch via scripts/ssh-tabs-native-visual.py prepare-before",
+    "binary_sha256": "511d04ae8e84475d723801c60aeefb6503604fed0b99f5bedd1ab7941094ea79",
+    "image": "images/ssh-host-groups/before-sidebar.jpg",
+    "image_sha256": "d336a862367fd3fee3c08e91df4b58c1563735c7a4fea4b96d0991c13d742cc3",
+    "captured_at": "2026-10-30T21:02:23+08:00"
+  },
+  "after": {
+    "source_revision": "efd7985528599fceeb1d1169a09fabe8e66dc89a",
+    "binary_sha256": "ab5368a2df0dd5f85e5e1a8edf120e130d6c27556e264b408e24937c526d93e2",
+    "image": "images/ssh-host-groups/after-sidebar.jpg",
+    "image_sha256": "4110f64e4d08287540d29996c0a1e65924a97d2ba899efccc9f8e0c7b1c36afc",
+    "captured_at": "2026-10-30T20:58:15+08:00"
+  }
+}

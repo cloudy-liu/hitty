@@ -1,0 +1,513 @@
+{
+  "highlight_theme": {
+    "name": "Atom One Dark",
+    "appearance": "dark",
+    "style": {
+      "editor.background": "#282C34",
+      "editor.foreground": "#ABB2BF",
+      "editor.gutter.background": "#282C34",
+      "editor.active_line.background": "#99BBFF0A",
+      "editor.line_number": "#636D83",
+      "editor.active_line_number": "#ABB2BF",
+      "editor.invisible": "#ABB2BF26",
+      "syntax": {
+        "keyword": {
+          "color": "#C678DD"
+        },
+        "operator": {
+          "color": "#C678DD"
+        },
+        "function": {
+          "color": "#61AFEF"
+        },
+        "function.builtin": {
+          "color": "#56B6C2"
+        },
+        "function.method.builtin": {
+          "color": "#56B6C2"
+        },
+        "constructor": {
+          "color": "#61AFEF"
+        },
+        "type": {
+          "color": "#E5C07B"
+        },
+        "type.builtin": {
+          "color": "#56B6C2"
+        },
+        "enum": {
+          "color": "#E5C07B"
+        },
+        "variant": {
+          "color": "#E5C07B"
+        },
+        "variable": {
+          "color": "#E06C75"
+        },
+        "variable.special": {
+          "color": "#E06C75"
+        },
+        "variable.builtin": {
+          "color": "#E06C75"
+        },
+        "variable.member": {
+          "color": "#E06C75"
+        },
+        "variable.parameter": {
+          "color": "#ABB2BF"
+        },
+        "property": {
+          "color": "#E06C75"
+        },
+        "constant": {
+          "color": "#D19A66"
+        },
+        "number": {
+          "color": "#D19A66"
+        },
+        "boolean": {
+          "color": "#D19A66"
+        },
+        "string": {
+          "color": "#98C379"
+        },
+        "string.escape": {
+          "color": "#56B6C2"
+        },
+        "escape": {
+          "color": "#56B6C2"
+        },
+        "string.regex": {
+          "color": "#56B6C2"
+        },
+        "string.special.regex": {
+          "color": "#56B6C2"
+        },
+        "string.special": {
+          "color": "#98C379"
+        },
+        "string.special.symbol": {
+          "color": "#56B6C2"
+        },
+        "comment": {
+          "color": "#5C6370",
+          "font_style": "italic"
+        },
+        "comment.doc": {
+          "color": "#5C6370",
+          "font_style": "italic"
+        },
+        "tag": {
+          "color": "#E06C75"
+        },
+        "tag.doctype": {
+          "color": "#C678DD"
+        },
+        "attribute": {
+          "color": "#D19A66"
+        },
+        "preproc": {
+          "color": "#C678DD"
+        },
+        "label": {
+          "color": "#D19A66"
+        },
+        "link_text": {
+          "color": "#61AFEF"
+        },
+        "link_uri": {
+          "color": "#E06C75"
+        },
+        "title": {
+          "color": "#61AFEF"
+        },
+        "text.literal": {
+          "color": "#98C379"
+        },
+        "text.code.span": {
+          "color": "#98C379"
+        },
+        "embedded": {
+          "color": "#BE5046"
+        },
+        "emphasis": {
+          "color": "#C678DD",
+          "font_style": "italic"
+        },
+        "emphasis.strong": {
+          "color": "#D19A66",
+          "font_weight": 700
+        },
+        "primary": {
+          "color": "#ABB2BF"
+        },
+        "punctuation": {
+          "color": "#ABB2BF"
+        },
+        "namespace": {
+          "color": "#ABB2BF"
+        },
+        "module": {
+          "color": "#ABB2BF"
+        },
+        "conditional": {
+          "color": "#C678DD"
+        },
+        "exception": {
+          "color": "#C678DD"
+        },
+        "include": {
+          "color": "#C678DD"
+        },
+        "repeat": {
+          "color": "#C678DD"
+        },
+        "storageclass": {
+          "color": "#C678DD"
+        },
+        "float": {
+          "color": "#D19A66"
+        },
+        "character": {
+          "color": "#98C379"
+        },
+        "parameter": {
+          "color": "#ABB2BF"
+        },
+        "field": {
+          "color": "#E06C75"
+        },
+        "method": {
+          "color": "#61AFEF"
+        },
+        "import": {
+          "color": "#C678DD"
+        },
+        "cImport": {
+          "color": "#C678DD"
+        },
+        "delimiter": {
+          "color": "#ABB2BF"
+        },
+        "text.uri": {
+          "color": "#E06C75"
+        },
+        "text.reference": {
+          "color": "#61AFEF"
+        },
+        "none": {
+          "color": "#ABB2BF"
+        },
+        "punctuation.bracket": {
+          "color": "#ABB2BF"
+        },
+        "punctuation.delimiter": {
+          "color": "#ABB2BF"
+        },
+        "punctuation.special": {
+          "color": "#ABB2BF"
+        },
+        "punctuation.list_marker": {
+          "color": "#ABB2BF"
+        },
+        "python.variable": {
+          "color": "#ABB2BF"
+        },
+        "python.constant": {
+          "color": "#ABB2BF"
+        },
+        "python.constant.builtin": {
+          "color": "#D19A66"
+        },
+        "python.property": {
+          "color": "#ABB2BF"
+        },
+        "python.constructor": {
+          "color": "#ABB2BF"
+        },
+        "python.variable.parameter": {
+          "color": "#D19A66"
+        },
+        "python.variable.builtin": {
+          "color": "#E06C75"
+        },
+        "python.type.parameter": {
+          "color": "#D19A66"
+        },
+        "javascript.variable": {
+          "color": "#ABB2BF"
+        },
+        "javascript.variable.parameter": {
+          "color": "#ABB2BF"
+        },
+        "javascript.operator": {
+          "color": "#56B6C2"
+        },
+        "javascript.keyword.operator.word": {
+          "color": "#C678DD"
+        },
+        "javascript.punctuation.key_value": {
+          "color": "#56B6C2"
+        },
+        "javascript.variable.constant": {
+          "color": "#D19A66"
+        },
+        "javascript.variable.builtin": {
+          "color": "#E06C75"
+        },
+        "javascript.string.special": {
+          "color": "#56B6C2"
+        },
+        "javascript.keyword.default": {
+          "color": "#E06C75"
+        },
+        "typescript.variable": {
+          "color": "#ABB2BF"
+        },
+        "typescript.variable.parameter": {
+          "color": "#ABB2BF"
+        },
+        "typescript.operator": {
+          "color": "#56B6C2"
+        },
+        "typescript.keyword.operator.word": {
+          "color": "#C678DD"
+        },
+        "typescript.punctuation.key_value": {
+          "color": "#56B6C2"
+        },
+        "typescript.variable.constant": {
+          "color": "#D19A66"
+        },
+        "typescript.variable.builtin": {
+          "color": "#E06C75"
+        },
+        "typescript.string.special": {
+          "color": "#56B6C2"
+        },
+        "typescript.keyword.default": {
+          "color": "#E06C75"
+        },
+        "json.boolean": {
+          "color": "#56B6C2"
+        },
+        "json.constant.builtin": {
+          "color": "#56B6C2"
+        },
+        "rust.type": {
+          "color": "#56B6C2"
+        },
+        "rust.type.builtin": {
+          "color": "#56B6C2"
+        },
+        "rust.variable.parameter": {
+          "color": "#E06C75"
+        },
+        "rust.label": {
+          "color": "#D19A66"
+        },
+        "rust.attribute": {
+          "color": "#D19A66"
+        },
+        "css.property": {
+          "color": "#ABB2BF"
+        },
+        "css.type": {
+          "color": "#D19A66"
+        },
+        "css.string.special": {
+          "color": "#56B6C2"
+        },
+        "css.attribute.id": {
+          "color": "#61AFEF"
+        },
+        "css.constant.color": {
+          "color": "#D19A66"
+        },
+        "css.constant.builtin": {
+          "color": "#ABB2BF"
+        },
+        "java.type.builtin": {
+          "color": "#C678DD"
+        },
+        "java.namespace": {
+          "color": "#E5C07B"
+        },
+        "java.variable.argument": {
+          "color": "#ABB2BF"
+        },
+        "c.variable": {
+          "color": "#ABB2BF"
+        },
+        "c.property": {
+          "color": "#ABB2BF"
+        },
+        "c.type.builtin": {
+          "color": "#C678DD"
+        },
+        "c.operator": {
+          "color": "#C678DD"
+        },
+        "cpp.variable": {
+          "color": "#ABB2BF"
+        },
+        "cpp.property": {
+          "color": "#ABB2BF"
+        },
+        "cpp.type.builtin": {
+          "color": "#C678DD"
+        },
+        "cpp.operator": {
+          "color": "#C678DD"
+        },
+        "ruby.constructor": {
+          "color": "#E5C07B"
+        },
+        "ruby.variable": {
+          "color": "#ABB2BF"
+        },
+        "ruby.variable.definition": {
+          "color": "#E06C75"
+        },
+        "go.namespace": {
+          "color": "#E5C07B"
+        },
+        "toml.type": {
+          "color": "#ABB2BF"
+        },
+        "toml.property": {
+          "color": "#ABB2BF"
+        },
+        "toml.operator": {
+          "color": "#ABB2BF"
+        },
+        "make.string": {
+          "color": "#ABB2BF"
+        },
+        "make.operator": {
+          "color": "#ABB2BF"
+        },
+        "make.constant": {
+          "color": "#E06C75"
+        },
+        "make.constant.macro": {
+          "color": "#61AFEF"
+        },
+        "markdown.title": {
+          "color": "#E06C75"
+        },
+        "markdown.title.setext": {
+          "color": "#ABB2BF"
+        },
+        "markdown.punctuation.heading": {
+          "color": "#E06C75"
+        },
+        "markdown.text.literal": {
+          "color": "#ABB2BF"
+        },
+        "markdown_inline.link_uri": {
+          "color": "#C678DD"
+        },
+        "elixir.constant": {
+          "color": "#61AFEF"
+        },
+        "elixir.constant.builtin": {
+          "color": "#61AFEF"
+        },
+        "elixir.number": {
+          "color": "#61AFEF"
+        },
+        "elixir.operator": {
+          "color": "#D19A66"
+        },
+        "elixir.module": {
+          "color": "#E5C07B"
+        },
+        "elixir.variable.definition": {
+          "color": "#C678DD"
+        },
+        "sql.variable": {
+          "color": "#ABB2BF"
+        },
+        "sql.field": {
+          "color": "#ABB2BF"
+        },
+        "sql.parameter": {
+          "color": "#ABB2BF"
+        },
+        "sql.type": {
+          "color": "#ABB2BF"
+        },
+        "diff.constant": {
+          "color": "#ABB2BF"
+        },
+        "diff.attribute": {
+          "color": "#ABB2BF"
+        },
+        "diff.keyword": {
+          "color": "#ABB2BF"
+        },
+        "diff.string": {
+          "color": "#ABB2BF"
+        },
+        "diff.variable.builtin": {
+          "color": "#ABB2BF"
+        },
+        "diff.markup.inserted": {
+          "color": "#98C379"
+        },
+        "diff.markup.deleted": {
+          "color": "#E06C75"
+        },
+        "tsx.variable": {
+          "color": "#ABB2BF"
+        },
+        "tsx.variable.parameter": {
+          "color": "#ABB2BF"
+        },
+        "tsx.operator": {
+          "color": "#56B6C2"
+        },
+        "tsx.keyword.operator.word": {
+          "color": "#C678DD"
+        },
+        "tsx.punctuation.key_value": {
+          "color": "#56B6C2"
+        },
+        "tsx.variable.constant": {
+          "color": "#D19A66"
+        },
+        "tsx.variable.builtin": {
+          "color": "#E06C75"
+        },
+        "tsx.string.special": {
+          "color": "#56B6C2"
+        },
+        "tsx.keyword.default": {
+          "color": "#E06C75"
+        }
+      },
+      "error": "#E06C75",
+      "error.border": "#E06C75",
+      "error.background": "#E06C7526",
+      "warning": "#E5C07B",
+      "warning.border": "#E5C07B",
+      "warning.background": "#E5C07B26",
+      "info": "#61AFEF",
+      "info.border": "#61AFEF",
+      "info.background": "#61AFEF26",
+      "success": "#98C379",
+      "success.border": "#98C379",
+      "success.background": "#98C37926",
+      "hint": "#5C6370",
+      "hint.border": "#5C6370",
+      "hint.background": "#5C637026"
+    }
+  },
+  "selection": "#3E4451",
+  "caret": "#528BFF",
+  "search_match": "#528BFF3D",
+  "search_match_active": "#3E4451",
+  "muted_foreground": "#636D83",
+  "border": "#ABB2BF26"
+}

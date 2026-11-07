@@ -1,0 +1,24 @@
+{
+  "os": "windows",
+  "dpi_scale": 1.75,
+  "window": [
+    1200.0,
+    850.2857055664062
+  ],
+  "source_bytes": 92246,
+  "all_content_ready_ms": 1140.7531,
+  "scroll_cpu_frame": {
+    "samples": 100,
+    "median_ms": 119.9228,
+    "p95_ms": 168.6602,
+    "max_ms": 221.7575
+  },
+  "expanded_drag_cpu_frame": {
+    "samples": 100,
+    "median_ms": 116.0048,
+    "p95_ms": 189.5773,
+    "max_ms": 216.1741
+  },
+  "min_scroll_offset": -6600.0,
+  "measurement": "event dispatch plus GPUI CPU layout/prepaint/paint; excludes present and GPU time"
+}

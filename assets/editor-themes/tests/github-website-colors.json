@@ -1,0 +1,432 @@
+[
+  {
+    "mode": "light",
+    "language": "rust",
+    "source": "fn config_watch_change(\n    event: &notify::Event,\n    config_file: &std::path::Path,\n    markdown_dir: &std::path::Path,\n) -> Option<ConfigWatchChange> {\n    // Reading a file can itself emit an event on Linux.\n    if !tty7_core::host::is_content_change(&event.kind) {\n        return None;\n    }\n    if event\n        .paths\n        .iter()\n        .any(|path| path == config_file || is_theme_file(path))\n    {\n        Some(ConfigWatchChange::Application)\n    } else if event\n        .paths\n        .iter()\n        .any(|path| crate::core::markdown_theme::is_theme_path(path, markdown_dir))\n    {\n        Some(ConfigWatchChange::Markdown)\n    } else {\n        None\n    }\n}\n",
+    "tokens": [
+      {
+        "text": "fn",
+        "start": 0,
+        "end": 2,
+        "color": "#CF222E"
+      },
+      {
+        "text": "config_watch_change",
+        "start": 3,
+        "end": 22,
+        "color": "#6639BA"
+      },
+      {
+        "text": "(",
+        "start": 22,
+        "end": 23,
+        "color": "#1F2328"
+      },
+      {
+        "text": "    event: ",
+        "start": 24,
+        "end": 35,
+        "color": "#1F2328"
+      },
+      {
+        "text": "&",
+        "start": 35,
+        "end": 36,
+        "color": "#0550AE"
+      },
+      {
+        "text": "notify::Event,",
+        "start": 36,
+        "end": 50,
+        "color": "#1F2328"
+      },
+      {
+        "text": "    config_file: ",
+        "start": 51,
+        "end": 68,
+        "color": "#1F2328"
+      },
+      {
+        "text": "&",
+        "start": 68,
+        "end": 69,
+        "color": "#0550AE"
+      },
+      {
+        "text": "std::path::Path,",
+        "start": 69,
+        "end": 85,
+        "color": "#1F2328"
+      },
+      {
+        "text": "    markdown_dir: ",
+        "start": 86,
+        "end": 104,
+        "color": "#1F2328"
+      },
+      {
+        "text": "&",
+        "start": 104,
+        "end": 105,
+        "color": "#0550AE"
+      },
+      {
+        "text": "std::path::Path,",
+        "start": 105,
+        "end": 121,
+        "color": "#1F2328"
+      },
+      {
+        "text": ") -> Option<ConfigWatchChange> {",
+        "start": 122,
+        "end": 154,
+        "color": "#1F2328"
+      },
+      {
+        "text": "// Reading a file can itself emit an event on Linux.",
+        "start": 159,
+        "end": 211,
+        "color": "#59636E"
+      },
+      {
+        "text": "if",
+        "start": 216,
+        "end": 218,
+        "color": "#CF222E"
+      },
+      {
+        "text": " !tty7_core::host::",
+        "start": 218,
+        "end": 237,
+        "color": "#1F2328"
+      },
+      {
+        "text": "is_content_change",
+        "start": 237,
+        "end": 254,
+        "color": "#6639BA"
+      },
+      {
+        "text": "(",
+        "start": 254,
+        "end": 255,
+        "color": "#1F2328"
+      },
+      {
+        "text": "&",
+        "start": 255,
+        "end": 256,
+        "color": "#0550AE"
+      },
+      {
+        "text": "event.",
+        "start": 256,
+        "end": 262,
+        "color": "#1F2328"
+      },
+      {
+        "text": "kind",
+        "start": 262,
+        "end": 266,
+        "color": "#0550AE"
+      },
+      {
+        "text": ") {",
+        "start": 266,
+        "end": 269,
+        "color": "#1F2328"
+      },
+      {
+        "text": "return",
+        "start": 278,
+        "end": 284,
+        "color": "#CF222E"
+      },
+      {
+        "text": "None",
+        "start": 285,
+        "end": 289,
+        "color": "#953800"
+      },
+      {
+        "text": ";",
+        "start": 289,
+        "end": 290,
+        "color": "#1F2328"
+      },
+      {
+        "text": "    }",
+        "start": 291,
+        "end": 296,
+        "color": "#1F2328"
+      },
+      {
+        "text": "if",
+        "start": 301,
+        "end": 303,
+        "color": "#CF222E"
+      },
+      {
+        "text": " event",
+        "start": 303,
+        "end": 309,
+        "color": "#1F2328"
+      },
+      {
+        "text": "        .",
+        "start": 310,
+        "end": 319,
+        "color": "#1F2328"
+      },
+      {
+        "text": "paths",
+        "start": 319,
+        "end": 324,
+        "color": "#0550AE"
+      },
+      {
+        "text": "        .",
+        "start": 325,
+        "end": 334,
+        "color": "#1F2328"
+      },
+      {
+        "text": "iter",
+        "start": 334,
+        "end": 338,
+        "color": "#6639BA"
+      },
+      {
+        "text": "()",
+        "start": 338,
+        "end": 340,
+        "color": "#1F2328"
+      },
+      {
+        "text": "        .",
+        "start": 341,
+        "end": 350,
+        "color": "#1F2328"
+      },
+      {
+        "text": "any",
+        "start": 350,
+        "end": 353,
+        "color": "#6639BA"
+      },
+      {
+        "text": "(|path| path == config_file || ",
+        "start": 353,
+        "end": 384,
+        "color": "#1F2328"
+      },
+      {
+        "text": "is_theme_file",
+        "start": 384,
+        "end": 397,
+        "color": "#6639BA"
+      },
+      {
+        "text": "(path))",
+        "start": 397,
+        "end": 404,
+        "color": "#1F2328"
+      },
+      {
+        "text": "    {",
+        "start": 405,
+        "end": 410,
+        "color": "#1F2328"
+      },
+      {
+        "text": "Some",
+        "start": 419,
+        "end": 423,
+        "color": "#6639BA"
+      },
+      {
+        "text": "(ConfigWatchChange::",
+        "start": 423,
+        "end": 443,
+        "color": "#1F2328"
+      },
+      {
+        "text": "Application",
+        "start": 443,
+        "end": 454,
+        "color": "#953800"
+      },
+      {
+        "text": ")",
+        "start": 454,
+        "end": 455,
+        "color": "#1F2328"
+      },
+      {
+        "text": "    } ",
+        "start": 456,
+        "end": 462,
+        "color": "#1F2328"
+      },
+      {
+        "text": "else",
+        "start": 462,
+        "end": 466,
+        "color": "#CF222E"
+      },
+      {
+        "text": "if",
+        "start": 467,
+        "end": 469,
+        "color": "#CF222E"
+      },
+      {
+        "text": " event",
+        "start": 469,
+        "end": 475,
+        "color": "#1F2328"
+      },
+      {
+        "text": "        .",
+        "start": 476,
+        "end": 485,
+        "color": "#1F2328"
+      },
+      {
+        "text": "paths",
+        "start": 485,
+        "end": 490,
+        "color": "#0550AE"
+      },
+      {
+        "text": "        .",
+        "start": 491,
+        "end": 500,
+        "color": "#1F2328"
+      },
+      {
+        "text": "iter",
+        "start": 500,
+        "end": 504,
+        "color": "#6639BA"
+      },
+      {
+        "text": "()",
+        "start": 504,
+        "end": 506,
+        "color": "#1F2328"
+      },
+      {
+        "text": "        .",
+        "start": 507,
+        "end": 516,
+        "color": "#1F2328"
+      },
+      {
+        "text": "any",
+        "start": 516,
+        "end": 519,
+        "color": "#6639BA"
+      },
+      {
+        "text": "(|path| ",
+        "start": 519,
+        "end": 527,
+        "color": "#1F2328"
+      },
+      {
+        "text": "crate",
+        "start": 527,
+        "end": 532,
+        "color": "#CF222E"
+      },
+      {
+        "text": "::core::markdown_theme::",
+        "start": 532,
+        "end": 556,
+        "color": "#1F2328"
+      },
+      {
+        "text": "is_theme_path",
+        "start": 556,
+        "end": 569,
+        "color": "#6639BA"
+      },
+      {
+        "text": "(path, markdown_dir))",
+        "start": 569,
+        "end": 590,
+        "color": "#1F2328"
+      },
+      {
+        "text": "    {",
+        "start": 591,
+        "end": 596,
+        "color": "#1F2328"
+      },
+      {
+        "text": "Some",
+        "start": 605,
+        "end": 609,
+        "color": "#6639BA"
+      },
+      {
+        "text": "(ConfigWatchChange::",
+        "start": 609,
+        "end": 629,
+        "color": "#1F2328"
+      },
+      {
+        "text": "Markdown",
+        "start": 629,
+        "end": 637,
+        "color": "#953800"
+      },
+      {
+        "text": ")",
+        "start": 637,
+        "end": 638,
+        "color": "#1F2328"
+      },
+      {
+        "text": "    } ",
+        "start": 639,
+        "end": 645,
+        "color": "#1F2328"
+      },
+      {
+        "text": "else",
+        "start": 645,
+        "end": 649,
+        "color": "#CF222E"
+      },
+      {
+        "text": " {",
+        "start": 649,
+        "end": 651,
+        "color": "#1F2328"
+      },
+      {
+        "text": "None",
+        "start": 660,
+        "end": 664,
+        "color": "#953800"
+      },
+      {
+        "text": "    }",
+        "start": 665,
+        "end": 670,
+        "color": "#1F2328"
+      },
+      {
+        "text": "}",
+        "start": 671,
+        "end": 672,
+        "color": "#1F2328"
+      }
+    ],
+    "source_url": "https://github.com/cloudy-liu/ctty7/blob/814b4036a05b877a1c3cf3a04e764bbb4822e807/src/main.rs#L35-L59",
+    "captured": "2026-10-06",
+    "stylesheet": "https://github.githubassets.com/assets/light-5c4e9fc574bf49f3.css"
+  }
+]

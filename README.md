@@ -6,9 +6,9 @@ Hitty is starting as an independent project based on a source snapshot of [ctty7
 
 ## Project status
 
-This repository currently contains the project introduction only. The application source has not been imported, and no Hitty release is available yet.
+The selected application source has been imported as a separate baseline. Hitty rebranding and validation are in progress, and no Hitty release is available yet.
 
-The next milestone is to import a reviewed ctty7 source snapshot as the Hitty baseline, retain the existing application icon with the new Hitty wordmark, and migrate product naming and release tooling to Hitty.
+The next milestone is to complete product naming and release tooling for Hitty, retaining the existing application icon with the selected Hitty wordmark. See the [bootstrap specification](docs/specs/0001-hitty-bootstrap.md) and [source provenance](docs/provenance/source-baseline.md).
 
 ## A fresh start
 

@@ -1,0 +1,213 @@
+# GitHub Light/Dark defaults, verified against github.com on 2026-10-05.
+# See tests/fixtures/github-live-2026-10-05 and GITHUB-NOTICE/GITHUB-LICENSE.
+# Sizes are CSS computed values at 16px in logical pixels.
+schema_version: 2
+id: github
+name: GitHub
+author: GitHub, Sindre Sorhus
+description: GitHub's light and dark Markdown colors and typography.
+license: MIT
+typography:
+  resolve_font_stack: true
+  # .AppleSystemUIFont is the native equivalent of -apple-system on macOS.
+  # Native CJK additions prefer the observed Windows browser sans fallback.
+  # Keep platform fonts as alternatives when Noto Sans SC is unavailable.
+  fonts: [.AppleSystemUIFont, Segoe UI, Noto Sans, Helvetica, Arial, Apple Color Emoji, Segoe UI Emoji, Noto Sans SC, PingFang SC, Microsoft YaHei]
+  heading_fonts: []
+  code_fonts: [SFMono-Regular, SF Mono, Menlo, Consolas, Liberation Mono]
+  font_size: 16
+  code_size: 13.6
+  line_height: 1.5
+  bold_weight: 600
+  heading_sizes: [32, 24, 20, 16, 14, 13.6]
+  heading_weights: [600, 600, 600, 600, 600, 600]
+  heading_line_height: 1.25
+  heading_gap: 24
+  heading_bottom_gap: 16
+  heading_padding: [9.6, 7.2, 0, 0, 0, 0]
+  heading_borders: [true, true, false, false, false, false]
+  paragraph_gap: 16
+  code_line_height: 1.45
+  inline_code_size: 13.6
+  kbd_size: 11
+layout:
+  # 1012px content cap plus 32px padding on each side.
+  max_width: 1076
+  compact_below: 768
+  outer_padding: 0
+  padding: 32
+  compact_padding: 32
+  radius: 0
+  paper_border_width: 0
+  shadow_blur: 0
+  shadow_offset: 0
+  code_padding: 16
+  code_radius: 6
+  code_border_width: 0
+  inline_code_radius: 6
+  inline_code_padding_x: 5.44
+  inline_code_padding_y: 2.72
+  heading_code_padding_x_em: 0.2
+  heading_code_padding_y_em: 0
+  kbd_padding: 4
+  kbd_radius: 6
+  kbd_line_height: 10
+  quote_padding: 16
+  quote_padding_y: 0
+  quote_border: 4
+  quote_radius: 0
+  alert_padding_x: 16
+  alert_padding_y: 8
+  alert_title_weight: 500
+  alert_title_line_height: 1
+  table_padding: 6
+  table_padding_x: 13
+  table_padding_y: 6
+  table_radius: 0
+  table_gap: 16
+  table_fill: false
+  rule_height: 4
+  rule_gap: 24
+  link_underline: always
+  roman_ordered_lists: true
+  list_indent: 32
+  list_gap: 4
+  list_paragraph_gap: 16
+light:
+  background: '#ffffff'
+  paper: '#ffffff'
+  paper_border: '#00000000'
+  shadow: '#00000000'
+  foreground: '#1f2328'
+  heading: '#1f2328'
+  heading_colors: ['#1f2328', '#1f2328', '#1f2328', '#1f2328', '#1f2328', '#59636e']
+  heading_border: '#d1d9e0b3'
+  muted: '#59636e'
+  border: '#d1d9e0'
+  rule: '#d1d9e0'
+  # Primer bgColor.accent.emphasis, also used by checked controls.
+  accent: '#0969da'
+  link: '#0969da'
+  link_hover: '#0969da'
+  # Primer selection.bgColor = bgColor.accent.emphasis at alpha 0.2.
+  selection: 'rgba(9,105,218,0.2)'
+  inline_code_background: '#818b981f'
+  inline_code_foreground: '#1f2328'
+  inline_code_border: null
+  code_background: '#f6f8fa'
+  code_foreground: '#1f2328'
+  code_border: '#00000000'
+  kbd_background: '#f6f8fa'
+  kbd_border: '#d1d9e0b3'
+  kbd_shadow: '#d1d9e0b3'
+  quote_background: '#00000000'
+  quote_foreground: '#59636e'
+  quote_border: '#d1d9e0'
+  quote_link: '#0969da'
+  quote_code_background: '#818b981f'
+  quote_code_foreground: '#1f2328'
+  nested_quote_background: '#00000000'
+  nested_quote_border: '#d1d9e0'
+  alert_background: '#00000000'
+  alert_foreground: null # Inherit body foreground, unlike an ordinary quote.
+  alert_border: '#d1d9e0'
+  alerts:
+    - {border: '#0969da', title: '#0969da', icon: 'icons/github/info.svg'}
+    - {border: '#1a7f37', title: '#1a7f37', icon: 'icons/github/light-bulb.svg'}
+    - {border: '#8250df', title: '#8250df', icon: 'icons/github/report.svg'}
+    - {border: '#9a6700', title: '#9a6700', icon: 'icons/github/alert.svg'}
+    - {border: '#cf222e', title: '#d1242f', icon: 'icons/github/stop.svg'}
+  table_code_background: '#818b981f'
+  table_hover: null
+  table_stripe: '#f6f8fa'
+  table_row_border: '#d1d9e0b3'
+  syntax:
+    keyword: '#cf222e'
+    number: '#0550ae'
+    constant: '#0550ae'
+    function: '#6639ba'
+    entity: '#6639ba'
+    variable: '#1f2328'
+    variable_special: '#953800'
+    type: '#6639ba'
+    comment: '#59636e'
+    string: '#0a3069'
+    tag: '#0550ae'
+    tag_name: '#0550ae'
+    escape: '#116329'
+    markup_heading: '#0550ae'
+    markup_list: '#3b2300'
+    link_uri: '#0a3069'
+    diff_added: {foreground: '#116329', background: '#dafbe1'}
+    diff_deleted: {foreground: '#82071e', background: '#ffebe9'}
+    diff_changed: {foreground: '#953800', background: '#ffd8b5'}
+    diff_hunk: '#8250df'
+dark:
+  background: '#0d1117'
+  paper: '#0d1117'
+  paper_border: '#00000000'
+  shadow: '#00000000'
+  foreground: '#f0f6fc'
+  heading: '#f0f6fc'
+  heading_colors: ['#f0f6fc', '#f0f6fc', '#f0f6fc', '#f0f6fc', '#f0f6fc', '#9198a1'] # Six levels; see h6.
+  heading_border: '#3d444db3'
+  muted: '#9198a1'
+  border: '#3d444d'
+  rule: '#3d444d'
+  # Primer bgColor.accent.emphasis, also used by checked controls.
+  accent: '#1f6feb'
+  link: '#4493f8'
+  link_hover: '#4493f8'
+  # Primer selection.bgColor dark override uses alpha 0.7.
+  selection: 'rgba(31,111,235,0.7)'
+  inline_code_background: '#656c7633'
+  inline_code_foreground: '#f0f6fc'
+  inline_code_border: null
+  code_background: '#151b23'
+  code_foreground: '#f0f6fc'
+  code_border: '#00000000'
+  kbd_background: '#151b23'
+  kbd_border: '#3d444db3'
+  kbd_shadow: '#3d444db3'
+  quote_background: '#00000000'
+  quote_foreground: '#9198a1'
+  quote_border: '#3d444d'
+  quote_link: '#4493f8'
+  quote_code_background: '#656c7633'
+  quote_code_foreground: '#f0f6fc'
+  nested_quote_background: '#00000000'
+  nested_quote_border: '#3d444d'
+  alert_background: '#00000000'
+  alert_foreground: null
+  alert_border: '#3d444d'
+  alerts:
+    - {border: '#1f6feb', title: '#4493f8', icon: 'icons/github/info.svg'}
+    - {border: '#238636', title: '#3fb950', icon: 'icons/github/light-bulb.svg'}
+    - {border: '#8957e5', title: '#ab7df8', icon: 'icons/github/report.svg'}
+    - {border: '#9e6a03', title: '#d29922', icon: 'icons/github/alert.svg'}
+    - {border: '#da3633', title: '#f85149', icon: 'icons/github/stop.svg'}
+  table_code_background: '#656c7633'
+  table_hover: null
+  table_stripe: '#151b23'
+  table_row_border: '#3d444db3'
+  syntax:
+    keyword: '#ff7b72'
+    number: '#79c0ff'
+    constant: '#79c0ff'
+    function: '#d2a8ff'
+    entity: '#d2a8ff'
+    variable: '#f0f6fc'
+    variable_special: '#ffa657'
+    type: '#d2a8ff'
+    comment: '#9198a1'
+    string: '#a5d6ff'
+    tag: '#7ee787'
+    tag_name: '#7ee787'
+    escape: '#7ee787'
+    markup_heading: '#1f6feb'
+    markup_list: '#f2cc60'
+    link_uri: '#a5d6ff'
+    diff_added: {foreground: '#aff5b4', background: '#033a16'}
+    diff_deleted: {foreground: '#ffdcd7', background: '#67060c'}
+    diff_changed: {foreground: '#ffdfb6', background: '#5a1e02'}
+    diff_hunk: '#d2a8ff'

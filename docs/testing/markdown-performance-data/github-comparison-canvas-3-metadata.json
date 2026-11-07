@@ -1,0 +1,18 @@
+{
+  "input_sha256": "67712a4534ed9faa77bc36d223d76a68770b9c412925b44d2be8965f24746b56",
+  "input_bytes": 101027,
+  "binary_sha256": "4be1dc1d2345cc251958ab952e160e0b0bac78f668c2fc41814573edb0fd125a",
+  "started_unix": 1791993846.8986428,
+  "options": {
+    "source": "C:/Users/cloudy/.codex/worktrees/compose-open-prs/ctty7/tests/fixtures/markdown/large-navigation.md",
+    "width": 1200,
+    "height": 850,
+    "scale": 1,
+    "dark": true,
+    "hold_seconds": 1,
+    "profile_output": "D:/gh-prj/ctty7/dist/markdown-performance/github-comparison-canvas-3.json"
+  },
+  "window_visibility": "hidden; native CPU drawing is explicitly driven and verified",
+  "build": "optimized dev: debug=0, incremental=false, opt-level=2; gpui and gpui-component opt-level=3",
+  "exit_code": 0
+}

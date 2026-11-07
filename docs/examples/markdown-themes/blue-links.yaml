@@ -1,0 +1,13 @@
+# GitHub defaults with custom link colors. All other styles are inherited.
+schema_version: 2
+id: blue-links
+name: Blue Links
+author: tty7 contributors
+description: GitHub typography with custom blue links.
+license: Apache-2.0
+light:
+  link: '#2456a6'
+  link_hover: '#183f80'
+dark:
+  link: '#a1c2ff'
+  link_hover: '#c6dbff'

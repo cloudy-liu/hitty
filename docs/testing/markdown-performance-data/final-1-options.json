@@ -1,0 +1,9 @@
+{
+  "source": "D:/gh-prj/ctty7/dist/local-test/markdown-stress-test.md",
+  "width": 1200,
+  "height": 850,
+  "scale": 1,
+  "dark": true,
+  "hold_seconds": 1,
+  "profile_output": "D:/gh-prj/ctty7/dist/markdown-performance/final-final-1.json"
+}

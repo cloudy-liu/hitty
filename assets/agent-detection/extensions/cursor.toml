@@ -1,0 +1,20 @@
+# Herdr's divider precedes the nested Cursor pane in tty7's screen snapshot.
+# Preserve the upstream rule priorities and detection regions.
+[[rules]]
+id = "nested_approval_prompt"
+state = "blocked"
+priority = 300
+region = "whole_recent"
+visible_blocker = true
+any = [
+  { line_regex = ['(?i)│\s*allow .*\(y\)'] },
+  { line_regex = ['(?i)│\s*(?:→\s*)?run .*\(y\)'] },
+]
+
+[[rules]]
+id = "nested_spinner_working"
+state = "working"
+priority = 90
+region = "bottom_non_empty_lines(8)"
+visible_working = true
+line_regex = ['│\s*(⬡|⬢|[\u2800-\u28FF]+)\s+\p{Alphabetic}+\w*ing\b']

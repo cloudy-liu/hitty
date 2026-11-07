@@ -1,0 +1,34 @@
+GitHub Markdown reading theme
+
+Live verification: github.com on 2026-10-05, using Chrome CDP in an
+isolated signed-out context, Light default and Dark default. Captured
+computed styles are in tests/fixtures/github-live-2026-10-05.
+Content width, container padding, default link underlines and heading
+code padding follow this capture instead of the third-party snapshot.
+
+CSS snapshot: github-markdown-css 5.9.0
+https://github.com/sindresorhus/github-markdown-css/tree/v5.9.0
+Copyright (c) Sindre Sorhus. MIT license; see GITHUB-LICENSE.
+Generated from GitHub's online Light default and Dark default Markdown styles.
+
+Additional semantic tokens: Primer Primitives
+https://github.com/primer/primitives/tree/f48bc063f7bc0fb3e447386a8c259650ce46dea8
+Token paths: src/tokens/functional/color/{selection,bgColor,control}.json5
+and src/tokens/base/color/{light/light,dark/dark}.json5.
+Copyright (c) GitHub, Inc. MIT license; see PRIMER-LICENSE.
+selection.bgColor uses bgColor.accent.emphasis at 0.2 alpha in light mode and
+0.7 alpha in dark mode. control.checked.bgColor.rest uses the same accent.
+Code copy uses fgColor.muted, the Markdown secondary text token. The built-in
+GitHub theme uses Mermaid's default/light and dark diagram themes. Custom
+themes map their reading palette onto the diagram's semantic color roles.
+
+Alert and heading icons: Primer Octicons, 16px info, light-bulb, report, alert,
+stop and link
+https://github.com/primer/octicons/tree/923a31b34542702800cb90a0fd390e2e60dd92ac
+Copyright (c) GitHub, Inc. MIT license; see OCTICONS-LICENSE.
+
+ctty7 changes: converted CSS values to native rendering parameters and mapped
+TextMate colors to tree-sitter captures. Chinese fallback fonts are non-GitHub
+values. The built-in reading surface uses the application's background by user
+request; explicit custom backgrounds remain unchanged. Font rasterization and
+token boundaries depend on the native platform.

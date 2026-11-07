@@ -1,0 +1,81 @@
+{
+  "repository": "herdrdev/herdr",
+  "commit": "ee5bfb5041bb3e4a49d591c72308aae3c81ecdde",
+  "manifests": {
+    "amp.toml": {
+      "path": "src/detect/manifests/amp.toml",
+      "version": "2026.07.09.1",
+      "sha256": "b5806b0dd21e2f5e752d0eac7f084d5ce2e3f275638cfd1234c42cc88152dc8c"
+    },
+    "antigravity.toml": {
+      "path": "src/detect/manifests/antigravity.toml",
+      "version": "2026.10.05.1",
+      "sha256": "c25fc6bae935b7582d707120915287b52d39bf81b5ab3f368cd688739c6e0325"
+    },
+    "claude.toml": {
+      "path": "src/detect/manifests/claude.toml",
+      "version": "2026.10.11.1",
+      "sha256": "e8b816a70edc1b5f91479acc9977f1f132a55b0c93845682611e91bdf8aa1920"
+    },
+    "codex.toml": {
+      "path": "src/detect/manifests/codex.toml",
+      "version": "2026.10.11.1",
+      "sha256": "d25cfddb5434259303fb0ac27b5b0e6d0558408e6901ee112bcd53de02bcda13"
+    },
+    "copilot.toml": {
+      "path": "src/detect/manifests/github-copilot.toml",
+      "version": "2026.08.29.1",
+      "sha256": "b70c652584326a1a98475a5fcef16207dee9f23b65f8e78300f4fc2bb578cb11"
+    },
+    "cursor.toml": {
+      "path": "src/detect/manifests/cursor.toml",
+      "version": "2026.08.03.1",
+      "sha256": "753b1f7f632d42fa21139c2767ecbb5e1078748aba2e59407ac4932d3ce36ad7"
+    },
+    "droid.toml": {
+      "path": "src/detect/manifests/droid.toml",
+      "version": "2026.06.10.1",
+      "sha256": "d37e7c464177c0e8f3edce8d4fabc4bcc7a1874edf2c4c87a2f927888cf69ce9"
+    },
+    "gemini.toml": {
+      "path": "src/detect/manifests/gemini.toml",
+      "version": "2026.06.10.1",
+      "sha256": "d7013b5e772852ecc595febf964f00b4f9edcbc6047a2a5421613a154d92520d"
+    },
+    "grok.toml": {
+      "path": "src/detect/manifests/grok.toml",
+      "version": "2026.10.05.1",
+      "sha256": "8db7a8de4cd782fce26600859d78db7167399feb4c76f303104bc1bb83ab602b"
+    },
+    "hermes.toml": {
+      "path": "src/detect/manifests/hermes.toml",
+      "version": "2026.07.24.1",
+      "sha256": "533d21b65dea3a0c60c25d0475c9c900d28a5712b6392669a7788f75de2b6e85"
+    },
+    "kimi.toml": {
+      "path": "src/detect/manifests/kimi.toml",
+      "version": "2026.06.10.1",
+      "sha256": "ede08c0d2d5024f7606dc0a1b2f7a9c6a0ebb99f3b6c58ca6757049856d06e05"
+    },
+    "opencode.toml": {
+      "path": "src/detect/manifests/opencode.toml",
+      "version": "2026.06.10.1",
+      "sha256": "faa82aed2d76ad856528caae04232894594b74cc903aed3e522b3e725c5f2c95"
+    },
+    "pi.toml": {
+      "path": "src/detect/manifests/pi.toml",
+      "version": "2026.10.01.1",
+      "sha256": "949f5f3bcfeb6db1261432697dd94a9ed625a733d70c00e6fc0910372fad7c66"
+    },
+    "qodercli.toml": {
+      "path": "src/detect/manifests/qodercli.toml",
+      "version": "2026.06.10.1",
+      "sha256": "2089f70fc78c6576fd7128a00f4e7eedb85be81bde9ed73301b3b88000048961"
+    },
+    "qwen.toml": {
+      "path": "src/detect/manifests/qwen.toml",
+      "version": "2026.08.14.1",
+      "sha256": "b27aa456af228e8a4ceac74f0dd431c33b21473b69314fc672a7fba474e2a7fe"
+    }
+  }
+}

@@ -1,0 +1,451 @@
+{
+  "label": "Final: active HTML preview, no CDP",
+  "root_process_id": 25972,
+  "samples": [
+    {
+      "utc": "2026-10-20T05:13:52.2920051Z",
+      "processes": [
+        {
+          "id": 25972,
+          "parent": 29456,
+          "name": "tty7-app.exe",
+          "private_working_set_bytes": 30797824,
+          "working_set_bytes": 105345024,
+          "private_committed_bytes": 190353408,
+          "cpu_one_core_percent": 0,
+          "cpu_seconds": 12.5625
+        },
+        {
+          "id": 29124,
+          "parent": 25972,
+          "name": "conhost.exe",
+          "private_working_set_bytes": 8208384,
+          "working_set_bytes": 25448448,
+          "private_committed_bytes": 9494528,
+          "cpu_one_core_percent": 0,
+          "cpu_seconds": 1.28125
+        },
+        {
+          "id": 26448,
+          "parent": 25972,
+          "name": "msedgewebview2.exe",
+          "private_working_set_bytes": 28196864,
+          "working_set_bytes": 120598528,
+          "private_committed_bytes": 37142528,
+          "cpu_one_core_percent": 0,
+          "cpu_seconds": 2.28125
+        },
+        {
+          "id": 28652,
+          "parent": 26448,
+          "name": "msedgewebview2.exe",
+          "private_working_set_bytes": 1552384,
+          "working_set_bytes": 12029952,
+          "private_committed_bytes": 2449408,
+          "cpu_one_core_percent": 0,
+          "cpu_seconds": 0.015625
+        },
+        {
+          "id": 7388,
+          "parent": 26448,
+          "name": "msedgewebview2.exe",
+          "private_working_set_bytes": 78958592,
+          "working_set_bytes": 124010496,
+          "private_committed_bytes": 137416704,
+          "cpu_one_core_percent": 0,
+          "cpu_seconds": 1.4375
+        },
+        {
+          "id": 30840,
+          "parent": 26448,
+          "name": "msedgewebview2.exe",
+          "private_working_set_bytes": 5894144,
+          "working_set_bytes": 33812480,
+          "private_committed_bytes": 11067392,
+          "cpu_one_core_percent": 0,
+          "cpu_seconds": 0.21875
+        },
+        {
+          "id": 9720,
+          "parent": 26448,
+          "name": "msedgewebview2.exe",
+          "private_working_set_bytes": 2674688,
+          "working_set_bytes": 21417984,
+          "private_committed_bytes": 7430144,
+          "cpu_one_core_percent": 0,
+          "cpu_seconds": 0.109375
+        },
+        {
+          "id": 34060,
+          "parent": 26448,
+          "name": "msedgewebview2.exe",
+          "private_working_set_bytes": 15945728,
+          "working_set_bytes": 62906368,
+          "private_committed_bytes": 29245440,
+          "cpu_one_core_percent": 0,
+          "cpu_seconds": 0.171875
+        }
+      ],
+      "private_working_set_mib": 164.25,
+      "working_set_mib": 482.15,
+      "private_committed_mib": 404.93,
+      "cpu_one_core_percent": null
+    },
+    {
+      "utc": "2026-10-20T05:13:54.2549045Z",
+      "processes": [
+        {
+          "id": 25972,
+          "parent": 29456,
+          "name": "tty7-app.exe",
+          "private_working_set_bytes": 30797824,
+          "working_set_bytes": 105345024,
+          "private_committed_bytes": 190353408,
+          "cpu_one_core_percent": 0,
+          "cpu_seconds": 12.75
+        },
+        {
+          "id": 29124,
+          "parent": 25972,
+          "name": "conhost.exe",
+          "private_working_set_bytes": 8208384,
+          "working_set_bytes": 25448448,
+          "private_committed_bytes": 9494528,
+          "cpu_one_core_percent": 0,
+          "cpu_seconds": 1.28125
+        },
+        {
+          "id": 26448,
+          "parent": 25972,
+          "name": "msedgewebview2.exe",
+          "private_working_set_bytes": 28377088,
+          "working_set_bytes": 120795136,
+          "private_committed_bytes": 37343232,
+          "cpu_one_core_percent": 0,
+          "cpu_seconds": 2.4375
+        },
+        {
+          "id": 28652,
+          "parent": 26448,
+          "name": "msedgewebview2.exe",
+          "private_working_set_bytes": 1552384,
+          "working_set_bytes": 12029952,
+          "private_committed_bytes": 2449408,
+          "cpu_one_core_percent": 0,
+          "cpu_seconds": 0.015625
+        },
+        {
+          "id": 7388,
+          "parent": 26448,
+          "name": "msedgewebview2.exe",
+          "private_working_set_bytes": 78958592,
+          "working_set_bytes": 124010496,
+          "private_committed_bytes": 137416704,
+          "cpu_one_core_percent": 0,
+          "cpu_seconds": 1.46875
+        },
+        {
+          "id": 30840,
+          "parent": 26448,
+          "name": "msedgewebview2.exe",
+          "private_working_set_bytes": 5902336,
+          "working_set_bytes": 33853440,
+          "private_committed_bytes": 11075584,
+          "cpu_one_core_percent": 0,
+          "cpu_seconds": 0.21875
+        },
+        {
+          "id": 9720,
+          "parent": 26448,
+          "name": "msedgewebview2.exe",
+          "private_working_set_bytes": 2674688,
+          "working_set_bytes": 21417984,
+          "private_committed_bytes": 7430144,
+          "cpu_one_core_percent": 0,
+          "cpu_seconds": 0.109375
+        },
+        {
+          "id": 34060,
+          "parent": 26448,
+          "name": "msedgewebview2.exe",
+          "private_working_set_bytes": 15101952,
+          "working_set_bytes": 62070784,
+          "private_committed_bytes": 28356608,
+          "cpu_one_core_percent": 0,
+          "cpu_seconds": 0.171875
+        }
+      ],
+      "private_working_set_mib": 163.62,
+      "working_set_mib": 481.58,
+      "private_committed_mib": 404.28,
+      "cpu_one_core_percent": 0
+    },
+    {
+      "utc": "2026-10-20T05:13:56.1328006Z",
+      "processes": [
+        {
+          "id": 25972,
+          "parent": 29456,
+          "name": "tty7-app.exe",
+          "private_working_set_bytes": 30797824,
+          "working_set_bytes": 105345024,
+          "private_committed_bytes": 190353408,
+          "cpu_one_core_percent": 0,
+          "cpu_seconds": 12.796875
+        },
+        {
+          "id": 29124,
+          "parent": 25972,
+          "name": "conhost.exe",
+          "private_working_set_bytes": 8208384,
+          "working_set_bytes": 25448448,
+          "private_committed_bytes": 9494528,
+          "cpu_one_core_percent": 0,
+          "cpu_seconds": 1.28125
+        },
+        {
+          "id": 26448,
+          "parent": 25972,
+          "name": "msedgewebview2.exe",
+          "private_working_set_bytes": 28377088,
+          "working_set_bytes": 120795136,
+          "private_committed_bytes": 37343232,
+          "cpu_one_core_percent": 0,
+          "cpu_seconds": 2.53125
+        },
+        {
+          "id": 28652,
+          "parent": 26448,
+          "name": "msedgewebview2.exe",
+          "private_working_set_bytes": 1552384,
+          "working_set_bytes": 12029952,
+          "private_committed_bytes": 2449408,
+          "cpu_one_core_percent": 0,
+          "cpu_seconds": 0.015625
+        },
+        {
+          "id": 7388,
+          "parent": 26448,
+          "name": "msedgewebview2.exe",
+          "private_working_set_bytes": 78958592,
+          "working_set_bytes": 124010496,
+          "private_committed_bytes": 137416704,
+          "cpu_one_core_percent": 0,
+          "cpu_seconds": 1.5
+        },
+        {
+          "id": 30840,
+          "parent": 26448,
+          "name": "msedgewebview2.exe",
+          "private_working_set_bytes": 5902336,
+          "working_set_bytes": 33861632,
+          "private_committed_bytes": 11075584,
+          "cpu_one_core_percent": 0,
+          "cpu_seconds": 0.21875
+        },
+        {
+          "id": 9720,
+          "parent": 26448,
+          "name": "msedgewebview2.exe",
+          "private_working_set_bytes": 2674688,
+          "working_set_bytes": 21417984,
+          "private_committed_bytes": 7430144,
+          "cpu_one_core_percent": 0,
+          "cpu_seconds": 0.109375
+        },
+        {
+          "id": 34060,
+          "parent": 26448,
+          "name": "msedgewebview2.exe",
+          "private_working_set_bytes": 15101952,
+          "working_set_bytes": 62070784,
+          "private_committed_bytes": 28356608,
+          "cpu_one_core_percent": 0,
+          "cpu_seconds": 0.171875
+        }
+      ],
+      "private_working_set_mib": 163.62,
+      "working_set_mib": 481.59,
+      "private_committed_mib": 404.28,
+      "cpu_one_core_percent": 0
+    },
+    {
+      "utc": "2026-10-20T05:13:57.9978190Z",
+      "processes": [
+        {
+          "id": 25972,
+          "parent": 29456,
+          "name": "tty7-app.exe",
+          "private_working_set_bytes": 30797824,
+          "working_set_bytes": 105345024,
+          "private_committed_bytes": 190353408,
+          "cpu_one_core_percent": 9,
+          "cpu_seconds": 12.84375
+        },
+        {
+          "id": 29124,
+          "parent": 25972,
+          "name": "conhost.exe",
+          "private_working_set_bytes": 8208384,
+          "working_set_bytes": 25448448,
+          "private_committed_bytes": 9494528,
+          "cpu_one_core_percent": 0,
+          "cpu_seconds": 1.28125
+        },
+        {
+          "id": 26448,
+          "parent": 25972,
+          "name": "msedgewebview2.exe",
+          "private_working_set_bytes": 28377088,
+          "working_set_bytes": 120827904,
+          "private_committed_bytes": 37343232,
+          "cpu_one_core_percent": 33,
+          "cpu_seconds": 2.640625
+        },
+        {
+          "id": 28652,
+          "parent": 26448,
+          "name": "msedgewebview2.exe",
+          "private_working_set_bytes": 1552384,
+          "working_set_bytes": 12029952,
+          "private_committed_bytes": 2449408,
+          "cpu_one_core_percent": 0,
+          "cpu_seconds": 0.015625
+        },
+        {
+          "id": 7388,
+          "parent": 26448,
+          "name": "msedgewebview2.exe",
+          "private_working_set_bytes": 78958592,
+          "working_set_bytes": 124010496,
+          "private_committed_bytes": 137416704,
+          "cpu_one_core_percent": 0,
+          "cpu_seconds": 1.5
+        },
+        {
+          "id": 30840,
+          "parent": 26448,
+          "name": "msedgewebview2.exe",
+          "private_working_set_bytes": 5902336,
+          "working_set_bytes": 33861632,
+          "private_committed_bytes": 11075584,
+          "cpu_one_core_percent": 0,
+          "cpu_seconds": 0.21875
+        },
+        {
+          "id": 9720,
+          "parent": 26448,
+          "name": "msedgewebview2.exe",
+          "private_working_set_bytes": 2674688,
+          "working_set_bytes": 21417984,
+          "private_committed_bytes": 7430144,
+          "cpu_one_core_percent": 0,
+          "cpu_seconds": 0.109375
+        },
+        {
+          "id": 34060,
+          "parent": 26448,
+          "name": "msedgewebview2.exe",
+          "private_working_set_bytes": 15101952,
+          "working_set_bytes": 62070784,
+          "private_committed_bytes": 28356608,
+          "cpu_one_core_percent": 0,
+          "cpu_seconds": 0.171875
+        }
+      ],
+      "private_working_set_mib": 163.62,
+      "working_set_mib": 481.62,
+      "private_committed_mib": 404.28,
+      "cpu_one_core_percent": 0
+    },
+    {
+      "utc": "2026-10-20T05:13:59.8207750Z",
+      "processes": [
+        {
+          "id": 25972,
+          "parent": 29456,
+          "name": "tty7-app.exe",
+          "private_working_set_bytes": 30814208,
+          "working_set_bytes": 105365504,
+          "private_committed_bytes": 190386176,
+          "cpu_one_core_percent": 0,
+          "cpu_seconds": 12.859375
+        },
+        {
+          "id": 29124,
+          "parent": 25972,
+          "name": "conhost.exe",
+          "private_working_set_bytes": 8208384,
+          "working_set_bytes": 25448448,
+          "private_committed_bytes": 9494528,
+          "cpu_one_core_percent": 0,
+          "cpu_seconds": 1.28125
+        },
+        {
+          "id": 26448,
+          "parent": 25972,
+          "name": "msedgewebview2.exe",
+          "private_working_set_bytes": 28364800,
+          "working_set_bytes": 120815616,
+          "private_committed_bytes": 37277696,
+          "cpu_one_core_percent": 31,
+          "cpu_seconds": 2.875
+        },
+        {
+          "id": 28652,
+          "parent": 26448,
+          "name": "msedgewebview2.exe",
+          "private_working_set_bytes": 1552384,
+          "working_set_bytes": 12029952,
+          "private_committed_bytes": 2449408,
+          "cpu_one_core_percent": 0,
+          "cpu_seconds": 0.015625
+        },
+        {
+          "id": 7388,
+          "parent": 26448,
+          "name": "msedgewebview2.exe",
+          "private_working_set_bytes": 78946304,
+          "working_set_bytes": 123998208,
+          "private_committed_bytes": 137416704,
+          "cpu_one_core_percent": 0,
+          "cpu_seconds": 1.53125
+        },
+        {
+          "id": 30840,
+          "parent": 26448,
+          "name": "msedgewebview2.exe",
+          "private_working_set_bytes": 5902336,
+          "working_set_bytes": 33861632,
+          "private_committed_bytes": 11075584,
+          "cpu_one_core_percent": 0,
+          "cpu_seconds": 0.21875
+        },
+        {
+          "id": 9720,
+          "parent": 26448,
+          "name": "msedgewebview2.exe",
+          "private_working_set_bytes": 2674688,
+          "working_set_bytes": 21417984,
+          "private_committed_bytes": 7430144,
+          "cpu_one_core_percent": 0,
+          "cpu_seconds": 0.109375
+        },
+        {
+          "id": 34060,
+          "parent": 26448,
+          "name": "msedgewebview2.exe",
+          "private_working_set_bytes": 15101952,
+          "working_set_bytes": 62070784,
+          "private_committed_bytes": 28356608,
+          "cpu_one_core_percent": 0,
+          "cpu_seconds": 0.171875
+        }
+      ],
+      "private_working_set_mib": 163.62,
+      "working_set_mib": 481.61,
+      "private_committed_mib": 404.25,
+      "cpu_one_core_percent": 0
+    }
+  ]
+}
