@@ -8,7 +8,7 @@ use gpui_component::WindowExt as _;
 use crate::ui::i18n::{L10nKey, t_fmt};
 
 #[allow(unused_imports)]
-pub use tty7_core::host::{
+pub use hitty_core::host::{
     Entry, Host, HostId, MTime, Meta, Output, SearchHit, SharedHost, WatchSub,
 };
 
@@ -76,7 +76,7 @@ mod blocking {
             st.threads += 1;
             let spawned = Arc::clone(inner);
             match std::thread::Builder::new()
-                .name("tty7-host-op".into())
+                .name("hitty-host-op".into())
                 .spawn(move || worker(spawned))
             {
                 Ok(_) => return,
@@ -206,7 +206,7 @@ impl HostOps {
         F: FnOnce(&dyn Host) -> T + Send + 'static,
         L: FnOnce(&mut E, T, &mut Context<E>) + 'static,
     {
-        tty7_core::host::register_ui_thread();
+        hitty_core::host::register_ui_thread();
         cx.spawn(async move |this, cx| {
             let Some(out) = off_thread(move || f(&*host)).await else {
                 return;
@@ -223,7 +223,7 @@ impl HostOps {
         F: FnOnce(&dyn Host) -> T + Send + 'static,
         L: FnOnce(&mut App, T) + 'static,
     {
-        tty7_core::host::register_ui_thread();
+        hitty_core::host::register_ui_thread();
         cx.spawn(async move |_this, cx| {
             let Some(out) = off_thread(move || f(&*host)).await else {
                 return;
@@ -240,7 +240,7 @@ impl HostOps {
         F: FnOnce(&dyn Host) -> T + Send + 'static,
         L: FnOnce(&mut E, T, &mut Window, &mut Context<E>) + 'static,
     {
-        tty7_core::host::register_ui_thread();
+        hitty_core::host::register_ui_thread();
         cx.spawn_in(window, async move |this, cx| {
             let Some(out) = off_thread(move || f(&*host)).await else {
                 return;
@@ -539,7 +539,7 @@ mod gpui_tests {
         let _: () = pane.update(cx, |_pane: &mut Pane, cx: &mut Context<Pane>| {
             let d = Arc::clone(&detached);
             HostOps::run_detached(
-                tty7_core::host::local::LocalHost::new(),
+                hitty_core::host::local::LocalHost::new(),
                 cx,
                 |_h: &dyn Host| 7usize,
                 move |_app: &mut App, n: usize| {
@@ -548,7 +548,7 @@ mod gpui_tests {
             );
             let v = Arc::clone(&view_scoped);
             HostOps::run(
-                tty7_core::host::local::LocalHost::new(),
+                hitty_core::host::local::LocalHost::new(),
                 cx,
                 |_h: &dyn Host| 7usize,
                 move |_pane: &mut Pane, n: usize, _cx: &mut Context<Pane>| {

@@ -116,7 +116,7 @@ impl GitStatusCache {
     /// the two are the same answer read at different moments — but the overlay
     /// treats a disagreement between them as "the repository changed under me"
     /// and re-probes. Leaving the branch behind made that disagreement
-    /// permanent whenever anything switched branches outside tty7: the overlay
+    /// permanent whenever anything switched branches outside hitty: the overlay
     /// re-read the diff, published it, woke every watcher of this cache, found
     /// the same disagreement, and went round again — two `git` processes per
     /// lap, forever, with `refreshing…` pinned to the header.
@@ -269,7 +269,7 @@ mod tests {
         assert_eq!((got.added, got.removed), (8, 6));
     }
 
-    /// A branch switched outside tty7 leaves the cached status naming the old
+    /// A branch switched outside hitty leaves the cached status naming the old
     /// one. The diff overlay compares its snapshot's branch against this cache
     /// to decide whether the repository moved under it, so a disagreement the
     /// diff read cannot settle is a re-probe that never stops. The read settles

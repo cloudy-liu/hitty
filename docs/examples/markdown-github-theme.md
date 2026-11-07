@@ -1,6 +1,6 @@
 # GitHub Markdown acceptance sample
 
-Read this file in ctty7 and on GitHub with Light default and Dark default.
+Read this file in hitty and on GitHub with Light default and Dark default.
 Body text includes **semibold**, *emphasis*, ~~deleted text~~, a
 [link to this section](#github-markdown-acceptance-sample), and 中文混合排版。
 

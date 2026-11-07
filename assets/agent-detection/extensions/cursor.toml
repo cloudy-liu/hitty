@@ -1,4 +1,4 @@
-# Herdr's divider precedes the nested Cursor pane in tty7's screen snapshot.
+# Herdr's divider precedes the nested Cursor pane in hitty's screen snapshot.
 # Preserve the upstream rule priorities and detection regions.
 [[rules]]
 id = "nested_approval_prompt"

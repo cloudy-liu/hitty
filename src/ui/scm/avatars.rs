@@ -1,5 +1,6 @@
 //! Author photo loading boundary for History; local initials are rendered by the row.
 use gpui::{App, AppContext as _, Context, Entity, RenderImage, Task};
+use hitty_core::daemon::install::checksums::{hex, sha256};
 use smol::io::AsyncReadExt as _;
 use std::{
     collections::HashMap,
@@ -8,7 +9,6 @@ use std::{
     sync::Arc,
     time::{Duration, Instant, SystemTime},
 };
-use tty7_core::daemon::install::checksums::{hex, sha256};
 
 /// Use the preset's auto-sized initials box; pixel avatar sizes in the pinned
 /// component force a half-size text box and inherit an unrelated line height.

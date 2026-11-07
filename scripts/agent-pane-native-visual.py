@@ -76,7 +76,7 @@ def capture_scene(binary, output, phase, scene, scale):
     name, titles, dark, hover, zoom, settings, layout = scene
     png = output / f"{phase}-{name}.png"
     log = output / f"{phase}-{name}.log"
-    with tempfile.TemporaryDirectory(prefix="ctty7-agent-pane-visual-") as temporary:
+    with tempfile.TemporaryDirectory(prefix="hitty-agent-pane-visual-") as temporary:
         options = pathlib.Path(temporary) / "options.json"
         options.write_text(json.dumps({"output": str(png), "titles": titles, "dark": dark,
                                        "zoom": zoom, "settings": settings, "layout": layout, "hold_seconds": 90,
@@ -130,7 +130,7 @@ def capture(binary, output, phase, repository, scale, only=None):
     (output / f"{phase}-metadata.json").write_text(json.dumps({
         "revision": revision, "platform": "Windows / GPUI / PrintWindow",
         "viewport": [W, H], "display_scale": scale,
-        "source": "Production Tty7App render; deterministic daemon messages, no live agent.",
+        "source": "Production HittyApp render; deterministic daemon messages, no live agent.",
         "scenes": [s[0] for s in SCENES],
     }, indent=2), encoding="utf-8")
 

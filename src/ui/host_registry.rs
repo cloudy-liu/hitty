@@ -2,9 +2,9 @@ use std::collections::HashMap;
 use std::sync::{Arc, Weak};
 
 use gpui::{App, Global};
-use tty7_core::host::local::LocalHost;
+use hitty_core::host::local::LocalHost;
 
-pub use tty7_core::host::{Host, HostId, SharedHost};
+pub use hitty_core::host::{Host, HostId, SharedHost};
 
 pub struct HostRegistry {
     hosts: HashMap<HostId, SharedHost>,

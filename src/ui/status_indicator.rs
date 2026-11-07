@@ -6,7 +6,7 @@
 //! A half-filled disc keeps a full circle's outline at every angle, so turning
 //! it read as half done rather than busy. The old badge was a nine-pixel dot
 //! that told working from done by hue alone and drew nothing at all for idle,
-//! so an idle agent and one whose status tty7 could not read looked the same.
+//! so an idle agent and one whose status hitty could not read looked the same.
 //! Every state is a different shape here as well as a different colour.
 
 use crate::core::cli_agent::AgentStatus;
@@ -20,7 +20,7 @@ pub enum StatusIndicator {
     /// A finished turn nobody has looked at yet.
     Done,
     Idle,
-    /// An agent tty7 recognised but has no status for: no hooks installed and
+    /// An agent hitty recognised but has no status for: no hooks installed and
     /// no screen manifest, or neither has reported yet.
     Unknown,
 }

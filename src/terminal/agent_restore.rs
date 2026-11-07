@@ -1,5 +1,5 @@
 use gpui::{Context, Window};
-use tty7_core::core::machine::AgentFacts;
+use hitty_core::core::machine::AgentFacts;
 
 use crate::core::cli_agent::{CLIAgent, command_argv};
 use crate::ui::host_ops::HostOps;

@@ -11,7 +11,7 @@ use crate::core::keychain::{CredentialStore as _, OsCredentialStore};
 use crate::daemon::protocol::{AuthPromptKind, AuthResponse, SshPhase};
 use crate::terminal::view::TerminalView;
 
-use super::app::Tty7App;
+use super::app::HittyApp;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct KiRow {
@@ -282,13 +282,13 @@ pub(crate) struct SshPromptState {
     remember: bool,
     phase: Option<SshPhase>,
     routed: Option<crate::ui::remote_connect::PendingAuth>,
-    routed_host: Option<tty7_core::host::HostId>,
+    routed_host: Option<hitty_core::host::HostId>,
     focus_handle: FocusHandle,
     _subs: Vec<Subscription>,
 }
 
 impl SshPromptState {
-    pub(crate) fn new(cx: &mut Context<Tty7App>) -> Self {
+    pub(crate) fn new(cx: &mut Context<HittyApp>) -> Self {
         Self {
             pane: None,
             pane_id: None,
@@ -319,7 +319,7 @@ impl SshPromptState {
     }
 }
 
-impl Tty7App {
+impl HittyApp {
     pub(crate) fn on_auth_prompt_ready(
         &mut self,
         view: Entity<TerminalView>,
@@ -1046,7 +1046,7 @@ impl Tty7App {
 fn build_inputs(
     model: &PromptModel,
     window: &mut Window,
-    cx: &mut Context<Tty7App>,
+    cx: &mut Context<HittyApp>,
 ) -> Vec<Entity<InputState>> {
     let count = model.input_count();
     (0..count)
@@ -1364,14 +1364,14 @@ mod focus_tests {
     use crate::core::session::Session;
     use gpui::{TestAppContext, VisualTestContext, WindowHandle};
 
-    fn harness(cx: &mut TestAppContext) -> (WindowHandle<Tty7App>, VisualTestContext) {
+    fn harness(cx: &mut TestAppContext) -> (WindowHandle<HittyApp>, VisualTestContext) {
         cx.executor().allow_parking();
         cx.update(|cx| {
             gpui_component::init(cx);
             cx.set_global(Config::default());
         });
         let window = cx.add_window(|window, cx| {
-            Tty7App::with_session(None, Some(Session::default()), window, cx)
+            HittyApp::with_session(None, Some(Session::default()), window, cx)
         });
         window
             .update(cx, |_, window, _| window.activate_window())

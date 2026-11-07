@@ -4,18 +4,18 @@ description: "Native builds for macOS, Windows, and Linux — plus building from
 ---
 
 Every release publishes native builds on
-[**GitHub Releases**](https://github.com/cloudy-liu/ctty7/releases). There is no
+[**GitHub Releases**](https://github.com/cloudy-liu/hitty/releases). There is no
 runtime to install first: fonts are embedded in the binary, and the Linux
 AppImage bundles its own X11/Wayland/font libraries.
 
 <Tabs>
   <Tab title="macOS">
-    Download the DMG that matches your Mac and drag **tty7** into Applications.
+    Download the DMG that matches your Mac and drag **hitty** into Applications.
 
     | Mac | File |
     |---|---|
-    | Apple silicon (M1 and later) | `ctty7-<version>-macos-arm64.dmg` |
-    | Intel | `ctty7-<version>-macos-x86_64.dmg` |
+    | Apple silicon (M1 and later) | `hitty-<version>-macos-arm64.dmg` |
+    | Intel | `hitty-<version>-macos-x86_64.dmg` |
 
     Builds use ad-hoc signing unless release signing credentials are configured.
     Gatekeeper may require manual confirmation.
@@ -31,23 +31,23 @@ AppImage bundles its own X11/Wayland/font libraries.
 
     | File | Use it when |
     |---|---|
-    | `ctty7-<version>-windows-x86_64-setup.exe` | You want a normal install with Start-menu entries and an uninstaller. |
-    | `ctty7-<version>-windows-x86_64.zip` | You want it portable — unzip anywhere and run `tty7-app.exe`. |
+    | `hitty-<version>-windows-x86_64-setup.exe` | You want a normal install with Start-menu entries and an uninstaller. |
+    | `hitty-<version>-windows-x86_64.zip` | You want it portable — unzip anywhere and run `hitty-app.exe`. |
 
     The installer offers one optional setup task, off by default: **Add "Open in
-    ctty7" to the folder context menu**. It writes shell verbs under `HKCU`, so
+    hitty" to the folder context menu**. It writes shell verbs under `HKCU`, so
     only your own Windows account is affected, and the uninstaller always takes
     them back out.
 
     A portable install can add or remove the same entries itself:
 
     ```powershell
-    tty7-app.exe --register-explorer-menu
-    tty7-app.exe --unregister-explorer-menu
+    hitty-app.exe --register-explorer-menu
+    hitty-app.exe --unregister-explorer-menu
     ```
 
     <Note>
-      The Windows package also carries a Linux `tty7-server` binary so a WSL
+      The Windows package also carries a Linux `hitty-server` binary so a WSL
       distro can be served locally instead of downloading one. See
       [Remote workspaces](/remote/workspaces).
     </Note>
@@ -56,19 +56,19 @@ AppImage bundles its own X11/Wayland/font libraries.
   <Tab title="Linux">
     | File | Use it when |
     |---|---|
-    | `ctty7-<version>-linux-x86_64.AppImage` | Almost always. `chmod +x` and run — the X11, Wayland, xkb, and font libraries are bundled, so it works on Fedora, Arch, Debian and friends, not just Ubuntu. |
-    | `ctty7-<version>-linux-x86_64.tar.gz` | You would rather unpack the plain binary and place it yourself. |
+    | `hitty-<version>-linux-x86_64.AppImage` | Almost always. `chmod +x` and run — the X11, Wayland, xkb, and font libraries are bundled, so it works on Fedora, Arch, Debian and friends, not just Ubuntu. |
+    | `hitty-<version>-linux-x86_64.tar.gz` | You would rather unpack the plain binary and place it yourself. |
 
     ```bash
-    chmod +x ctty7-*-linux-x86_64.AppImage
-    ./ctty7-*-linux-x86_64.AppImage
+    chmod +x hitty-*-linux-x86_64.AppImage
+    ./hitty-*-linux-x86_64.AppImage
     ```
   </Tab>
 </Tabs>
 
-## The `tty7` command
+## The `hitty` command
 
-Every installer ships the `tty7` CLI beside the app, and the app puts it on your
+Every installer ships the `hitty` CLI beside the app, and the app puts it on your
 PATH the first time it launches. That is what lets a script — or a coding agent
 in some other terminal — open panes and read them back.
 
@@ -78,34 +78,34 @@ in some other terminal — open panes and read them back.
 - **On Windows** the install directory is appended to your user PATH, and the
   uninstaller removes it again.
 
-A `tty7` you installed yourself — a `cargo install` build, a package manager's
+A `hitty` you installed yourself — a `cargo install` build, a package manager's
 copy — is never replaced. To turn the whole thing off, uncheck **Settings →
-Agents → Install the tty7 command on PATH**.
+Agents → Install the hitty command on PATH**.
 
 <Tip>
-  Inside a tty7 pane the CLI works regardless of PATH, because panes inherit the
+  Inside a hitty pane the CLI works regardless of PATH, because panes inherit the
   app's environment.
 </Tip>
 
 ## Updating
 
-tty7 checks for updates every six hours and can update itself: **Settings →
+hitty checks for updates every six hours and can update itself: **Settings →
 About → Check now**, then **Update and relaunch**. Releases are downloaded and
 verified in the background so applying one is just a restart.
 
-ctty7 has one official Release channel. Old 26.x installations need one manual
+hitty has one official Release channel. Old 26.x installations need one manual
 installation of 0.1.0. See [Updates](/reference/updates).
 
 ## Building from source
 
 You need a stable Rust toolchain. The build is a plain `cargo build`; the app
-binary is `tty7-app`.
+binary is `hitty-app`.
 
 <Tabs>
   <Tab title="macOS / Windows">
     ```bash
-    git clone https://github.com/cloudy-liu/ctty7
-    cd ctty7
+    git clone https://github.com/cloudy-liu/hitty
+    cd hitty
     cargo build --release
     ```
   </Tab>
@@ -141,17 +141,17 @@ be running for sounds to play.
 
 <AccordionGroup>
   <Accordion title="macOS">
-    Quit tty7 (use **Quit and Stop Server** from the tray menu so the background
+    Quit hitty (use **Quit and Stop Server** from the tray menu so the background
     server stops too), then drag the app to the Trash. Your settings live in
-    `~/.config/tty7` and are left alone; delete that folder to remove them.
+    `~/.config/hitty` and are left alone; delete that folder to remove them.
   </Accordion>
   <Accordion title="Windows">
     Use **Add or remove programs**. The uninstaller removes the PATH entry and
     any Explorer context-menu keys it added. Settings live in
-    `%APPDATA%\tty7`.
+    `%APPDATA%\hitty`.
   </Accordion>
   <Accordion title="Linux">
     Delete the AppImage or the unpacked directory. Settings live in
-    `~/.config/tty7`.
+    `~/.config/hitty`.
   </Accordion>
 </AccordionGroup>

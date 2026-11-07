@@ -497,13 +497,13 @@ pub(crate) mod tests {
     <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="160" height="30">
       <path id="line"><animate id="typing" attributeName="d" begin="0s;typing.end" dur="1s"
         values="m0,20 h0;m0,20 h160;m0,20 h160;m0,20 h0" keyTimes="0;0.6;0.85;1"/></path>
-      <text font-family="monospace" font-size="20" fill="#ff5fa2"><textPath xlink:href="#line">ctty7</textPath></text>
+      <text font-family="monospace" font-size="20" fill="#ff5fa2"><textPath xlink:href="#line">tty</textPath></text>
     </svg>"##;
 
     pub(crate) fn typing_with_embedded_font() -> String {
         use base64::Engine;
         let encoded = base64::engine::general_purpose::STANDARD.encode(include_bytes!(
-            "../../tests/fixtures/markdown/jetbrains-mono-ctty7.ttf"
+            "../../tests/fixtures/markdown/jetbrains-mono-subset.ttf"
         ));
         std::str::from_utf8(TYPING)
             .unwrap()
@@ -564,7 +564,7 @@ pub(crate) mod tests {
 
     #[test]
     fn markdown_svg_embedded_font_matches_explicit_font_pixels() {
-        let font = include_bytes!("../../tests/fixtures/markdown/jetbrains-mono-ctty7.ttf");
+        let font = include_bytes!("../../tests/fixtures/markdown/jetbrains-mono-subset.ttf");
         let svg = typing_with_embedded_font();
         let doc = Document::parse(&svg).unwrap();
         let nodes: Vec<_> = doc
@@ -606,7 +606,7 @@ pub(crate) mod tests {
     fn markdown_svg_fonts_are_document_scoped_and_ignore_external_urls() {
         use base64::Engine;
         let encoded = base64::engine::general_purpose::STANDARD.encode(include_bytes!(
-            "../../tests/fixtures/markdown/jetbrains-mono-ctty7.ttf"
+            "../../tests/fixtures/markdown/jetbrains-mono-subset.ttf"
         ));
         let svg = format!(
             "<svg><style>/* font */ @font-face {{font-family:Scoped Fixture;src:url(https://example.com/missing.ttf),url(data:font/truetype;base64,{encoded}) format('truetype')}}</style></svg>"

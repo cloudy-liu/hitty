@@ -47,4 +47,4 @@ Remove old-product data adoption and old-GUI installer cleanup behavior. Do not 
 - Validate the existing four desktop targets across the three platforms: Windows x86_64, Linux x86_64, macOS ARM64, and macOS x86_64, together with required remote-server artifacts.
 - Check clean first-run behavior with the retained preference defaults, normal terminal/Agent/SSH/WSL behavior, installation, and updates between Hitty versions. Assemble and verify the first release as a draft before publication.
 
-Source import and release implementation have not started. The GitHub specification has not yet been updated with these decisions; its legacy-data import requirements are superseded. Application defaults and the maintainer's current configuration have not been modified.
+The maintainer confirmed the complete scope (Q5). GitHub issue #1 is synchronized with the specification in `docs/specs/0001-hitty-bootstrap.md`. The source baseline is recorded in commit `4699e7e`; rebranding and validation are in progress. No Hitty release has been published. Preference defaults and the maintainer's current configuration remain unchanged.

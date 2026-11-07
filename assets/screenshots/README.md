@@ -22,7 +22,7 @@ are byte-identical copies of `workspace-light.webp` for existing documentation l
 
 ## Capture method
 
-The document fixture opens the full production `Tty7App`. Its sample pane data
+The document fixture opens the full production `HittyApp`. Its sample pane data
 travels through the normal daemon message reader. Codex is idle, Claude Code is
 working, Gemini needs input, and Cursor has an unread result. These states use
 controlled events; no agent CLI runs and no model request is sent. Branch names
@@ -50,14 +50,14 @@ checkout. The preparation script uses only Python's standard library and Git;
 it refuses to reuse an existing output directory.
 
 ```powershell
-cargo build --locked --features markdown-visual-tests --bin tty7-app
-python scripts/prepare-readme-captures.py D:/gh-prj/ctty7-readme-capture
+cargo build --locked --features markdown-visual-tests --bin hitty-app
+python scripts/prepare-readme-captures.py D:/gh-prj/hitty-readme-capture
 ```
 
 Launch one case at a time with a separate configuration directory. For example:
 
 ```powershell
-.\target\debug\tty7-app.exe --config-dir D:/gh-prj/ctty7-readme-capture/light-config --document-visual D:/gh-prj/ctty7-readme-capture/workspace-light.json
+.\target\debug\hitty-app.exe --config-dir D:/gh-prj/hitty-readme-capture/light-config --document-visual D:/gh-prj/hitty-readme-capture/workspace-light.json
 ```
 
 The other document options are `workspace-dark.json`, `editor-light.json`, and

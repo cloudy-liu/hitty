@@ -1,16 +1,16 @@
 ---
 title: "Coding agents"
-description: "What tty7 does around Claude Code, Codex, and 20 others — without ever wrapping them."
+description: "What hitty does around Claude Code, Codex, and 20 others — without ever wrapping them."
 ---
 
-tty7 recognises coding agents running in a pane and builds around them. It does
+hitty recognises coding agents running in a pane and builds around them. It does
 not wrap them, proxy them, or replace their interface: the agent you start is
-the agent you get, running in a normal PTY, with its own UI. tty7 adds the
+the agent you get, running in a normal PTY, with its own UI. hitty adds the
 things a terminal is in a position to add — who is running where, what they
 need, and what changed.
 
 <Frame caption="Placeholder — screenshot: a sidebar of agent sessions across several repos, each with a brand avatar and status symbol">
-  <img src="/images/placeholder.svg" alt="Agent sessions in the tty7 sidebar" />
+  <img src="/images/placeholder.svg" alt="Agent sessions in the hitty sidebar" />
 </Frame>
 
 ## Which agents
@@ -90,8 +90,8 @@ Just by running an agent in a pane:
 ## What needs a hook
 
 Live status — **working**, **needs your input**, **done** — comes from the agent
-itself, over a channel tty7 installs into that agent's configuration. It powers
-the status symbols, the notifications, the tray icon, and `tty7 wait`. For
+itself, over a channel hitty installs into that agent's configuration. It powers
+the status symbols, the notifications, the tray icon, and `hitty wait`. For
 agents with a herdr detection manifest, the window also reads the status off
 the agent's screen, so Cursor and Antigravity get a status with no hooks at all,
 and Qoder shows one before its hooks are installed.
@@ -109,6 +109,6 @@ Installing takes one click per agent under **Settings → Agents**.
     Resume, fork, and copying a session id.
   </Card>
   <Card title="Orchestration" icon="diagram-project" href="/agents/orchestration">
-    One agent driving another with `tty7 wait`.
+    One agent driving another with `hitty wait`.
   </Card>
 </CardGroup>

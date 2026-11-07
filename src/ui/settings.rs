@@ -33,8 +33,8 @@ use crate::core::ssh_profile::{
 };
 use crate::daemon::protocol::{SshTestNeed, SshTestReport};
 use crate::ui::app::{
-    FONT_SIZE_STEP, LINE_HEIGHT_STEP, TILE_GLYPH_LINE, TILE_SIZE, TITLE_BAR_HEIGHT, ThemeEdit,
-    Tty7App, UI_FONT_SIZE_STEP,
+    FONT_SIZE_STEP, HittyApp, LINE_HEIGHT_STEP, TILE_GLYPH_LINE, TILE_SIZE, TITLE_BAR_HEIGHT,
+    ThemeEdit, UI_FONT_SIZE_STEP,
 };
 use crate::ui::host_ops::HostId;
 use crate::ui::i18n::{L10nKey, t, t_fmt, t_plural};
@@ -271,7 +271,7 @@ fn preset_choice<T: Copy + PartialEq>(
 
 /// `50000` beside cells reading `10,000` and `100,000` looks like a different
 /// kind of number, so the custom cell groups its digits the way the presets
-/// next to it are written. Every locale tty7 ships writes these counts the
+/// next to it are written. Every locale hitty ships writes these counts the
 /// same way — the preset labels themselves are one set of literals for all
 /// three.
 fn group_thousands(n: usize) -> String {
@@ -965,7 +965,7 @@ fn ssh_group_key(p: &SshProfile) -> &str {
 fn ssh_group_label(key: &str) -> &str {
     match key {
         crate::core::ssh_config::IMPORTED_GROUP => "~/.ssh/config",
-        "" => t(L10nKey::SettingsInTty7),
+        "" => t(L10nKey::SettingsInHitty),
         other => other,
     }
 }
@@ -1518,7 +1518,7 @@ fn forward_row_inputs(row: &ForwardRuleForm) -> [&Entity<InputState>; 5] {
 
 fn seed_forward_row(
     window: &mut Window,
-    cx: &mut Context<Tty7App>,
+    cx: &mut Context<HittyApp>,
     rule: &ForwardRule,
 ) -> ForwardRuleForm {
     let port = |p: u16| if p == 0 { String::new() } else { p.to_string() };
@@ -1539,7 +1539,7 @@ fn seed_forward_row(
 
 fn seed_hinted(
     window: &mut Window,
-    cx: &mut Context<Tty7App>,
+    cx: &mut Context<HittyApp>,
     value: &str,
     placeholder: &'static str,
 ) -> Entity<InputState> {
@@ -1553,7 +1553,7 @@ fn seed_hinted(
 
 fn seed_input(
     window: &mut Window,
-    cx: &mut Context<Tty7App>,
+    cx: &mut Context<HittyApp>,
     value: &str,
     multi_line: bool,
 ) -> Entity<InputState> {
@@ -1565,7 +1565,7 @@ fn seed_input(
     })
 }
 
-impl Tty7App {
+impl HittyApp {
     pub(crate) fn render_settings(
         &self,
         window: &mut Window,
@@ -2531,7 +2531,7 @@ impl Tty7App {
         let config = cx.global::<Config>();
         let overridden = window_overrides_active(config, cfg!(target_os = "windows"));
         let dim_inactive_panes = config.dim_inactive_panes;
-        let opacity = Tty7App::effective_window_opacity(cx);
+        let opacity = HittyApp::effective_window_opacity(cx);
 
         let opacity_control = h_flex()
             .items_center()
@@ -4100,7 +4100,7 @@ impl Tty7App {
             .collect();
         log::info!(
             "imported {read} alias(es) from {source} ({} file(s) read): {} added, {} updated, \
-             {} unchanged; no tty7 setting for: [{}]",
+             {} unchanged; no hitty setting for: [{}]",
             report.files_read,
             stats.added,
             stats.updated,
@@ -5127,10 +5127,10 @@ impl Tty7App {
             t(L10nKey::SettingsShellDefaultLoginShell)
         };
 
-        // tty7 already knows which shells are installed — it lists them on the
+        // hitty already knows which shells are installed — it lists them on the
         // new-tab button. Settings asked you to type one from memory instead,
         // so the same choice was a menu in one place and a blind text field in
-        // the other. The field stays: a shell tty7 did not find still has to be
+        // the other. The field stays: a shell hitty did not find still has to be
         // reachable by path.
         // Detected shells only. A `custom_shells` row is a menu extra rather
         // than a candidate for the platform default, and this picker hands its
@@ -5603,7 +5603,7 @@ impl Tty7App {
         let copy_on_select = cfg.copy_on_select;
         let clip_trim = cfg.clipboard_trim_trailing_spaces;
 
-        // Tab completion and history search are menus tty7 opens *inside* its
+        // Tab completion and history search are menus hitty opens *inside* its
         // own prompt editor. With the editor off, both keys already belong to
         // the shell, so the switches have nothing left to switch: grey them
         // out and say why, rather than leave two controls that quietly do
@@ -6538,16 +6538,18 @@ impl Tty7App {
                 "editor-font-size"
             };
             let step = if line_height { 0.1 } else { 1.0 };
-            let change =
-                move |delta, this: &mut Tty7App, window: &mut Window, cx: &mut Context<Tty7App>| {
-                    let cfg = cx.global::<Config>();
-                    let current = if line_height {
-                        cfg.editor_line_height
-                    } else {
-                        cfg.editor_font_size
-                    };
-                    this.commit_editor_metric(line_height, current + delta, window, cx);
+            let change = move |delta,
+                               this: &mut HittyApp,
+                               window: &mut Window,
+                               cx: &mut Context<HittyApp>| {
+                let cfg = cx.global::<Config>();
+                let current = if line_height {
+                    cfg.editor_line_height
+                } else {
+                    cfg.editor_font_size
                 };
+                this.commit_editor_metric(line_height, current + delta, window, cx);
+            };
             h_flex()
                 .items_center()
                 .gap_1()
@@ -7520,7 +7522,7 @@ impl Tty7App {
         // half-typed address is never marked wrong mid-keystroke.
         let http_proxy_value = http_proxy_input.read(cx).value().trim().to_string();
         let http_proxy_invalid = !http_proxy_value.is_empty()
-            && !tty7_core::daemon::install::proxy::is_valid_manual(&http_proxy_value);
+            && !hitty_core::daemon::install::proxy::is_valid_manual(&http_proxy_value);
         let http_proxy_error =
             http_proxy_invalid.then(|| field_error(t(L10nKey::SettingsAppHttpProxyInvalid), cx));
         let http_proxy_control = v_flex()
@@ -7560,9 +7562,9 @@ impl Tty7App {
                             )))
                             .child(
                                 Link::new("about-github")
-                                    .href("https://github.com/cloudy-liu/ctty7")
+                                    .href("https://github.com/cloudy-liu/hitty")
                                     .text_sm()
-                                    .child("github.com/cloudy-liu/ctty7"),
+                                    .child("github.com/cloudy-liu/hitty"),
                             ),
                     ),
             )
@@ -8352,7 +8354,7 @@ mod tests {
         }
     }
 
-    /// The `tty7` CLI exists so scripts and coding agents can drive tty7, so it
+    /// The `hitty` CLI exists so scripts and coding agents can drive hitty, so it
     /// lives with the other agent integrations rather than under About.
     #[test]
     fn command_line_tool_is_searchable_under_agents() {
@@ -8377,7 +8379,7 @@ mod tests {
             "History search",
             "Dim inactive panes",
             "Option (⌥) acts as Meta",
-            "Install the tty7 command on PATH",
+            "Install the hitty command on PATH",
         ] {
             assert!(
                 settings_search_entries()
@@ -8451,7 +8453,7 @@ mod tests {
             ssh_group_label(crate::core::ssh_config::IMPORTED_GROUP),
             "~/.ssh/config"
         );
-        assert_eq!(ssh_group_label(""), "In ctty7");
+        assert_eq!(ssh_group_label(""), "In hitty");
         assert_eq!(ssh_group_label("Work"), "Work");
     }
 
@@ -8684,10 +8686,10 @@ mod gpui_tests {
     use super::SettingsSection;
     use crate::core::config::{Config, MouseZoomModifier};
     use crate::core::session::Session;
-    use crate::ui::app::Tty7App;
+    use crate::ui::app::HittyApp;
     use gpui::{AppContext as _, Entity, TestAppContext, VisualTestContext, px, size};
 
-    fn harness(cx: &mut TestAppContext) -> (Entity<Tty7App>, VisualTestContext) {
+    fn harness(cx: &mut TestAppContext) -> (Entity<HittyApp>, VisualTestContext) {
         cx.executor().allow_parking();
         cx.update(|cx| {
             gpui_component::init(cx);
@@ -8696,7 +8698,7 @@ mod gpui_tests {
         });
         let window = cx.add_window(|window, cx| {
             let app =
-                cx.new(|cx| Tty7App::with_session(None, Some(Session::default()), window, cx));
+                cx.new(|cx| HittyApp::with_session(None, Some(Session::default()), window, cx));
             gpui_component::Root::new(app, window, cx)
         });
         cx.background_executor.run_until_parked();
@@ -8704,8 +8706,8 @@ mod gpui_tests {
             .update(cx, |root, _, _| {
                 root.view()
                     .clone()
-                    .downcast::<Tty7App>()
-                    .unwrap_or_else(|_| panic!("window root wraps a Tty7App"))
+                    .downcast::<HittyApp>()
+                    .unwrap_or_else(|_| panic!("window root wraps a HittyApp"))
             })
             .unwrap();
         let vcx = VisualTestContext::from_window(window.into(), cx);
@@ -8716,7 +8718,7 @@ mod gpui_tests {
     #[cfg(target_os = "windows")]
     fn attention_badge_settings_persist_and_reach_the_tray_snapshot(cx: &mut TestAppContext) {
         use crate::core::config::AttentionBadgeSize;
-        const CHILD: &str = "TTY7_TEST_ATTENTION_BADGE_CONFIG_CHILD";
+        const CHILD: &str = "HITTY_TEST_ATTENTION_BADGE_CONFIG_CHILD";
         if std::env::var_os(CHILD).is_none() {
             let name = concat!(
                 module_path!(),
@@ -8758,7 +8760,7 @@ mod gpui_tests {
         use crate::core::config::NotifyMode;
         // Config's directory override is process-wide. Other GPUI tests save
         // defaults concurrently, so run the real persistence check on its own.
-        const CHILD: &str = "TTY7_TEST_AGENT_SOUND_CONFIG_CHILD";
+        const CHILD: &str = "HITTY_TEST_AGENT_SOUND_CONFIG_CHILD";
         if std::env::var_os(CHILD).is_none() {
             let name = concat!(
                 module_path!(),

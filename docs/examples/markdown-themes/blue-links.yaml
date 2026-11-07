@@ -2,7 +2,7 @@
 schema_version: 2
 id: blue-links
 name: Blue Links
-author: tty7 contributors
+author: hitty contributors
 description: GitHub typography with custom blue links.
 license: Apache-2.0
 light:

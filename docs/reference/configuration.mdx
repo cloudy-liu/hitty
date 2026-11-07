@@ -1,13 +1,13 @@
 ---
 title: "config.json"
-description: "Every key tty7 reads, its type, and its default."
+description: "Every key hitty reads, its type, and its default."
 ---
 
 | | |
 |---|---|
-| macOS / Linux | `~/.config/tty7/config.json` |
-| Windows | `%APPDATA%\tty7\config.json` |
-| Override the whole directory | `TTY7_CONFIG_DIR` |
+| macOS / Linux | `~/.config/hitty/config.json` |
+| Windows | `%APPDATA%\hitty\config.json` |
+| Override the whole directory | `HITTY_CONFIG_DIR` |
 
 Every key is optional — a missing one means its default, so you only write what
 you change. Out-of-range numbers are clamped rather than rejected, and an
@@ -106,8 +106,8 @@ their id from the file name. [More about themes →](/customization/themes)
 
 | Key | Type | Default | |
 |---|---|---|---|
-| `shell` | object | — | `{"program": "fish", "args": ["-l"]}`. Unset uses the platform default. `args` you write are always launched verbatim. They normally turn off [shell integration](/reference/shell-integration); custom `cmd.exe` is the exception when its startup loads Clink (for example, Cmder), because tty7 can integrate it through the environment without changing argv. |
-| `custom_shells` | array | `[]` | Extra entries for the new-tab menu: `[{"label": "Ubuntu", "program": "wsl.exe", "args": ["-d", "Ubuntu"]}]`. Launched exactly as written, listed after the detected shells. An entry with arguments normally skips [shell integration](/reference/shell-integration), so it has no prompt marks, working-directory tracking, or command-finished notifications. Custom `cmd.exe` entries that load Clink (including Cmder) receive environment-only integration while keeping every argument unchanged. An entry with no arguments, on a shell tty7 recognizes, is integrated like the detected row beside it. An entry with no `program` is skipped; with no `label` it is named after its program. |
+| `shell` | object | — | `{"program": "fish", "args": ["-l"]}`. Unset uses the platform default. `args` you write are always launched verbatim. They normally turn off [shell integration](/reference/shell-integration); custom `cmd.exe` is the exception when its startup loads Clink (for example, Cmder), because hitty can integrate it through the environment without changing argv. |
+| `custom_shells` | array | `[]` | Extra entries for the new-tab menu: `[{"label": "Ubuntu", "program": "wsl.exe", "args": ["-d", "Ubuntu"]}]`. Launched exactly as written, listed after the detected shells. An entry with arguments normally skips [shell integration](/reference/shell-integration), so it has no prompt marks, working-directory tracking, or command-finished notifications. Custom `cmd.exe` entries that load Clink (including Cmder) receive environment-only integration while keeping every argument unchanged. An entry with no arguments, on a shell hitty recognizes, is integrated like the detected row beside it. An entry with no `program` is skipped; with no `label` it is named after its program. |
 | `working_directory` | object | `{"strategy":"inherit"}` | `strategy` is `inherit`, `home`, or `custom`; `path` is used when custom. |
 | `env` | object | `{}` | Extra environment variables for every pane. |
 | `scrollback_limit` | number | `10000` | Lines per pane (100–100,000). New panes only. |
@@ -131,9 +131,9 @@ their id from the file name. [More about themes →](/customization/themes)
 
 | Key | Type | Default | |
 |---|---|---|---|
-| `prompt_editor` | bool | `true` | tty7 edits the shell prompt. Off sends every key at the prompt to the shell, so its own line editor (ZLE, readline) owns editing. Shell integration stays on. |
-| `tab_completion` | bool | `true` | tty7's completion menu on <kbd>⇥</kbd>. Off hands the key to the shell. Needs `prompt_editor`. |
-| `history_search` | bool | `true` | tty7's fuzzy history on <kbd>⌃ R</kbd>. Off hands the key to the shell. Needs `prompt_editor`. |
+| `prompt_editor` | bool | `true` | hitty edits the shell prompt. Off sends every key at the prompt to the shell, so its own line editor (ZLE, readline) owns editing. Shell integration stays on. |
+| `tab_completion` | bool | `true` | hitty's completion menu on <kbd>⇥</kbd>. Off hands the key to the shell. Needs `prompt_editor`. |
+| `history_search` | bool | `true` | hitty's fuzzy history on <kbd>⌃ R</kbd>. Off hands the key to the shell. Needs `prompt_editor`. |
 | `smart_select` | bool | `true` | Double-click grabs URLs, paths, bracket pairs, CJK words. |
 | `word_separators` | string | see below | Characters that end a word. Used when smart selection is off. |
 | `copy_on_select` | bool | `false` | |
@@ -156,7 +156,7 @@ angle brackets, and a tab:
 | Key | Type | Default | |
 |---|---|---|---|
 | `link_url` | bool | `true` | Underline and open URLs on ⌘/Ctrl-click. |
-| `link_file_open` | string | `internal` | What a file link opens: `internal` (tty7's editor, at the line), `system` (the OS file association), `command`. A file on another machine always uses `internal`. |
+| `link_file_open` | string | `internal` | What a file link opens: `internal` (hitty's editor, at the line), `system` (the OS file association), `command`. A file on another machine always uses `internal`. |
 | `link_file_command` | string | — | Command for file links under `link_file_open: command`. `{path}`, `{line}`, `{column}` are substituted; a flag whose value is missing is dropped. |
 | `ssh_loopback_forward` | bool | `false` | Open `localhost:PORT` links through a temporary forward when the pane is in SSH. |
 
@@ -165,7 +165,7 @@ angle brackets, and a tab:
 | Key | Type | Default | |
 |---|---|---|---|
 | `notify_on_command_finish` | enum | `"unfocused"` | Desktop notifications for command completion and Agent done/input events: `never`, `unfocused`, `always`. Agent events check focus across the whole app. |
-| `agent_notification_sound` | enum | `"unfocused"` | Independent Agent done/input sound policy on Windows, macOS and Linux: `never`, `unfocused`, `always`. Uses the bundled Default sound; `unfocused` means no tty7 window is active. |
+| `agent_notification_sound` | enum | `"unfocused"` | Independent Agent done/input sound policy on Windows, macOS and Linux: `never`, `unfocused`, `always`. Uses the bundled Default sound; `unfocused` means no hitty window is active. |
 | `attention_badge_size` | enum | `"medium"` | Windows taskbar and tray blue-dot size: `small` (previous size), `medium` (Standard), or `large`. Changes apply without restarting. |
 | `notify_threshold_secs` | number | `10` | How long a normal command must run to qualify (1–3600). Agent done/input alerts do not use this threshold. |
 | `show_binary_file_notice` | bool | `true` | Show an explanatory hint for archives and other unsupported binary previews. The hint's checkbox and **Got it** save an opt-out; **Window & Tabs → Notifications → Show unsupported preview hints** restores it. Read and encoding errors remain visible. |
@@ -176,7 +176,7 @@ angle brackets, and a tab:
 |---|---|---|---|
 | `agent_commands` | object | `{}` | Map a wrapper command to an agent slug: `{"cc": "claude"}`. |
 | `restore_agent_sessions` | bool | `true` | Relaunch an agent conversation when a lost pane is restored. |
-| `install_cli_on_path` | bool | `true` | Put the bundled `tty7` command on PATH at launch. |
+| `install_cli_on_path` | bool | `true` | Put the bundled `hitty` command on PATH at launch. |
 
 [Agent slugs →](/agents/overview#your-own-wrapper)
 
@@ -194,18 +194,18 @@ angle brackets, and a tab:
 |---|---|---|---|
 | `check_for_updates` | bool | `true` | |
 | `auto_download_updates` | bool | `true` | Fetch and verify in the background so installing is a restart. Packages are ~25–30 MB and a check happens every six hours. |
-| `http_proxy` | string | — | For tty7's *own* traffic only — update checks, downloads, remote-server installs. `http://…` or `socks5://…`. Programs in a pane are unaffected. |
+| `http_proxy` | string | — | For hitty's *own* traffic only — update checks, downloads, remote-server installs. `http://…` or `socks5://…`. Programs in a pane are unaffected. |
 
 [Updates →](/reference/updates)
 
-## Keys tty7 manages itself
+## Keys hitty manages itself
 
 `ssh_profile_frecency` and `command_frecency` record how often and how recently
 you use a profile or command, so the pickers can rank them. They are written by
 the app; there is no reason to edit them.
 
 <Note>
-  If the file cannot be parsed, tty7 starts on defaults, keeps your original at
+  If the file cannot be parsed, hitty starts on defaults, keeps your original at
   `config.json.corrupt`, and logs the reason. It never silently overwrites what
   you wrote.
 </Note>

@@ -17,7 +17,7 @@ use crate::{
     },
     terminal::view::{TerminalView, quiet_test_pane},
     ui::{
-        app::{Tab, Tty7App},
+        app::{HittyApp, Tab},
         pane::{Pane, PaneSlot},
     },
 };
@@ -40,7 +40,7 @@ struct Options {
 }
 
 struct Fixture {
-    owner: Entity<Tty7App>,
+    owner: Entity<HittyApp>,
     _streams: Vec<Stream>,
 }
 
@@ -144,7 +144,7 @@ pub(crate) fn run(path: &std::ffi::OsStr) {
                     |window, cx| {
                         crate::ui::theme::apply_theme(Some(window), cx);
                         let owner = cx.new(|cx| {
-                            Tty7App::with_session(
+                            HittyApp::with_session(
                                 None,
                                 Some(crate::core::session::Session::default()),
                                 window,

@@ -16,7 +16,7 @@ def main():
     if not re.fullmatch(r"(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)", args.version):
         parser.error("version must be X.Y.Z")
     expected = {
-        f"ctty7-{args.version}-{suffix}"
+        f"hitty-{args.version}-{suffix}"
         for suffix in (
             "windows-x86_64-setup.exe", "windows-x86_64.zip",
             "linux-x86_64.AppImage", "linux-x86_64.tar.gz",
@@ -24,8 +24,8 @@ def main():
             "macos-x86_64.dmg", "macos-x86_64.zip",
         )
     } | {
-        "tty7-server-linux-x86_64-musl", "tty7-server-linux-aarch64-musl",
-        "tty7-server-macos-aarch64", "tty7-server-macos-x86_64",
+        "hitty-server-linux-x86_64-musl", "hitty-server-linux-aarch64-musl",
+        "hitty-server-macos-aarch64", "hitty-server-macos-x86_64",
     }
     actual = {p.name for p in args.directory.iterdir()}
     allowed = expected | ({"checksums.txt"} if args.checksums else set())

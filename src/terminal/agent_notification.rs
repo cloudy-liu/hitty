@@ -124,7 +124,7 @@ fn play_native(playing: std::sync::Arc<std::sync::atomic::AtomicBool>) {
     // Keep the playback slot until the native backend finishes. New events and
     // previews share this slot and never queue behind the current sound.
     if let Err(error) = std::thread::Builder::new()
-        .name("tty7-agent-sound".into())
+        .name("hitty-agent-sound".into())
         .spawn(move || {
             if let Err(error) = play_wav() {
                 log::warn!("failed to play Agent notification sound: {error:#}");
@@ -211,7 +211,7 @@ fn play_wav() -> anyhow::Result<()> {
     }
     let stream = Simple::new(
         None,
-        "ctty7",
+        "hitty",
         Direction::Playback,
         None,
         "Agent notification",

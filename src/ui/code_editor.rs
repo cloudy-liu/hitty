@@ -20,7 +20,7 @@ use gpui_component::{
 };
 
 use crate::core::config::Config;
-use crate::ui::app::Tty7App;
+use crate::ui::app::HittyApp;
 use crate::ui::document_column::DocumentChrome;
 use crate::ui::host_ops::{HostId, HostOps, MTime, SharedHost, WatchSub};
 use crate::ui::i18n::{L10nKey, t, t_fmt};
@@ -198,7 +198,7 @@ pub(crate) struct EditorPanelState {
 }
 
 impl EditorPanelState {
-    pub(crate) fn new(window: &mut Window, cx: &mut Context<Tty7App>) -> Self {
+    pub(crate) fn new(window: &mut Window, cx: &mut Context<HittyApp>) -> Self {
         let (tx, rx) = smol::channel::unbounded::<Vec<PathBuf>>();
         cx.spawn_in(window, async move |app, cx| {
             while let Ok(first) = rx.recv().await {
@@ -403,7 +403,7 @@ fn settle_save(ok: bool, wrote_seq: u64, current_seq: u64, pending: bool) -> Sav
     }
 }
 
-impl Tty7App {
+impl HittyApp {
     pub(crate) fn reveal_commit_document_tab(&self) {
         if let Some(code) = self.tab_code() {
             code.tab_scroll.scroll_to_item(code.files.len());
@@ -884,7 +884,7 @@ impl Tty7App {
         });
         let sub = cx.subscribe_in(&input, window, {
             let input_id = input.entity_id();
-            move |this: &mut Tty7App, _input, ev, _window, cx| {
+            move |this: &mut HittyApp, _input, ev, _window, cx| {
                 if matches!(ev, InputEvent::Change) {
                     let Some(f) = this
                         .tabs
@@ -1860,7 +1860,7 @@ impl Tty7App {
     }
 }
 
-impl Tty7App {
+impl HittyApp {
     pub(crate) fn render_code_overlay(
         &mut self,
         chrome: DocumentChrome,
@@ -2343,7 +2343,7 @@ impl Tty7App {
                 ),
             )
             .context_menu(move |menu, _window, cx| {
-                Tty7App::document_header_menu(menu, &menu_app, cx)
+                HittyApp::document_header_menu(menu, &menu_app, cx)
             })
     }
 
@@ -2695,7 +2695,7 @@ mod tests {
         }
     }
 
-    fn markdown_window(cx: &mut TestAppContext) -> (Entity<Tty7App>, VisualTestContext) {
+    fn markdown_window(cx: &mut TestAppContext) -> (Entity<HittyApp>, VisualTestContext) {
         let (app, mut vcx) = crate::ui::app::test_window::harness(cx);
         app.update_in(&mut vcx, |app, _, cx| {
             crate::ui::markdown_preview::init(Default::default(), cx);
@@ -2712,7 +2712,7 @@ mod tests {
         let (app, mut vcx) = markdown_window(cx);
         app.update_in(&mut vcx, |app, window, cx| {
             app.editor_install_file(
-                tty7_core::host::local::LocalHost::new(),
+                hitty_core::host::local::LocalHost::new(),
                 "/work/README.md".into(),
                 "# Preserve this document\n".into(),
                 None,
@@ -3000,7 +3000,7 @@ mod tests {
             app.tabs[app.active].document_layout = Some(crate::core::config::DocumentLayout::Fill);
             for n in 0..18 {
                 app.editor_install_file(
-                    tty7_core::host::local::LocalHost::new(),
+                    hitty_core::host::local::LocalHost::new(),
                     format!("/work/file-{n}.rs").into(),
                     "fn main() {}".into(),
                     None,
@@ -3053,7 +3053,7 @@ mod tests {
         let (app, mut vcx) = markdown_window(cx);
         let input = app.update_in(&mut vcx, |app, window, cx| {
             app.editor_install_file(
-                tty7_core::host::local::LocalHost::new(),
+                hitty_core::host::local::LocalHost::new(),
                 "/work/long-lines.rs".into(),
                 format!(
                     "const LONG_LINE: &str = \"{}END_OF_LONG_LINE\";\n",
@@ -3101,7 +3101,7 @@ mod tests {
         std::fs::write(&invalid_text, [0xff, 0xfe]).unwrap();
         app.update_in(&mut vcx, |app, window, cx| {
             app.editor_install_file(
-                tty7_core::host::local::LocalHost::new(),
+                hitty_core::host::local::LocalHost::new(),
                 dir.path().join("keep.rs"),
                 "fn keep() {}".into(),
                 None,
@@ -3116,7 +3116,12 @@ mod tests {
                     .notification
                     .clone()
                     .update(cx, |list, cx| list.clear(window, cx));
-                app.editor_open_on_host(tty7_core::host::local::LocalHost::new(), path, window, cx);
+                app.editor_open_on_host(
+                    hitty_core::host::local::LocalHost::new(),
+                    path,
+                    window,
+                    cx,
+                );
             });
             wait_for_markdown(&mut vcx, |cx| {
                 cx.update(|window, cx| {
@@ -3175,7 +3180,12 @@ mod tests {
                     .notification
                     .clone()
                     .update(cx, |list, cx| list.clear(window, cx));
-                app.editor_open_on_host(tty7_core::host::local::LocalHost::new(), path, window, cx);
+                app.editor_open_on_host(
+                    hitty_core::host::local::LocalHost::new(),
+                    path,
+                    window,
+                    cx,
+                );
             });
             wait_for_markdown(&mut vcx, |cx| {
                 cx.update(|window, cx| {
@@ -3226,7 +3236,7 @@ mod tests {
                 "/work/main.rs",
             ] {
                 app.editor_install_file(
-                    tty7_core::host::local::LocalHost::new(),
+                    hitty_core::host::local::LocalHost::new(),
                     path.into(),
                     "# Document\n".into(),
                     None,
@@ -3236,7 +3246,7 @@ mod tests {
             }
             // Reopening a file must activate it without moving its tab.
             app.editor_install_file(
-                tty7_core::host::local::LocalHost::new(),
+                hitty_core::host::local::LocalHost::new(),
                 "/work/second/guide.md".into(),
                 String::new(),
                 None,
@@ -3302,7 +3312,7 @@ mod tests {
         let path = folder.join("guide.md");
         std::fs::write(&path, "# Guide\n").unwrap();
         app.update_in(&mut vcx, |app, window, cx| {
-            app.editor_open_on_host(tty7_core::host::local::LocalHost::new(), &path, window, cx);
+            app.editor_open_on_host(hitty_core::host::local::LocalHost::new(), &path, window, cx);
         });
         wait_for_markdown(&mut vcx, |vcx| {
             app.read_with(vcx, |app, _| {
@@ -3352,7 +3362,7 @@ mod tests {
         std::fs::write(&path, "# Original\n").unwrap();
         app.update_in(&mut vcx, |app, window, cx| {
             app.editor_install_file(
-                tty7_core::host::local::LocalHost::new(),
+                hitty_core::host::local::LocalHost::new(),
                 path.clone(),
                 "# Original\n".into(),
                 None,
@@ -3408,7 +3418,7 @@ mod tests {
             app.set_document_layout(crate::core::config::DocumentLayout::Fill, cx);
             for name in ["migration.md", "release.md", "settings.rs"] {
                 app.editor_install_file(
-                    tty7_core::host::local::LocalHost::new(),
+                    hitty_core::host::local::LocalHost::new(),
                     Path::new("/work").join(name),
                     String::new(),
                     None,
@@ -3469,7 +3479,7 @@ mod tests {
             app.set_document_layout(crate::core::config::DocumentLayout::Fill, cx);
             for name in ["migration.md", "release.md", "settings.rs"] {
                 app.editor_install_file(
-                    tty7_core::host::local::LocalHost::new(),
+                    hitty_core::host::local::LocalHost::new(),
                     Path::new("/work").join(name),
                     String::new(),
                     None,
@@ -3513,7 +3523,7 @@ mod tests {
         app.update_in(&mut vcx, |app, window, cx| {
             for ix in 3..10 {
                 app.editor_install_file(
-                    tty7_core::host::local::LocalHost::new(),
+                    hitty_core::host::local::LocalHost::new(),
                     format!("/work/document-number-{ix}.rs").into(),
                     String::new(),
                     None,
@@ -3558,7 +3568,12 @@ mod tests {
         for path in [&first, &second, &first] {
             let canonical = std::fs::canonicalize(path).unwrap();
             app.update_in(&mut vcx, |app, window, cx| {
-                app.editor_open_on_host(tty7_core::host::local::LocalHost::new(), path, window, cx);
+                app.editor_open_on_host(
+                    hitty_core::host::local::LocalHost::new(),
+                    path,
+                    window,
+                    cx,
+                );
             });
             wait_for_markdown(&mut vcx, |vcx| {
                 app.read_with(vcx, |app, _| {
@@ -3592,7 +3607,7 @@ mod tests {
         app.update_in(&mut vcx, |app, window, cx| {
             for path in [&first, &second] {
                 app.editor_install_file(
-                    tty7_core::host::local::LocalHost::new(),
+                    hitty_core::host::local::LocalHost::new(),
                     path.clone(),
                     std::fs::read_to_string(path).unwrap(),
                     None,
@@ -3671,7 +3686,7 @@ mod tests {
         app.update_in(&mut vcx, |app, window, cx| {
             for ix in 0..8 {
                 app.editor_install_file(
-                    tty7_core::host::local::LocalHost::new(),
+                    hitty_core::host::local::LocalHost::new(),
                     format!("/work/document-number-{ix}.rs").into(),
                     "fn main() {}".into(),
                     None,
@@ -3687,7 +3702,7 @@ mod tests {
         ] {
             app.update_in(&mut vcx, |app, window, cx| {
                 app.editor_open_on_host(
-                    tty7_core::host::local::LocalHost::new(),
+                    hitty_core::host::local::LocalHost::new(),
                     Path::new(path),
                     window,
                     cx,
@@ -3715,7 +3730,7 @@ mod tests {
         let original = "fn first() {}";
         let first_session = app.update_in(&mut vcx, |app, window, cx| {
             app.editor_install_file(
-                tty7_core::host::local::LocalHost::new(),
+                hitty_core::host::local::LocalHost::new(),
                 "/work/shared.rs".into(),
                 original.into(),
                 None,
@@ -3727,7 +3742,7 @@ mod tests {
                 .push(crate::ui::app::Tab::new(crate::ui::pane::Pane::Empty));
             app.activate(app.tabs.len() - 1, window, cx);
             app.editor_install_file(
-                tty7_core::host::local::LocalHost::new(),
+                hitty_core::host::local::LocalHost::new(),
                 "/work/shared.rs".into(),
                 original.into(),
                 None,
@@ -3772,7 +3787,7 @@ mod tests {
         std::fs::write(&target, "<h1>B</h1>").unwrap();
         app.update_in(&mut vcx, |app, window, cx| {
             app.editor_install_file(
-                tty7_core::host::local::LocalHost::new(),
+                hitty_core::host::local::LocalHost::new(),
                 active.clone(),
                 "<h1>A</h1>".into(),
                 None,
@@ -3802,7 +3817,7 @@ mod tests {
         std::fs::write(&target, "<h1>Saved</h1>").unwrap();
         app.update_in(&mut vcx, |app, window, cx| {
             app.editor_install_file(
-                tty7_core::host::local::LocalHost::new(),
+                hitty_core::host::local::LocalHost::new(),
                 target.clone(),
                 "<h1>Saved</h1>".into(),
                 None,
@@ -3833,7 +3848,7 @@ mod tests {
         std::fs::write(&path, "<h1>Saved</h1>").unwrap();
         app.update_in(&mut vcx, |app, window, cx| {
             app.editor_install_file(
-                tty7_core::host::local::LocalHost::new(),
+                hitty_core::host::local::LocalHost::new(),
                 path.clone(),
                 "<h1>Saved</h1>".into(),
                 None,
@@ -3868,7 +3883,7 @@ mod tests {
         std::fs::write(&path, "<h1>Saved</h1>").unwrap();
         app.update_in(&mut vcx, |app, window, cx| {
             app.editor_install_file(
-                tty7_core::host::local::LocalHost::new(),
+                hitty_core::host::local::LocalHost::new(),
                 path.clone(),
                 "<h1>Saved</h1>".into(),
                 None,
@@ -3892,7 +3907,7 @@ mod tests {
         std::fs::write(&path, saved).unwrap();
         app.update_in(&mut vcx, |app, window, cx| {
             app.editor_install_file(
-                tty7_core::host::local::LocalHost::new(),
+                hitty_core::host::local::LocalHost::new(),
                 path.clone(),
                 saved.into(),
                 None,
@@ -3937,7 +3952,7 @@ mod tests {
         app.update_in(&mut vcx, |app, window, cx| {
             let path = dir.path().join("index.HTM");
             app.editor_install_file(
-                tty7_core::host::local::LocalHost::new(),
+                hitty_core::host::local::LocalHost::new(),
                 path.clone(),
                 "<h1>Index</h1>".into(),
                 None,
@@ -3976,7 +3991,7 @@ mod tests {
                 ("guide.md", "# Guide"),
             ] {
                 app.editor_install_file(
-                    tty7_core::host::local::LocalHost::new(),
+                    hitty_core::host::local::LocalHost::new(),
                     dir.path().join(path),
                     content.into(),
                     None,
@@ -4030,7 +4045,7 @@ mod tests {
         app.update_in(&mut vcx, |app, window, cx| {
             for path in ["first.html", "second.html"] {
                 app.editor_install_file(
-                    tty7_core::host::local::LocalHost::new(),
+                    hitty_core::host::local::LocalHost::new(),
                     dir.path().join(path),
                     "<h1>Saved</h1>".into(),
                     None,
@@ -4061,7 +4076,7 @@ mod tests {
         let (app, mut vcx) = markdown_window(cx);
         app.update_in(&mut vcx, |app, window, cx| {
             app.editor_install_file(
-                tty7_core::host::local::LocalHost::new(),
+                hitty_core::host::local::LocalHost::new(),
                 "/work/second/docs/guide.md".into(),
                 "# Guide\n".into(),
                 None,
@@ -4106,8 +4121,8 @@ mod tests {
             );
             #[cfg(windows)]
             for path in [
-                r"D:\gh-prj\ctty7\tests\fixtures\html-preview\report.html",
-                r"\\?\D:\gh-prj\ctty7\tests\fixtures\html-preview\report.html",
+                r"D:\gh-prj\hitty\tests\fixtures\html-preview\report.html",
+                r"\\?\D:\gh-prj\hitty\tests\fixtures\html-preview\report.html",
             ] {
                 // This test covers path spelling; the native browser has its
                 // own real-window acceptance fixture.
@@ -4118,10 +4133,10 @@ mod tests {
                     code.active_display_path(HostId::LOCAL),
                     Some("report.html".into())
                 );
-                code.roots.push(r"D:\gh-prj\ctty7".into());
+                code.roots.push(r"D:\gh-prj\hitty".into());
                 assert_eq!(
                     code.active_display_path(HostId::LOCAL),
-                    Some(r"ctty7\tests\fixtures\html-preview\report.html".into())
+                    Some(r"hitty\tests\fixtures\html-preview\report.html".into())
                 );
             }
         });
@@ -4150,7 +4165,7 @@ mod tests {
             app.update_in(&mut vcx, |app, window, cx| {
                 app.tab_code_mut_or_init().unwrap().roots = vec![root.to_path_buf()];
                 app.editor_open_on_host(
-                    tty7_core::host::local::LocalHost::new(),
+                    hitty_core::host::local::LocalHost::new(),
                     &path,
                     window,
                     cx,
@@ -4181,7 +4196,7 @@ mod tests {
                 // canonical buffer stays open. Reopen through the real path.
                 app.tab_code_mut().unwrap().roots.clear();
                 app.editor_open_on_host(
-                    tty7_core::host::local::LocalHost::new(), &path, window, cx,
+                    hitty_core::host::local::LocalHost::new(), &path, window, cx,
                 );
                 assert_eq!(app.tab_code().unwrap().active_display_path(HostId::LOCAL),
                     Some(PathBuf::from(path.file_name().unwrap())),
@@ -4195,7 +4210,7 @@ mod tests {
         let (app, mut vcx) = markdown_window(cx);
         app.update_in(&mut vcx, |app, window, cx| {
             app.editor_install_file(
-                tty7_core::host::local::LocalHost::new(),
+                hitty_core::host::local::LocalHost::new(),
                 "/work/project/docs/guide.md".into(),
                 "# Guide\n".into(),
                 None,
@@ -4260,7 +4275,7 @@ mod tests {
         let (app, mut vcx) = markdown_window(cx);
         app.update_in(&mut vcx, |app, window, cx| {
             app.editor_install_file(
-                tty7_core::host::local::LocalHost::new(),
+                hitty_core::host::local::LocalHost::new(),
                 "/work/project/a-very-long-directory/another-long-directory/reading-guide-with-a-very-long-name-阅读说明.md".into(),
                 "# Guide\n\nRead and edit.\n".into(),
                 None,
@@ -4335,7 +4350,7 @@ mod tests {
         let (app, mut vcx) = markdown_window(cx);
         app.update_in(&mut vcx, |app, window, cx| {
             app.editor_install_file(
-                tty7_core::host::local::LocalHost::new(),
+                hitty_core::host::local::LocalHost::new(),
                 "/focus.md".into(),
                 "# Focus\n".into(),
                 None,
@@ -4799,7 +4814,7 @@ mod tests {
         use crate::ui::editor_theme;
         let (app, mut vcx) = markdown_window(cx);
         let original = "fn main() {}\n".repeat(150);
-        let host: SharedHost = tty7_core::host::local::LocalHost::new();
+        let host: SharedHost = hitty_core::host::local::LocalHost::new();
         app.update_in(&mut vcx, |app, window, cx| {
             let mut themes = crate::ui::presets::builtins();
             for (id, base, background) in [
@@ -4904,7 +4919,7 @@ mod tests {
         let original = "// comment\nconst root = obj.parent;\n".repeat(60);
         app.update_in(&mut vcx, |app, window, cx| {
             app.editor_install_file(
-                tty7_core::host::local::LocalHost::new(),
+                hitty_core::host::local::LocalHost::new(),
                 "/theme.js".into(),
                 original.clone(),
                 None,
@@ -5026,7 +5041,7 @@ mod tests {
         cx: &mut TestAppContext,
     ) {
         let (app, mut vcx) = markdown_window(cx);
-        let host: SharedHost = tty7_core::host::local::LocalHost::new();
+        let host: SharedHost = hitty_core::host::local::LocalHost::new();
         let path = PathBuf::from("/markdown-tests/background.md");
         let content = (0..40)
             .map(|n| format!("## Section {n}\n\nParagraph {n}.\n\n"))
@@ -5085,7 +5100,7 @@ mod tests {
     #[gpui::test]
     fn repository_readme_opens_and_draws_in_preview(cx: &mut TestAppContext) {
         let path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("README.md");
-        let host: SharedHost = tty7_core::host::local::LocalHost::new();
+        let host: SharedHost = hitty_core::host::local::LocalHost::new();
         let (app, mut vcx) = markdown_window(cx);
         app.update_in(&mut vcx, |app, window, cx| {
             app.editor_open_on_host(host, &path, window, cx)
@@ -5113,7 +5128,7 @@ mod tests {
     #[ignore = "manual Markdown opening and switching profile; run with --ignored --nocapture"]
     fn markdown_open_profile(cx: &mut TestAppContext) {
         let (app, mut vcx) = markdown_window(cx);
-        let host: SharedHost = tty7_core::host::local::LocalHost::new();
+        let host: SharedHost = hitty_core::host::local::LocalHost::new();
         for filename in [
             "README.md",
             "docs/examples/markdown-github-theme.md",
@@ -5180,7 +5195,7 @@ mod tests {
         let start = std::time::Instant::now();
         app.update_in(&mut vcx, |app, window, cx| {
             app.editor_install_file(
-                tty7_core::host::local::LocalHost::new(),
+                hitty_core::host::local::LocalHost::new(),
                 "/large-navigation.md".into(),
                 source.into(),
                 None,
@@ -5256,7 +5271,7 @@ mod tests {
         vcx.simulate_resize(gpui::size(px(1200.), px(850.)));
         app.update_in(&mut vcx, |app, window, cx| {
             app.editor_install_file(
-                tty7_core::host::local::LocalHost::new(),
+                hitty_core::host::local::LocalHost::new(),
                 "/large-navigation.md".into(),
                 include_str!("../../tests/fixtures/markdown/large-navigation.md").into(),
                 None,
@@ -5336,7 +5351,7 @@ mod tests {
         );
         app.update_in(&mut vcx, |app, window, cx| {
             app.editor_install_file(
-                tty7_core::host::local::LocalHost::new(),
+                hitty_core::host::local::LocalHost::new(),
                 "/links.md".into(),
                 content,
                 None,
@@ -5402,7 +5417,7 @@ mod tests {
         let path = dir.path().join("README.MARKDOWN");
         let original = "# Reading\n\nThe source buffer owns this text.\n";
         std::fs::write(&path, original).unwrap();
-        let host: SharedHost = tty7_core::host::local::LocalHost::new();
+        let host: SharedHost = hitty_core::host::local::LocalHost::new();
         let (app, mut vcx) = markdown_window(cx);
         app.update_in(&mut vcx, |app, window, cx| {
             app.editor_open_on_host(host, &path, window, cx)
@@ -5517,7 +5532,7 @@ mod tests {
         cx: &mut TestAppContext,
     ) {
         let (app, mut vcx) = markdown_window(cx);
-        let host: SharedHost = tty7_core::host::local::LocalHost::new();
+        let host: SharedHost = hitty_core::host::local::LocalHost::new();
         let path = PathBuf::from("/markdown-tests/first.md");
         app.update_in(&mut vcx, |app, window, cx| {
             app.editor_install_file(
@@ -5556,7 +5571,7 @@ mod tests {
         let (app, mut vcx) = markdown_window(cx);
         let dir = tempfile::tempdir().unwrap();
         let path = dir.path().join("guide.md");
-        let host: SharedHost = tty7_core::host::local::LocalHost::new();
+        let host: SharedHost = hitty_core::host::local::LocalHost::new();
         app.update_in(&mut vcx, |app, window, cx| {
             app.editor_open_markdown_link(host, &path, Some("intro".into()), window, cx);
         });
@@ -5598,7 +5613,7 @@ mod tests {
         let dir = tempfile::tempdir().unwrap();
         let path = dir.path().join("guide.md");
         std::fs::write(&path, "# Intro\n\nTarget line\n").unwrap();
-        let host: SharedHost = tty7_core::host::local::LocalHost::new();
+        let host: SharedHost = hitty_core::host::local::LocalHost::new();
         // Both requests start before the UI executor can deliver either Host
         // result. The last click must choose source, regardless of read order.
         app.update_in(&mut vcx, |app, window, cx| {
@@ -5632,7 +5647,7 @@ mod tests {
         let content = "# Heading\n\nParagraph.\n\n".repeat(80);
         app.update_in(&mut vcx, |app, window, cx| {
             app.editor_install_file(
-                tty7_core::host::local::LocalHost::new(),
+                hitty_core::host::local::LocalHost::new(),
                 "/markdown-tests/keys.md".into(),
                 content.clone(),
                 None,
@@ -5675,7 +5690,7 @@ mod tests {
         let reading_offset = reading.read_with(&vcx, |reading, _| reading.scroll.offset());
         app.update_in(&mut vcx, |app, window, cx| {
             app.editor_install_file(
-                tty7_core::host::local::LocalHost::new(),
+                hitty_core::host::local::LocalHost::new(),
                 "/markdown-tests/other.rs".into(),
                 "fn main() {}".into(),
                 None,
@@ -5711,7 +5726,7 @@ mod tests {
         let theme_path = dir.path().join("study.yaml");
         let yaml = "schema_version: 2\nid: study\nname: Study\nlight: {link: '#123456'}\ndark: {link: '#654321'}\n";
         std::fs::write(&theme_path, yaml).unwrap();
-        let host: SharedHost = tty7_core::host::local::LocalHost::new();
+        let host: SharedHost = hitty_core::host::local::LocalHost::new();
         let content = (0..80)
             .map(|n| format!("## Section {n}\n\nReading paragraph {n}.\n\n"))
             .collect::<String>();
@@ -5861,7 +5876,7 @@ mod tests {
             .map(|n| format!("## Section {n}\n\nReading paragraph {n}.\n\n"))
             .collect::<String>();
         std::fs::write(&path, &content).unwrap();
-        let host: SharedHost = tty7_core::host::local::LocalHost::new();
+        let host: SharedHost = hitty_core::host::local::LocalHost::new();
         app.update_in(&mut vcx, |app, window, cx| {
             app.editor_open_markdown_link(
                 host.clone(),

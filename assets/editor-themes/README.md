@@ -41,12 +41,12 @@ colors still come from the bundled palette. GitHub Light uses the website border
 for invisible characters and borders, and the foreground for active line numbers.
 Auxiliary diagnostic colors use Atom syntax roles in dark mode and GitHub's
 danger, attention, accent, success and muted tokens in light mode. Their backgrounds
-use a 15% tint. These are tty7 adaptations, not additional upstream theme keys.
+use a 15% tint. These are hitty adaptations, not additional upstream theme keys.
 Fold controls and scrollbars use the editor's muted text, selection, background,
 and border colors. These controls use the source palette rather than application colors.
 
 The JSON retains the upstream search colors as source data. At runtime, search
-fills use the resolved editor background and foreground with tty7's contrast
+fills use the resolved editor background and foreground with hitty's contrast
 targets. Ordinary matches are neutral; the current match uses the application
 accent with a contrast fallback. Both fills are opaque and keep the search
 visibility fix from cloudy-liu/ctty7#87 in both editor appearances.

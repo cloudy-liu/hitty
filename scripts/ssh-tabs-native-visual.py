@@ -66,7 +66,7 @@ def capture(binary, output, phase, repository):
         for surface in ("top", "sidebar"):
             screenshot = output / f"{phase}-{surface}.png"
             log = output / f"{phase}-{surface}.log"
-            with tempfile.TemporaryDirectory(prefix="ctty7-ssh-visual-") as temporary:
+            with tempfile.TemporaryDirectory(prefix="hitty-ssh-visual-") as temporary:
                 options = pathlib.Path(temporary) / "options.json"
                 options.write_text(json.dumps({"sidebar": surface == "sidebar",
                                                "output": str(screenshot)}), encoding="utf-8")
@@ -117,7 +117,7 @@ def capture(binary, output, phase, repository):
             "viewport": [1200, 660], "theme": "light",
             "titlebar_action": titlebar_action,
             "titlebar_action_trigger": "Opened through the production trailing tile at window coordinates (1077, 20).",
-            "source": "Production Tty7App render; deterministic daemon messages, no live SSH.",
+            "source": "Production HittyApp render; deterministic daemon messages, no live SSH.",
             "cases": ["local shell", "local Codex", "local Claude Code", "native SSH shell",
                       "terminal SSH with detected Codex", "native SSH with detected Claude Code"],
         }, indent=2), encoding="utf-8")

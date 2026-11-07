@@ -6,7 +6,7 @@
 这一行之后是硬换行。\
 这里必须换行。<br>这里是 HTML 换行。
 
-[跳到代码示例](#代码示例) · [第二个同名标题](#重复标题-1) · [主题说明](../customization/markdown-themes.mdx) · [外部链接](https://github.com/cloudy-liu/ctty7)
+[跳到代码示例](#代码示例) · [第二个同名标题](#重复标题-1) · [主题说明](../customization/markdown-themes.mdx) · [外部链接](https://github.com/cloudy-liu/hitty)
 
 ## 二级标题
 
@@ -84,10 +84,10 @@ This intentionally long line should scroll inside the code block: 0000000000 111
 <div align="center">
 <p><strong>居中 HTML</strong> 与 <em>强调</em></p>
 <p>按 <kbd>Ctrl</kbd> + <kbd>C</kbd> 复制。<br>这段内容保留换行。</p>
-<a href="https://github.com/cloudy-liu/ctty7"><img src="../../assets/app-icon.svg" alt="tty7 本地 SVG 图标" width="88" height="88"></a>
+<a href="https://github.com/cloudy-liu/hitty"><img src="../../assets/app-icon.svg" alt="hitty 本地 SVG 图标" width="88" height="88"></a>
 </div>
 
-徽章与文字 [![CI](https://github.com/cloudy-liu/ctty7/actions/workflows/ci.yml/badge.svg)](https://github.com/cloudy-liu/ctty7/actions/workflows/ci.yml) 应在一行。
+徽章与文字 [![CI](https://github.com/cloudy-liu/hitty/actions/workflows/ci.yml/badge.svg)](https://github.com/cloudy-liu/hitty/actions/workflows/ci.yml) 应在一行。
 
 ![相对图片，按可用宽度缩小](../../assets/hero.webp)
 

@@ -7,7 +7,7 @@ use gpui_component::{
 
 use crate::daemon::protocol::{ForwardStatus, ManagedForward, SshForwardKind, SshForwardRule};
 use crate::terminal::view::TerminalView;
-use crate::ui::app::{CONTENT_INSET, TILE_GLYPH_SM, TILE_SIZE_SM, Tty7App};
+use crate::ui::app::{CONTENT_INSET, HittyApp, TILE_GLYPH_SM, TILE_SIZE_SM};
 use crate::ui::i18n::{L10nKey, t, t_fmt};
 use crate::ui::right_panel::{META, TEXT, TEXT_MONO};
 
@@ -113,7 +113,7 @@ pub(crate) fn rule_of(forward: &ManagedForward) -> SshForwardRule {
     }
 }
 
-impl Tty7App {
+impl HittyApp {
     pub(crate) fn render_ssh_status_strip(
         &self,
         leaf: &Entity<TerminalView>,

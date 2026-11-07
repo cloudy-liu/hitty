@@ -18,7 +18,7 @@ use crate::core::actions::{
 use crate::core::config::RightPanelTab;
 use crate::core::shells::DetectedShell;
 use crate::daemon::protocol::{RemoteKind, ShellSpec};
-use crate::ui::app::{SpawnWhere, TILE_GLYPH, TILE_SIZE, Tab, Tty7App, tile_trailing_inset};
+use crate::ui::app::{HittyApp, SpawnWhere, TILE_GLYPH, TILE_SIZE, Tab, tile_trailing_inset};
 use crate::ui::hints::tab_badge_label;
 use crate::ui::i18n::{L10nKey, t, t_fmt};
 use crate::ui::reorder::{self, Reorder, Surface};
@@ -44,11 +44,11 @@ pub(crate) struct RunBadgeAnimation {
     phase: f32,
     visible: bool,
     pending: bool,
-    owner: gpui::WeakEntity<Tty7App>,
+    owner: gpui::WeakEntity<HittyApp>,
 }
 
 impl RunBadgeAnimation {
-    pub(crate) fn new(cx: &Context<Tty7App>) -> Self {
+    pub(crate) fn new(cx: &Context<HittyApp>) -> Self {
         Self {
             epoch: cx.background_executor().now(),
             phase: 0.,
@@ -93,19 +93,19 @@ pub(crate) fn has_ssh_badge(kind: Option<RemoteKind>) -> bool {
 
 /// Builds a launch specification without recomputing argument ownership locally.
 /// The inventory may originate from a remote host, so only its transported
-/// metadata can distinguish tty7 launch defaults from user-authored arguments.
+/// metadata can distinguish hitty launch defaults from user-authored arguments.
 fn shell_spec(shell: &DetectedShell) -> ShellSpec {
     ShellSpec {
         program: shell.program.clone(),
         args: shell.args.clone(),
-        args_are_tty7_defaults: shell.args_are_tty7_defaults,
+        args_are_hitty_defaults: shell.args_are_hitty_defaults,
     }
 }
 
 /// Shared with the switcher's tab column and the CLI, which name tabs of
 /// workspaces this process does not own and have to cut the same head off the
 /// same titles.
-pub(crate) use tty7_core::core::tab_view::strip_host_prefix;
+pub(crate) use hitty_core::core::tab_view::strip_host_prefix;
 
 /// `home` is the home directory of the machine `path` is on, from
 /// [`Tab::leaf_title_and_home`](crate::ui::app::Tab::leaf_title_and_home) or
@@ -637,7 +637,7 @@ fn split_modifier() -> &'static str {
 /// worth sorting once per menu, not once per frame — and a host saved while
 /// the window sat still is in the list the next time the `+` is pressed.
 struct NewTabMenu {
-    app: gpui::WeakEntity<Tty7App>,
+    app: gpui::WeakEntity<HittyApp>,
     shells: Vec<(SharedString, ShellSpec)>,
     default_shell: SharedString,
     /// Saved host, its display name, and the `user@host:port` beside it —
@@ -872,7 +872,7 @@ pub(crate) fn workspace_avatar(
                 .text_color(cx.theme().foreground.opacity(0.65))
                 .child(initial),
         )
-        .children(dot.map(|rgb| Tty7App::liveness_dot(rgb, size, cx.theme().popover)))
+        .children(dot.map(|rgb| HittyApp::liveness_dot(rgb, size, cx.theme().popover)))
 }
 
 pub(crate) fn select_workspace_action(index: usize) -> Option<Box<dyn gpui::Action>> {
@@ -890,7 +890,7 @@ pub(crate) fn select_workspace_action(index: usize) -> Option<Box<dyn gpui::Acti
     })
 }
 
-impl Tty7App {
+impl HittyApp {
     pub(crate) const AVATAR_PX: f32 = 20.0;
 
     pub(crate) fn workspace_head(&self, cx: &mut Context<Self>) -> impl IntoElement + use<> {
@@ -2212,13 +2212,16 @@ mod tests {
         assert_eq!(short_title("root@prod"), "root@prod");
         assert_eq!(short_title("prod-web"), "prod-web");
         // Only a port stops the cut: a drive letter is still a path, and this
-        // is the title tty7's own pwsh integration writes on Windows.
+        // is the title hitty's own pwsh integration writes on Windows.
         assert_eq!(short_title(r"ann@BOX:C:/Users/app"), r"C:/Users/app");
     }
 
     #[test]
     fn short_title_truncates_deep_paths_to_trailing_segments() {
-        assert_eq!(short_title("user@host:~/repo/025/tty7"), "…/repo/025/tty7");
+        assert_eq!(
+            short_title("user@host:~/repo/025/hitty"),
+            "…/repo/025/hitty"
+        );
         assert_eq!(short_title("/usr/local/share/man"), "…/local/share/man");
         assert_eq!(short_title("a/b/c/d"), "…/b/c/d");
     }
@@ -2257,9 +2260,9 @@ mod tests {
     #[gpui::test]
     fn elide_path_fits_shallow_paths_untouched(cx: &mut TestAppContext) {
         let (ts, font, size) = elide_setup(cx);
-        let path = "~/tty7";
+        let path = "~/hitty";
         let max = measure_text(&ts, &font, size, path) + 1.;
-        assert_eq!(elide_path_keep_tail(&ts, &font, size, path, max), "~/tty7");
+        assert_eq!(elide_path_keep_tail(&ts, &font, size, path, max), "~/hitty");
     }
 
     #[gpui::test]
@@ -2267,7 +2270,7 @@ mod tests {
         let (ts, font, size) = elide_setup(cx);
         // A wide sidebar must not elide a deep path: only the width may
         // decide, never a fixed segment cap.
-        let path = "E:/work/toolbox/crates/tty7-core/src/client";
+        let path = "E:/work/toolbox/crates/hitty-core/src/client";
         let max = measure_text(&ts, &font, size, path) + 1.;
         assert_eq!(elide_path_keep_tail(&ts, &font, size, path, max), path);
     }
@@ -2633,13 +2636,13 @@ mod tests {
             label: "custom".into(),
             program: "custom-shell".into(),
             args: vec!["--login".into()],
-            args_are_tty7_defaults: false,
+            args_are_hitty_defaults: false,
             user_authored: false,
         };
         let spec = shell_spec(&shell);
 
         assert_eq!(spec.program, "custom-shell");
         assert_eq!(spec.args, ["--login"]);
-        assert!(!spec.args_are_tty7_defaults);
+        assert!(!spec.args_are_hitty_defaults);
     }
 }

@@ -4,7 +4,7 @@ description: "Resuming a conversation after a reboot, forking a live one, and ge
 ---
 
 Coding agents keep their own conversation history, addressed by a session id.
-tty7 saves the current id with the pane so it survives app and server restarts.
+hitty saves the current id with the pane so it survives app and server restarts.
 
 ## Resume after a restart
 
@@ -24,7 +24,7 @@ restart before its next hook arrives can resume the same conversation again.
 Exiting the agent, or returning to the shell after a failed resume, clears the
 pane's session identity.
 
-When tty7 knows the exact session id, it resumes that conversation in its
+When hitty knows the exact session id, it resumes that conversation in its
 original pane. Turn automatic restore off with `restore_agent_sessions: false`.
 Launch options that disable session history are also respected.
 
@@ -33,7 +33,7 @@ launch options. A `SessionStart` hook may allocate an id before any conversation
 history exists, as Claude Code does. That event keeps the untouched-launch
 marker, even with an id, so restart opens the agent instead of trying to resume
 nonexistent history. Once you type into the agent or it reports conversation
-activity, tty7 needs the exact session id to resume it. An unknown session
+activity, hitty needs the exact session id to resume it. An unknown session
 leaves a fresh shell.
 
 For native SSH panes, automatic conversation restoration supports Claude Code
@@ -47,31 +47,31 @@ not replayed over SSH, and remote hook installation or remote Codex history-pick
 identity discovery is not automatic.
 
 <Note>
-  Hooks capture the id for new conversations. tty7 can also recover a complete
+  Hooks capture the id for new conversations. hitty can also recover a complete
   id from an agent's saved, explicit resume command. Names, numeric indexes,
   `latest`, and a fork's parent id are not used to guess the original session.
   [Installing hooks →](/agents/status)
 </Note>
 
 Codex's native history picker can open a conversation without reporting its id
-through a hook. While Codex runs, tty7 also checks the session files that its
+through a hook. While Codex runs, hitty also checks the session files that its
 process has open and saves an unambiguous id. This runs even without an open
 app window and once more before a requested server shutdown. Selecting an old
 conversation does not require sending a new message to make it restorable.
 
 Cursor, Antigravity (`agy`), Amp, Auggie, Hermes and Vibe have resume commands but
-no built-in tty7 hooks to capture new conversation ids. Recognising their process
-alone is not enough to identify a conversation. An id already reported to tty7
+no built-in hitty hooks to capture new conversation ids. Recognising their process
+alone is not enough to identify a conversation. An id already reported to hitty
 is preserved across restarts.
 
 ## When a session cannot be restored
 
-If the original conversation cannot be identified, tty7 leaves a usable shell.
+If the original conversation cannot be identified, hitty leaves a usable shell.
 It does not display a session-selection prompt or choose the most recent
 conversation. You can run the agent's own resume command from that shell.
 
 Aider restores messages from a chat history file instead of a native session
-id. When its original path is known, tty7 checks that the file
+id. When its original path is known, hitty checks that the file
 exists on the pane's machine before running
 `aider --chat-history-file <path> --restore-chat-history`. Later restarts use
 that same path. It does not guess a file when Aider's original history path is
@@ -85,7 +85,7 @@ original keeps going untouched; both continue separately from the same history.
 Right-click a **pane** to fork into a split — the menu offers a placement —
 or right-click the **tab or sidebar row** to open the fork in a new tab.
 
-| Agent | What tty7 runs |
+| Agent | What hitty runs |
 |---|---|
 | Claude Code | `claude --resume <id> --fork-session` |
 | Codex | `codex fork <id>` |
@@ -97,7 +97,7 @@ or right-click the **tab or sidebar row** to open the fork in a new tab.
 | CodeBuddy | `codebuddy --resume <id> --fork-session` |
 
 It is the agent's own fork command, run in a new pane — nothing is copied by
-tty7 itself.
+hitty itself.
 
 <Warning>
   A fork duplicates the whole transcript in the agent's session store, so

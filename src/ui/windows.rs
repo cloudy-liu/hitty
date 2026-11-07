@@ -8,7 +8,7 @@ use gpui_component::{Root, TitleBar};
 use crate::core::config::{Config, StartupMode};
 use crate::core::session::{WorkspaceId, WorkspaceStore};
 use crate::core::window_state::{WindowGeometry as _, WindowState};
-use crate::ui::app::Tty7App;
+use crate::ui::app::HittyApp;
 use crate::ui::i18n::{L10nKey, t, t_fmt, t_plural};
 
 const CASCADE_STEP: f32 = 28.0;
@@ -19,7 +19,7 @@ const DEFAULT_SIZE: (f32, f32) = (1440.0, 900.0);
 /// can paint and receive input before a large recovery set is constructed.
 const STARTUP_WINDOW_STAGGER: std::time::Duration = std::time::Duration::from_millis(1);
 
-/// The smallest window tty7 still holds its shape in.
+/// The smallest window hitty still holds its shape in.
 ///
 /// Below this the chrome stops being chrome: the sidebar is at its 180px floor
 /// with barely forty columns beside it, and the overlays the app drops on top —
@@ -31,7 +31,7 @@ const MIN_SIZE: (f32, f32) = (720.0, 520.0);
 struct WindowEntry {
     workspace: WorkspaceId,
     handle: AnyWindowHandle,
-    app: WeakEntity<Tty7App>,
+    app: WeakEntity<HittyApp>,
 }
 
 #[derive(Default)]
@@ -51,7 +51,7 @@ impl WindowRegistry {
         cx.global::<Self>().windows.len()
     }
 
-    pub fn open_windows(cx: &mut App) -> Vec<(WorkspaceId, WeakEntity<Tty7App>)> {
+    pub fn open_windows(cx: &mut App) -> Vec<(WorkspaceId, WeakEntity<HittyApp>)> {
         Self::sweep(cx);
         cx.global::<Self>()
             .windows
@@ -101,7 +101,7 @@ impl WindowRegistry {
         })
     }
 
-    pub fn app_in(cx: &mut App, window: &Window) -> Option<gpui::Entity<Tty7App>> {
+    pub fn app_in(cx: &mut App, window: &Window) -> Option<gpui::Entity<HittyApp>> {
         Self::sweep(cx);
         let handle = window.window_handle();
         cx.global::<Self>()
@@ -111,7 +111,7 @@ impl WindowRegistry {
             .and_then(|w| w.app.upgrade())
     }
 
-    pub fn app_for(cx: &mut App, workspace: WorkspaceId) -> Option<WeakEntity<Tty7App>> {
+    pub fn app_for(cx: &mut App, workspace: WorkspaceId) -> Option<WeakEntity<HittyApp>> {
         Self::sweep(cx);
         cx.global::<Self>()
             .windows
@@ -161,7 +161,7 @@ impl WindowRegistry {
         cx: &mut App,
         workspace: WorkspaceId,
         handle: AnyWindowHandle,
-        app: WeakEntity<Tty7App>,
+        app: WeakEntity<HittyApp>,
     ) {
         cx.global_mut::<Self>().windows.push(WindowEntry {
             workspace,
@@ -212,7 +212,7 @@ pub fn open(cx: &mut App, workspace: Option<WorkspaceId>) {
 /// open, may belong to this process but be behind, or may not exist yet — the
 /// caller does not care which. The tab is named by id rather than position
 /// because the caller read it out of the machine tree, not out of that window.
-pub fn open_at_tab(cx: &mut App, workspace: WorkspaceId, tab: tty7_core::core::machine::TabId) {
+pub fn open_at_tab(cx: &mut App, workspace: WorkspaceId, tab: hitty_core::core::machine::TabId) {
     open_at(cx, Some(workspace), None);
     let Some(handle) = WindowRegistry::window_for(cx, workspace) else {
         return;
@@ -254,14 +254,14 @@ fn open_at_with_disposition(
     }
 
     let options = window_options(cx, workspace, disposition);
-    let mut created: Option<gpui::Entity<Tty7App>> = None;
+    let mut created: Option<gpui::Entity<HittyApp>> = None;
     let opened = cx.open_window(options, |window, cx| {
         let app = cx.new(|cx| match (disposition, workspace, initial_cwd.clone()) {
             (OpenDisposition::RestoreBackground, Some(id), _) => {
-                Tty7App::for_workspace_in_background(id, window, cx)
+                HittyApp::for_workspace_in_background(id, window, cx)
             }
-            (_, _, Some(cwd)) => Tty7App::for_workspace_at(workspace, Some(cwd), window, cx),
-            _ => Tty7App::for_workspace(workspace, window, cx),
+            (_, _, Some(cwd)) => HittyApp::for_workspace_at(workspace, Some(cwd), window, cx),
+            _ => HittyApp::for_workspace(workspace, window, cx),
         });
         created = Some(app.clone());
         cx.new(|cx| Root::new(app, window, cx).bg(gpui::transparent_black()))
@@ -275,7 +275,7 @@ fn open_at_with_disposition(
         }
     };
     let Some(app) = created else {
-        log::error!("opened a window but its Tty7App was never built; not registering");
+        log::error!("opened a window but its HittyApp was never built; not registering");
         return false;
     };
 
@@ -286,7 +286,7 @@ fn open_at_with_disposition(
 }
 
 /// A named workspace is the one that gets the window: the CLI made it, knows
-/// its id, and no other window would do. Everything else is `tty7 [PATH]`,
+/// its id, and no other window would do. Everything else is `hitty [PATH]`,
 /// where the CLI has no opinion and this process picks.
 pub fn open_named_workspace_from_cli(cx: &mut App, workspace: WorkspaceId) {
     cx.activate(true);
@@ -352,12 +352,12 @@ pub(crate) struct StartupPlan {
 
 pub(crate) fn restore_at_launch_with(
     cx: &mut App,
-    daemon: impl Into<Option<tty7_core::daemon::spawn::DaemonStartup>>,
+    daemon: impl Into<Option<hitty_core::daemon::spawn::DaemonStartup>>,
     restore_session: bool,
     path: Option<std::path::PathBuf>,
     open: impl FnOnce(&mut App, StartupPlan),
 ) {
-    use tty7_core::daemon::spawn::DaemonStartup;
+    use hitty_core::daemon::spawn::DaemonStartup;
     let daemon = daemon.into();
 
     let plan = if !restore_session {
@@ -428,7 +428,7 @@ pub(crate) fn restore_at_launch_with(
 
 pub fn restore_at_launch(
     cx: &mut App,
-    daemon: Option<tty7_core::daemon::spawn::DaemonStartup>,
+    daemon: Option<hitty_core::daemon::spawn::DaemonStartup>,
     restore_session: bool,
     path: Option<std::path::PathBuf>,
 ) {
@@ -559,7 +559,7 @@ fn startup_foreground(
 ///
 /// A launch that carries a directory restores the last layout exactly like a
 /// pathless one does, and the directory becomes another tab in it. The two used
-/// to disagree: "Open in tty7" from Explorer, or `tty7 <PATH>`, skipped the
+/// to disagree: "Open in hitty" from Explorer, or `hitty <PATH>`, skipped the
 /// restore outright whenever no window was already up, so a folder opened that
 /// way came back as one blank terminal with the previous tabs nowhere — still
 /// live on the machine, but reachable only through the switcher.
@@ -861,7 +861,7 @@ pub fn cascade_for_profile(cx: &mut App, profile: uuid::Uuid) -> Vec<WorkspaceId
 fn delete_from_tree(cx: &mut App, workspace: WorkspaceId) -> Vec<u64> {
     let doomed = doomed_pane_ids(cx, workspace);
     crate::ui::tree_sync::fire_workspace_op(cx, workspace, |ws| {
-        tty7_core::daemon::control::ControlRequest::WorkspaceRemove { workspace: ws }
+        hitty_core::daemon::control::ControlRequest::WorkspaceRemove { workspace: ws }
     });
     crate::ui::tree_sync::forget(cx, workspace);
     doomed
@@ -953,14 +953,14 @@ fn window_options(
 
     WindowOptions {
         window_bounds: Some(window_bounds),
-        app_id: Some("tty7".to_owned()),
+        app_id: Some("hitty".to_owned()),
         #[cfg(any(target_os = "linux", target_os = "freebsd"))]
         icon: APP_ICON.as_ref().cloned(),
         titlebar: Some(TitlebarOptions {
             traffic_light_position: Some(crate::ui::theme::traffic_light_position()),
             ..TitleBar::title_bar_options()
         }),
-        // The title bar above is tty7's own, so the compositor must not add a
+        // The title bar above is hitty's own, so the compositor must not add a
         // second one: left unset, gpui asks Wayland for server-side
         // decorations (#679). Only the Linux backends read this — macOS and
         // Windows ignore the request — and X11 falls back to the window
@@ -1086,7 +1086,7 @@ mod tests {
 
     #[gpui::test]
     fn a_window_asks_the_compositor_for_client_side_decorations(cx: &mut gpui::TestAppContext) {
-        // #679: tty7 draws its own title bar, so the request must say so —
+        // #679: hitty draws its own title bar, so the request must say so —
         // gpui's default asks Wayland for a server-side frame on top of it.
         cx.update(|cx| {
             WindowRegistry::init(cx);
@@ -1199,7 +1199,7 @@ mod tests {
             );
             restore_at_launch_with(
                 cx,
-                tty7_core::daemon::spawn::DaemonStartup::Spawned,
+                hitty_core::daemon::spawn::DaemonStartup::Spawned,
                 true,
                 None,
                 |_, plan| planned = Some(plan),
@@ -1254,7 +1254,7 @@ mod tests {
             );
             restore_at_launch_with(
                 cx,
-                tty7_core::daemon::spawn::DaemonStartup::Reused,
+                hitty_core::daemon::spawn::DaemonStartup::Reused,
                 true,
                 None,
                 |_, plan| planned = Some(plan),
@@ -1298,7 +1298,7 @@ mod tests {
             );
             restore_at_launch_with(
                 cx,
-                Option::<tty7_core::daemon::spawn::DaemonStartup>::None,
+                Option::<hitty_core::daemon::spawn::DaemonStartup>::None,
                 true,
                 None,
                 |_, plan| planned = Some(plan),
@@ -1334,7 +1334,7 @@ mod tests {
             );
             restore_at_launch_with(
                 cx,
-                tty7_core::daemon::spawn::DaemonStartup::Spawned,
+                hitty_core::daemon::spawn::DaemonStartup::Spawned,
                 false,
                 None,
                 |_, plan| planned = Some(plan),
@@ -1382,7 +1382,7 @@ mod tests {
             );
             restore_at_launch_with(
                 cx,
-                tty7_core::daemon::spawn::DaemonStartup::Spawned,
+                hitty_core::daemon::spawn::DaemonStartup::Spawned,
                 true,
                 Some(path.clone()),
                 |_, plan| planned = Some(plan),
@@ -1426,7 +1426,7 @@ mod tests {
             );
             restore_at_launch_with(
                 cx,
-                tty7_core::daemon::spawn::DaemonStartup::Spawned,
+                hitty_core::daemon::spawn::DaemonStartup::Spawned,
                 true,
                 None,
                 |_, plan| planned = Some(plan),
@@ -1468,7 +1468,7 @@ mod tests {
             );
             restore_at_launch_with(
                 cx,
-                tty7_core::daemon::spawn::DaemonStartup::Spawned,
+                hitty_core::daemon::spawn::DaemonStartup::Spawned,
                 true,
                 None,
                 |_, plan| planned = Some(plan),
@@ -1497,7 +1497,7 @@ mod tests {
             );
             restore_at_launch_with(
                 cx,
-                tty7_core::daemon::spawn::DaemonStartup::Spawned,
+                hitty_core::daemon::spawn::DaemonStartup::Spawned,
                 true,
                 None,
                 |_, plan| planned = Some(plan),
@@ -1538,7 +1538,7 @@ mod tests {
             );
             restore_at_launch_with(
                 cx,
-                tty7_core::daemon::spawn::DaemonStartup::Spawned,
+                hitty_core::daemon::spawn::DaemonStartup::Spawned,
                 true,
                 Some(path.clone()),
                 |_, plan| planned = Some(plan),
@@ -1858,7 +1858,7 @@ mod tests {
             );
             restore_at_launch_with(
                 cx,
-                tty7_core::daemon::spawn::DaemonStartup::Spawned,
+                hitty_core::daemon::spawn::DaemonStartup::Spawned,
                 true,
                 None,
                 move |cx, plan| {
@@ -2083,7 +2083,7 @@ mod tests {
     fn a_request_carrying_a_path_restores_the_layout_and_brings_the_path_along(
         cx: &mut gpui::TestAppContext,
     ) {
-        // The Explorer "Open in tty7" case with no window up: the folder is
+        // The Explorer "Open in hitty" case with no window up: the folder is
         // wanted *and* so are the tabs that were there, which used to be
         // dropped on the floor by every launch that named a directory.
         let view = WindowView::default();
@@ -2193,7 +2193,7 @@ mod tests {
     fn a_delete_reads_its_kill_list_before_the_removal_blanks_the_mirror(
         cx: &mut gpui::TestAppContext,
     ) {
-        use tty7_core::core::machine::{Machine, PaneRecord, Tab, Workspace as TreeWorkspace};
+        use hitty_core::core::machine::{Machine, PaneRecord, Tab, Workspace as TreeWorkspace};
 
         cx.update(|cx| {
             let view = WindowView::default();
@@ -2322,12 +2322,12 @@ mod tests {
         // `WorkspaceRemove` on a live link would kill the remote panes. The
         // machine mirror observes every op `fire_workspace_op` fires, so "the
         // mirror still lists the workspace" pins "no remove ever went out".
-        use tty7_core::core::machine::{Machine, Workspace as TreeWorkspace};
+        use hitty_core::core::machine::{Machine, Workspace as TreeWorkspace};
 
         // `WorkspaceStore::remove` saves; a test has no business writing the
         // real views.
-        let _ = tty7_core::core::config::set_config_dir(
-            std::env::temp_dir().join(format!("tty7-windows-test-{}", std::process::id())),
+        let _ = hitty_core::core::config::set_config_dir(
+            std::env::temp_dir().join(format!("hitty-windows-test-{}", std::process::id())),
         );
         cx.update(|cx| {
             let target = RemoteTarget::Profile {

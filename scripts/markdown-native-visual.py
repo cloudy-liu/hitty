@@ -13,7 +13,7 @@ def capture(binary, output, dark, width, scale, anchor):
     name = f"{'dark' if dark else 'light'}-{width}-{scale:g}-{anchor or 'top'}"
     screenshot = output / f"{name}.png"
     log = output / f"{name}.log"
-    with tempfile.TemporaryDirectory(prefix="ctty7-markdown-visual-") as temporary:
+    with tempfile.TemporaryDirectory(prefix="hitty-markdown-visual-") as temporary:
         options = pathlib.Path(temporary) / "options.json"
         options.write_text(json.dumps({
             "source": str(pathlib.Path("docs/examples/markdown-github-theme.md").resolve()),

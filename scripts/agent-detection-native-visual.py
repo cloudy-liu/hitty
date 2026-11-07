@@ -1,6 +1,6 @@
-"""Capture Qoder CLI and CodeBuddy detection in a live ctty7 window on Windows.
+"""Capture Qoder CLI and CodeBuddy detection in a live hitty window on Windows.
 
-Builds nothing. Runs an already built tty7-app against a throwaway config
+Builds nothing. Runs an already built hitty-app against a throwaway config
 directory, so the machine's own server, settings and hooks stay untouched, and
 renders the window with scripts/capture-native-window.ps1 (PrintWindow: no
 pointer, no overlapping windows). Debug builds also skip the hook refresh and
@@ -47,16 +47,16 @@ SCENES = [  # (name, theme, kind)
 
 
 class Instance:
-    """One tty7-app, its own server, and a CLI pointed at that server."""
+    """One hitty-app, its own server, and a CLI pointed at that server."""
 
     def __init__(self, target, theme, cwd, log):
-        self.cli_path = target / "tty7.exe"
-        self.config = pathlib.Path(tempfile.mkdtemp(prefix="ctty7-agent-detection-visual-"))
+        self.cli_path = target / "hitty.exe"
+        self.config = pathlib.Path(tempfile.mkdtemp(prefix="hitty-agent-detection-visual-"))
         (self.config / "config.json").write_text(
             json.dumps({"theme": theme, "theme_preset": theme}), encoding="utf-8")
-        self.env = {k: v for k, v in os.environ.items() if not k.startswith("TTY7")}
-        self.env["TTY7_CONFIG_DIR"] = str(self.config)
-        self.app = subprocess.Popen([str(target / "tty7-app.exe"), "--config-dir", str(self.config)],
+        self.env = {k: v for k, v in os.environ.items() if not k.startswith("HITTY")}
+        self.env["HITTY_CONFIG_DIR"] = str(self.config)
+        self.app = subprocess.Popen([str(target / "hitty-app.exe"), "--config-dir", str(self.config)],
                                     env=self.env, cwd=cwd, stdout=log, stderr=log,
                                     creationflags=subprocess.DETACHED_PROCESS)
 
@@ -64,7 +64,7 @@ class Instance:
         result = subprocess.run([str(self.cli_path), *args], env=self.env, capture_output=True,
                                 text=True, encoding="utf-8", errors="replace", timeout=30)
         if check and result.returncode:
-            raise RuntimeError(f"tty7 {' '.join(args)}: {result.stdout}{result.stderr}")
+            raise RuntimeError(f"hitty {' '.join(args)}: {result.stdout}{result.stderr}")
         return result.stdout
 
     def panes(self):
@@ -160,7 +160,7 @@ def capture_scene(target, output, phase, scene, scale, standin, qoder_cwd):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("target", type=pathlib.Path, help="directory holding tty7-app.exe and tty7.exe")
+    parser.add_argument("target", type=pathlib.Path, help="directory holding hitty-app.exe and hitty.exe")
     parser.add_argument("output", type=pathlib.Path)
     parser.add_argument("--phase", choices=("before", "after"), required=True)
     parser.add_argument("--qoder-cwd", type=pathlib.Path, required=True,
@@ -173,7 +173,7 @@ def main():
     output.mkdir(parents=True, exist_ok=True)
     # A fixed directory, so the stand-in's sidebar row reads the same in both
     # phases. Its path must not contain spaces: it is typed into the shell.
-    standin = pathlib.Path(tempfile.gettempdir()) / "ctty7-agent-detection" / "codebuddy.exe"
+    standin = pathlib.Path(tempfile.gettempdir()) / "hitty-agent-detection" / "codebuddy.exe"
     standin.parent.mkdir(exist_ok=True)
     shutil.copyfile(pathlib.Path(os.environ["SystemRoot"]) / "System32/timeout.exe", standin)
     for scene in SCENES:

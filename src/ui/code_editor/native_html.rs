@@ -49,12 +49,12 @@ pub(crate) fn run(path: &std::ffi::OsStr) {
                 ..Default::default()
             }, |window, cx| {
                 crate::ui::theme::apply_theme(Some(window), cx);
-                let app = cx.new(|cx| Tty7App::with_session(None,
+                let app = cx.new(|cx| HittyApp::with_session(None,
                     Some(crate::core::session::Session::default()), window, cx));
                 app.update(cx, |app, cx| {
                     app.tabs.push(crate::ui::app::Tab::new(crate::ui::pane::Pane::Empty));
                     app.active = app.tabs.len() - 1;
-                    app.editor_open_on_host(tty7_core::host::local::LocalHost::new(),
+                    app.editor_open_on_host(hitty_core::host::local::LocalHost::new(),
                         &options.source, window, cx);
                 });
                 owner = Some(app.clone());
@@ -126,7 +126,7 @@ pub(crate) fn run(path: &std::ffi::OsStr) {
                 ] {
                     let started = Instant::now();
                     cx.update_window(handle.into(), |_, window, cx| app.update(cx, |app, cx| {
-                        app.editor_open_on_host(tty7_core::host::local::LocalHost::new(), &path, window, cx);
+                        app.editor_open_on_host(hitty_core::host::local::LocalHost::new(), &path, window, cx);
                     })).unwrap();
                     loop {
                         assert!(started.elapsed() < Duration::from_secs(15), "file switch did not load");
@@ -161,11 +161,11 @@ pub(crate) fn run(path: &std::ffi::OsStr) {
                 let released = view.downgrade();
                 drop(view);
                 cx.update_window(handle.into(), |_, window, cx| app.update(cx, |app, cx| {
-                    app.editor_open_on_host(tty7_core::host::local::LocalHost::new(), markdown.path(), window, cx);
+                    app.editor_open_on_host(hitty_core::host::local::LocalHost::new(), markdown.path(), window, cx);
                 })).unwrap();
                 wait_for_release(released, cx).await;
                 cx.update_window(handle.into(), |_, window, cx| app.update(cx, |app, cx| {
-                    app.editor_open_on_host(tty7_core::host::local::LocalHost::new(), &options.source, window, cx);
+                    app.editor_open_on_host(hitty_core::host::local::LocalHost::new(), &options.source, window, cx);
                 })).unwrap();
                 let view = wait_for_scroll(&app, 850., cx).await;
                 let released = view.downgrade();
@@ -185,7 +185,7 @@ pub(crate) fn run(path: &std::ffi::OsStr) {
                 cx.update_window(handle.into(), |_, window, cx| app.update(cx, |app, cx| {
                     app.tabs.push(crate::ui::app::Tab::new(crate::ui::pane::Pane::Empty));
                     app.active = app.tabs.len() - 1;
-                    app.editor_open_on_host(tty7_core::host::local::LocalHost::new(), &options.source, window, cx);
+                    app.editor_open_on_host(hitty_core::host::local::LocalHost::new(), &options.source, window, cx);
                 })).unwrap();
                 let second = wait_for_scroll(&app, 0., cx).await;
                 assert_eq!(second.entity_id(), singleton, "same-path session changes still reuse one browser");
@@ -215,7 +215,7 @@ pub(crate) fn run(path: &std::ffi::OsStr) {
                 cx.update_window(handle.into(), |_, window, cx| app.update(cx, |app, cx| {
                     let ix = app.tab_code().unwrap().active;
                     app.editor_close_file(ix, window, cx);
-                    app.editor_open_on_host(tty7_core::host::local::LocalHost::new(), &options.source, window, cx);
+                    app.editor_open_on_host(hitty_core::host::local::LocalHost::new(), &options.source, window, cx);
                 })).unwrap();
                 wait_for_scroll(&app, 0., cx).await;
                 drop(view);
@@ -261,7 +261,7 @@ pub(crate) fn run(path: &std::ffi::OsStr) {
                 let saved = "<!doctype html><title>Failure recovery</title><p>Saved buffer</p>";
                 fault.write_all(saved.as_bytes()).unwrap();
                 cx.update_window(handle.into(), |_, window, cx| app.update(cx, |app, cx| {
-                    app.editor_open_on_host(tty7_core::host::local::LocalHost::new(), fault.path(), window, cx);
+                    app.editor_open_on_host(hitty_core::host::local::LocalHost::new(), fault.path(), window, cx);
                 })).unwrap();
                 let started = Instant::now();
                 loop {
@@ -298,7 +298,7 @@ pub(crate) fn run(path: &std::ffi::OsStr) {
 }
 
 async fn wait_for_scroll(
-    app: &Entity<Tty7App>,
+    app: &Entity<HittyApp>,
     expected: f64,
     cx: &mut AsyncApp,
 ) -> Entity<crate::ui::html_preview::HtmlPreview> {

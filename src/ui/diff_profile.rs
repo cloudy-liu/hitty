@@ -19,7 +19,7 @@ struct Options {
 }
 
 struct Fixture {
-    owner: gpui::Entity<Tty7App>,
+    owner: gpui::Entity<HittyApp>,
     snapshot: Option<DiffSnapshot>,
     scroll: gpui::ScrollHandle,
 }
@@ -37,7 +37,7 @@ impl gpui::Render for Fixture {
 }
 
 pub(crate) fn run(path: &std::ffi::OsStr) {
-    let host = tty7_core::host::local::LocalHost::new();
+    let host = hitty_core::host::local::LocalHost::new();
     let options: Options =
         serde_json::from_slice(&host.read_file(Path::new(path), 64 * 1024).unwrap()).unwrap();
     let start = Instant::now();
@@ -69,7 +69,7 @@ pub(crate) fn run(path: &std::ffi::OsStr) {
                 show: true, focus: true, ..Default::default()
             }, |window, cx| {
                 crate::ui::theme::apply_theme(Some(window), cx);
-                let owner = cx.new(|cx| Tty7App::with_session(None,
+                let owner = cx.new(|cx| HittyApp::with_session(None,
                     Some(crate::core::session::Session::default()), window, cx));
                 let view = cx.new(|_| Fixture { owner, snapshot: None, scroll: gpui::ScrollHandle::new() });
                 fixture = Some(view.clone());

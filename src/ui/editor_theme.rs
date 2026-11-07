@@ -5,7 +5,7 @@ use crate::core::config::{
     EDITOR_LINE_HEIGHT_DEFAULT, EDITOR_LINE_HEIGHT_MAX, EDITOR_LINE_HEIGHT_MIN,
 };
 use crate::ui::{
-    app::Tty7App,
+    app::HittyApp,
     presets::{ActiveAccent, match_wash_targets, wash},
 };
 use gpui::{App, Context, SharedString, Window, rgb};
@@ -83,7 +83,7 @@ pub(crate) fn language(language: &'static str) -> &'static str {
     let aliases = ALIASES.get_or_init(|| {
         let registry = gpui_component::highlighter::LanguageRegistry::singleton();
         let aliases: HashMap<_, _> = gpui_component::highlighter::Language::all()
-            .map(|language| (language.name(), format!("tty7-{}", language.name())))
+            .map(|language| (language.name(), format!("hitty-{}", language.name())))
             .collect();
         let captures = regex::Regex::new(r"@([A-Za-z0-9_.-]+)").expect("capture regex");
         let syntax = &palettes().dark.highlight_theme.style.syntax;
@@ -216,7 +216,7 @@ fn extra_highlights(language: &str) -> &'static str {
     }
 }
 
-impl Tty7App {
+impl HittyApp {
     pub(crate) fn change_focused_font_size(
         &mut self,
         delta: f32,

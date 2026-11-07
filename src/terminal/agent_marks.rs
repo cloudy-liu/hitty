@@ -1,6 +1,6 @@
 //! Where each turn of a coding agent's conversation sits in the scrollback.
 //!
-//! The hooks tty7 installs into Claude Code and friends already announce a
+//! The hooks hitty installs into Claude Code and friends already announce a
 //! turn's start and end over the pty, as an OSC 777 the daemon reads for the
 //! pane's status dot. Those same bytes arrive at the client, and *here* they
 //! are worth something else: the byte offset a `prompt-submit` lands on is a
@@ -30,7 +30,7 @@
 //! path this process is allowed to read. An OSC comes back through the pty
 //! from wherever the agent actually runs — over ssh, inside a container, in a
 //! remote workspace — with no file access and no per-agent format. What is
-//! lost is the assistant's text; what is kept is every host tty7 supports.
+//! lost is the assistant's text; what is kept is every host hitty supports.
 
 use std::sync::{Arc, Mutex};
 

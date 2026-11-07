@@ -1,8 +1,8 @@
 use gpui::{Axis, Bounds, Pixels, Point, Styled, px};
+use hitty_core::core::machine::TabId;
 use std::cell::{Cell, RefCell};
 use std::path::PathBuf;
 use std::rc::Rc;
-use tty7_core::core::machine::TabId;
 
 pub(crate) type ReorderState = Rc<RefCell<Option<Reorder>>>;
 

@@ -956,7 +956,7 @@ impl Pane<PaneSlot> {
                     }
                     PaneSlot::Connecting(_) => (None, false),
                 };
-                // Herdr manages its own tabs and panes. Keep tty7's controls
+                // Herdr manages its own tabs and panes. Keep hitty's controls
                 // off its screen so the nested workspace stays unobstructed.
                 let rearrangeable = chrome.rearrangeable && !herdr;
                 let grip = rearrangeable && chrome.lifted.is_none();

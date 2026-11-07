@@ -102,7 +102,7 @@ pub struct PaneWorkspace {
     /// The name the workspace answers to — its own label, or its machine's
     /// when it has none. A pane keeps answering to this name when its link
     /// dies (#438 gave SSH panes their host here; without this, a workspace
-    /// pane fell back to the bare app name and the tab read "tty7 —
+    /// pane fell back to the bare app name and the tab read "hitty —
     /// disconnected").
     pub label: Option<String>,
     /// Whether the daemon serving this workspace's panes echoes a `Size` frame
@@ -307,7 +307,7 @@ impl LinkWriter {
         let sending = Arc::clone(&queue);
         let sender_loss = loss.clone();
         let thread = std::thread::Builder::new()
-            .name("tty7-pane-writer".into())
+            .name("hitty-pane-writer".into())
             .spawn(move || send_loop(stream, sending, sender_loss))?;
         Ok(LinkWriter {
             closer,
@@ -533,7 +533,7 @@ pub struct RemoteTerminal {
     reader_quit: Arc<AtomicBool>,
 }
 
-/// The workspace id a spawn carries, so the pane's shell gets `$TTY7_WS` and a
+/// The workspace id a spawn carries, so the pane's shell gets `$HITTY_WS` and a
 /// CLI running in it can use workspace-scoped verbs with no argument.
 ///
 /// This is the same id as `owner`, but decided separately: `owner` is also
@@ -1014,7 +1014,7 @@ impl RemoteTerminal {
         signals: ReaderSignals,
     ) -> JoinHandle<()> {
         std::thread::Builder::new()
-            .name("tty7-remote-reader".to_string())
+            .name("hitty-remote-reader".to_string())
             .spawn(move || {
                 let ReaderSignals {
                     cwd,
@@ -1065,7 +1065,7 @@ impl RemoteTerminal {
                 };
                 let mut scratch = vec![0u8; 256 * 1024];
 
-                let trace = std::env::var("TTY7_TRACE").is_ok_and(|v| !v.is_empty() && v != "0");
+                let trace = std::env::var("HITTY_TRACE").is_ok_and(|v| !v.is_empty() && v != "0");
                 let mut tr_last = std::time::Instant::now();
                 let mut tr_bytes: u64 = 0;
                 let mut tr_reads: u32 = 0;
@@ -1102,7 +1102,7 @@ impl RemoteTerminal {
                                 // Only agent markers split parsing. Hide/show sequences
                                 // must leave the VT cursor untouched: Vim echoes the next
                                 // key at the position a repaint leaves, even through
-                                // ConPTY (l0ng-ai/tty7#430, l0ng-ai/tty7#774).
+                                // ConPTY (cloudy-liu/hitty#430, cloudy-liu/hitty#774).
                                 let mut cuts: Vec<(usize, TurnCut)> = Vec::new();
                                 turn_scan.feed(&out_batch, |off, cut| cuts.push((off, cut)));
                                 {
@@ -1299,7 +1299,7 @@ impl RemoteTerminal {
                             DaemonMsg::Image(frame) => {
                                 flush_batch!();
                                 if let Some(img) =
-                                    tty7_core::core::kitty_graphics::Image::decode_frame_owned(
+                                    hitty_core::core::kitty_graphics::Image::decode_frame_owned(
                                         frame,
                                     )
                                 {
@@ -1340,7 +1340,7 @@ impl RemoteTerminal {
                             DaemonMsg::DeleteImage(sel) => {
                                 flush_batch!();
                                 if let Some(del) =
-                                    tty7_core::core::kitty_graphics::ImageDelete::decode(&sel)
+                                    hitty_core::core::kitty_graphics::ImageDelete::decode(&sel)
                                 {
                                     image_decoder.delete(&del);
                                     proxy.send_event(AlacEvent::Wakeup);
@@ -2472,7 +2472,7 @@ fn notify_desktop_for_pane_with_sound(
     pane: Option<EntityId>,
     silent: bool,
 ) {
-    let summary = sanitize_notification_text(title.unwrap_or("tty7"), NOTIFY_TITLE_MAX);
+    let summary = sanitize_notification_text(title.unwrap_or("hitty"), NOTIFY_TITLE_MAX);
     let body = sanitize_notification_text(body, NOTIFY_BODY_MAX);
 
     if let Some(pane) = pane
@@ -2630,7 +2630,7 @@ fn toast_thread() -> Option<&'static std::sync::mpsc::SyncSender<ToastRequest>> 
     TX.get_or_init(|| {
         let (tx, rx) = sync_channel::<ToastRequest>(32);
         std::thread::Builder::new()
-            .name("tty7-toasts".into())
+            .name("hitty-toasts".into())
             .spawn(move || toast_loop(rx))
             .map_err(|e| log::warn!("failed to start the toast thread: {e}"))
             .ok()
@@ -2809,7 +2809,7 @@ fn ensure_notification_app() {
     use std::sync::Once;
     static ONCE: Once = Once::new();
     ONCE.call_once(|| {
-        if notify_rust::set_application("com.github.tty7").is_err() {
+        if notify_rust::set_application("com.github.hitty").is_err() {
             let _ = notify_rust::set_application("com.apple.Terminal");
         }
     });
@@ -2916,7 +2916,7 @@ fn connect_routed(route: &PaneRoute) -> anyhow::Result<Stream> {
         return connect();
     };
 
-    tty7_core::host::guard_off_ui();
+    hitty_core::host::guard_off_ui();
 
     // No `ensure_wsl_server` here on purpose. The daemon runs exactly the same
     // probe inside `router::open_link` before it opens the link, so asking from
@@ -3393,7 +3393,7 @@ mod cursor_tests {
         }
     }
 
-    /// Vim 9 on a raw 20x11 PTY, from l0ng-ai/tty7#430. The command-line
+    /// Vim 9 on a raw 20x11 PTY, from cloudy-liu/hitty#430. The command-line
     /// repaint ends after the colon; later keys have no positioning of their
     /// own. This must also hold on a Windows client receiving a Unix PTY.
     #[test]
@@ -3410,7 +3410,7 @@ mod cursor_tests {
     }
 
     /// Minimized from local cmd.exe -> bundled ConPTY -> ssh.exe -> Linux Vim
-    /// 8.1, reproducing l0ng-ai/tty7#774. ConPTY passes this legal repaint
+    /// 8.1, reproducing cloudy-liu/hitty#774. ConPTY passes this legal repaint
     /// through too, so choosing a cursor repair by client OS is insufficient.
     #[test]
     fn a_local_windows_ssh_vim_repaint_preserves_the_command_line() {
@@ -3727,7 +3727,7 @@ mod tests {
         let ws = PaneWorkspace {
             workspace: crate::core::session::WorkspaceId::new(),
             target: crate::core::session::RemoteTarget::LocalStdio {
-                program: "/tmp/tty7-server".into(),
+                program: "/tmp/hitty-server".into(),
                 args: vec!["--stdio".into()],
             },
             spec: None,
@@ -3739,7 +3739,7 @@ mod tests {
         assert_eq!(header.channel, crate::daemon::router::RouteChannel::Pane);
         match &header.target {
             crate::daemon::router::RouteTarget::LocalStdio { program, args } => {
-                assert_eq!(program, "/tmp/tty7-server");
+                assert_eq!(program, "/tmp/hitty-server");
                 assert_eq!(args, &vec!["--stdio".to_string(), "--pane".to_string()]);
             }
             other => panic!("wrong target: {other:?}"),
@@ -3765,13 +3765,13 @@ mod tests {
     }
 
     #[test]
-    fn a_local_spawn_carries_its_workspace_so_the_shell_gets_tty7_ws() {
+    fn a_local_spawn_carries_its_workspace_so_the_shell_gets_hitty_ws() {
         let ws = "0d4e1a54-0000-4000-8000-000000000001";
 
         assert_eq!(
             spawn_workspace(Some(ws), &PaneRoute::Local).as_deref(),
             Some(ws),
-            "without this the pane's shell has no $TTY7_WS and every \
+            "without this the pane's shell has no $HITTY_WS and every \
              workspace-scoped CLI verb in it needs an explicit address"
         );
 
@@ -3970,7 +3970,7 @@ mod tests {
     fn only_a_dead_daemon_is_worth_starting_one_for() {
         let connect_failed = |kind| -> anyhow::Error {
             anyhow::Error::new(std::io::Error::new(kind, "no listener"))
-                .context("connect to daemon at /tmp/tty7.sock")
+                .context("connect to daemon at /tmp/hitty.sock")
         };
         assert!(daemon_not_listening(&connect_failed(
             std::io::ErrorKind::ConnectionRefused
@@ -5155,19 +5155,19 @@ mod tests {
         };
 
         assert_eq!(term.foreground_cwd(), None, "nothing known before the seed");
-        term.seed_cwd(Some(PathBuf::from("/repo/tty7")));
+        term.seed_cwd(Some(PathBuf::from("/repo/hitty")));
         assert_eq!(
             term.foreground_cwd(),
-            Some(PathBuf::from("/repo/tty7")),
+            Some(PathBuf::from("/repo/hitty")),
             "the sidebar can group this pane without waiting for the shell"
         );
 
-        DaemonMsg::Cwd(PathBuf::from("/repo/tty7/crates"))
+        DaemonMsg::Cwd(PathBuf::from("/repo/hitty/crates"))
             .encode(&mut daemon_side)
             .unwrap();
         daemon_side.flush().unwrap();
         assert!(
-            poll(Some("/repo/tty7/crates")),
+            poll(Some("/repo/hitty/crates")),
             "the shell's own report replaces the seed"
         );
     }
@@ -5189,7 +5189,7 @@ mod tests {
             std::thread::sleep(std::time::Duration::from_millis(5));
         }
 
-        term.seed_cwd(Some(PathBuf::from("/repo/tty7")));
+        term.seed_cwd(Some(PathBuf::from("/repo/hitty")));
         assert_eq!(
             term.foreground_cwd(),
             Some(PathBuf::from("/somewhere/else")),

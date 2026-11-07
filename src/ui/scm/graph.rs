@@ -15,13 +15,13 @@ use gpui_component::button::{Button, ButtonVariants as _};
 use gpui_component::menu::{ContextMenuExt as _, DropdownMenu as _, PopupMenu, PopupMenuItem};
 use gpui_component::{ActiveTheme as _, Icon, IconName, Sizable as _, h_flex, v_flex};
 
-use tty7_core::core::git::log::{
+use hitty_core::core::git::log::{
     Commit, CommitPage, Edge, GRAPH_PAGE, GraphRow, GraphScope, Lane, MAX_GRAPH_COMMITS, RefDeco,
     RefKind,
 };
-use tty7_core::core::git::ops::{GitOp, ResetMode};
+use hitty_core::core::git::ops::{GitOp, ResetMode};
 
-use crate::ui::app::{CONTENT_INSET, Tty7App};
+use crate::ui::app::{CONTENT_INSET, HittyApp};
 use crate::ui::i18n::{L10nKey, t};
 use crate::ui::presets::{ActiveLanes, LANE_SLOTS, Lanes};
 use crate::ui::right_panel::{META, META_MONO, TEXT};
@@ -405,7 +405,7 @@ fn paint_graph(p: &GraphPaint, bounds: Bounds<Pixels>, window: &mut Window) {
     }
 }
 
-impl Tty7App {
+impl HittyApp {
     /// The history section, when it is expanded and has something to draw.
     ///
     /// Sits below the file list as its own scroll region rather than at the end
@@ -536,7 +536,7 @@ impl Tty7App {
         crate::ui::host_ops::HostOps::run(
             host,
             cx,
-            move |h| tty7_core::core::git::log::load_page(h, &root, &query, want),
+            move |h| hitty_core::core::git::log::load_page(h, &root, &query, want),
             move |this, page, cx| {
                 this.scm.graph.loading = false;
                 match page {
@@ -635,7 +635,7 @@ impl Tty7App {
     }
 }
 
-impl Tty7App {
+impl HittyApp {
     /// The scrolling list: rows underneath, one canvas over the gutter.
     ///
     /// `height` is the section's height — the ceiling on how much of the list
@@ -894,14 +894,14 @@ impl Tty7App {
                 let repo = repo.clone();
                 move |menu, _window, cx| {
                     let danger = cx.theme().danger;
-                    Tty7App::graph_row_context_menu(menu, &repo, &oid, danger, &app)
+                    HittyApp::graph_row_context_menu(menu, &repo, &oid, danger, &app)
                 }
             })
             .into_any_element()
     }
 }
 
-impl Tty7App {
+impl HittyApp {
     /// Select a commit in the existing diff viewer while keeping History open.
     fn graph_open_commit(
         &mut self,
@@ -994,7 +994,7 @@ fn commit_tooltip(commit: &Commit, now: i64) -> SharedString {
     ))
 }
 
-impl Tty7App {
+impl HittyApp {
     /// The highest-priority ref on a commit, plus a count of the rest.
     ///
     /// `load_page` already sorted them HEAD → local → tag → remote, so the
@@ -1089,7 +1089,7 @@ impl Tty7App {
     }
 }
 
-impl Tty7App {
+impl HittyApp {
     /// The section's own title row: fold, title and count on the left, the
     /// filter tile and the scope picker on the right.
     ///
@@ -1229,7 +1229,7 @@ impl Tty7App {
 
         move |menu, _window, _cx| {
             let mut menu = menu.min_w(px(180.));
-            let pick = |app: &gpui::WeakEntity<Tty7App>, next: GraphScope| {
+            let pick = |app: &gpui::WeakEntity<HittyApp>, next: GraphScope| {
                 let app = app.clone();
                 move |_: &gpui::ClickEvent, _: &mut Window, cx: &mut gpui::App| {
                     let _ = app.update(cx, |this, cx| this.graph_set_scope(next.clone(), cx));
@@ -1310,7 +1310,7 @@ fn scope_label(scope: &GraphScope) -> String {
     }
 }
 
-impl Tty7App {
+impl HittyApp {
     /// The row's verbs.
     ///
     /// Every one of them goes through `scm_op`, which is where the confirmation
@@ -1321,9 +1321,9 @@ impl Tty7App {
         repo: &RepoKey,
         oid: &str,
         danger: Hsla,
-        app: &gpui::WeakEntity<Tty7App>,
+        app: &gpui::WeakEntity<HittyApp>,
     ) -> PopupMenu {
-        let op = |app: &gpui::WeakEntity<Tty7App>, repo: &RepoKey, build: fn(String) -> GitOp| {
+        let op = |app: &gpui::WeakEntity<HittyApp>, repo: &RepoKey, build: fn(String) -> GitOp| {
             let app = app.clone();
             let repo = repo.clone();
             let rev = oid.to_string();
@@ -1512,7 +1512,7 @@ impl Tty7App {
     }
 }
 
-impl Tty7App {
+impl HittyApp {
     /// Open the inline "name a branch here" input for one commit.
     ///
     /// Its own input rather than the panel's naming row: that row always
@@ -1619,7 +1619,7 @@ mod tests {
     fn repo() -> RepoKey {
         RepoKey {
             host: HostId::LOCAL,
-            root: PathBuf::from("/tmp/tty7-graph-test"),
+            root: PathBuf::from("/tmp/hitty-graph-test"),
         }
     }
 
@@ -1649,7 +1649,7 @@ mod tests {
     #[test]
     fn everything_past_the_cap_lands_in_the_overflow_column() {
         let cap = 4;
-        for lane in 4u16..=tty7_core::core::git::log::MAX_LANES {
+        for lane in 4u16..=hitty_core::core::git::log::MAX_LANES {
             assert_eq!(project(lane, cap), 3, "lane {lane} escaped the last column");
         }
         // `max_lanes` never goes below `GRAPH_MIN_LANES`, but `project` is a
@@ -1876,11 +1876,11 @@ mod tests {
     }
 
     struct HistoryRows {
-        app: gpui::Entity<Tty7App>,
+        app: gpui::Entity<HittyApp>,
         page: Arc<CommitPage>,
     }
 
-    struct SelectedCommit(gpui::Entity<Tty7App>);
+    struct SelectedCommit(gpui::Entity<HittyApp>);
 
     impl gpui::Render for SelectedCommit {
         fn render(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
@@ -2217,7 +2217,7 @@ mod tests {
 
         let other = RepoKey {
             host: HostId::LOCAL,
-            root: PathBuf::from("/tmp/tty7-graph-test-other"),
+            root: PathBuf::from("/tmp/hitty-graph-test-other"),
         };
         app.update(&mut vcx, |app, cx| {
             app.scm.graph.requested = GRAPH_PAGE * 3;
@@ -2331,7 +2331,7 @@ mod tests {
     }
 
     fn commit_named(summary: &str, author: &str, oid: &str) -> Commit {
-        use tty7_core::core::git::log::{OffsetTs, Signature};
+        use hitty_core::core::git::log::{OffsetTs, Signature};
         let who = Signature {
             name: author.to_string(),
             email: "a@b.invalid".into(),
@@ -2381,8 +2381,8 @@ mod render_idle_gpui_tests {
     use super::*;
     use crate::ui::app::{render_probe, test_window};
     use gpui::{Entity, TestAppContext, VisualTestContext};
+    use hitty_core::core::config::RightPanelTab;
     use std::path::Path;
-    use tty7_core::core::config::RightPanelTab;
 
     const BUDGET: u64 = 200;
 
@@ -2396,9 +2396,9 @@ mod render_idle_gpui_tests {
     fn git(root: &Path, args: &[&str]) -> bool {
         let mut full = vec![
             "-c",
-            "user.name=tty7 test",
+            "user.name=hitty test",
             "-c",
-            "user.email=test@tty7.invalid",
+            "user.email=test@hitty.invalid",
             "-c",
             "commit.gpgsign=false",
         ];
@@ -2414,7 +2414,7 @@ mod render_idle_gpui_tests {
     }
 
     fn scratch(name: &str) -> std::path::PathBuf {
-        let dir = std::env::temp_dir().join(format!("tty7-graph-{name}-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("hitty-graph-{name}-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&dir);
         std::fs::create_dir_all(&dir).unwrap();
         std::fs::canonicalize(&dir).unwrap()
@@ -2441,7 +2441,10 @@ mod render_idle_gpui_tests {
 
     /// Drive frames until the graph has a page, because the query only goes out
     /// from `render`.
-    fn settle_graph(app: &Entity<Tty7App>, vcx: &mut VisualTestContext) -> Option<Arc<CommitPage>> {
+    fn settle_graph(
+        app: &Entity<HittyApp>,
+        vcx: &mut VisualTestContext,
+    ) -> Option<Arc<CommitPage>> {
         let deadline = std::time::Instant::now() + std::time::Duration::from_secs(30);
         loop {
             app.update_in(vcx, |_, _, cx| cx.notify());

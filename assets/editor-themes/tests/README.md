@@ -17,7 +17,7 @@ JavaScript line, block and documentation comments, and Python line comments.
 Embedded JavaScript, JSX/TSX and Rust Markdown fences retain separate regressions.
 
 `github-website-colors.json` contains the 70 continuous color ranges of the
-reference Rust function from [the GitHub file viewer](https://github.com/cloudy-liu/ctty7/blob/814b4036a05b877a1c3cf3a04e764bbb4822e807/src/main.rs#L35-L59),
+reference Rust function from [the GitHub file viewer](https://github.com/cloudy-liu/hitty/blob/814b4036a05b877a1c3cf3a04e764bbb4822e807/src/main.rs#L35-L59),
 captured on 2026-10-06. Expected colors were resolved from the page's actual
 `stylingDirectives` CSS classes and the published light stylesheet, independently
 of the editor generator. This checks the same source as the user's screenshot,
@@ -39,8 +39,8 @@ variable and magic-variable cases reported in the screenshots.
 Other tests compare 11 editor/control colors for each palette directly with
 its pinned source, compile all 38 private language queries, and verify that shared
 language registrations remain unchanged. No TextMate or Node runtime is
-required to build or run tty7 or these tests.
+required to build or run hitty or these tests.
 
 ```powershell
-cargo test --locked --features updater -j 2 --bin tty7-app editor_theme_
+cargo test --locked --features updater -j 2 --bin hitty-app editor_theme_
 ```

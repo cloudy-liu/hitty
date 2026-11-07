@@ -1,12 +1,12 @@
-# Moving your workspace to ctty7
+# Moving your workspace to hitty
 
-Keep your sessions, configuration and command history when moving to ctty7.
+Keep your sessions, configuration and command history when moving to hitty.
 
 ## Before you start
 
 1. Save any files you are editing.
 2. Close the previous application.
-3. Install ctty7 and reopen your workspace.
+3. Install hitty and reopen your workspace.
 
 > Your existing workspace stays available after the upgrade.
 
@@ -21,7 +21,7 @@ Keep your sessions, configuration and command history when moving to ctty7.
 Read [the release notes](release.md) for the latest changes.
 
 ```sh
-ctty7 --version
+hitty --version
 ```
 
 ## Continue working

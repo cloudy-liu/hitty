@@ -81,7 +81,10 @@ fn file_stem(label: &str) -> String {
         })
         .collect();
     safe.truncate(48);
-    format!("{safe}-{:016x}", tty7_core::host::fnv1a64(label.as_bytes()))
+    format!(
+        "{safe}-{:016x}",
+        hitty_core::host::fnv1a64(label.as_bytes())
+    )
 }
 
 pub fn load(scope: &Scope) -> History {
@@ -414,7 +417,7 @@ fn parse_history_file(name: &str, content: &str, out: &mut Vec<Raw>) {
 }
 
 /// PSReadLine writes an embedded newline as a trailing backtick followed by a
-/// physical newline. tty7's history menus still hold one display row per
+/// physical newline. hitty's history menus still hold one display row per
 /// command, so omit the complete multiline record instead of exposing each
 /// physical line as a command that never existed. The live shell remains the
 /// source of truth for Up/Down and can recall the multiline record itself.
@@ -1027,7 +1030,7 @@ mod tests {
 
         append(&Scope::Local, "bad\ncmd", None, 1_700_000_000, None);
 
-        let unique = format!("tty7_cov_marker_{}", std::process::id());
+        let unique = format!("hitty_cov_marker_{}", std::process::id());
         append(
             &Scope::Local,
             &unique,
@@ -1061,7 +1064,7 @@ mod tests {
     fn concurrent_appends_never_interleave_records() {
         crate::core::config::pin_test_config_dir();
 
-        let tag = format!("tty7_race_{}", std::process::id());
+        let tag = format!("hitty_race_{}", std::process::id());
         let handles: Vec<_> = (0..8)
             .map(|t| {
                 let tag = tag.clone();
@@ -1098,7 +1101,7 @@ mod tests {
     fn a_remote_scope_never_serves_the_local_machine_s_history() {
         crate::core::config::pin_test_config_dir();
 
-        let tag = format!("tty7_scope_{}", std::process::id());
+        let tag = format!("hitty_scope_{}", std::process::id());
         let here = Scope::Local;
         let there = Scope::remote("me@box");
         append(&here, &format!("{tag}_local"), None, 1_700_000_000, Some(0));
@@ -1128,7 +1131,7 @@ mod tests {
     fn two_remotes_keep_their_own_stores() {
         crate::core::config::pin_test_config_dir();
 
-        let tag = format!("tty7_twohosts_{}", std::process::id());
+        let tag = format!("hitty_twohosts_{}", std::process::id());
         let a = Scope::remote("me@alpha");
         let b = Scope::remote("me@beta");
         append(&a, &format!("{tag}_a"), None, 1_700_000_000, Some(0));
@@ -1246,7 +1249,7 @@ mod tests {
     fn append_rejects_a_cwd_that_would_break_the_line_format() {
         crate::core::config::pin_test_config_dir();
 
-        let unique = format!("tty7_nlcwd_marker_{}", std::process::id());
+        let unique = format!("hitty_nlcwd_marker_{}", std::process::id());
         append(
             &Scope::Local,
             &unique,

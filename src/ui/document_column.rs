@@ -27,7 +27,7 @@ use std::rc::Rc;
 use crate::core::config::{
     Config, DOCUMENT_RATIO_MAX, DOCUMENT_RATIO_MIN, DOCUMENT_RATIO_STOPS, DocumentLayout,
 };
-use crate::ui::app::{DOCUMENT_MIN_W, OverlayTop, TERMINAL_MIN_W, Tty7App, document_column_px};
+use crate::ui::app::{DOCUMENT_MIN_W, HittyApp, OverlayTop, TERMINAL_MIN_W, document_column_px};
 use crate::ui::i18n::{L10nKey, t};
 use crate::ui::right_panel::RESIZE_HANDLE_WIDTH;
 
@@ -84,9 +84,9 @@ impl DocumentChrome {
     }
 }
 
-impl Tty7App {
+impl HittyApp {
     /// The layout the active tab's document was asked for, which is not always
-    /// the one it gets — see [`Tty7App::document_dock_px`].
+    /// the one it gets — see [`HittyApp::document_dock_px`].
     ///
     /// A tab that has never been told follows the config, which holds the last
     /// explicit choice anyone made and is therefore what a fresh tab starts
@@ -637,7 +637,7 @@ mod gpui_tests {
 
     /// One quiet tab. The pane is a *connecting* one so the harness needs no
     /// PTY and runs on every platform.
-    fn push_tab(app: &mut Tty7App, cx: &mut Context<Tty7App>) {
+    fn push_tab(app: &mut HittyApp, cx: &mut Context<HittyApp>) {
         let pending = cx.new(|cx| {
             PendingPane::new(
                 "test-box",
@@ -669,7 +669,7 @@ mod gpui_tests {
         cx: &mut TestAppContext,
         w: f32,
         tabs: usize,
-    ) -> (Entity<Tty7App>, VisualTestContext) {
+    ) -> (Entity<HittyApp>, VisualTestContext) {
         let (app, mut vcx) = test_window::harness(cx);
         app.update_in(&mut vcx, |app, _, cx| {
             for _ in 0..tabs {
@@ -682,11 +682,11 @@ mod gpui_tests {
         (app, vcx)
     }
 
-    fn window(cx: &mut TestAppContext, w: f32) -> (Entity<Tty7App>, VisualTestContext) {
+    fn window(cx: &mut TestAppContext, w: f32) -> (Entity<HittyApp>, VisualTestContext) {
         window_with(cx, w, 1)
     }
 
-    fn dock_px(app: &Entity<Tty7App>, vcx: &mut VisualTestContext) -> Option<f32> {
+    fn dock_px(app: &Entity<HittyApp>, vcx: &mut VisualTestContext) -> Option<f32> {
         app.update_in(vcx, |app, window, cx| app.document_dock_px(window, cx))
     }
 
@@ -697,7 +697,7 @@ mod gpui_tests {
     }
 
     /// What the active tab is actually doing.
-    fn tab_layout(app: &Entity<Tty7App>, vcx: &mut VisualTestContext) -> DocumentLayout {
+    fn tab_layout(app: &Entity<HittyApp>, vcx: &mut VisualTestContext) -> DocumentLayout {
         app.update_in(vcx, |app, _, cx| app.document_layout(cx))
     }
 
@@ -963,7 +963,7 @@ mod gpui_tests {
                     app.tabs[active].diff_overlay = Some(DiffOverlayState {
                         pane_host: None,
                         host_id: HostId::LOCAL,
-                        cwd: PathBuf::from("/no/such/tty7/repo"),
+                        cwd: PathBuf::from("/no/such/hitty/repo"),
                         source: source.clone(),
                         commit: None,
                         commit_message_expanded: false,
@@ -1031,7 +1031,7 @@ mod gpui_tests {
                 OverlayTop::Code => app.toggle_code_panel(window, cx),
                 OverlayTop::Diff => app.open_diff_overlay(
                     crate::ui::host_ops::HostId::LOCAL,
-                    std::path::PathBuf::from("/no/such/tty7/repo"),
+                    std::path::PathBuf::from("/no/such/hitty/repo"),
                     crate::terminal::git_diff::DiffSource::Head,
                     None,
                     window,
@@ -1113,7 +1113,7 @@ mod gpui_tests {
         app.update_in(&mut vcx, |app, window, cx| {
             app.open_diff_overlay(
                 crate::ui::host_ops::HostId::LOCAL,
-                std::path::PathBuf::from("/no/such/tty7/repo"),
+                std::path::PathBuf::from("/no/such/hitty/repo"),
                 DiffSource::Worktree,
                 None,
                 window,
@@ -1283,7 +1283,7 @@ mod gpui_tests {
         use std::sync::Arc;
 
         let (app, mut vcx) = window(cx, 1600.);
-        let cwd = std::path::PathBuf::from("/no/such/tty7/repo");
+        let cwd = std::path::PathBuf::from("/no/such/hitty/repo");
         app.update_in(&mut vcx, |app, window, cx| {
             app.open_diff_overlay(
                 crate::ui::host_ops::HostId::LOCAL,
@@ -1388,7 +1388,7 @@ mod gpui_tests {
                     OverlayTop::Code => app.toggle_code_panel(window, cx),
                     OverlayTop::Diff => app.open_diff_overlay(
                         crate::ui::host_ops::HostId::LOCAL,
-                        std::path::PathBuf::from("/no/such/tty7/repo"),
+                        std::path::PathBuf::from("/no/such/hitty/repo"),
                         crate::terminal::git_diff::DiffSource::Head,
                         None,
                         window,
@@ -1459,7 +1459,7 @@ mod gpui_tests {
                     OverlayTop::Code => app.toggle_code_panel(window, cx),
                     OverlayTop::Diff => app.open_diff_overlay(
                         crate::ui::host_ops::HostId::LOCAL,
-                        std::path::PathBuf::from("/no/such/tty7/repo"),
+                        std::path::PathBuf::from("/no/such/hitty/repo"),
                         crate::terminal::git_diff::DiffSource::Head,
                         None,
                         window,
@@ -1642,7 +1642,7 @@ mod gpui_tests {
 
         let (app, mut vcx) = window_with(cx, 1440., 2);
         crate::ui::i18n::set_locale("en");
-        let row = |app: &Entity<Tty7App>, vcx: &mut VisualTestContext| {
+        let row = |app: &Entity<HittyApp>, vcx: &mut VisualTestContext| {
             app.update_in(vcx, |app, window, cx| {
                 app.palette_commands(window, cx)
                     .into_iter()

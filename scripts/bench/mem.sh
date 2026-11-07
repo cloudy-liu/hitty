@@ -1,26 +1,26 @@
 #!/bin/zsh
 # Memory benchmark: cold-launch each terminal with its DEFAULT shell, idle 6 s
 # at the prompt, record RSS via ps, kill, repeat. $1 = runs per terminal
-# (default 3). tty7 is reported as GUI + daemon — both processes are part of
+# (default 3). hitty is reported as GUI + daemon — both processes are part of
 # delivering one window.
 set -u
 SELF=${0:A}
 HERE=${SELF:h}
 REPO=${HERE:h:h}
-WORK=${TTY7_BENCH_DIR:-$REPO/.bench}
-TTY7_BIN=${TTY7_BIN:-$REPO/target/release/tty7-app}
+WORK=${HITTY_BENCH_DIR:-$REPO/.bench}
+HITTY_BIN=${HITTY_BIN:-$REPO/target/release/hitty-app}
 RUNS=${1:-3}
 R=$WORK/results
 mkdir -p $R
 
 rss_kb() { ps -o rss= -p ${1:-0} 2>/dev/null | awk '{print $1+0}' }
 
-out=$R/mem-tty7.txt
+out=$R/mem-hitty.txt
 : > $out
 for i in $(seq 1 $RUNS); do
   cfg=$WORK/cfg-mem
   rm -rf $cfg && mkdir -p $cfg && print -- '{}' > $cfg/config.json
-  $TTY7_BIN --config-dir $cfg >/dev/null 2>&1 &
+  $HITTY_BIN --config-dir $cfg >/dev/null 2>&1 &
   gpid=$!
   sleep 6
   dpid=$(pgrep -f -- "--daemon --config-dir $cfg" | head -1)

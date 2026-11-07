@@ -716,7 +716,7 @@ pub(super) enum Probe {
     Unknown,
 }
 
-/// Answers for paths on the machine tty7 itself is running on.
+/// Answers for paths on the machine hitty itself is running on.
 pub(super) fn local_probe(path: &Path, require_file: bool) -> Probe {
     if path.is_file() {
         return Probe::Hit { is_dir: false };
@@ -746,7 +746,7 @@ pub(super) struct LinkRoots {
 }
 
 impl LinkRoots {
-    /// Roots on the machine tty7 is running on, where `$HOME` means what it
+    /// Roots on the machine hitty is running on, where `$HOME` means what it
     /// says.
     pub fn local(dirs: Vec<PathBuf>) -> Self {
         Self {
@@ -1398,7 +1398,7 @@ mod tests {
 
     #[test]
     fn url_at_stops_at_unbalanced_close_paren_glued_after_url() {
-        let url = "https://github.com/l0ng-ai/tty7/pull/43";
+        let url = "https://github.com/cloudy-liu/hitty/pull/43";
         let line = format!("PR 已开:#43 ({url})(Fixes #42),分支 fix-x。");
         let h = line.chars().position(|c| c == 'h').expect("scheme start");
         assert_eq!(url_at(&line, h).as_deref(), Some(url));
@@ -1422,7 +1422,7 @@ mod tests {
     }
 
     fn temp_file(name: &str) -> PathBuf {
-        let dir = std::env::temp_dir().join(format!("tty7-link-test-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("hitty-link-test-{}", std::process::id()));
         std::fs::create_dir_all(&dir).expect("create temporary link-test dir");
         let path = dir.join(name);
         if let Some(parent) = path.parent() {
@@ -1484,10 +1484,10 @@ mod tests {
     #[test]
     #[cfg(unix)]
     fn tilde_expansion_prefers_home_inferred_from_the_pane_cwd() {
-        let cwd = Path::new("/Users/alice/clone/tty7");
+        let cwd = Path::new("/Users/alice/clone/hitty");
         assert_eq!(
-            expand_home("~/clone/tty7/src/main.rs", Some(cwd), true),
-            Some(PathBuf::from("/Users/alice/clone/tty7/src/main.rs"))
+            expand_home("~/clone/hitty/src/main.rs", Some(cwd), true),
+            Some(PathBuf::from("/Users/alice/clone/hitty/src/main.rs"))
         );
     }
 

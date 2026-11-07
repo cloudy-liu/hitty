@@ -6,7 +6,7 @@ use gpui_component::{
 };
 
 use crate::core::worktree::{WorktreeDefaults, WorktreeRequest};
-use crate::ui::app::Tty7App;
+use crate::ui::app::HittyApp;
 use crate::ui::i18n::{L10nKey, t, t_fmt};
 
 pub(crate) struct WorktreePrompt {
@@ -20,7 +20,7 @@ pub(crate) struct WorktreePrompt {
     _subs: Vec<Subscription>,
 }
 
-impl Tty7App {
+impl HittyApp {
     pub(crate) fn open_worktree_prompt(
         &mut self,
         host: crate::ui::host_ops::SharedHost,

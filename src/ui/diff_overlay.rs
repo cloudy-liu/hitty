@@ -35,7 +35,7 @@ use crate::terminal::git_diff::{
 /// says the read failed rather than showing a silently cut-off file — and the
 /// line budget below cuts rendering long before this does anyway.
 const MAX_PREVIEW_BYTES: u64 = 4 * 1024 * 1024;
-use crate::ui::app::Tty7App;
+use crate::ui::app::HittyApp;
 use crate::ui::diff_rows::{Side, SplitCell, SplitRow, UnifiedRow, split_hunk, unified_rows};
 use crate::ui::diff_selection::{
     DiffSelection, SelectableLabel, SelectionLine, selectable_card, selectable_viewport,
@@ -122,7 +122,7 @@ pub(crate) struct DiffOverlayState {
     /// Which patch this overlay is showing. Part of its identity, not a
     /// setting: two sources over one directory are two different overlays.
     pub(crate) source: DiffSource,
-    pub(crate) commit: Option<Arc<tty7_core::core::git::log::Commit>>,
+    pub(crate) commit: Option<Arc<hitty_core::core::git::log::Commit>>,
     pub(crate) commit_message_expanded: bool,
     pub(crate) commit_split: CommitSplit,
     pub(crate) document_header_focus: FocusHandle,
@@ -329,7 +329,7 @@ fn diff_palette(cx: &gpui::App) -> DiffPalette {
     }
 }
 
-impl Tty7App {
+impl HittyApp {
     fn change_diff_context(
         &mut self,
         path: String,
@@ -1364,7 +1364,7 @@ impl Tty7App {
                 ),
             )
             .context_menu(move |menu, _window, cx| {
-                Tty7App::document_header_menu(menu, &menu_app, cx)
+                HittyApp::document_header_menu(menu, &menu_app, cx)
             })
     }
 
@@ -2850,7 +2850,7 @@ fn oversized_summary(snap: &DiffSnapshot, stats: &DiffStats) -> String {
     parts.join(", ")
 }
 
-/// The de-duplication sets on `Tty7App` are keyed by `(HostId, PathBuf)`, so
+/// The de-duplication sets on `HittyApp` are keyed by `(HostId, PathBuf)`, so
 /// the source rides along inside the path: two sources over one directory are
 /// two independent probes and must not cancel one another.
 ///
@@ -3527,7 +3527,7 @@ mod overlay_gpui_tests {
     use gpui::{Entity, TestAppContext, VisualTestContext};
 
     fn overlay_source_and_load(
-        app: &Entity<Tty7App>,
+        app: &Entity<HittyApp>,
         vcx: &mut VisualTestContext,
     ) -> (DiffSource, bool) {
         app.update_in(vcx, |app, _, _| {
@@ -3549,7 +3549,7 @@ mod overlay_gpui_tests {
     #[gpui::test]
     fn a_second_source_over_one_directory_is_a_second_overlay(cx: &mut TestAppContext) {
         let (app, mut vcx, _pane) = test_window::harness_with_tabs(cx, 1);
-        let cwd = std::path::PathBuf::from("/no/such/tty7/repo");
+        let cwd = std::path::PathBuf::from("/no/such/hitty/repo");
 
         app.update_in(&mut vcx, |app, window, cx| {
             app.open_diff_overlay(
@@ -3598,7 +3598,7 @@ mod overlay_gpui_tests {
     fn one_file_snapshot(source: DiffSource) -> DiffSnapshot {
         use crate::terminal::git_diff::{DiffLine, Hunk, LineKind};
         DiffSnapshot {
-            root: std::path::PathBuf::from("/no/such/tty7/repo"),
+            root: std::path::PathBuf::from("/no/such/hitty/repo"),
             source,
             branch: "main".into(),
             files: vec![FileDiff {
@@ -3639,8 +3639,8 @@ mod overlay_gpui_tests {
         }
     }
 
-    fn show(app: &Entity<Tty7App>, vcx: &mut VisualTestContext, source: DiffSource) {
-        let cwd = std::path::PathBuf::from("/no/such/tty7/repo");
+    fn show(app: &Entity<HittyApp>, vcx: &mut VisualTestContext, source: DiffSource) {
+        let cwd = std::path::PathBuf::from("/no/such/hitty/repo");
         app.update_in(vcx, |app, window, cx| {
             app.open_diff_overlay(HostId::LOCAL, cwd.clone(), source.clone(), None, window, cx);
             let active = app.active;
@@ -3726,7 +3726,7 @@ mod overlay_gpui_tests {
     #[gpui::test]
     fn a_focused_untracked_file_still_has_a_way_back(cx: &mut TestAppContext) {
         let (app, mut vcx, _pane) = test_window::harness_with_tabs(cx, 1);
-        let cwd = std::path::PathBuf::from("/no/such/tty7/repo");
+        let cwd = std::path::PathBuf::from("/no/such/hitty/repo");
 
         app.update_in(&mut vcx, |app, window, cx| {
             app.open_diff_overlay(
@@ -3763,7 +3763,7 @@ mod overlay_gpui_tests {
     #[gpui::test]
     fn the_same_source_twice_still_closes(cx: &mut TestAppContext) {
         let (app, mut vcx, _pane) = test_window::harness_with_tabs(cx, 1);
-        let cwd = std::path::PathBuf::from("/no/such/tty7/repo");
+        let cwd = std::path::PathBuf::from("/no/such/hitty/repo");
 
         for _ in 0..2 {
             app.update_in(&mut vcx, |app, window, cx| {
@@ -3793,7 +3793,7 @@ mod overlay_gpui_tests {
 /// processes a lap, `refreshing…` pinned to the header, and a window that
 /// costs 7% of a core sitting still.
 ///
-/// The way in is ordinary: switch branches anywhere outside tty7 — another
+/// The way in is ordinary: switch branches anywhere outside hitty — another
 /// terminal, an editor, a worktree command — and the cached branch is a branch
 /// the repository has left. That is what the stale entry below stands for.
 ///
@@ -3820,7 +3820,7 @@ mod render_idle_gpui_tests {
 
     #[gpui::test]
     fn an_overlay_over_a_stale_branch_reaches_render_idle(cx: &mut TestAppContext) {
-        let root = std::env::temp_dir().join(format!("tty7-diff-idle-{}", std::process::id()));
+        let root = std::env::temp_dir().join(format!("hitty-diff-idle-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&root);
         std::fs::create_dir_all(&root).unwrap();
         let root = std::fs::canonicalize(&root).unwrap();
@@ -3845,7 +3845,7 @@ mod render_idle_gpui_tests {
 
         let (app, mut vcx, _pane) = test_window::harness_with_tabs(cx, 1);
 
-        // The cache as a branch switch outside tty7 leaves it: a branch this
+        // The cache as a branch switch outside hitty leaves it: a branch this
         // repository is no longer on, and counts from before the switch.
         let stale = root.clone();
         app.update_in(&mut vcx, |_, _, cx| {
@@ -3915,7 +3915,7 @@ mod github_theme_gpui_tests {
     use gpui::{TestAppContext, point, size};
     use gpui_component::{Theme, ThemeMode};
 
-    struct ContextDiff(gpui::Entity<Tty7App>);
+    struct ContextDiff(gpui::Entity<HittyApp>);
 
     impl gpui::Render for ContextDiff {
         fn render(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
@@ -4458,14 +4458,14 @@ mod github_theme_gpui_tests {
     }
 
     struct LongDiff {
-        app: gpui::Entity<Tty7App>,
+        app: gpui::Entity<HittyApp>,
         file: FileDiff,
         mode: DiffViewMode,
         vertical: gpui::ScrollHandle,
     }
 
     struct ManyDiffs {
-        app: gpui::Entity<Tty7App>,
+        app: gpui::Entity<HittyApp>,
         snapshot: DiffSnapshot,
         vertical: gpui::ScrollHandle,
     }

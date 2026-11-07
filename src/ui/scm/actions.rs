@@ -6,10 +6,10 @@
 
 use gpui::{Context, PromptLevel, Window};
 
-use tty7_core::core::git::ops::{Destructive, GitOp, PullMode};
+use hitty_core::core::git::ops::{Destructive, GitOp, PullMode};
 
 use crate::core::config::DiffViewMode;
-use crate::ui::app::Tty7App;
+use crate::ui::app::HittyApp;
 use crate::ui::host_registry::HostRegistry;
 use crate::ui::i18n::{L10nKey, t, t_fmt};
 use crate::ui::scm::state::RepoKey;
@@ -62,7 +62,7 @@ pub(crate) enum ScmFollowUp {
     Op(GitOp),
 }
 
-impl Tty7App {
+impl HittyApp {
     /// Fold the history section open or shut and remember it.
     pub(crate) fn scm_toggle_graph(&mut self, cx: &mut Context<Self>) {
         let next = !self.scm.graph.expanded;
@@ -400,7 +400,7 @@ impl Tty7App {
     /// Run the second half of a compound verb, from the first half's landing.
     pub(crate) fn scm_follow_up(
         &mut self,
-        host: tty7_core::host::HostId,
+        host: hitty_core::host::HostId,
         root: std::path::PathBuf,
         follow: ScmFollowUp,
         window: &mut Window,
@@ -424,7 +424,7 @@ impl Tty7App {
     /// The message itself stays where the user can see it.
     pub(crate) fn scm_commit_failed(
         &mut self,
-        host: tty7_core::host::HostId,
+        host: hitty_core::host::HostId,
         root: &std::path::Path,
     ) {
         if self
@@ -440,7 +440,7 @@ impl Tty7App {
 
 /// What "discard all" actually runs, in order. Pure so a test can hold it up
 /// against a status without a window.
-fn discard_all_ops(status: &tty7_core::core::git::status::WorkingTreeStatus) -> Vec<GitOp> {
+fn discard_all_ops(status: &hitty_core::core::git::status::WorkingTreeStatus) -> Vec<GitOp> {
     let unstaged: Vec<_> = status
         .unstaged()
         .filter(|e| e.path.pathspec().is_some())
@@ -506,7 +506,7 @@ fn confirm_verb(op: &GitOp, loss: Destructive) -> &'static str {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use tty7_core::core::git::status::{
+    use hitty_core::core::git::status::{
         ChangeCode, EntryKind, HeadState, RepoPath, StatusEntry, WorkingTreeStatus,
     };
 

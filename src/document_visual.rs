@@ -18,7 +18,7 @@ use crate::{
     daemon::{protocol::DaemonMsg, transport::Stream},
     terminal::view::{TerminalView, quiet_test_pane},
     ui::{
-        app::{Tab, Tty7App},
+        app::{HittyApp, Tab},
         pane::{Pane, PaneSlot},
         windows::WindowRegistry,
     },
@@ -167,7 +167,7 @@ pub(crate) fn run(path: &std::ffi::OsStr) {
                     .replace('\\', "/");
                 config
                     .sidebar_group_names
-                    .insert(root.clone(), "ctty7".into());
+                    .insert(root.clone(), "hitty".into());
                 config
                     .sidebar_group_names
                     .insert(archive.clone(), "Playground".into());
@@ -204,7 +204,7 @@ pub(crate) fn run(path: &std::ffi::OsStr) {
                             cx,
                         ))),
                         titlebar: Some(TitlebarOptions {
-                            title: Some("ctty7 document acceptance".into()),
+                            title: Some("hitty document acceptance".into()),
                             ..gpui_component::TitleBar::title_bar_options()
                         }),
                         show: true,
@@ -214,7 +214,7 @@ pub(crate) fn run(path: &std::ffi::OsStr) {
                     |window, cx| {
                         crate::ui::theme::apply_theme(Some(window), cx);
                         let app = cx.new(|cx| {
-                            Tty7App::with_session(None, Some(Session::default()), window, cx)
+                            HittyApp::with_session(None, Some(Session::default()), window, cx)
                         });
                         app.update(cx, |app, cx| {
                             if options.readme {
@@ -279,7 +279,7 @@ pub(crate) fn run(path: &std::ffi::OsStr) {
                     cx.update_window(handle.into(), |_, window, cx| {
                         app.update(cx, |app, cx| {
                             app.editor_open_on_host(
-                                tty7_core::host::local::LocalHost::new(),
+                                hitty_core::host::local::LocalHost::new(),
                                 path,
                                 window,
                                 cx,
@@ -479,9 +479,9 @@ pub(crate) fn run(path: &std::ffi::OsStr) {
                 let evidence = cx
                     .update_window(handle.into(), |_, window, cx| {
                         window.set_window_title(if options.history {
-                            "ctty7 Git History acceptance"
+                            "hitty Git History acceptance"
                         } else {
-                            "ctty7 document acceptance"
+                            "hitty document acceptance"
                         });
                         window.refresh();
                         let _ = window.draw(cx);
@@ -533,7 +533,7 @@ pub(crate) fn run(path: &std::ffi::OsStr) {
                         };
                         serde_json::json!({
                             "ready": true,
-                            "title": if options.history { "ctty7 Git History acceptance" } else { "ctty7 document acceptance" },
+                            "title": if options.history { "hitty Git History acceptance" } else { "hitty document acceptance" },
                             "os": std::env::consts::OS,
                             "scale_factor": window.scale_factor(),
                             "width": f32::from(window.viewport_size().width),
@@ -596,10 +596,10 @@ pub(crate) fn run(path: &std::ffi::OsStr) {
 
 /// Sample daemon events exercise the normal renderers without agent requests.
 fn install_readme_tabs(
-    app: &mut Tty7App,
+    app: &mut HittyApp,
     root: &std::path::Path,
     window: &mut Window,
-    cx: &mut Context<Tty7App>,
+    cx: &mut Context<HittyApp>,
 ) -> Vec<ReadmePane> {
     let cases = [
         ("Read the project", None, None),

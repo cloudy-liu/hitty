@@ -18,7 +18,7 @@ YAML packages and editing them with live reload.
 | Light *(default)* · One Light · Catppuccin Latte · Rosé Pine Dawn | Dark · Dracula · Harbor · One Dark Pro · Rosé Pine · Catppuccin Mocha · Gruvbox Dark · Nord · Tokyo Night |
 
 <Frame caption="Placeholder — screenshot: the theme picker with light and dark sections">
-  <img src="/images/placeholder.svg" alt="The tty7 theme picker" />
+  <img src="/images/placeholder.svg" alt="The hitty theme picker" />
 </Frame>
 
 ## Code editor colors
@@ -84,7 +84,7 @@ and terminal text otherwise. Markdown reading mode retains its separate typograp
 
 ## Following the system
 
-Turn on **Sync with system** and pick a theme for each appearance. tty7 follows
+Turn on **Sync with system** and pick a theme for each appearance. hitty follows
 the OS live — no restart, no reload.
 
 ```json
@@ -129,8 +129,8 @@ scrollback are never rewritten.
 
 | | |
 |---|---|
-| macOS / Linux | `~/.config/tty7/themes/` |
-| Windows | `%APPDATA%\tty7\themes\` |
+| macOS / Linux | `~/.config/hitty/themes/` |
+| Windows | `%APPDATA%\hitty\themes\` |
 
 Drop a `.yaml` file in and it appears in the picker. The file name is the
 theme's id; `name` is what is shown.
@@ -181,10 +181,10 @@ to your themes folder as YAML.
 
 ## Importing from iTerm2
 
-Drop an `.itermcolors` file into the themes folder and tty7 reads it directly —
+Drop an `.itermcolors` file into the themes folder and hitty reads it directly —
 no conversion step.
 
 <Note>
-  A theme file tty7 could not load is listed in Settings under **Not loaded from
+  A theme file hitty could not load is listed in Settings under **Not loaded from
   the themes folder**, with the reason, rather than silently ignored.
 </Note>

@@ -126,7 +126,7 @@ fn hsla_to_u32(color: gpui::Hsla) -> u32 {
 }
 
 // The steppers clamp to the same range `sanitize` allows, defined in
-// tty7-core next to the validation: a local, narrower pair used to push a
+// hitty-core next to the validation: a local, narrower pair used to push a
 // config-legal value the wrong way — `font_size: 50` shrank to 48 on "+",
 // and the result was written back to the file (#550).
 pub(crate) use crate::core::config::{
@@ -240,7 +240,7 @@ pub(crate) const TILE_GLYPH_XS: f32 = 11.;
 /// The compensation a glyph gets when its art does not fill the box the rest
 /// of the set fills.
 ///
-/// Every icon tty7 draws itself sits on the same optical bound — 3.4..20.6 of
+/// Every icon hitty draws itself sits on the same optical bound — 3.4..20.6 of
 /// a 24 viewBox, 19.3 units of ink once the round caps are counted. Stock
 /// lucide `close` is a bare 6..18 cross, 14 units, so at [`TILE_GLYPH`] it
 /// carries a quarter less ink than the tiles beside it and reads as the one
@@ -265,14 +265,13 @@ pub(crate) const TILE_GLYPH_LINE: f32 = 16.;
 pub(crate) const TILE_PAD: f32 = (TILE_SIZE - TILE_GLYPH) / 2.;
 pub(crate) const TILE_PAD_SM: f32 = (TILE_SIZE_SM - TILE_GLYPH_SM) / 2.;
 
-const DOCS_URL: &str = "https://github.com/cloudy-liu/ctty7#readme";
-const DISCORD_URL: &str = "https://discord.gg/s3dethqz2V";
-const ISSUES_URL: &str = "https://github.com/cloudy-liu/ctty7/issues/new";
+const DOCS_URL: &str = "https://github.com/cloudy-liu/hitty#readme";
+const ISSUES_URL: &str = "https://github.com/cloudy-liu/hitty/issues/new";
 
 /// What the window title and the About page call the app. The fork keeps every
 /// identifier upstream ships — binaries, config directories, the installed AUMID — and
 /// marks itself only where people read the name.
-pub(crate) const DISPLAY_NAME: &str = "ctty7";
+pub(crate) const DISPLAY_NAME: &str = "Hitty";
 
 pub(crate) const CONTENT_INSET: f32 = 12.;
 
@@ -427,7 +426,7 @@ pub struct Tab {
     /// The pane zoomed in this tab, stashed here by `activate` while another
     /// tab is on screen — zoom is a tab's view state, not the window's, so
     /// looking at another tab and coming back must not lose it (#599). `None`
-    /// while the tab is active: then the zoom lives in `Tty7App::maximized`.
+    /// while the tab is active: then the zoom lives in `HittyApp::maximized`.
     pub(crate) zoomed: Option<Entity<TerminalView>>,
     pub(crate) diff_overlay: Option<crate::ui::diff_overlay::DiffOverlayState>,
     pub(crate) code: Option<Box<crate::ui::code_editor::TabCode>>,
@@ -443,7 +442,7 @@ pub struct Tab {
     /// the whole window here and half of it there, and a global switch made
     /// each of those flip the other.
     pub(crate) document_layout: Option<crate::core::config::DocumentLayout>,
-    pub(crate) tree_id: std::cell::Cell<tty7_core::core::machine::TabId>,
+    pub(crate) tree_id: std::cell::Cell<hitty_core::core::machine::TabId>,
     /// Monotonic stamp of when this tab was last activated, used to order the
     /// switcher's tab column most-recently-used first. Zero means never.
     pub(crate) last_used: std::cell::Cell<u64>,
@@ -523,12 +522,12 @@ impl Tab {
             overlay_top: OverlayTop::default(),
             document_layout: None,
             sidebar_group: std::cell::RefCell::new(None),
-            tree_id: std::cell::Cell::new(tty7_core::core::machine::TabId::new()),
+            tree_id: std::cell::Cell::new(hitty_core::core::machine::TabId::new()),
             last_used: std::cell::Cell::new(0),
         }
     }
 
-    pub(crate) fn from_tree(tree: &tty7_core::core::machine::Tab, pane: Pane, cx: &App) -> Self {
+    pub(crate) fn from_tree(tree: &hitty_core::core::machine::Tab, pane: Pane, cx: &App) -> Self {
         let last_focused = tree
             .focused_pane
             .and_then(|id| pane_entity_id_for_pane(&pane, id, cx));
@@ -639,7 +638,7 @@ impl Tab {
     /// cwd belongs to a different machine.
     pub(crate) fn title_details(&self, window: Option<&Window>, cx: &App) -> TabTitle {
         use crate::ui::tab_strip::{abbreviate_home, strip_host_prefix};
-        use tty7_core::core::tab_view::{shell_title_path, ssh_tab_title};
+        use hitty_core::core::tab_view::{shell_title_path, ssh_tab_title};
 
         let name = self
             .name
@@ -801,7 +800,7 @@ pub(crate) struct Renaming {
     /// the moment any other tab closes or the strip reorders, which used to
     /// force every unrelated tab event to throw the half-typed name away —
     /// and left a window where the commit landed on the wrong tab (#598).
-    pub(crate) tab: tty7_core::core::machine::TabId,
+    pub(crate) tab: hitty_core::core::machine::TabId,
     pub(crate) input: Entity<InputState>,
     _subs: Vec<Subscription>,
 }
@@ -843,10 +842,10 @@ pub(crate) struct LoopbackForwardPanelState {
 const PATH_OPEN_REVEAL_RENDERS: u8 = 60;
 
 /// One folder opened from outside the window (Explorer, `--open-path`,
-/// `tty7 <path>`, or the first terminal of a fresh window). In-app "new tab
+/// `hitty <path>`, or the first terminal of a fresh window). In-app "new tab
 /// here" does not create one of these.
 struct PathOpenReveal {
-    tab: tty7_core::core::machine::TabId,
+    tab: hitty_core::core::machine::TabId,
     /// The directory the open asked for, until the shell reports its own cwd.
     cwd: std::path::PathBuf,
     /// `true` while the repo probe has not answered. After it has, a later
@@ -869,14 +868,14 @@ fn advance_path_reveal_scroll(left: u8, row_painted: bool, bounds_ready: bool) -
     }
 }
 
-pub struct Tty7App {
+pub struct HittyApp {
     pub(crate) tabs: Vec<Tab>,
     pub(crate) active: usize,
     /// Hands out `Tab::last_used` stamps. A counter rather than a clock so two
     /// activations in the same second still order.
     tab_use_seq: std::cell::Cell<u64>,
     /// A tab asked for before its workspace finished hydrating.
-    pending_tab: Option<tty7_core::core::machine::TabId>,
+    pending_tab: Option<hitty_core::core::machine::TabId>,
     pub(crate) font_size: f32,
     pub(crate) line_height: f32,
     pub(crate) font_family: String,
@@ -967,7 +966,7 @@ pub struct Tty7App {
     /// over a highlight always does what the highlight showed.
     pub(crate) tab_merge: Cell<
         Option<(
-            tty7_core::core::machine::TabId,
+            hitty_core::core::machine::TabId,
             crate::ui::pane_drag::DropZone<gpui::EntityId>,
         )>,
     >,
@@ -1021,7 +1020,7 @@ pub struct Tty7App {
     /// the entries stay, only the "will not reconnect" block is hidden.
     pub(crate) parked_dismissed: std::collections::HashSet<String>,
     /// A create asked of a machine that was not connected yet; the connect
-    /// finishing is what completes it (see `Tty7App::finish_connect`).
+    /// finishing is what completes it (see `HittyApp::finish_connect`).
     pub(crate) pending_create: Option<crate::ui::switcher::PendingCreate>,
     /// A create whose connect was refused for the control dialect — the state
     /// the "update server" button answers. Set aside rather than dropped, so
@@ -1040,7 +1039,7 @@ pub struct Tty7App {
 /// every index after it, and answering "Close" must not then end a bystander.
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub(crate) enum CloseTarget {
-    Tab(tty7_core::core::machine::TabId),
+    Tab(hitty_core::core::machine::TabId),
     Pane,
 }
 
@@ -1192,7 +1191,7 @@ fn clear_window_override_values(config: &mut Config, backdrop_is_local: bool) {
     }
 }
 
-impl Tty7App {
+impl HittyApp {
     pub fn for_workspace(
         id: Option<WorkspaceId>,
         window: &mut Window,
@@ -1327,7 +1326,7 @@ impl Tty7App {
             PromptLevel::Warning,
             t(L10nKey::AppRestartServerTitle),
             Some(&detail),
-            &[t(L10nKey::CmdQuitTty7), t(L10nKey::RestartServer)],
+            &[t(L10nKey::CmdQuitHitty), t(L10nKey::RestartServer)],
             cx,
         );
         cx.spawn(async move |this, cx| match answer.await {
@@ -1474,7 +1473,7 @@ impl Tty7App {
                 Err(e) => {
                     log::error!("first terminal failed to start: {e}");
                     // The home screen is what a user sees when they have closed
-                    // everything, and it used to be what they saw when tty7
+                    // everything, and it used to be what they saw when hitty
                     // could not open anything — silently, on the very first
                     // launch, with the cause only in a log file.
                     startup_error = Some(gpui::SharedString::from(t_fmt(
@@ -1731,7 +1730,7 @@ impl Tty7App {
             && crate::ui::tree_sync::workspace_is_disposable(cx, self.workspace)
         {
             crate::ui::tree_sync::fire_workspace_op(cx, self.workspace, |ws| {
-                tty7_core::daemon::control::ControlRequest::WorkspaceRemove { workspace: ws }
+                hitty_core::daemon::control::ControlRequest::WorkspaceRemove { workspace: ws }
             });
             WorkspaceStore::remove(cx, self.workspace);
         } else {
@@ -1831,7 +1830,7 @@ impl Tty7App {
         self.pending_tab = None;
         if self.tabs.is_empty() && crate::ui::tree_sync::workspace_is_disposable(cx, previous) {
             crate::ui::tree_sync::fire_workspace_op(cx, previous, |ws| {
-                tty7_core::daemon::control::ControlRequest::WorkspaceRemove { workspace: ws }
+                hitty_core::daemon::control::ControlRequest::WorkspaceRemove { workspace: ws }
             });
             WorkspaceStore::remove(cx, previous);
         } else if self.tabs.is_empty() {
@@ -1928,7 +1927,7 @@ impl Tty7App {
                 overlay_top: OverlayTop::default(),
                 document_layout: None,
                 sidebar_group: std::cell::RefCell::new(st.sidebar_group),
-                tree_id: std::cell::Cell::new(tty7_core::core::machine::TabId::new()),
+                tree_id: std::cell::Cell::new(hitty_core::core::machine::TabId::new()),
                 last_used: std::cell::Cell::new(0),
             },
         );
@@ -2164,7 +2163,7 @@ impl Tty7App {
     /// window's entity leased. `resync_after_local_daemon_change` takes the
     /// whole `App` and rebuilds *every* local window from the tree, and the
     /// first thing it asks each one is which tabs it is showing — which it gets
-    /// by reading that window's `Tty7App` back out of the registry. Called from
+    /// by reading that window's `HittyApp` back out of the registry. Called from
     /// inside `update_in`, the window it reaches for first is the one already
     /// leased to the closure, and gpui's answer to a double lease is a panic
     /// that takes the process with it: clicking Restart Server made the whole
@@ -3655,7 +3654,7 @@ impl Tty7App {
         &self,
         cx: &App,
     ) -> Vec<(
-        tty7_core::core::machine::TabId,
+        hitty_core::core::machine::TabId,
         Option<std::path::PathBuf>,
         std::path::PathBuf,
     )> {
@@ -3690,7 +3689,7 @@ impl Tty7App {
     /// not run, and the Scratch unfold from [`Self::finish_path_open`] stands.
     fn resolve_path_open(
         &mut self,
-        tab: tty7_core::core::machine::TabId,
+        tab: hitty_core::core::machine::TabId,
         known: Option<Option<std::path::PathBuf>>,
         cwd: &std::path::Path,
         cx: &mut Context<Self>,
@@ -3757,7 +3756,7 @@ impl Tty7App {
     /// budget. A row that already has bounds stops.
     pub(crate) fn drive_path_reveal_scroll(
         &self,
-        rows: &[(tty7_core::core::machine::TabId, usize)],
+        rows: &[(hitty_core::core::machine::TabId, usize)],
     ) {
         let plan: Vec<_> = {
             let reveals = self.path_open_reveals.borrow();
@@ -3811,7 +3810,7 @@ impl Tty7App {
         self.new_tab_with_cwd(Some(cwd), None, false, window, cx);
     }
 
-    /// A folder from Explorer, `--open-path`, `tty7 <path>`, or a hydrated
+    /// A folder from Explorer, `--open-path`, `hitty <path>`, or a hydrated
     /// window. In-app "new tab here" stays on [`Self::new_tab_at`].
     pub(crate) fn open_path(
         &mut self,
@@ -4322,7 +4321,7 @@ impl Tty7App {
     /// a pane is zoomed over the layout.
     fn tab_landing_rect(
         &self,
-        id: tty7_core::core::machine::TabId,
+        id: hitty_core::core::machine::TabId,
         window: &Window,
     ) -> Option<(
         crate::ui::pane_drag::DropZone<gpui::EntityId>,
@@ -4360,7 +4359,7 @@ impl Tty7App {
     /// along only where the tab receiving them has none of its own to lose.
     fn merge_tab(
         &mut self,
-        source: tty7_core::core::machine::TabId,
+        source: hitty_core::core::machine::TabId,
         zone: crate::ui::pane_drag::DropZone<gpui::EntityId>,
         window: &mut Window,
         cx: &mut Context<Self>,
@@ -4617,7 +4616,7 @@ impl Tty7App {
     /// request is parked and claimed on the frame it arrives.
     pub(crate) fn activate_tree_tab(
         &mut self,
-        id: tty7_core::core::machine::TabId,
+        id: hitty_core::core::machine::TabId,
         window: &mut Window,
         cx: &mut Context<Self>,
     ) {
@@ -5654,7 +5653,6 @@ impl Tty7App {
             About => self.open_settings_section(SettingsSection::About, window, cx),
             CheckForUpdates => self.check_for_updates_now(window, cx),
             OpenDocumentation => cx.open_url(DOCS_URL),
-            OpenDiscord => cx.open_url(DISCORD_URL),
             ReportIssue => cx.open_url(ISSUES_URL),
             // Same exit as the tray's: confirm, then stop the server with the
             // app. A bare quit would leave the daemon orphaned behind a dead
@@ -5726,7 +5724,7 @@ impl Tty7App {
 
     fn deliver_agent_prompt(&mut self, prompt: &str, window: &mut Window, cx: &mut Context<Self>) {
         let Some(target) = self.agent_target_leaf(cx) else {
-            crate::terminal::notify_desktop(Some("tty7"), t(L10nKey::AppNoRunningCodingAgent));
+            crate::terminal::notify_desktop(Some("Hitty"), t(L10nKey::AppNoRunningCodingAgent));
             return;
         };
         target.read(cx).send_agent_prompt(prompt);
@@ -5749,7 +5747,7 @@ impl Tty7App {
             None => (None, None),
         };
         let Some(selection) = selection else {
-            crate::terminal::notify_desktop(Some("tty7"), t(L10nKey::AppNothingSelected));
+            crate::terminal::notify_desktop(Some("Hitty"), t(L10nKey::AppNothingSelected));
             return;
         };
         let cwd = cwd.map(|c| c.to_string_lossy().into_owned());
@@ -5770,7 +5768,7 @@ impl Tty7App {
             Some((view.host(cx)?, view.host_cwd()?))
         });
         let Some((host, cwd)) = target else {
-            crate::terminal::notify_desktop(Some("tty7"), t(L10nKey::AppPaneNoKnownDirectory));
+            crate::terminal::notify_desktop(Some("Hitty"), t(L10nKey::AppPaneNoKnownDirectory));
             return;
         };
         crate::ui::host_ops::HostOps::run_in(
@@ -5792,7 +5790,7 @@ impl Tty7App {
                 match crate::core::agent_prompt::build_diff_review_prompt(&diff, Some(&cwd_s)) {
                     Some(prompt) => this.deliver_agent_prompt(&prompt, window, cx),
                     None => crate::terminal::notify_desktop(
-                        Some("tty7"),
+                        Some("hitty"),
                         &t_fmt(L10nKey::AppNoUncommittedChanges, &[("cwd", &cwd_s)]),
                     ),
                 }
@@ -6320,7 +6318,7 @@ impl Tty7App {
         };
         // Keep an unusable value out of `config.json`. The row renders a hint
         // under the input, so the typo does not silently vanish either.
-        if !value.is_empty() && !tty7_core::daemon::install::proxy::is_valid_manual(&value) {
+        if !value.is_empty() && !hitty_core::daemon::install::proxy::is_valid_manual(&value) {
             cx.notify();
             return;
         }
@@ -6709,7 +6707,7 @@ impl Tty7App {
         };
         // A typo here is not a directory, and the daemon then silently falls
         // back to its own cwd for every new pane — "new shells don't start in
-        // my project" reads as a tty7 bug rather than a typo (#601). Refuse
+        // my project" reads as a hitty bug rather than a typo (#601). Refuse
         // to save, the proxy row's pattern (#551): the field keeps the text,
         // the settings row explains in red, and the last good value stays in
         // config.json.
@@ -7059,7 +7057,7 @@ impl Tty7App {
     /// Words a hook install or removal for the note in Settings.
     ///
     /// `agent_hooks` returns what it did rather than a sentence, because it
-    /// lives in `tty7-core` and cannot reach `src/ui/i18n` — it used to hand
+    /// lives in `hitty-core` and cannot reach `src/ui/i18n` — it used to hand
     /// back English prose, which a Chinese or Japanese UI then showed as-is.
     fn agent_hooks_outcome_msg(outcome: &crate::core::agent_hooks::HookOutcome) -> String {
         use crate::core::agent_hooks::HookOutcome as O;
@@ -7074,7 +7072,7 @@ impl Tty7App {
             ),
             O::Removed => t(L10nKey::AppAgentHooksRemoved).to_string(),
             O::NothingInstalled => t(L10nKey::AppAgentHooksNothingInstalled).to_string(),
-            O::NoTty7Hooks => t(L10nKey::AppAgentHooksNoTty7Hooks).to_string(),
+            O::NoHittyHooks => t(L10nKey::AppAgentHooksNoHittyHooks).to_string(),
         }
     }
 
@@ -7430,7 +7428,7 @@ pub(crate) mod render_probe {
     }
 }
 
-impl Tty7App {
+impl HittyApp {
     fn render_remote_workspace_strip(&self, cx: &mut Context<Self>) -> Option<gpui::AnyElement> {
         if self.tabs.is_empty() {
             return None;
@@ -7625,7 +7623,7 @@ impl ForwardRoute {
     }
 }
 
-impl Render for Tty7App {
+impl Render for HittyApp {
     fn render(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         #[cfg(test)]
         render_probe::record();
@@ -8009,7 +8007,7 @@ impl Render for Tty7App {
 
         let root =
             div()
-                .id("tty7-root")
+                .id("hitty-root")
                 .size_full()
                 .flex()
                 .flex_col()
@@ -8324,7 +8322,6 @@ impl Render for Tty7App {
                 .on_action(
                     cx.listener(|_, _: &OpenDocumentation, _window, cx| cx.open_url(DOCS_URL)),
                 )
-                .on_action(cx.listener(|_, _: &OpenDiscord, _window, cx| cx.open_url(DISCORD_URL)))
                 .on_action(cx.listener(|_, _: &ReportIssue, _window, cx| cx.open_url(ISSUES_URL)))
                 .children(bg_image)
                 .child(main_layout)
@@ -8562,8 +8559,8 @@ fn pane_free_for(
         Some(None) => true,
         Some(Some(recorded)) => {
             // Only a workspace id is a claim. Anything else is a client
-            // stamping its own name — `tty7` before this release wrote a
-            // literal "tty7-cli" — and refusing on it strands every pane the
+            // stamping its own name — `hitty` before this release wrote a
+            // literal "hitty-cli" — and refusing on it strands every pane the
             // CLI ever made, respawning over a live shell the tree just told
             // us belongs here.
             let Ok(recorded) = recorded.parse::<crate::core::session::WorkspaceId>() else {
@@ -8587,7 +8584,7 @@ fn tabs_from_session(
     session: Option<Session>,
     font_size: f32,
     window: &mut Window,
-    cx: &mut Context<Tty7App>,
+    cx: &mut Context<HittyApp>,
 ) -> (Vec<Tab>, usize, usize) {
     let Some(session) = session.filter(|s| !s.tabs.is_empty()) else {
         return (Vec::new(), 0, 0);
@@ -8626,7 +8623,7 @@ fn tabs_from_session(
             sidebar_group: std::cell::RefCell::new(st.sidebar_group.clone()),
             tree_id: std::cell::Cell::new(
                 st.tree_id
-                    .unwrap_or_else(tty7_core::core::machine::TabId::new),
+                    .unwrap_or_else(hitty_core::core::machine::TabId::new),
             ),
             last_used: std::cell::Cell::new(0),
         });
@@ -8656,7 +8653,7 @@ fn session_to_pane(
     alive: Option<&std::collections::HashMap<u64, Option<String>>>,
     font_size: f32,
     window: &mut Window,
-    cx: &mut Context<Tty7App>,
+    cx: &mut Context<HittyApp>,
 ) -> Option<Pane> {
     match sp {
         SessionPane::Leaf {
@@ -8781,7 +8778,7 @@ pub(crate) fn new_terminal(
     restore_pane: Option<u64>,
     shell: Option<ShellSpec>,
     window: &mut Window,
-    cx: &mut Context<Tty7App>,
+    cx: &mut Context<HittyApp>,
 ) -> anyhow::Result<PaneSlot> {
     // A local ConPTY can take longer than an Attach acknowledgement, especially
     // on a cold start. Use the same pending pane as remote spawns so waiting
@@ -8824,7 +8821,7 @@ pub(crate) fn new_terminal(
 fn start_pane_spawn(
     pending: Entity<crate::ui::pending_pane::PendingPane>,
     window: &mut Window,
-    cx: &mut Context<Tty7App>,
+    cx: &mut Context<HittyApp>,
 ) {
     let spawn = pending.read(cx).spawn.clone();
     let slot_id = pending.entity_id();
@@ -8854,7 +8851,7 @@ fn build_terminal_view(
     parts: crate::terminal::view::ShellParts,
     font_size: f32,
     window: &mut Window,
-    cx: &mut Context<Tty7App>,
+    cx: &mut Context<HittyApp>,
 ) -> Entity<TerminalView> {
     let view = cx.new(|cx| {
         let mut view = TerminalView::from_shell_parts(parts, window, cx);
@@ -8898,7 +8895,7 @@ fn kill_pane_off_thread(route: crate::terminal::PaneRoute, pane_id: u64, cx: &mu
 fn watch_open_file_requests(
     view: &Entity<TerminalView>,
     window: &mut Window,
-    cx: &mut Context<Tty7App>,
+    cx: &mut Context<HittyApp>,
 ) {
     cx.subscribe_in(
         view,
@@ -8910,7 +8907,7 @@ fn watch_open_file_requests(
     .detach();
 }
 
-fn watch_pane_focus(view: &Entity<TerminalView>, window: &mut Window, cx: &mut Context<Tty7App>) {
+fn watch_pane_focus(view: &Entity<TerminalView>, window: &mut Window, cx: &mut Context<HittyApp>) {
     let handle = view.read(cx).focus_handle.clone();
     let app = cx.weak_entity();
     window
@@ -8935,7 +8932,7 @@ pub(crate) fn new_terminal_native(
     spec: Box<crate::daemon::protocol::NativeSshSpec>,
     restore_pane: Option<u64>,
     window: &mut Window,
-    cx: &mut Context<Tty7App>,
+    cx: &mut Context<HittyApp>,
 ) -> anyhow::Result<Entity<TerminalView>> {
     let parts = TerminalView::spawn_native_ssh_terminal(spec, working_directory, restore_pane)?;
     let view = cx.new(|cx| {
@@ -9662,7 +9659,7 @@ mod tests {
         );
         assert!(!wd_path_saveable("/definitely/not/a/real/dir"));
         // A file is not a directory the shell can start in.
-        let file = std::env::temp_dir().join("tty7-wd-saveable-probe");
+        let file = std::env::temp_dir().join("hitty-wd-saveable-probe");
         std::fs::write(&file, b"x").expect("write probe file");
         assert!(!wd_path_saveable(file.to_str().expect("utf-8")));
         let _ = std::fs::remove_file(&file);
@@ -9771,7 +9768,7 @@ mod tests {
             (1, Some(ours.to_string())),
             (2, Some(theirs.to_string())),
             (3, None),
-            (5, Some("tty7-cli".to_string())),
+            (5, Some("hitty-cli".to_string())),
         ]
         .into_iter()
         .collect();
@@ -9937,7 +9934,7 @@ mod tests {
         use crate::terminal::view::quiet_test_pane;
         use crate::ui::pane::{Pane, PaneSlot};
         use crate::ui::tree_sync::{DesiredNode, desired_tabs};
-        use tty7_core::core::machine::{AgentFacts, MACHINE_FILE, MachineStore, PaneSeed};
+        use hitty_core::core::machine::{AgentFacts, MACHINE_FILE, MachineStore, PaneSeed};
 
         let (app, mut vcx) = super::test_window::harness(cx);
         for (agent, allocated_id) in CLIAgent::ALL.into_iter().flat_map(|agent| {
@@ -10015,7 +10012,7 @@ mod tests {
         use crate::terminal::view::quiet_test_pane;
         use crate::ui::pane::{Pane, PaneSlot};
         use crate::ui::tree_sync::{DesiredNode, desired_tabs};
-        use tty7_core::core::machine::{AgentFacts, MACHINE_FILE, MachineStore, PaneSeed};
+        use hitty_core::core::machine::{AgentFacts, MACHINE_FILE, MachineStore, PaneSeed};
 
         let (app, mut vcx) = super::test_window::harness(cx);
         let session_id = "0199c3f2-1b0e-7c3a-9f21-6d4b8e2a5c17";
@@ -10227,7 +10224,7 @@ mod tests {
         use crate::terminal::view::quiet_test_pane;
         use crate::ui::pane::{Pane, PaneSlot};
         use crate::ui::tree_sync::{DesiredNode, desired_tabs};
-        use tty7_core::core::machine::{MACHINE_FILE, MachineStore, PaneSeed};
+        use hitty_core::core::machine::{MACHINE_FILE, MachineStore, PaneSeed};
 
         let (app, mut vcx) = super::test_window::harness(cx);
         for agent in CLIAgent::ALL {
@@ -10393,13 +10390,13 @@ mod tests {
             // Backslashes are how a path is spelled on Windows, and the field
             // has to be able to carry one either bare or inside quotes.
             &[r"--dir", r"C:\Users\me"],
-            &[r"--dir", r"C:\Program Files\tty7"],
+            &[r"--dir", r"C:\Program Files\hitty"],
             &["--tag", "#1"],
         ] {
             let argv = argv(case);
             let field_text = join_shell_args(&argv);
             assert_eq!(
-                split_shell_args(&field_text).expect("tty7's own refill must parse"),
+                split_shell_args(&field_text).expect("hitty's own refill must parse"),
                 argv,
                 "round trip through {field_text:?}"
             );
@@ -10456,7 +10453,7 @@ mod tests {
     #[test]
     fn unbalanced_quotes_are_refused_not_shredded() {
         assert!(split_shell_args("-c \"echo hi").is_err());
-        assert!(split_shell_args("--name 'tty7").is_err());
+        assert!(split_shell_args("--name 'hitty").is_err());
         assert!(split_shell_args("\"a\\\"").is_err());
     }
 }
@@ -10706,7 +10703,7 @@ mod run_badge_gpui_tests {
         cx: &mut TestAppContext,
         count: usize,
     ) -> (
-        Entity<super::Tty7App>,
+        Entity<super::HittyApp>,
         VisualTestContext,
         Vec<crate::daemon::transport::Stream>,
     ) {
@@ -11117,10 +11114,10 @@ mod titlebar_action_tests {
 pub(crate) mod test_window {
     use crate::core::config::Config;
     use crate::core::session::Session;
-    use crate::ui::app::Tty7App;
+    use crate::ui::app::HittyApp;
     use gpui::{AppContext, Entity, TestAppContext, VisualTestContext};
 
-    pub(crate) fn harness(cx: &mut TestAppContext) -> (Entity<Tty7App>, VisualTestContext) {
+    pub(crate) fn harness(cx: &mut TestAppContext) -> (Entity<HittyApp>, VisualTestContext) {
         crate::core::config::pin_test_config_dir();
 
         cx.executor().allow_parking();
@@ -11131,7 +11128,7 @@ pub(crate) mod test_window {
         });
         let window = cx.add_window(|window, cx| {
             let app =
-                cx.new(|cx| Tty7App::with_session(None, Some(Session::default()), window, cx));
+                cx.new(|cx| HittyApp::with_session(None, Some(Session::default()), window, cx));
             gpui_component::Root::new(app, window, cx)
         });
         window
@@ -11142,9 +11139,9 @@ pub(crate) mod test_window {
             .update(cx, |root, _, _| {
                 root.view()
                     .clone()
-                    .downcast::<Tty7App>()
+                    .downcast::<HittyApp>()
                     .ok()
-                    .expect("window root wraps a Tty7App")
+                    .expect("window root wraps a HittyApp")
             })
             .unwrap();
         let vcx = VisualTestContext::from_window(window.into(), cx);
@@ -11157,7 +11154,7 @@ pub(crate) mod test_window {
         cx: &mut TestAppContext,
         n: usize,
     ) -> (
-        Entity<Tty7App>,
+        Entity<HittyApp>,
         VisualTestContext,
         Vec<std::os::unix::net::UnixStream>,
     ) {
@@ -11190,7 +11187,7 @@ pub(crate) mod test_window {
     pub(crate) fn harness_with_pane(
         cx: &mut TestAppContext,
     ) -> (
-        Entity<Tty7App>,
+        Entity<HittyApp>,
         VisualTestContext,
         std::os::unix::net::UnixStream,
     ) {
@@ -11304,7 +11301,7 @@ mod pending_spawn_gpui_tests {
     use crate::ui::pending_pane::{PendingPane, PendingSpawn, PendingState};
     use gpui::TestAppContext;
 
-    fn pending(cx: &mut Context<Tty7App>) -> Entity<PendingPane> {
+    fn pending(cx: &mut Context<HittyApp>) -> Entity<PendingPane> {
         cx.new(|cx| {
             PendingPane::new(
                 "local",
@@ -11548,7 +11545,7 @@ mod ssh_rebuild_gpui_tests {
     };
     use crate::ui::pane::{Pane, PaneSlot};
     use gpui::TestAppContext;
-    use tty7_core::core::machine::{LayoutDelta, PaneNode, Tab as TreeTab};
+    use hitty_core::core::machine::{LayoutDelta, PaneNode, Tab as TreeTab};
 
     #[gpui::test]
     fn a_tree_rebuild_keeps_the_native_ssh_split_a_remote_tab_holds(cx: &mut TestAppContext) {
@@ -11669,11 +11666,11 @@ mod ssh_rebuild_gpui_tests {
 mod keybinding_gpui_tests {
     use super::test_window::harness;
     use crate::core::config::Config;
-    use crate::ui::app::Tty7App;
+    use crate::ui::app::HittyApp;
     use crate::ui::settings::SettingsSection;
     use gpui::{Entity, TestAppContext, VisualTestContext};
 
-    fn begin_capture(app: &Entity<Tty7App>, vcx: &mut VisualTestContext, action: &str) {
+    fn begin_capture(app: &Entity<HittyApp>, vcx: &mut VisualTestContext, action: &str) {
         let action = action.to_string();
         app.update_in(vcx, |app, window, cx| {
             app.toggle_settings(window, cx);
@@ -11766,7 +11763,7 @@ mod keybinding_gpui_tests {
 mod restart_server_gpui_tests {
     use crate::core::config::Config;
     use crate::core::session::Session;
-    use crate::ui::app::Tty7App;
+    use crate::ui::app::HittyApp;
     use gpui::{AppContext, TestAppContext};
 
     /// Clicking Restart Server made the whole app disappear.
@@ -11794,16 +11791,16 @@ mod restart_server_gpui_tests {
         });
         let window = cx.add_window(|window, cx| {
             let app =
-                cx.new(|cx| Tty7App::with_session(None, Some(Session::default()), window, cx));
+                cx.new(|cx| HittyApp::with_session(None, Some(Session::default()), window, cx));
             gpui_component::Root::new(app, window, cx)
         });
         let app = window
             .update(cx, |root, _, _| {
                 root.view()
                     .clone()
-                    .downcast::<Tty7App>()
+                    .downcast::<HittyApp>()
                     .ok()
-                    .expect("window root wraps a Tty7App")
+                    .expect("window root wraps a HittyApp")
             })
             .unwrap();
 
@@ -11816,7 +11813,7 @@ mod restart_server_gpui_tests {
             crate::ui::windows::WindowRegistry::register(cx, app.workspace, handle, weak);
         });
 
-        Tty7App::settle_after_restart(app.downgrade(), Ok(()), &mut cx.to_async()).await;
+        HittyApp::settle_after_restart(app.downgrade(), Ok(()), &mut cx.to_async()).await;
 
         assert!(
             app.update(cx, |app, _| app.startup_error.is_none()),
@@ -11831,10 +11828,10 @@ mod shell_menu_gpui_tests {
     use crate::core::session::{
         RemoteRef, RemoteTarget, Session, WindowView, WindowViews, WorkspaceId, WorkspaceStore,
     };
-    use crate::ui::app::Tty7App;
+    use crate::ui::app::HittyApp;
     use gpui::{AppContext, Entity, TestAppContext, VisualTestContext};
 
-    fn harness(cx: &mut TestAppContext) -> (Entity<Tty7App>, VisualTestContext) {
+    fn harness(cx: &mut TestAppContext) -> (Entity<HittyApp>, VisualTestContext) {
         crate::core::config::pin_test_config_dir();
         cx.executor().allow_parking();
         cx.update(|cx| {
@@ -11845,16 +11842,16 @@ mod shell_menu_gpui_tests {
         });
         let window = cx.add_window(|window, cx| {
             let app =
-                cx.new(|cx| Tty7App::with_session(None, Some(Session::default()), window, cx));
+                cx.new(|cx| HittyApp::with_session(None, Some(Session::default()), window, cx));
             gpui_component::Root::new(app, window, cx)
         });
         let app = window
             .update(cx, |root, _, _| {
                 root.view()
                     .clone()
-                    .downcast::<Tty7App>()
+                    .downcast::<HittyApp>()
                     .ok()
-                    .expect("window root wraps a Tty7App")
+                    .expect("window root wraps a HittyApp")
             })
             .unwrap();
         let vcx = VisualTestContext::from_window(window.into(), cx);
@@ -11862,9 +11859,9 @@ mod shell_menu_gpui_tests {
     }
 
     fn pump_until(
-        app: &Entity<Tty7App>,
+        app: &Entity<HittyApp>,
         vcx: &mut VisualTestContext,
-        done: impl Fn(&Tty7App) -> bool,
+        done: impl Fn(&HittyApp) -> bool,
     ) -> bool {
         let deadline = std::time::Instant::now() + std::time::Duration::from_secs(30);
         loop {
@@ -12003,11 +12000,11 @@ mod sidebar_new_tab_gpui_tests {
     }
 
     fn open_at(
-        app: &gpui::Entity<super::Tty7App>,
+        app: &gpui::Entity<super::HittyApp>,
         vcx: &mut gpui::VisualTestContext,
         cwd: &str,
         group: Option<Option<std::path::PathBuf>>,
-    ) -> tty7_core::core::machine::TabId {
+    ) -> hitty_core::core::machine::TabId {
         app.update_in(vcx, |app, window, cx| {
             let tab = Tab::new(Pane::Empty);
             let id = tab.tree_id.get();
@@ -12519,7 +12516,7 @@ mod rename_gpui_tests {
 }
 
 // The output gate: a pane repaints on PTY output only while it is on screen.
-// `Tty7App::render` declares the active tab's panes displayed each frame and
+// `HittyApp::render` declares the active tab's panes displayed each frame and
 // everything else hidden; a pane nobody has declared — or whose id nobody
 // registered — must err toward displayed, because the failure direction that
 // matters is a visible pane that stops repainting.
@@ -12530,7 +12527,7 @@ mod displayed_gpui_tests {
     use crate::terminal::view::{declare_displayed, displayed_for_test, quiet_test_pane};
     use crate::ui::app::test_window::harness_with_tabs;
 
-    fn pane_id(app: &super::Tty7App, tab: usize) -> gpui::EntityId {
+    fn pane_id(app: &super::HittyApp, tab: usize) -> gpui::EntityId {
         app.tabs[tab]
             .pane
             .first_leaf()

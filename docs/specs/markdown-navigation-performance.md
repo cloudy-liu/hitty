@@ -55,4 +55,4 @@ SVG inside a 1,152 × 576 dialog, with `overflow-y: auto`. End reached the last
 node at scrollTop 4,160 (scrollHeight 4,735; clientHeight 575). The wide diagram
 was capped to the available width. These are direct observations of
 <https://github.com/cloudy-liu/ctty7/blob/9b0fd9a3d66214788b32ccacf170c3c3432753c9/tests/fixtures/markdown/large-navigation.md>.
-The modifier-wheel and keyboard bindings above are ctty7's explicit behavior.
+The modifier-wheel and keyboard bindings above are hitty's explicit behavior.

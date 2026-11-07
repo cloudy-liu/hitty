@@ -1,37 +1,37 @@
 [package]
-name = "tty7"
+name = "hitty"
 version.workspace = true
 edition = "2024"
 description = "A terminal workbench: shells, persistent sessions, SSH, coding agents — GPU-rendered on Zed's gpui, pure Rust"
-repository = "https://github.com/cloudy-liu/ctty7"
+repository = "https://github.com/cloudy-liu/hitty"
 license = "Apache-2.0"
 readme = "README.md"
 publish = false
-default-run = "tty7-app"
+default-run = "hitty-app"
 
 [[bin]]
-name = "tty7-app"
+name = "hitty-app"
 path = "src/main.rs"
 
 [[bin]]
-name = "tty7-updater"
-path = "src/bin/tty7-updater.rs"
+name = "hitty-updater"
+path = "src/bin/hitty-updater.rs"
 required-features = ["updater"]
 
 [dependencies]
-# The framework-free half of tty7: wire protocol, session daemon, PTY, the
-# native SSH engine, and the domain model the headless `tty7-server` shares with
+# The framework-free half of hitty: wire protocol, session daemon, PTY, the
+# native SSH engine, and the domain model the headless `hitty-server` shares with
 # this GUI. Everything that does *not* need gpui lives there.
-# `gssapi` is off in tty7-core's defaults (a static musl `tty7-server` cannot
+# `gssapi` is off in hitty-core's defaults (a static musl `hitty-server` cannot
 # link the system krb5 it binds); the GUI, which builds against a real desktop
 # toolchain, turns it on so managed SSH connections keep offering
 # `gssapi-with-mic` exactly as before.
 #
 # `remote-install` is off there for the same shape of reason: it pulls an HTTPS
-# client used only to *download* a `tty7-server` onto a remote machine
+# client used only to *download* a `hitty-server` onto a remote machine
 # (decision D5). The server binary is the thing being downloaded, so it can
 # never take that path; the GUI, which is the client that pushes it, can.
-tty7-core = { path = "crates/tty7-core", features = ["gssapi", "remote-install"] }
+hitty-core = { path = "crates/hitty-core", features = ["gssapi", "remote-install"] }
 
 gpui = { workspace = true }
 gpui_platform = { workspace = true }
@@ -61,7 +61,7 @@ unicode-segmentation = "1"
 # out the way the terminal grid will, and the grid gets its widths from this
 # same crate by way of `alacritty_terminal` — a hand-rolled code-point table
 # drifts from it the moment Unicode adds a block. Already in the tree via
-# `tty7-cli`, so this pins no new code.
+# `hitty-cli`, so this pins no new code.
 unicode-width = "0.2"
 smol.workspace = true
 smallvec.workspace = true
@@ -71,7 +71,7 @@ tempfile = "3"
 
 # SSH profile ids in the connection manager UI (`ui::ssh_connect`,
 # `ui::settings`, the command palette). The profiles themselves — and the
-# secret-free `CredentialRef` they carry — live in `tty7-core`, which `Config`
+# secret-free `CredentialRef` they carry — live in `hitty-core`, which `Config`
 # needs to parse `config.json` without gpui.
 uuid = { version = "1", features = ["v4", "serde"] }
 
@@ -80,15 +80,15 @@ uuid = { version = "1", features = ["v4", "serde"] }
 # Credential Manager / Linux Secret Service), so no per-platform guards are
 # needed.
 #
-# It sits here rather than in `tty7-core` on purpose: every caller is in `ui::`
+# It sits here rather than in `hitty-core` on purpose: every caller is in `ui::`
 # (`ssh_prompt`, `ssh_connect`, `settings`, `app`), and leaving it downstairs made
-# the headless `tty7-server` — a static binary pushed onto machines that have no
+# the headless `hitty-server` — a static binary pushed onto machines that have no
 # keychain at all — link `zbus`/`secret-service` and thirty-odd crates behind them
 # for code it can never reach. Only the secret-free naming half (`CredentialRef`,
 # the account scheme) stays in core, where `config.json` parsing needs it.
 keyring = "4"
 
-# Theme files. tty7 themes are authored as YAML (`~/.config/tty7/themes/*.yaml`,
+# Theme files. hitty themes are authored as YAML (`~/.config/hitty/themes/*.yaml`,
 # our own schema); `plist` parses imported iTerm2 `.itermcolors` schemes (XML
 # plist) so the large iTerm color-scheme ecosystem drops straight in. serde_yaml
 # is already in the tree transitively, so it pins no new code; plist is pure Rust.
@@ -123,7 +123,7 @@ reqwest_client = { git = "https://github.com/zed-industries/zed", rev = "1d217ee
 reqwest = { package = "zed-reqwest", git = "https://github.com/zed-industries/reqwest.git", rev = "c15662463bda39148ba154100dd44d3fba5873a4", default-features = false, features = ["stream", "socks", "rustls-tls-native-roots"] }
 http_client_tls = { git = "https://github.com/zed-industries/zed", rev = "1d217ee39d381ac101b7cf49d3d22451ac1093fe" }
 
-# See `[workspace.dependencies]`: the pin is shared with tty7-cli, which parses
+# See `[workspace.dependencies]`: the pin is shared with hitty-cli, which parses
 # `capture` output through the same grid.
 alacritty_terminal.workspace = true
 
@@ -147,7 +147,7 @@ resvg = { version = "0.47", default-features = false }
 # The tray icon itself, macOS + Windows: tauri's `tray-icon` (NSStatusItem /
 # Shell_NotifyIcon via objc2 / windows-sys, both already in the tree). Linux is
 # deliberately NOT on this crate — its Linux backend needs GTK + libappindicator,
-# which tty7's AppImage doesn't bundle and the x11/wayland gpui backends don't
+# which hitty's AppImage doesn't bundle and the x11/wayland gpui backends don't
 # pull. Linux instead uses `ksni` below.
 [target.'cfg(any(target_os = "macos", target_os = "windows"))'.dependencies]
 tray-icon = "0.24"
@@ -160,7 +160,7 @@ wry = { package = "lb-wry", version = "0.53.3" }
 raw-window-handle = "0.6"
 
 # The pty-size ioctl in `terminal::generator` is the only libc user left in the
-# GUI (the daemon's own libc calls went to tty7-core), and it is Unix-only — so
+# GUI (the daemon's own libc calls went to hitty-core), and it is Unix-only — so
 # the dep is Unix-only too.
 [target.'cfg(unix)'.dependencies]
 libc = "0.2"
@@ -179,7 +179,7 @@ windows-sys = { version = "0.61", features = [
     "Win32_Media_Audio",
     # ConvertStringSecurityDescriptorToSecurityDescriptorW + SECURITY_ATTRIBUTES:
     # the elevated updater's %ProgramData% staging directory gets an explicit
-    # admin-only DACL (see `create_dir_admin_only` in tty7-updater).
+    # admin-only DACL (see `create_dir_admin_only` in hitty-updater).
     "Win32_Security",
     "Win32_Security_Authorization",
     "Win32_System_Registry",
@@ -222,7 +222,7 @@ windows = { version = "0.58", features = [
     "Win32_UI_WindowsAndMessaging",
 ] }
 
-# Embeds `assets/favicon.ico` into the `.exe` so Windows shows the tty7 logo in
+# Embeds `assets/favicon.ico` into the `.exe` so Windows shows the hitty logo in
 # the taskbar / window / Explorer (macOS gets its icon from the `.app` bundle via
 # bundle.sh instead). Only needed at build time on Windows — see build.rs.
 [target.'cfg(windows)'.build-dependencies]
@@ -296,23 +296,23 @@ markdown-visual-tests = ["gpui_platform/test-support"]
 # ---- caches are shared and versions stay aligned. ----
 [workspace]
 members = ["crates/*"]
-# The root `tty7` package is a member implicitly; naming every crate here is
+# The root `hitty` package is a member implicitly; naming every crate here is
 # what makes a bare `cargo build` / `cargo test` at the root cover the whole
 # workspace, which is how CI invokes them.
-default-members = [".", "crates/tty7-core", "crates/tty7-server", "crates/tty7-cli"]
+default-members = [".", "crates/hitty-core", "crates/hitty-server", "crates/hitty-cli"]
 
 [workspace.package]
 edition = "2024"
-# The single version for all four crates — `tty7`, `tty7-core`, `tty7-cli`, `tty7-server`
+# The single version for all four crates — `hitty`, `hitty-core`, `hitty-cli`, `hitty-server`
 # all inherit it with `version.workspace = true`. They ship together and a
 # client talking to a server of a different build has to be able to say so, so
 # they must never drift apart. This is the line a release bump edits (and the
 # first explicit version line in the file; package entries above all use
 # `version.workspace = true`).
-version = "0.11.1"
+version = "0.1.0"
 
 [workspace.dependencies]
-# The maintenance fork retains ctty7's existing menu, button and input changes
+# The maintenance fork retains the inherited menu, button and input changes
 # and adds instance-scoped Markdown and source editor styles, highlighting,
 # document resources, selection snapshots, adaptive tables and aligned hit testing.
 # Both packages use the same commit, also recorded in Cargo.lock.
@@ -336,11 +336,11 @@ gpui_platform = { git = "https://github.com/zed-industries/zed", rev = "1d217ee3
 # Our fork of Zed's alacritty_terminal fork: the VT parser + grid
 # (`Term`/`ansi::Processor`). Two packages read it and they must agree, hence
 # this being a workspace pin rather than one each — the GUI (`terminal::remote`)
-# to render the live mirror, and tty7-cli to turn a captured pane back into text
-# (`tty7 capture --plain`). The daemon parses nothing; it is a byte pipe, and its
+# to render the live mirror, and hitty-cli to turn a captured pane back into text
+# (`hitty capture --plain`). The daemon parses nothing; it is a byte pipe, and its
 # PTY is driven by `portable-pty`.
 #
-# The `tty7` branch is Zed's `fcf32fe` (the rev Zed pins) plus two commits, both
+# The pinned terminal fork is based on Zed's `fcf32fe` (the rev Zed pins) plus two commits, both
 # still missing from alacritty master as of 852e971:
 #
 # 1. `push_keyboard_mode` capped its stack by removing from `title_stack` instead
@@ -402,7 +402,7 @@ gpui-component = { opt-level = 3 }
 # crawls under `cargo dev`.
 alacritty_terminal = { opt-level = 3 }
 
-# The render/parse hot path crosses the tty7 ↔ alacritty_terminal ↔ gpui crate
+# The render/parse hot path crosses the hitty ↔ alacritty_terminal ↔ gpui crate
 # boundaries, so cross-crate inlining (thin LTO, like Zed ships) buys real
 # throughput there; single codegen unit for the same reason.
 [profile.release]
@@ -410,11 +410,11 @@ lto = "thin"
 codegen-units = 1
 
 # ---- gpui fork ------------------------------------------------------------
-# The locked fork retains tty7's three compatibility commits and adds child
+# The locked fork retains three inherited compatibility commits and adds child
 # window composition support:
 #
 # 1. `prefers_ime_for_printable_keys` takes the keystroke, so an input handler can
-#    answer per key instead of per view. tty7 needs it for Option-as-Meta — macOS
+#    answer per key instead of per view. hitty needs it for Option-as-Meta — macOS
 #    routes ⌥-chords to the IME whenever a CJK input source is active, and without
 #    the keystroke there is no way to decline just those chords (see
 #    `terminal::input::prefers_ime_for_printable_keys`, issue #177).
@@ -428,7 +428,7 @@ codegen-units = 1
 #    which reads as mojibake rather than as a font bug.
 #
 # 3. resvg/usvg bumped 0.45 → 0.47 so gpui's SVG stack unifies with the resvg
-#    tty7 pins directly above (follow-up to the #227 dependabot bump).
+#    hitty pins directly above (follow-up to the #227 dependabot bump).
 #
 # 4. A non-topmost Windows DirectComposition target allows WebView2 child
 #    windows above GPUI, retaining the existing transparency and backdrop path.
@@ -439,7 +439,7 @@ codegen-units = 1
 # rewrites the source for every dependent at once, so the fork's sibling crates
 # (`gpui_macos`, `gpui_web`, …) come along through their in-repo path deps.
 #
-# When bumping the upstream rev: rebase the fork's `tty7` branch onto the new rev,
+# When bumping the upstream rev: rebase the existing fork branch onto the new rev,
 # push, then update both the upstream pins above and the fork revision below.
 [patch."https://github.com/zed-industries/zed"]
 gpui = { git = "https://github.com/cloudy-liu/zed", rev = "7a54867bb4b5b3766855d40f5cbd70d85f229d21" }

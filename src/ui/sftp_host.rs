@@ -18,7 +18,7 @@ use std::io;
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, Ordering};
 
-use tty7_core::host::ShellInventory;
+use hitty_core::host::ShellInventory;
 
 use crate::daemon::protocol::{SftpEntry, SftpEntryKind, SftpOp, SftpOpResult};
 use crate::daemon::ssh::sftp::remote_parent;

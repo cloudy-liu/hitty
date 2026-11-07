@@ -1,4 +1,4 @@
-"""Render tty7's raster icons from the SVG sources in assets/.
+"""Render hitty's raster icons from the SVG sources in assets/.
 
     pip install resvg-py pillow icnsutil
     python scripts/brand/render.py
@@ -7,7 +7,7 @@ The SVGs are the source of truth: app-icon.svg uses the macOS icon grid;
 Windows ICO frames remove that outer margin and enlarge the panes by 10%
 so both the tile and its contents fill the taskbar slot.
 logo.svg is the transparent two-pane mark for the header and color tray;
-tray.svg is its alpha-only macOS template, read at runtime. resvg is what tty7 uses
+tray.svg is its alpha-only macOS template, read at runtime. resvg is what hitty uses
 to draw the tray icon, so these PNGs match what the app renders. Every size is
 rendered from the vector instead of downscaled from 1024, which keeps the
 prompt crisp in the 16-32 px frames Windows shows most.
@@ -98,7 +98,7 @@ def main() -> None:
         ("ic10", 1024),
     ]:
         icns.add_media(key, data=png_bytes(render("app-icon.svg", size)))
-    icns.write(str(ASSETS / "tty7.icns"))
+    icns.write(str(ASSETS / "hitty.icns"))
 
 
 if __name__ == "__main__":

@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to tty7 are documented in this file.
+All notable changes to hitty are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
@@ -9,17 +9,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Markdown reading now follows the application background, keeps heading code aligned, renders Mermaid labels with diagram controls, and defers diagram work and source highlighting while opening previews. File-tree children are indented below the workspace root. (cloudy-liu/ctty7#85)
+- Markdown reading now follows the application background, keeps heading code aligned, renders Mermaid labels with diagram controls, and defers diagram work and source highlighting while opening previews. File-tree children are indented below the workspace root. (cloudy-liu/hitty#85)
 
-- GitHub reading defaults now follow live website measurements for content width, 32px padding, persistent link underlines and heading code spacing. (cloudy-liu/ctty7#85)
+- GitHub reading defaults now follow live website measurements for content width, 32px padding, persistent link underlines and heading code spacing. (cloudy-liu/hitty#85)
 
-- Markdown previews now offer GitHub Light and Dark styles, including typed alerts, padded inline code, keyboard keys, striped tables and diff span backgrounds. GitHub is the only built-in reading theme; saved Paperglow selections migrate to it. Custom packages require v2 and inherit GitHub defaults; v1 files remain untouched and show upgrade instructions. (cloudy-liu/ctty7#85)
+- Markdown previews now offer GitHub Light and Dark styles, including typed alerts, padded inline code, keyboard keys, striped tables and diff span backgrounds. GitHub is the only built-in reading theme; saved Paperglow selections migrate to it. Custom packages require v2 and inherit GitHub defaults; v1 files remain untouched and show upgrade instructions. (cloudy-liu/hitty#85)
 
 - Mermaid fences render as inline SVG diagrams with source-copy and expanded
   viewing controls. GitHub reading uses Mermaid's default/dark element colors
   on a transparent canvas; custom v2 themes supply their own reading palette.
   Rendering runs in the background and supports the syntax provided by `merman`.
-  See [Mermaid support](docs/mermaid-support.md). (cloudy-liu/ctty7#80, cloudy-liu/ctty7#85)
+  See [Mermaid support](docs/mermaid-support.md). (cloudy-liu/hitty#80, cloudy-liu/hitty#85)
 
 - **Documents dock beside the terminal** (#625). Opening a file, toggling the
   code panel or opening a diff no longer covers the workspace: the document
@@ -54,15 +54,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Give the prompt back to the shell** — a new **Settings → Input → Prompt →
   Prompt editor** switch (`prompt_editor` in `config.json`, on by default).
-  Turned off, tty7 stops editing the shell prompt: every keystroke there —
+  Turned off, hitty stops editing the shell prompt: every keystroke there —
   printable keys, arrows, IME commits, paste, <kbd>⇥</kbd> and <kbd>⌃ R</kbd> —
   goes straight to the PTY, so zsh's ZLE, bash's readline and fish's reader own
   the line and the keys bound in a dotfile behave exactly as they do outside
-  tty7, history traversal included. Previously the only way to get there was to
-  hide the shell's own name from tty7 so integration never armed. Shell
+  hitty, history traversal included. Previously the only way to get there was to
+  hide the shell's own name from hitty so integration never armed. Shell
   integration is untouched by the switch: prompt boundaries, working directory,
-  exit codes, notifications and `tty7 procs` keep working. Tab completion and
-  history search are menus tty7 opens inside that editor, so both grey out
+  exit codes, notifications and `hitty procs` keep working. Tab completion and
+  history search are menus hitty opens inside that editor, so both grey out
   while it is off rather than sitting there doing nothing. It reaches open
   panes immediately, and a half-typed line is handed to the shell rather than
   dropped on the way over.
@@ -112,7 +112,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   CONVERSATION section below now says what that agent is doing in a form the
   row never could, and the dot stays where it was learned.
 - **A zsh or fish you gave your own arguments to is no longer injected into.**
-  Custom arguments have always been the line where tty7 backs off — the bash,
+  Custom arguments have always been the line where hitty backs off — the bash,
   PowerShell and WSL setups checked for them — but the zsh and fish setups did
   not, so a `fish` started with your flags had `-C <script>` appended to them
   and a `zsh` had its `ZDOTDIR` swapped out from under its startup files. Both
@@ -125,7 +125,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   raises when integration never engaged now names this as a cause (#624, #629).
 - **An SSH pane is named after its host.** A fresh SSH tab reads the host's
   name, or its address when the host has none — every host imported from
-  `~/.ssh/config` arrives nameless, and a window full of them all read `tty7`
+  `~/.ssh/config` arrives nameless, and a window full of them all read `hitty`
   until the far shell happened to title itself. The name survives a title
   reset and a dropped link (`prod-web — disconnected`), and a tab titled
   `deploy@10.0.0.5:2222` is shown whole rather than cut down to `2222`: the
@@ -138,7 +138,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **A workspace reads its own name from the first frame, and stops changing
   under you.** Every workspace a window creates is given a generated name —
-  `keen-marten` — and that is the name `tty7 ws ls` prints and `tty7 ws rename
+  `keen-marten` — and that is the name `hitty ws ls` prints and `hitty ws rename
   keen-marten …` addresses. The window that created it was never told: a client
   is left out of the deltas its own edits raise, and both create paths threw
   away the name the machine sent back, so the chip showed the directory its
@@ -147,21 +147,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   first daemon restart, rebuild or relaunch — looking like the workspace had
   renamed itself. A window now learns the name along with the layout, so the
   chip agrees with `ws ls` from the start. A workspace with no name, which is
-  what `tty7 new` leaves behind, still reads the directory it is working in, and
+  what `hitty new` leaves behind, still reads the directory it is working in, and
   a name you chose yourself still wins (#604).
-- **File links open in tty7 instead of leaving it.** A ⌘/Ctrl-clicked file path
+- **File links open in hitty instead of leaving it.** A ⌘/Ctrl-clicked file path
   now opens in the built-in editor, on the line and column the link named, and
   the Files panel selects it and scrolls it into view; a directory link opens
   the panel on that directory. **Settings → Terminal → Links → Open files with**
   picks between the built-in editor, the OS file association and a command of
   your own — anyone who had already set `link_file_command` keeps it.
-- **A pane address may now be written without its `%`** — `tty7 pane ls
+- **A pane address may now be written without its `%`** — `hitty pane ls
   --json` prints bare ids, so `83` addresses the same pane as `%83`
-  everywhere an address is taken. One behaviour goes with it: a lone `tty7
+  everywhere an address is taken. One behaviour goes with it: a lone `hitty
   send 83` used to type "83" into the caller's own pane and now reports that
   it has nothing to send, the same as a lone `send %83` always did. It fails
   loudly and never presses anything anywhere; to type a number as text, name
-  the pane too (`tty7 send %5 83 --enter`) (#538).
+  the pane too (`hitty send %5 83 --enter`) (#538).
 
 ### Fixed
 
@@ -207,8 +207,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   installer now runs `/SILENT`: still unattended, but Inno's own progress
   window stays on screen for the gap (#600).
 - **Orphan panes are visible in the GUI, and closable from it.** A shell
-  left running after its workspace went away — what an interrupted `tty7
-  run` leaves behind — showed up nowhere in the GUI; only the CLI's `tty7
+  left running after its workspace went away — what an interrupted `hitty
+  run` leaves behind — showed up nowhere in the GUI; only the CLI's `hitty
   pane ls --all` could see it, and only `pane close --orphans` could stop
   it. The workspace switcher's local machine group now lists those
   background panes with their owner and working directory, each with a
@@ -219,7 +219,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   screen, the only trace a log line. The restored window now shows a
   notification naming how many workspaces are still running in the
   background and where to reopen them (#597).
-- **`tty7 pane close %99` fails when no pane 99 exists.** The orphan path
+- **`hitty pane close %99` fails when no pane 99 exists.** The orphan path
   hangs the pane up directly, and that kill is fire-and-forget — the daemon
   never says whether it knew the pane — so a typo'd id printed
   `{"closed":[99]}` and exited 0, telling a reaper script the leak it was
@@ -279,26 +279,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   rerouting every new pane.** The custom path used to be stored unchecked,
   and the daemon's picker then skipped it — not a directory — and started
   each new shell in its own fallback directory, so "new shells don't start
-  in my project" read as a tty7 bug rather than a typo. Settings now marks a
+  in my project" read as a hitty bug rather than a typo. Settings now marks a
   non-existent directory in red and does not save it, and a hand-edited
   `config.json` holding one gets a `log::warn!` naming the path at the
   moment the fallback engages (#601).
-- **`tty7 doctor` exits 1 when the server is unreachable.** Doctor is the
+- **`hitty doctor` exits 1 when the server is unreachable.** Doctor is the
   verb people run when something is not working, so an unreachable server is
-  *the* finding — not a row to exit 0 over while `tty7 doctor || alert`
+  *the* finding — not a row to exit 0 over while `hitty doctor || alert`
   never fires. The full table and JSON still go out, and stderr carries the
   headline under `-q` (#592).
 - **The `owner` field of `pane ls --all` is documented the same way in both
   references** — the bundled skill reference still claimed the CLI stamps a
-  literal `"tty7-cli"` owner, the behaviour that was removed because an owner
+  literal `"hitty-cli"` owner, the behaviour that was removed because an owner
   names the workspace allowed to attach. Both now describe the workspace id,
   or its absence while a pane is unfiled (#591).
-- **A failed `tty7 wait` now says so on stderr even under `-q`.** Timeout and
+- **A failed `hitty wait` now says so on stderr even under `-q`.** Timeout and
   "pane exited first" are structured exits, so they bypassed the anyhow path
   that prints under quiet mode and left the exit code as the only evidence —
   against the documented "errors still go to stderr". Both now print a
   one-line headline to stderr, the discipline `pane close` already set (#590).
-- **A timed-out `tty7 wait` now answers in the same JSON shape as a finished
+- **A timed-out `hitty wait` now answers in the same JSON shape as a finished
   one** — `matched`, `stale` and the agent session fields, plus
   `"timed_out": true` — instead of a bare object missing the fields a
   consumer's error branch was written against. The schema, including
@@ -353,8 +353,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   reload path say what happened and where the copy is. A file that simply
   cannot be *read* logs a warning now too — it used to fall to defaults with
   no trace at all. (#537)
-- **A mistyped `tty7 send` address no longer types itself into your own
-  pane** — `tty7 send %3x --key C-c` used to degrade the unparseable `%3x`
+- **A mistyped `hitty send` address no longer types itself into your own
+  pane** — `hitty send %3x --key C-c` used to degrade the unparseable `%3x`
   into text aimed at the pane the caller was sitting in, then deliver the
   Ctrl-C there too, interrupting whatever was in front of them. A `%`
   followed by a digit that still fails to parse is now the address error it
@@ -429,12 +429,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the arguments that need it, and a value whose quotes do not close is refused
   with an explanation under the input rather than saved as fragments. A path
   spelled with backslashes still means itself. (#551)
-- **`tty7 send --enter` now presses Enter when there is nothing to type** —
+- **`hitty send --enter` now presses Enter when there is nothing to type** —
   `--enter` is shorthand for `--key enter`, but it was never counted as a key,
-  so `tty7 send %42 --enter` answered "needs TEXT … or a --key to press"
+  so `hitty send %42 --enter` answered "needs TEXT … or a --key to press"
   instead of running what pane 42 already had typed. It counts now, with an
-  address or without one (`tty7 send --enter` presses Enter in your own pane).
-  An *unmarked* id is deliberately left out: `tty7 send 83 --enter` reads as
+  address or without one (`hitty send --enter` presses Enter in your own pane).
+  An *unmarked* id is deliberately left out: `hitty send 83 --enter` reads as
   much like typing "83" where you are sitting as like pressing Enter in pane
   83, so it stays a loud error that names both spellings (`send %83 --enter`,
   `send %PANE 83 --enter`) rather than quietly retargeting the keystroke
@@ -667,7 +667,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   A pane's shell is recorded alongside, so a git bash pane no longer comes
   back as PowerShell.
 
-- **`tty7 wait` can wait for a command, not just an agent** — a new `free`
+- **`hitty wait` can wait for a command, not just an agent** — a new `free`
   state ends the wait when the pane's foreground command has exited and the
   pane is back to its bare shell, which is what a `cargo test` running in a
   pane has instead of an agent status. With `--changed` it means "something ran
@@ -676,23 +676,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   when none of the agent states you named answered first, so `waiting,done,free`
   on a pane of unknown kind cannot lose you a `waiting`.
 
-- **`tty7 send --key` presses keys instead of typing characters** — `C-c` to
+- **`hitty send --key` presses keys instead of typing characters** — `C-c` to
   stop a runaway build, `escape` to close a TUI, `up`/`down`/`enter` to answer
   a permission prompt that takes no text. Repeatable for a sequence, composable
   with `TEXT`, and delivered as separate events 200 ms apart so a raw-mode TUI
   reads a sequence as a sequence rather than as a paste. An unknown key name is
   a usage error raised before anything is written.
 
-- **`tty7 pane close` takes several panes, and `--orphans` clears the lot** —
+- **`hitty pane close` takes several panes, and `--orphans` clears the lot** —
   `pane ls --all` has been able to *show* the panes an interrupted `run` leaves
   behind; there was no way to act on that except by reading ids off the table
   one at a time. A pane that cannot be closed no longer abandons the rest of
   the batch.
 
-- **`tty7 doctor` reports where the agent status hooks stand** — it has claimed
+- **`hitty doctor` reports where the agent status hooks stand** — it has claimed
   to check hooks in its own `--help` for a while without doing so. Missing or
-  outdated hooks are why an agent can look frozen in `tty7 agents` and why
-  `tty7 wait` on it only ever times out, so the check belongs in the verb
+  outdated hooks are why an agent can look frozen in `hitty agents` and why
+  `hitty wait` on it only ever times out, so the check belongs in the verb
   people run when something is not working.
 
 - **SSH probes the `~/.ssh` default identity keys** — a connection with no
@@ -729,9 +729,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Put your own entries in the new-tab menu** — `custom_shells` in
   `config.json` takes a list of `{label, program, args}`, and each one becomes a
-  row in the menu behind the sidebar's **+**, after the shells tty7 detected. A
+  row in the menu behind the sidebar's **+**, after the shells hitty detected. A
   distro, a container, a REPL, the same shell against a different profile: they
-  are launched exactly as written, since tty7 chose none of the command and has
+  are launched exactly as written, since hitty chose none of the command and has
   no defaults to add to it — including its shell integration, so a custom entry
   opens without prompt marks or working-directory tracking even where the
   detected row beside it has both. `shell` still names the one command that
@@ -750,7 +750,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   temporary directory). The update now runs as one announced UAC prompt that
   covers both privileged stages, and the app itself never runs elevated: a
   helper running as the signed-in user waits the install out and relaunches
-  tty7 with the user's own token. The update dialog says the prompt is coming
+  hitty with the user's own token. The update dialog says the prompt is coming
   before the app quits, and "Install on Next Launch" is not offered — nobody
   would be there to answer. Declining the prompt is not an error: the staged
   package simply waits in Settings. Everything the elevated half needs crosses
@@ -824,7 +824,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   tab, down to 440 ms — and on the machine in #454, where a round trip takes
   3.3 s, the duplicate alone was costing 15 s a tab.
 
-- **`tty7 pane close --json` now reports `{"closed": [ids]}`** rather than a
+- **`hitty pane close --json` now reports `{"closed": [ids]}`** rather than a
   single `{"closed": id}`, because the verb takes more than one pane. A batch
   that could not close everything exits 1 with `{"closed": […], "failed": […]}`
   and the complaint on stderr, so a retry knows what is left.
@@ -842,10 +842,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   event to arrive on, so the group flag bought nothing to begin with; both
   daemon spawn paths and the headless CLI server now share one constant
   without it, and a pane clears any inherited ignore before it opens the pty,
-  so a tty7 launched from a shell that already had the bit set is covered too.
+  so a hitty launched from a shell that already had the bit set is covered too.
   (#459, #451, #314)
 
-- **Two tty7s on different config directories no longer erase each other's
+- **Two hittys on different config directories no longer erase each other's
   workspaces** — the machine tree resolved from `$HOME` while everything else
   an instance owns resolved from the config directory, so `--config-dir` moved
   every part of an instance except the one that says which workspaces exist.
@@ -901,13 +901,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   opening one keeps its id instead of claiming a fresh one; opening a workspace
   hydrates from the machine's tabs rather than saving an empty session over
   them; a workspace removed with `ws rm` stays removed instead of being written
-  back under the same id and haunting the switcher until a restart; `tty7 ls`
+  back under the same id and haunting the switcher until a restart; `hitty ls`
   can name the host holding a workspace; and `tab ls` / `ws tree` fall back
   through name, agent, cwd leaf and process name rather than showing a blank.
   (#423)
 
 - **A pane the CLI created can be attached to** — a pane's owner names the
-  workspace allowed to attach to it, and the CLI wrote a literal `tty7-cli`
+  workspace allowed to attach to it, and the CLI wrote a literal `hitty-cli`
   there for every pane it made. A window opening on a CLI-built workspace found
   none of them attachable: it spawned a fresh shell per tab, orphaned the live
   ones, and — because the tree still carried each pane's agent session — greeted
@@ -923,7 +923,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Every invocation carrying an argv goes out under `--exec` now. Those panes
   then came up with no shell integration, because the bootstrap only had a bash
   arm: no OSC 133 and no OSC 7, so no prompt marks, no exit status, no cwd, and
-  `tty7 wait` and busy/idle status dead in the pane. There is a fish arm now,
+  `hitty wait` and busy/idle status dead in the pane. There is a fish arm now,
   POSIX-quoted since `sh` parses the script rather than the user's own shell.
   (#422)
 
@@ -933,7 +933,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   server path that no longer exists inside the distro. The exec failure arrives
   later as an EOF on the bridge, so a distro that was reinstalled or had its
   bin directory cleaned out failed every WSL tab from then on with no way out
-  but restarting tty7. A bridge that closed without ever sending a byte never
+  but restarting hitty. A bridge that closed without ever sending a byte never
   ran, and after one of those the next pane proves the distro again. The note
   is also read under the install lock now, so a window restoring panes can no
   longer spawn the binary that a server update is in the middle of replacing.
@@ -999,7 +999,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Overlay scrollbars fade out again** — macOS reports that scrollbars should
   not auto-hide for anyone with a mouse plugged in, and that was turned into
   "always show" for every list in the app. The preference is about legacy
-  scrollbars, which take a gutter out of the layout; tty7's are overlay bars
+  scrollbars, which take a gutter out of the layout; hitty's are overlay bars
   painted on top of the content, so "always" parked an opaque bar over the
   switcher's tab column for as long as the panel stayed open, with nothing to
   fade it. (#471)
@@ -1181,23 +1181,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   tree beside its cwd, and the switcher shows it, put through the same
   abbreviation the tab strip uses so a shell's `user@host:~/dir` reads `…/dir`
   in both places. In a split, the pane running an agent names the tab rather
-  than whichever shell happens to be first. `tty7 tab ls` and workspaces listed
+  than whichever shell happens to be first. `hitty tab ls` and workspaces listed
   on a remote machine were reading the same missing field, and are named the
   same way now.
 
 - **A WSL distro that cannot reach `/mnt` keeps its own `.bashrc`** — the
   bootstrap handed bash a `--rcfile` living on the Windows side without
   checking the distro could read it. bash ignores an unreadable `--rcfile`
-  without a word, and tty7 starts it non-login precisely so that `--rcfile` is
+  without a word, and hitty starts it non-login precisely so that `--rcfile` is
   honoured at all — so a distro with automount off, or a root moved by
   `wsl.conf`, opened a shell that had read no startup file the user wrote: not
-  tty7's, and not their `.bashrc` or `.bash_profile` either. The arm now checks
+  hitty's, and not their `.bashrc` or `.bash_profile` either. The arm now checks
   first and falls back to a plain login shell, which reads the same startup
   files a pane without shell integration reads and only gives up the
   integration.
 
 - **An idle window stops re-reading the repository on Linux** — with a
-  repository open, tty7 ran `git status -uall` about two and a half times a
+  repository open, hitty ran `git status -uall` about two and a half times a
   second, forever, with nothing on screen changing and nobody touching the
   machine. The filesystem watch was feeding itself: Linux reports opening a
   file as a watch event, every read of `.git` is an open, and reading `.git`
@@ -1312,9 +1312,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   over: a missing or unreadable file did nothing, a file naming no importable
   hosts did nothing, and a clean import of six hosts also did nothing visible.
   It now reports each of those, with counts of the hosts added, updated and
-  already current, and names the options tty7 has no field for — `IdentityAgent`,
+  already current, and names the options hitty has no field for — `IdentityAgent`,
   `CertificateFile`, `IdentitiesOnly` and the rest — grouped with the hosts that
-  set them, so a host that behaves differently under tty7 than under `ssh` has
+  set them, so a host that behaves differently under hitty than under `ssh` has
   something to point at.
 
 - **"Forget Password" asks first, and says who else it signs out** — one click
@@ -1333,8 +1333,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `claude` entering `.claude/worktrees/feature` left the tree rooted in the
   main checkout, disagreeing with the path printed directly above it.
 
-- **`tty7 wait` no longer calls a busy shell `idle`** — a pane with nothing
-  reporting agent status was reported as `idle`, so `tty7 wait %3 --until idle`
+- **`hitty wait` no longer calls a busy shell `idle`** — a pane with nothing
+  reporting agent status was reported as `idle`, so `hitty wait %3 --until idle`
   returned success immediately, `matched: true`, about a pane that was midway
   through a build. Those panes now report `no-agent`, which is both true and
   the signal to use `--until free` instead; a wait that times out there says so.
@@ -1353,7 +1353,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   finds the session again.
 
 - **Opening a folder from Explorer no longer costs you your layout** — "Open in
-  tty7", "Open tty7 here", and `tty7 <PATH>` restore the last window's tabs and
+  hitty", "Open hitty here", and `hitty <PATH>` restore the last window's tabs and
   splits before opening the folder as one more tab in it. A launch naming a
   directory used to skip the restore outright whenever no window was already
   up — whatever "Restore last layout" said — so the folder arrived as a lone
@@ -1365,7 +1365,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the directory it names is a path on this computer.
 
 - **An SFTP upload no longer sits in the browser under its temporary name** —
-  an upload is written as `<name>.tty7-upload-<hex>` and renamed into place at
+  an upload is written as `<name>.hitty-upload-<hex>` and renamed into place at
   the end, and the browser listed the directory the moment the transfer
   started, catching exactly that name. Nothing listed again afterwards, so a
   finished upload read as a file with a hash glued to its name until the
@@ -1382,7 +1382,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   advertised begins.
 
 - **A failed update install says so instead of asking again** — the GUI hands
-  the install to the `tty7-updater` helper and quits, so a failure inside the
+  the install to the `hitty-updater` helper and quits, so a failure inside the
   helper used to reach only `update.log`: the old version relaunched with no
   word about it, and because the prompt state had already been cleared, the
   next check offered the very same version again — and again. The helper now
@@ -1402,9 +1402,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- **Update tty7 without leaving the app** — the launch check and
+- **Update hitty without leaving the app** — the launch check and
   **Settings → About → Check Now** now offer **Update and Relaunch** instead of
-  sending the user to GitHub Releases. A dedicated `tty7-updater` helper
+  sending the user to GitHub Releases. A dedicated `hitty-updater` helper
   verifies the release checksum, the bundle version, and — on macOS — the
   code-signing requirement before replacing the installation, and restores the
   previous copy if the relaunch fails. The update is fetched and verified while
@@ -1441,7 +1441,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   in flight. Skipping a version is retired along with its state and its Settings
   row. (#386)
 
-- **A proxy for tty7's own network traffic** — update checks, release downloads
+- **A proxy for hitty's own network traffic** — update checks, release downloads
   and remote-server installs now resolve an HTTP/SOCKS proxy from, in order, a
   new `http_proxy` config field, the platform system proxy (Windows registry,
   macOS `SCDynamicStore`), and `HTTP_PROXY` / `HTTPS_PROXY` / `ALL_PROXY`.
@@ -1449,9 +1449,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   proxy from their own environment, as in any other terminal.
   (by @shihuaidexianyu in #367, reported in #365)
 
-- **`tty7 wait` — the primitive an agent team was missing** — block until a
+- **`hitty wait` — the primitive an agent team was missing** — block until a
   pane's agent needs input, finishes its turn, or dies:
-  `tty7 wait %3 --until waiting,done --changed --timeout 600`. The daemon
+  `hitty wait %3 --until waiting,done --changed --timeout 600`. The daemon
   already tracked, per pane, which coding agent runs there and its status
   (idle / working / **waiting on the user** / done, plus the agent's native
   session id), but the only consumer was the GUI's status dots. This hands
@@ -1473,17 +1473,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   is directly actionable.
 
   Polling `AgentStates` rather than subscribing to events, on purpose: a
-  stateless question composes into scripts (`tty7 wait %3 && tty7 capture %3
+  stateless question composes into scripts (`hitty wait %3 && hitty capture %3
   --plain`), survives a server restart mid-wait, and needs no cursor. The
-  cost is one aggregate request per tick — the same one `tty7 agents` makes
+  cost is one aggregate request per tick — the same one `hitty agents` makes
   once. (by @yetone in #248)
 
 - **An agent-facing skill for the CLI** — the repo carries
-  [`skills/tty7`](skills/tty7/SKILL.md), which teaches a coding agent the
+  [`skills/hitty`](skills/hitty/SKILL.md), which teaches a coding agent the
   verbs above: work out which pane it is sitting in, split one, send a task
   into another, capture what came back, run a command in a real PTY and pass
   its exit code through. You install it yourself, with
-  `npx skills add l0ng-ai/tty7` — tty7 writes nothing into `~/.claude` for
+  `npx skills add cloudy-liu/hitty` — hitty writes nothing into `~/.claude` for
   it, and there is no switch in Settings that does.
 
   A skill rather than a global instruction, on purpose: an earlier cut
@@ -1562,7 +1562,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   简体中文 / 日本語) in every locale.
   (by @shihuaidexianyu in #303, by @cwatanab in #372)
 
-- **Oh My Pi (`omp`) is a first-class agent** — the eighteenth CLI tty7
+- **Oh My Pi (`omp`) is a first-class agent** — the eighteenth CLI hitty
   recognizes in a pane, with the full set: brand avatar, status dot, session
   resume (`omp --resume <id>`), and **Fork Session** (`omp --fork <id>`).
   **Settings → Agents** installs its hooks like the others.
@@ -1574,7 +1574,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `pi --session <id>` to a binary that spells it `--resume`. The status
   bridge is the Pi extension the fork inherited (same default-exported
   factory, same four lifecycle events), so one template now serves both,
-  landing at `~/.omp/agent/extensions/tty7/index.ts`.
+  landing at `~/.omp/agent/extensions/hitty/index.ts`.
   (#405, reported by @Hanser0521 in #376)
 
 - **The switcher is two columns, and Ctrl+Tab raises it** — it listed
@@ -1589,12 +1589,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ("amber-yak") instead of inheriting whatever directory their first shell
   started in. (#380)
 
-- **Every shell tty7 can find is in the new-terminal menu, plus one you name** —
+- **Every shell hitty can find is in the new-terminal menu, plus one you name** —
   the menu lists the shells detected on this machine (Nushell included, on every
   platform) and a configurable custom entry with its own arguments, which
   survive across shell-inventory rescans. (by @ArnoChenFx in #311)
 
-- **Windows Explorer context menus** — an optional **Open in tty7** verb for a
+- **Windows Explorer context menus** — an optional **Open in hitty** verb for a
   directory background and for a folder, registered from the installer rather
   than from Settings: writing shell verbs is an install-time decision, which is
   where VS Code and Git for Windows put theirs. A task checkbox drives new
@@ -1604,7 +1604,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   registered once and was later upgraded without the box ticked does not leave
   keys pointing at a deleted exe. (by @ArnoChenFx in #310, #350)
 
-- **`tty7` opens directories in new tabs** — the CLI accepts one or more
+- **`hitty` opens directories in new tabs** — the CLI accepts one or more
   directories and opens a tab per directory in the running GUI, restoring a
   window if none is open. Paths that do not round-trip through UTF-8 are
   rejected rather than opened somewhere else. (by @ArnoChenFx in #308)
@@ -1634,8 +1634,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **The About page is about the app again** — it had grown three sections that
   change system state and that nobody looks for under "About": a PATH install, a
-  registry write, and a daemon restart. The `tty7` CLI toggle moves to
-  **Agents**, which already describes tty7 ↔ agent integration in the other
+  registry write, and a daemon restart. The `hitty` CLI toggle moves to
+  **Agents**, which already describes hitty ↔ agent integration in the other
   direction (hooks reporting session status). The Windows Explorer context menu
   moves to the installer. Server restart stays — it is about the app itself.
 
@@ -1655,14 +1655,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   than breaking the keymap. (#375, requested by @shihuaidexianyu in #374)
 
 - **Chinese terminology, corrected throughout** — the worst one collided two
-  concepts: a git worktree was translated as 工作区, the same word tty7 uses for
+  concepts: a git worktree was translated as 工作区, the same word hitty uses for
   a workspace, so "Remove Worktree" read as "delete this workspace" inside a
   destructive confirmation. Worktree is 工作树 now and workspace keeps 工作区 to
   itself. Also: Forget password means "clear the stored password", not password
   recovery; the SSH auth mode **Agent** was 代理, the same word as the proxy
   fields beside it; an SSH profile is a saved host (主机配置), not a file on
   disk; scrollback was 回滚, which means rollback — the opposite direction; and
-  tty7's own server is now written `server`, the way `shell`, `pane` and `agent`
+  hitty's own server is now written `server`, the way `shell`, `pane` and `agent`
   already were, while 服务器 stays where it means the SSH host being connected
   to. (#334, #350, #417)
 
@@ -1679,7 +1679,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   half-circle caps read as circles at large font sizes.
   (by @cwatanab in #335, by @ArnoChenFx in #341)
 
-- **macOS declares its privacy intents** — tty7 shipped no
+- **macOS declares its privacy intents** — hitty shipped no
   `NS*UsageDescription` keys, so macOS denied a pane's child process access to a
   protected folder (Containers, Mail, Messages, Calendar) with a repeated prompt
   instead of a single clear grant. The bundle now declares the folder, volume
@@ -1784,7 +1784,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Three smaller holes closed with it: the macOS updater waits for its parent by
   watching `getppid()` reparent to launchd rather than polling `kill(pid, 0)`,
   which a recycled pid could satisfy forever; a Windows update guard makes
-  `ensure_running` refuse to spawn a daemon mid-install, so a `tty7` CLI call
+  `ensure_running` refuse to spawn a daemon mid-install, so a `hitty` CLI call
   cannot relock the images Setup is replacing; and a Windows portable backup
   carries an incomplete marker from the first file move until the replacement
   lands, so an interrupted update is reported at the next launch instead of
@@ -1794,7 +1794,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   process a private copy of the environment block at `CreateProcess` time and
   never updates it, so a daemon that had been up since before an installer
   edited `HKCU\Environment` gave a brand-new pane its startup `PATH` and the
-  freshly installed command was unresolvable until tty7 restarted. Windows
+  freshly installed command was unresolvable until hitty restarted. Windows
   Terminal launched from Explorer found it, because Explorer rebuilds its own
   block when it sees `WM_SETTINGCHANGE`.
 
@@ -1813,14 +1813,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   only ever add resolvable commands. (#349, reported by @yhzhu99 in #333)
 
 - **Windows panes can answer a background-color query** — the in-box conhost
-  swallows a pane process's OSC 11 query, so it never reached tty7's emulator
+  swallows a pane process's OSC 11 query, so it never reached hitty's emulator
   and no reply was written back: applications that pick a light or dark UI from
-  the terminal background rendered a dark UI under a light theme. tty7 already
+  the terminal background rendered a dark UI under a light theme. hitty already
   answers OSC 10/11/12 from the live theme, so nothing was missing but a
   pseudoconsole that forwards the question. Microsoft ships one as a
   redistributable and `portable-pty` already prefers a sideloaded `conpty.dll`
   over kernel32's, so this is packaging rather than code: the pair goes beside
-  `tty7-app.exe`.
+  `hitty-app.exe`.
 
   Measured on Windows 11 26200, same binary, only the pair added beside it: with
   the in-box host the client times out with no reply; with the bundled ConPTY a
@@ -1836,7 +1836,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the cursor does not flicker across the repaint, and it moves the cursor
   explicitly just before the show only on the frames where it painted the
   cursor. On the others the show commits wherever the last erase or write left
-  it, and the cursor blinks there until conhost's next frame moves it back. tty7
+  it, and the cursor blinks there until conhost's next frame moves it back. hitty
   repaints when a batch of pty output lands, so it draws that cursor for a frame
   — and a TUI that repaints on a spinner produces one every tick.
 
@@ -1853,20 +1853,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   bundled ConPTY redistributable is in play; it earns its keep on hosts without
   it, notably a remote Windows server. (#362)
 
-- **Windows toasts are tty7's, not PowerShell's** — notifications showed the
-  PowerShell icon and name because tty7 had no AUMID of its own registered. It
-  now brands the process and refreshes the single per-user `tty7.lnk` Inno's
+- **Windows toasts are hitty's, not PowerShell's** — notifications showed the
+  PowerShell icon and name because hitty had no AUMID of its own registered. It
+  now brands the process and refreshes the single per-user `hitty.lnk` Inno's
   default install owns — but only when that shortcut is not already ours, never
   from a cargo build directory, and never as a second per-user copy beside an
   all-users install, all three of which the first cut got wrong on a real
   machine. The shell indexes a new `.lnk` asynchronously and `Toast::show()`
   reports success while dropping the toast for an AUMID it has not seen yet, so
-  toasts keep the PowerShell identity for half a minute after tty7 writes one:
+  toasts keep the PowerShell identity for half a minute after hitty writes one:
   ugly beats invisible. (by @shihuaidexianyu in #340, reported in #339)
 
 - **Windows panes are told whether the window is light or dark** — the daemon
   needs to know when it spawns a pane, because ConPTY drops the child's OSC 11
-  query before tty7's emulator can answer it. It was reading that from a dead
+  query before hitty's emulator can answer it. It was reading that from a dead
   `Config::theme` field, which meant the GUI had to rewrite the user's
   `config.json` every time the effective preset changed sides. The hint moves to
   its own `appearance.json` in the data dir: derived state, written by the
@@ -1875,7 +1875,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   is — so a daemon that starts before the GUI has ever applied a theme describes
   the default window instead of guessing. (by @yhzhu99 in #332)
 
-- **Scoop shims work again when tty7 is launched from a hardened Windows
+- **Scoop shims work again when hitty is launched from a hardened Windows
   shell broker** — some brokers enforce `ProcessRedirectionTrustPolicy` on
   what they start. The daemon inherited it, every ConPTY shell under the
   daemon inherited it in turn, and PowerShell could then no longer traverse
@@ -1885,14 +1885,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   never picked the policy up in the first place.
 
   The policy cannot be relaxed once it is on, so the fix is to not inherit
-  it: when tty7 detects the enforcing bit, it creates the daemon with
+  it: when hitty detects the enforcing bit, it creates the daemon with
   `PROC_THREAD_ATTRIBUTE_PARENT_PROCESS` naming the interactive desktop
   shell, which supplies the ordinary desktop token, device map, and
   mitigation policy. Everything else about the spawn is unchanged, and the
   ordinary path still runs whenever the policy is absent — or whenever the
-  desktop shell cannot be borrowed, in which case tty7 logs a warning and
+  desktop shell cannot be borrowed, in which case hitty logs a warning and
   starts degraded rather than not starting at all. Note the daemon's token on
-  the clean-parent path derives from Explorer, so an elevated tty7 starts a
+  the clean-parent path derives from Explorer, so an elevated hitty starts a
   medium-integrity daemon. (by @ArnoChenFx in #292)
 
 - **A pane's last line of output no longer loses the race with its exit on
@@ -1979,10 +1979,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (by @shihuaidexianyu in #352, reported in #351)
 
 - **A version-mismatched remote server is described as old, not as
-  not-tty7** — a handshake refused on the control dialect was shown with the
-  protocol layer's own wording: "java answered, but not as a tty7 server:
+  not-hitty** — a handshake refused on the control dialect was shown with the
+  protocol layer's own wording: "java answered, but not as a hitty server:
   control peer (build …) speaks control v4, this build speaks v5". The far end
-  *is* tty7; it is a build on the other side of a dialect bump, and the reader
+  *is* hitty; it is a build on the other side of a dialect bump, and the reader
   cannot act on the dialect numbers either way. The message now states which
   side is behind, and the button names the action. The failure that followed was
   also invisible: the switcher paints a failed `connect` in preference to stored
@@ -2042,12 +2042,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   macOS screenshots arrive as TIFF, which agent vision rejects the same way it
   rejects a Windows BMP, so those transcode to PNG on the way out.
 
-  Staging is hardened on the remote side. `/tmp/tty7-clipboard-<user>` is a
+  Staging is hardened on the remote side. `/tmp/hitty-clipboard-<user>` is a
   predictable name in a world-writable directory: any local account on the
-  remote host could pre-create it, and the `Mkdir` result was discarded, so tty7
+  remote host could pre-create it, and the `Mkdir` result was discarded, so hitty
   would have uploaded into a directory someone else owned — readable by them,
   and swappable for another image before the pane's agent opened the path.
-  Images now stage in `$HOME/.cache/tty7/clipboard` resolved from the session's
+  Images now stage in `$HOME/.cache/hitty/clipboard` resolved from the session's
   own `realpath .`, and the directory is verified before anything goes into it:
   a symlink is refused outright, a `chmod 0700` the daemon watched succeed is
   the ownership proof, and a following `stat` must report exactly `0700`. Any
@@ -2084,16 +2084,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **A right-click goes to the application when mouse reporting is on** — a TUI
   that turns mouse reporting on (vim with `set mouse=a`, lazygit, tmux) draws its
-  own right-button menus, and tty7 was delivering one right-click to both
-  consumers: the press was forwarded to the application *and* tty7's own context
+  own right-button menus, and hitty was delivering one right-click to both
+  consumers: the press was forwarded to the application *and* hitty's own context
   menu popped over the top of it. One pure predicate now decides, called from
   both sides, so one click can only ever feed one consumer; Shift stays the
-  escape hatch that reaches tty7, the same override it already provides for
+  escape hatch that reaches hitty, the same override it already provides for
   selection and for the wheel. (#347)
 
 - **`$SHELL` names the shell the pane actually runs** — a pane configured to run
   fish still advertised the login shell, because the pane environment injected
-  `TERM`, the `TTY7_*` markers and `TERM_PROGRAM` but never touched `SHELL`, so
+  `TERM`, the `HITTY_*` markers and `TERM_PROGRAM` but never touched `SHELL`, so
   the pane inherited the GUI session's login-time snapshot. Everything that
   spawns "the user's shell" read that: tmux's `default-shell` started zsh inside
   a fish pane, and so did `sudo -s`, an editor's shell escape, and any coding
@@ -2103,7 +2103,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
   `SHELL` is now injected alongside the other markers, set to the absolute path
   of the program the pane is about to exec, read off argv rather than off the
-  shell tty7 resolved — an argv-replacing integration injection and the
+  shell hitty resolved — an argv-replacing integration injection and the
   parent-shell override both rewrite argv. Only an absolute path is ever
   written: a configured command may be bare so `PATH` decides which install
   wins, so a bare name is resolved against the `PATH` the pane will inherit and
@@ -2123,7 +2123,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   macOS's 3.2 from 2007. (#278)
 
 - **A forwarding `.bash_profile` no longer sources `.bashrc` twice** — the
-  rcfile tty7 hands bash replays the login-shell startup chain, but then sourced
+  rcfile hitty hands bash replays the login-shell startup chain, but then sourced
   `~/.bashrc` unconditionally afterwards. A login shell never does that on its
   own: `~/.bashrc` arrives only because the profile that won the chain forwarded
   to it, which is how nearly every `~/.bash_profile` is written. The result was
@@ -2134,7 +2134,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **The macOS locale fallback sets `LANG`, not `LC_CTYPE`** — when a pane
   inherits no locale at all, the usual case for a GUI-launched process on macOS,
-  tty7 derives an installed UTF-8 locale and injects it — but as `LC_CTYPE`,
+  hitty derives an installed UTF-8 locale and injects it — but as `LC_CTYPE`,
   which backs only character handling. Collation, time and numbers stayed at C,
   and bash warned `setlocale: LC_COLLATE: cannot change locale ()` once per
   category on every launch; zsh and fish swallowed the failure and merely looked
@@ -2224,15 +2224,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Overlay scrollbars are softer.** (#293)
 
-- **`tty7 send` submits its Enter outside a paste burst**, so an agent does not
+- **`hitty send` submits its Enter outside a paste burst**, so an agent does not
   read the newline as part of pasted text. (#322)
 
 - **Closing a tab from the CLI terminates its panes.** (#319)
 
-- **`tty7` diagnoses an unavailable agent hook** instead of failing silently.
+- **`hitty` diagnoses an unavailable agent hook** instead of failing silently.
   (#321)
 
-- **tty7 no longer panics on launch under Wayland on a slow VM** — the
+- **hitty no longer panics on launch under Wayland on a slow VM** — the
   xdg-desktop-portal event source notified windows of the initial color-scheme
   and button-layout replies while still holding `client.borrow_mut()`, and those
   callbacks re-enter GPUI and reach the same `RefCell`. Whether it fires depends
@@ -2257,7 +2257,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **A remote workspace is a window that is one machine, not a pane that
   happens to be SSH'd somewhere** — pick a host from **Home → Connect to
-  Host** (or the workspace switcher) and tty7 opens a window bound to that
+  Host** (or the workspace switcher) and hitty opens a window bound to that
   machine: its own tab and pane tree, file browser and editor, repo grouping,
   branch line, Changes panel, diff overlay and worktree list, all answered by
   *that* machine rather than read off the client's disk. Before this, reaching
@@ -2270,7 +2270,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the far side to keep it alive.
 
   A remote workspace fixes all four at once by putting the same code on both
-  ends. `tty7-server` — a new headless binary built on `tty7-core`, the crate
+  ends. `hitty-server` — a new headless binary built on `hitty-core`, the crate
   the GUI's own daemon logic was extracted into — runs on the far machine and
   serves the identical `LocalHost` implementation the GUI uses for your own
   disk, over one control connection. Because both sides run the *same* code
@@ -2290,11 +2290,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   entries below build on: none of them had anywhere to attach to before this
   landed. (#235)
 
-- **`tty7` is now a CLI, not just the app you launch by clicking an icon** —
+- **`hitty` is now a CLI, not just the app you launch by clicking an icon** —
   a new scriptable command-line client, built for coding agents to drive
-  panes without a window in the way. The GUI binary is renamed `tty7-app`
-  (bundle id, icons and display name unchanged); `tty7`, the name you type,
-  is now the CLI. Both are clients of the same `tty7-server` a remote
+  panes without a window in the way. The GUI binary is renamed `hitty-app`
+  (bundle id, icons and display name unchanged); `hitty`, the name you type,
+  is now the CLI. Both are clients of the same `hitty-server` a remote
   workspace runs, talking the same control and pane protocols the window
   does — an agent reaching through the CLI can do exactly what the CLI
   exposes, no more, no less.
@@ -2304,7 +2304,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   | Hot path | `ls`, `run -- <cmd>` (real exit code, `--keep` keeps the pane around), `new`, `send`, `capture`, `split`, `procs` |
   | Addressing | `ws` / `tab` (`@N`) / `pane` (`%N`) / `machine` / `server` |
   | Introspection | `agents`, `events` (NDJSON), `status`, `doctor` |
-  | Global | `-m <machine>` routes over the server's existing SSH/WSL links; `--json` everywhere; implicit context from `TTY7_PANE` / `TTY7_WS` / `TTY7_SOCKET`, injected into every spawned shell |
+  | Global | `-m <machine>` routes over the server's existing SSH/WSL links; `--json` everywhere; implicit context from `HITTY_PANE` / `HITTY_WS` / `HITTY_SOCKET`, injected into every spawned shell |
 
   The server's control dialect grew several additive verbs to carry this: a
   read-only `Observe` for watching a pane without owning it, budgeted per
@@ -2313,7 +2313,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `Status` queries. Writing into a pane now hands off cleanly instead of
   fighting the previous controller for it — a displaced client gets a clean
   EOF and its stale input is dropped, closing a long-standing hazard where
-  two writers on one pane could leave it looking frozen. `tty7_core::client`
+  two writers on one pane could leave it looking frozen. `hitty_core::client`
   exposes the `ControlClient`/`PaneClient` pair the CLI is built on as a
   public library, with zero behavior change to the GUI's own connection code.
 
@@ -2322,12 +2322,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   interactively. An `attach` verb was designed and partway built during this
   work and then dropped before it ever reached a release, so this is design
   history, not a behavior change for anyone — the CLI itself is new in this
-  release, so there was no previous `tty7 attach` to remove out from under
+  release, so there was no previous `hitty attach` to remove out from under
   existing scripts. The protocol-level `Attach` call the GUI's own panes use
   is untouched.
 
   Every unimplemented verb (`ws stop`, `machine connect`/`disconnect`, bare
-  `tty7` launching the GUI) says so in `--help` rather than only failing at
+  `hitty` launching the GUI) says so in `--help` rather than only failing at
   runtime. Along the way, the GUI's own copy was reworded for the same two
   concepts the CLI now names — "server" for the background process, "shell"
   for what runs in a pane — replacing inconsistent uses of "daemon" and
@@ -2336,7 +2336,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **The CLI ships in every install and lands on PATH automatically** —
   previously it was built by every release and then discarded: the bundle
-  scripts copied only `tty7-app`, and the upload glob never reached the CLI
+  scripts copied only `hitty-app`, and the upload glob never reached the CLI
   binary. It now ships inside the macOS `.app`, the Linux tarball and
   AppImage, and the Windows installer and zip, and a fresh launch puts it
   where a shell can find it without you doing anything.
@@ -2344,9 +2344,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   The install is split into two halves on purpose. The **environment half**
   prepends the CLI's directory to the GUI process's own PATH before the
   server is spawned, so every pane — which inherits its environment from the
-  server, which inherits it from the GUI — can run `tty7` immediately. It
+  server, which inherits it from the GUI — can run `hitty` immediately. It
   writes nothing to disk and cannot fail. The **on-disk half** covers typing
-  `tty7` in some other terminal, and is allowed to fail safely: on Unix it
+  `hitty` in some other terminal, and is allowed to fail safely: on Unix it
   symlinks into a fixed, ordered list of candidate directories
   (`/opt/homebrew/bin`, `/usr/local/bin`, `~/.local/bin`, `~/bin`,
   `~/.cargo/bin`) rather than scanning PATH for the first writable entry —
@@ -2365,9 +2365,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   mistaken for someone else's binary — and a real file or a symlink aimed
   elsewhere is left alone. An occupied candidate directory doesn't end the
   scan, and every platform now reports whether the install actually wins the
-  lookup (`InstalledShadowed` names whichever `tty7` beats it on PATH).
+  lookup (`InstalledShadowed` names whichever `hitty` beats it on PATH).
   Debug builds and cargo build trees only get the environment half, so a
-  `cargo run` can't repoint your real `tty7` at a binary the next `cargo
+  `cargo run` can't repoint your real `hitty` at a binary the next `cargo
   clean` deletes. The Windows uninstaller removes the PATH entry it added;
   on Unix there is no uninstall hook, so the symlink is left dangling and
   that limitation is stated in the module docs rather than left to be
@@ -2378,9 +2378,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   robot glyph every unbranded agent shares, so a Pi tab was indistinguishable
   from an Aider or Qwen one in the sidebar, the tab chip and the tray menu. They
   now carry their own avatar on the existing sky accent, status dot unchanged.
-  The mark is Pi's own, from pi.dev, rescaled to tty7's 24x24 icon grid — its
+  The mark is Pi's own, from pi.dev, rescaled to hitty's 24x24 icon grid — its
   `prefers-color-scheme` stylesheet dropped, since these avatars are tinted by
-  the app. Restoring a Pi pane also resumes its conversation now: the tty7
+  the app. Restoring a Pi pane also resumes its conversation now: the hitty
   extension reports Pi's session id, and the resume command is
   `pi --session <id>` (Pi's `--resume` is a boolean that only opens the
   interactive picker), with `--session` / `--session-id` / `--fork` /
@@ -2391,11 +2391,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Fork an agent session** — branch a live agent conversation into a second,
   independent one, so a risky direction can be tried without losing the thread
-  that got you there. tty7 shells the agent's *own* fork command rather than
+  that got you there. hitty shells the agent's *own* fork command rather than
   touching its transcript files: `codex fork <id>`, `claude --resume <id>
   --fork-session`, `opencode --session <id> --fork`, `grok --resume <id>
   --fork-session` — every one checked against the installed CLI's own help.
-  Agents with no fork tty7 could verify simply don't offer the action, rather
+  Agents with no fork hitty could verify simply don't offer the action, rather
   than getting a row that can only produce a usage error. The command carries
   the pane's original launch flags exactly as session restore does, and sheds
   the stale session-targeting ones so a fork of a fork can't branch twice or
@@ -2418,7 +2418,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Your WSL distributions are machines you can open a workspace on** — the
   transport for them has been there since remote workspaces landed
-  (`wsl.exe -d <distro> -- tty7-server --stdio`: no SSH, no address, no
+  (`wsl.exe -d <distro> -- hitty-server --stdio`: no SSH, no address, no
   credential, no host key), but nothing offered one, so nothing could reach it.
   Every installed distribution now appears in the workspace switcher beside your
   saved SSH hosts, and opening one is the whole setup — there is nothing to
@@ -2427,9 +2427,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the machine is keyed (`wsl:<distro>`), and searching the switcher for `wsl`
   finds all of them.
 
-  A distribution is served the Linux `tty7-server` this client shipped with
+  A distribution is served the Linux `hitty-server` this client shipped with
   rather than one downloaded from a release, so the first connect writes it into
-  `~/.local/share/tty7/bin` inside the distro — with the same one-time
+  `~/.local/share/hitty/bin` inside the distro — with the same one-time
   confirmation any other machine gets, and no `sudo` anywhere. A build with no
   bundled server (any `cargo build`, and any platform that isn't Windows) says
   so and names the directories it looked in.
@@ -2562,7 +2562,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Two consequences worth knowing before you upgrade:
 
   - **Saved layouts do not carry over.** The tree is a new file
-    (`~/.local/share/tty7/machine.json`) and the old `session.json` is not read;
+    (`~/.local/share/hitty/machine.json`) and the old `session.json` is not read;
     the upgrade also replaces the background service, which ends the panes it was
     holding. The first launch after upgrading comes up on a fresh workspace, and
     tabs from before it are not recoverable. `views.json` (window geometry and
@@ -2667,7 +2667,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **A remote workspace no longer loses or crosses its own layout on reopen
   or restart** — two related failure modes in the same area, closed
   together. Reopening a remote workspace, or coming back to one whose
-  `tty7-server` had been replaced, could land on permanently `disconnected`
+  `hitty-server` had been replaced, could land on permanently `disconnected`
   panes with the coding-agent conversations gone: there was no way to tell a
   genuinely restarted server (which needs a rebuild from the saved layout
   and fresh shells) from a link that had merely blinked (which just needs
@@ -2698,7 +2698,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   compatible. (#257)
 
 - **A captured pane reads like text, not a stream of raw escape codes, and a
-  broken pipe ends quietly** — `tty7 capture --plain` replays a pane's bytes
+  broken pipe ends quietly** — `hitty capture --plain` replays a pane's bytes
   through the same `alacritty_terminal` grid the window renders panes with,
   instead of leaving a script to regex-strip escape sequences itself.
   Stripping alone gets the easy 90% and invents the rest: whether 200
@@ -2715,7 +2715,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Separately, every CLI verb that outputs to a pipe now ends the way `cat`
   does when the reader hangs up — silently, with the shell's own SIGPIPE
   exit code — instead of a Rust panic and a backtrace on stderr, which most
-  verbs produced on something as ordinary as `tty7 ls | head -1`. Rust
+  verbs produced on something as ordinary as `hitty ls | head -1`. Rust
   disables `SIGPIPE` by default, so a doomed write surfaces as an
   `io::Error` and `println!` turns that into a panic; the fix restores the
   default disposition on Unix so the kernel handles it directly, and
@@ -2755,11 +2755,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   following it. Two independent causes stacked: gpui never answered
   `WM_IME_REQUEST` / `IMR_QUERYCHARPOSITION`, which is how Windows 11's
   default Microsoft Pinyin IME asks for caret position — it ignores the
-  older `CANDIDATEFORM` call tty7 was already making once per composition —
+  older `CANDIDATEFORM` call hitty was already making once per composition —
   so an unanswered query fell back to the IME's own default spot; and Kimi
   CLI itself hides the hardware cursor and draws its own caret as a
   reverse-video cell that never gets parked at the logical input point,
-  landing the only real anchor tty7 had at the right edge of the input box's
+  landing the only real anchor hitty had at the right edge of the input box's
   border. The fix answers the position query from the input handler and
   re-anchors on every composition update instead of sampling once, and when
   the hardware cursor is hidden and its row holds exactly one caret-sized
@@ -2793,9 +2793,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   and Lao SARA AM combining-mark clustering is reconciled with upstream.
   (by @ChihGodlee in #250)
 
-- **tty7 gets a taskbar icon and identity on Linux** — the window now sets
-  `app_id: "tty7"` on every platform, which X11 uses as `WM_CLASS` and
-  Wayland matches against the packaged `tty7.desktop` entry, so taskbars and
+- **hitty gets a taskbar icon and identity on Linux** — the window now sets
+  `app_id: "hitty"` on every platform, which X11 uses as `WM_CLASS` and
+  Wayland matches against the packaged `hitty.desktop` entry, so taskbars and
   window switchers can resolve the app's identity and icon where they
   previously couldn't. X11 additionally needs the icon on the window itself
   (`_NET_WM_ICON` ships raw pixels per window rather than reading the
@@ -2815,14 +2815,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   before the probe reports no distributions, matching what an unreachable
   WSL already produced instead of holding the whole menu open.
 
-- **⌃R on a remote machine searches that machine's history** — tty7 owns ⌃R at
+- **⌃R on a remote machine searches that machine's history** — hitty owns ⌃R at
   the prompt and shows its own fuzzy menu, but the store behind it had no notion
   of *where* a command had run. Every pane read one file, so ssh'ing to a server
   and reaching for ⌃R offered the commands you had typed on your laptop —
   worse than offering nothing, since the answers look plausible until you run
   one. History is now kept per machine: the local store stays where it was, and
   each remote gets its own, keyed by the target you connected to. On a remote
-  workspace tty7 also reads the far end's own `~/.zsh_history` and
+  workspace hitty also reads the far end's own `~/.zsh_history` and
   `~/.bash_history` through the same channel it already uses for git and file
   listings, so the first ⌃R on a freshly connected box has something in it
   rather than starting empty. Switching a pane between machines swaps the store
@@ -2831,7 +2831,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **A Windows clipboard pastes like every other clipboard** — text copied on
   Windows carries `\r\n`, and a bracketed paste forwarded it byte for byte. vim
   counts CR and LF as two line breaks, so pasting a block of code into it left a
-  blank line under every line — bad enough to make tty7 unusable for editing.
+  blank line under every line — bad enough to make hitty unusable for editing.
   Bracketed pastes now fold `\r\n` down to a single `\n`, which is exactly what
   the same paste already produced on Linux and macOS. The non-bracketed path is
   untouched: with no paste mode to distinguish text from typing, a line break
@@ -2856,7 +2856,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   legitimately still see. (#247)
 
 - **Rounded UI controls no longer square off their corners**
-  ([#236](https://github.com/l0ng-ai/tty7/issues/236)) — the cursor-shape
+  ([#236](https://github.com/cloudy-liu/hitty/issues/236)) — the cursor-shape
   toggles (Block / Bar / Underline) are the clearest case: the selected
   segment's fill filled the whole corner of the track it caps, with the track's
   own anti-aliased border arc floating *inside* that square. The controls were
@@ -2920,7 +2920,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   macOS and are not claimed to be confirmed. (#249)
 
 - **Return no longer confirms the file tree's delete prompt** — it was the only
-  destructive prompt in tty7 with the destructive action first, and on macOS
+  destructive prompt in hitty with the destructive action first, and on macOS
   (NSAlert) and Windows (TaskDialog) the first button is the Return-key
   default, so pressing Return deleted — recursive folder deletion included. The
   buttons now put the safe option first, matching every other destructive
@@ -2971,13 +2971,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the warning orange to stay distinguishable. (#224)
 
 - **Panes are told which terminal they're running in** — every pane now carries
-  `TERM_PROGRAM=tty7` and `TERM_PROGRAM_VERSION`, the de-facto standard pair
+  `TERM_PROGRAM=hitty` and `TERM_PROGRAM_VERSION`, the de-facto standard pair
   Apple Terminal introduced and iTerm2, WezTerm, Ghostty, VS Code and tmux all
   set. `TERM` names terminfo capabilities and can't answer "which program is
   this", so without the pair, capability probes (`supports-color`,
   `supports-hyperlinks`, and the CLI ecosystem built on them), editors applying
   terminal-specific workarounds, and shell prompts all fell back to their most
-  conservative behaviour. tty7's own `TTY7` marker doesn't help them — it exists
+  conservative behaviour. hitty's own `HITTY` marker doesn't help them — it exists
   so globally-installed agent hooks stay silent in other terminals, and nothing
   third-party knows to look for it. Unlike `TERM` and `COLORTERM`, both new
   variables can be overridden from `env` in `config.json`: they name an
@@ -2999,10 +2999,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **One fewer duplicate SVG stack in the build** — the resvg 0.47 bump (#227)
   left the gpui fork on 0.45, so the tree compiled two resvg/usvg/tiny-skia
-  stacks. The fork now pins 0.47 too, re-unifying its stack with the one tty7
+  stacks. The fork now pins 0.47 too, re-unifying its stack with the one hitty
   uses for the tray icon. (#237)
 
-- **The last duplicate SVG stack is gone** — after #227 and #237 unified tty7
+- **The last duplicate SVG stack is gone** — after #227 and #237 unified hitty
   and the gpui fork on resvg 0.47, the gpui-component fork still declared its
   own `resvg = "0.45.1"`, keeping a legacy resvg/usvg/tiny-skia 0.45/0.11
   stack in the tree. That fork now pins 0.47 as well, so the whole build
@@ -3017,7 +3017,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   boundary: two-line prompts never closed their corners, TUI frames were dotted
   down both sides. U+2500–U+257F and U+2580–U+259F are now drawn as native
   geometry pinned to the cell's real edges — the same special case kitty,
-  Alacritty, WezTerm and iTerm2 all ship, and what tty7's Powerline separators
+  Alacritty, WezTerm and iTerm2 all ship, and what hitty's Powerline separators
   already did. Covers mixed light/heavy weights, the double-line set with its
   junctions left open, rounded corners, dashes, diagonals, block eighths and the
   ░▒▓ shades. (#229)
@@ -3069,7 +3069,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   echoed into the scrollback and no prompt hooks are involved. `cd` still filters
   to directories. Command position and `~/` still fall through, as does a
   foreground `ssh` typed into a local shell or a WSL pane, neither of which has a
-  tty7-owned connection to ask. (#217)
+  hitty-owned connection to ask. (#217)
 
 - **The last-window close confirmation can be turned off** — Settings → Window &
   Tabs gains **Confirm before closing the last window**, on by default. The
@@ -3089,7 +3089,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Foreground applications can negotiate the Kitty keyboard protocol** — the
   embedded terminal config inherited `kitty_keyboard: false`, so the parser
   ignored the negotiation sequences and an application asking for progressive
-  enhancement fell back to `modifyOtherKeys`, which tty7 doesn't implement. That
+  enhancement fell back to `modifyOtherKeys`, which hitty doesn't implement. That
   collapsed distinct chords onto the same legacy byte — `Shift+Enter` reached the
   application as a plain carriage return, submitting a prompt instead of
   inserting a soft newline. Legacy input is unchanged until an application opts
@@ -3108,7 +3108,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - **Interaction state and status colours are derived from the active theme**
-  ([#197](https://github.com/l0ng-ai/tty7/issues/197)) — a segmented control's
+  ([#197](https://github.com/cloudy-liu/hitty/issues/197)) — a segmented control's
   selected option was indistinguishable from its neighbours on *every* bundled
   theme (Dracula worst at 1.03:1), because the theme had a colour model but no
   state model: fixed blend ratios scattered across the code, plus every
@@ -3150,7 +3150,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - **Splitting or un-maximizing a pane you were hovering no longer kills the app**
-  ([#201](https://github.com/l0ng-ai/tty7/issues/201)) — a pane remembers the
+  ([#201](https://github.com/cloudy-liu/hitty/issues/201)) — a pane remembers the
   cell under the pointer (that's what makes ⌘-hover underline links), and nothing
   invalidated it when the grid shrank underneath. The remembered row then named a
   line the grid no longer had, and the next modifier press indexed the grid with
@@ -3165,7 +3165,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (#204)
 
 - **Emoji written with a variation selector take their real width and
-  presentation** ([#203](https://github.com/l0ng-ai/tty7/issues/203)) — `🗂️`,
+  presentation** ([#203](https://github.com/cloudy-liu/hitty/issues/203)) — `🗂️`,
   `❤️` and `⚠️` were budgeted one column, so the glyph bled over its neighbour
   and every following cell on the line shifted left by one, taking selection and
   click hit-testing with it. The selector is zero-width and lands *after* the
@@ -3205,7 +3205,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   config-dir file is read by a loader that treats any parse error as "there is
   no file", falling back to defaults. `serde_json` rejects the U+FEFF a BOM puts
   before the opening brace, so a BOM didn't report a broken config — it reported
-  an absent one, and tty7 came up on defaults with nothing in the log to explain
+  an absent one, and hitty came up on defaults with nothing in the log to explain
   it. Windows makes this easy to hit by accident: PowerShell's `>`, `Out-File`
   and `Set-Content -Encoding utf8` all write a BOM, so editing `config.json`
   from a shell was enough to lose every setting. `config.json`, `session.json`
@@ -3213,8 +3213,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   now skip a leading BOM. (#215)
 
 - **New tabs and splits open in the right directory even when the shell can't be
-  instrumented** ([#187](https://github.com/l0ng-ai/tty7/issues/187)) — a pane
-  learned its directory from `OSC 7`, which only shells tty7 injects its
+  instrumented** ([#187](https://github.com/cloudy-liu/hitty/issues/187)) — a pane
+  learned its directory from `OSC 7`, which only shells hitty injects its
   integration into ever emit. A shell that `exec`s into another one from its rc
   file (`exec fish` at the end of `.zshrc`), a nested shell started by hand, or
   any shell with no integration at all emitted none — and because a pane's
@@ -3229,7 +3229,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Windows has no equivalent process query and is unchanged. (#207)
 
 - **Links open on Ctrl+click on Windows and Linux**
-  ([#183](https://github.com/l0ng-ai/tty7/issues/183)) — the link modifier was
+  ([#183](https://github.com/cloudy-liu/hitty/issues/183)) — the link modifier was
   the platform key, which gpui maps to ⌘ on macOS but to Win/Super elsewhere, a
   key the OS mostly swallows. Off macOS neither the hover underline nor
   click-to-open could be triggered at all, and the only way to follow a URL was
@@ -3239,7 +3239,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Settings copy and the docs follow the platform. (#192)
 
 - **Option-as-Meta works with a CJK input source**
-  ([#177](https://github.com/l0ng-ai/tty7/issues/177)) — macOS gives Option two
+  ([#177](https://github.com/cloudy-liu/hitty/issues/177)) — macOS gives Option two
   jobs, and routes the chord before the terminal sees it. With a non-ASCII input
   source active, ⌥F went to the IME, which committed `ƒ` and consumed the event,
   so the code that turns the chord into `ESC f` never got a say. The setting
@@ -3304,7 +3304,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - **Grok Build gets the full hook integration** — Settings → Agents grows a
-  sixth row, installing tty7's hooks to `~/.grok/hooks/tty7.json`. A grok pane
+  sixth row, installing hitty's hooks to `~/.grok/hooks/hitty.json`. A grok pane
   now carries the same live status the other agents do (blue "working" → green
   "done", amber "needs you" when grok asks a question), and after a restart it
   relaunches `grok --resume <id>` with the original launch flags instead of a
@@ -3312,8 +3312,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   relabeled to grok rather than reporting as "Claude Code", and grok's brand
   mark replaces the generic robot avatar. (#174)
 - **Edit, File and Help menus** — copy/cut/paste/select-all, undo/redo and
-  find/find-next now live in a real Edit menu; `About tty7`, `Check for
-  Updates…`, `Hide tty7` and Services sit in the app menu; Docs, Discord and
+  find/find-next now live in a real Edit menu; `About hitty`, `Check for
+  Updates…`, `Hide hitty` and Services sit in the app menu; Docs, Discord and
   `Report an Issue` are reachable from Help; and tab actions that used to exist
   only in a context menu (Rename Tab, New Worktree Tab, Close Other Tabs, Close
   Tabs to the Right, Copy Working Directory) are real actions you can also find
@@ -3321,8 +3321,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- **The menu bar follows the HIG** — `tty7 · File · Edit · View · Window ·
-  Help` replaces `tty7 · Shell · Window · View`. The `Shell` menu is gone: its
+- **The menu bar follows the HIG** — `hitty · File · Edit · View · Window ·
+  Help` replaces `hitty · Shell · Window · View`. The `Shell` menu is gone: its
   new / close / split / rename items are File's job everywhere else, and the
   name collided with Settings → Shell, which configures something entirely
   different. View gained the layout toggles and pane commands that were
@@ -3366,7 +3366,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   The derived name is checked against the locales actually installed before it
   is exported, so it stays loadable on remote hosts too, where ssh forwards
   `LC_*` by default.
-  ([#178](https://github.com/l0ng-ai/tty7/issues/178), #173, #180)
+  ([#178](https://github.com/cloudy-liu/hitty/issues/178), #173, #180)
 - **Right-click Paste dropped images, and Copy looked disabled** — copy, cut,
   paste and undo each had two implementations, a chord handler and an action
   handler, which had drifted: the context menu's Paste skipped the image branch
@@ -3429,7 +3429,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Keyboard, or `history_search` in `config.json`. With it off, the prompt
   line is handed to the shell and the raw `^R` follows it, so a binding
   of your own (fzf, percol, plain reverse-i-search) answers instead of
-  tty7's menu. (#163, #170)
+  hitty's menu. (#163, #170)
 
 ### Changed
 
@@ -3532,7 +3532,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- **Tab completion falls through to the shell** — a Tab tty7 has no
+- **Tab completion falls through to the shell** — a Tab hitty has no
   candidates for now hands the line to the shell's own completion
   instead of being swallowed (remote panes included); `cd`/`pushd` stop
   offering files; and the whole feature can be turned off with
@@ -3647,7 +3647,7 @@ it shipped rather than what changed.
 - **Per-tab context menu with worktree tabs** — right-clicking a tab chip or
   sidebar row opens a menu: rename, splits, copy working directory, and a
   close group. *New Worktree Tab* creates a git worktree under the repo's own
-  `.tty7/worktrees/<name>` (kept out of `git status` by a self-ignoring
+  `.hitty/worktrees/<name>` (kept out of `git status` by a self-ignoring
   `.gitignore`), with editable name / branch / start point and a live path
   preview. Closing a tab that sat in a managed worktree offers to remove the
   checkout — unless another pane still lives in it, and dirty checkouts
@@ -3672,7 +3672,7 @@ it shipped rather than what changed.
   cut mid-height. (#97)
 - **README rewritten as a minimal index** — feature details, keybindings,
   and performance notes moved to `docs/features.md` (en + zh-CN); the
-  tagline now positions tty7 as a terminal workbench.
+  tagline now positions hitty as a terminal workbench.
 
 ### Fixed
 
@@ -3703,7 +3703,7 @@ it shipped rather than what changed.
   hunks. It rides the shared git-status signal: when fresh numbers land that
   disagree with what it shows, it re-probes the full diff so the overlay stays
   live. (#92)
-- **Window size and position are remembered across launches** — tty7 saves
+- **Window size and position are remembered across launches** — hitty saves
   the window geometry on quit and restores it next launch, re-centering if the
   saved bounds no longer overlap any display. Can be toggled off with the
   `remember_window_size` config key. (#94)
@@ -3800,7 +3800,7 @@ it shipped rather than what changed.
 - The Cmd+F find bar now owns the top-right slot over the SSH action
   icons. (#76, #78)
 - Windows: stop the daemon before install/uninstall so it can replace
-  `tty7.exe`. (#72)
+  `hitty.exe`. (#72)
 - Moved SSH forwards into the pane context. (#71)
 
 ## [0.13.0] - 2026-07-13
@@ -3938,7 +3938,7 @@ it shipped rather than what changed.
 
 - On Windows, a pane no longer hangs open when its shell exits on its own.
   Typing `exit`, pressing Ctrl-D, or a shell crash ends the shell, but ConPTY's
-  output pipe never reports EOF on a natural exit — and tty7 detected a shell's
+  output pipe never reports EOF on a natural exit — and hitty detected a shell's
   death solely from that EOF — so the pane was left wedged open, dead but
   visible. A Windows-only monitor now waits on the shell process directly and
   reports the exit through the same path a Unix `read()` EOF drives, so the pane
@@ -3948,7 +3948,7 @@ it shipped rather than what changed.
 - Nerd Font prompt icons no longer render sliced off on the right. A non-Mono
   Nerd Font (and the proportional `➜`/`❯` the OS cascade hands back when nothing
   in your font list covers them) gives an icon a single-cell *advance* but draws
-  ink up to ~1.9 cells wide, and tty7 clipped every lone glyph to exactly one
+  ink up to ~1.9 cells wide, and hitty clipped every lone glyph to exactly one
   cell — severing the overflow into the half-icons and cut-off arrow from the
   report. A single glyph now paints into a two-cell window, so it renders whole
   (bleeding into the trailing blank the way iTerm2 and Terminal.app do), bounded
@@ -3956,7 +3956,7 @@ it shipped rather than what changed.
   powerline separators from #19; Mono Nerd Fonts are unchanged. (#17)
 
 - New tabs and splits no longer stall for seconds while a zsh plugin manager
-  reinstalls itself. tty7 launches zsh through a throwaway `ZDOTDIR` (so it can
+  reinstalls itself. hitty launches zsh through a throwaway `ZDOTDIR` (so it can
   layer its shell integration on top of your config), but it used to leave
   `ZDOTDIR` pointing at that empty temp dir the whole time — so tools that find
   their own state via `${ZDOTDIR:-$HOME}` (Zim, oh-my-zsh, `compinit`'s
@@ -3967,7 +3967,7 @@ it shipped rather than what changed.
   and completion caches resolve correctly and load instantly. As a bonus this
   also fixes the classic relocated-config layout (a tiny `~/.zshenv` that sets
   `ZDOTDIR=~/.config/zsh`), which previously loaded your config but silently
-  dropped tty7's integration. (#15)
+  dropped hitty's integration. (#15)
 
 ## [0.6.1] - 2026-07-08
 
@@ -3975,9 +3975,9 @@ it shipped rather than what changed.
 
 - Tab completion (and other line editing) now stays out of the way over `ssh`.
   A remote shell that emits its own prompt marks — fish 4.x on a Linux server,
-  most visibly, which ships OSC 133 on by default — used to engage tty7's
+  most visibly, which ships OSC 133 on by default — used to engage hitty's
   *local* line editor, so Tab ran completion against the local machine's
-  filesystem instead of reaching the remote shell. tty7 now only drives the
+  filesystem instead of reaching the remote shell. hitty now only drives the
   inline editor while the shell it launched is itself idle at its prompt;
   whenever a foreground command (ssh, a TUI, a nested shell) owns the terminal,
   keystrokes pass straight through to it. (#26, follow-up to #18)
@@ -3986,7 +3986,7 @@ it shipped rather than what changed.
 
 ### Added
 
-- The "+" button now opens a shell picker: tty7 detects the shells installed
+- The "+" button now opens a shell picker: hitty detects the shells installed
   on this machine (on Unix the login shell, `/etc/shells`, plus well-known
   shells found on `PATH` — fish, nushell, pwsh and friends installed by
   Homebrew/nix are never registered in `/etc/shells`; on Windows PowerShell 7,
@@ -4025,7 +4025,7 @@ it shipped rather than what changed.
   (which those package managers leave to the user): a curated set of well-known
   shells is now probed on `PATH` as a catch-all, after the `/etc/shells`
   entries. (#18)
-- Upgrading tty7 while an older daemon is still running in the background no
+- Upgrading hitty while an older daemon is still running in the background no
   longer breaks new tabs. A stale daemon that accepts the connection but can't
   serve the new client's request is now restarted once and retried
   automatically; on macOS the GUI also forwards the shell it was launched with
@@ -4037,15 +4037,15 @@ it shipped rather than what changed.
 ### Added
 
 - Windows releases now ship an Inno Setup installer
-  (`tty7-<version>-windows-x86_64-setup.exe`) alongside the portable zip. It
+  (`hitty-<version>-windows-x86_64-setup.exe`) alongside the portable zip. It
   installs per-user by default (no admin prompt, with an all-users option),
   adds a Start Menu shortcut and an "Apps" uninstall entry, and offers an
   optional desktop icon. Still unsigned, so SmartScreen warns on first launch.
-- Startup update check: tty7 asks GitHub once, in the background, whether a
+- Startup update check: hitty asks GitHub once, in the background, whether a
   newer release has shipped. If so, it pops a one-time "Update available" dialog
   (once per version — remembered in `update.json`, so it never nags twice for
   the same release) and keeps a persistent "Download" prompt in Settings →
-  About. Both open the Releases page; tty7 never downloads or updates itself —
+  About. Both open the Releases page; hitty never downloads or updates itself —
   you still install by hand. Turn the check off with `check_for_updates` in
   `config.json` or the "Check for updates on launch" toggle in About. A failed
   or offline check is silent.
@@ -4071,7 +4071,7 @@ it shipped rather than what changed.
 
 ### Fixed
 
-- Windows: launching tty7 no longer opens a stray console window behind the
+- Windows: launching hitty no longer opens a stray console window behind the
   app. Release builds are now linked with the `windows` subsystem; debug
   builds keep the console so `println!` output stays visible. (#10)
 - The right-click "Select All" now matches the ⌘A shortcut: at the prompt it
@@ -4139,7 +4139,7 @@ it shipped rather than what changed.
 
 ### Changed
 
-- Project renamed to **tty7**.
+- Project renamed to **hitty**.
 - macOS releases ship as drag-to-Applications DMGs instead of zips, and the
   Intel build moved to the `macos-15-intel` runner (`macos-13` was retired,
   which had silently kept x86_64 assets from ever publishing).
@@ -4148,8 +4148,8 @@ it shipped rather than what changed.
 - CJK-dense screens paint ~2.4× faster: consecutive wide glyphs batch into single shaped runs (two columns per glyph) instead of painting cell-by-cell; the grid snapshot buffer is reused across frames and the selection/search overlay scans are skipped when nothing is highlighted. Release builds now use thin LTO.
 - Type-ahead is integrated into the line editor instead of being stranded on zle's line.
 - New tabs open next to the active tab instead of at the end.
-- Terminal throughput ~12× faster (11 MB `cat`: ~2.0 s → ~0.16 s; DOOM-fire: ~47 fps → ~920 fps, both at 155×40 on an M1 Pro — now ahead of Alacritty/Ghostty on the same machine): the daemon's replay ring is a `VecDeque` so a full ring no longer memmoves 8 MiB per ~1 KiB PTY read, and the per-connection writer coalesces queued `Output` frames (≤256 KiB) so a flood reaches the client as a few large frames instead of thousands of tiny ones. A backpressure gate (4 MiB high-water) pauses the PTY reader while the client catches up, so a runaway `yes` can't grow daemon memory without bound. `TTY7_TRACE=1` prints per-second reader-loop accounting on both sides for future diagnosis.
-- Second throughput pass, another ~1.4× on bulk output (11 MB `cat`: ~160 ms → ~100 ms; sustained plaintext drain 124 → 148 MB/s, vs ~170 MB/s for a raw do-nothing PTY reader on the same machine; DOOM-fire is unchanged — it is producer-bound at ~96 MB/s): the backpressure high-water grows to 16 MiB so a big burst drains at PTY speed while the client parses in its own time; daemon⇄GUI socket buffers grow from macOS's 8 KiB default to 256 KiB; the client applies consecutive `Output` frames as one batched parser pass (one term-lock + wakeup per burst, latency-free — the batch never waits for unarrived bytes); the shared OSC tokenizer skips Ground/Ignore runs with SIMD `memchr`; the gate's hot path is a lock-free atomic (previously a Mutex plus an unconditional `notify_all` per socket write); and the four threads on the interactive output path ask macOS for `USER_INTERACTIVE` QoS to stay off the efficiency cores (`TTY7_NO_QOS=1` opts out).
+- Terminal throughput ~12× faster (11 MB `cat`: ~2.0 s → ~0.16 s; DOOM-fire: ~47 fps → ~920 fps, both at 155×40 on an M1 Pro — now ahead of Alacritty/Ghostty on the same machine): the daemon's replay ring is a `VecDeque` so a full ring no longer memmoves 8 MiB per ~1 KiB PTY read, and the per-connection writer coalesces queued `Output` frames (≤256 KiB) so a flood reaches the client as a few large frames instead of thousands of tiny ones. A backpressure gate (4 MiB high-water) pauses the PTY reader while the client catches up, so a runaway `yes` can't grow daemon memory without bound. `HITTY_TRACE=1` prints per-second reader-loop accounting on both sides for future diagnosis.
+- Second throughput pass, another ~1.4× on bulk output (11 MB `cat`: ~160 ms → ~100 ms; sustained plaintext drain 124 → 148 MB/s, vs ~170 MB/s for a raw do-nothing PTY reader on the same machine; DOOM-fire is unchanged — it is producer-bound at ~96 MB/s): the backpressure high-water grows to 16 MiB so a big burst drains at PTY speed while the client parses in its own time; daemon⇄GUI socket buffers grow from macOS's 8 KiB default to 256 KiB; the client applies consecutive `Output` frames as one batched parser pass (one term-lock + wakeup per burst, latency-free — the batch never waits for unarrived bytes); the shared OSC tokenizer skips Ground/Ignore runs with SIMD `memchr`; the gate's hot path is a lock-free atomic (previously a Mutex plus an unconditional `notify_all` per socket write); and the four threads on the interactive output path ask macOS for `USER_INTERACTIVE` QoS to stay off the efficiency cores (`HITTY_NO_QOS=1` opts out).
 
 ### Fixed
 
@@ -4179,27 +4179,27 @@ Initial release.
 - zsh shell integration (OSC 7 cwd + OSC 133 prompt marks) via a throwaway `ZDOTDIR`.
 - Native macOS light/dark themes that follow the system appearance.
 
-[26.8.3]: https://github.com/l0ng-ai/tty7/compare/v26.8.2...v26.8.3
-[26.8.2]: https://github.com/l0ng-ai/tty7/compare/v26.8.1...v26.8.2
-[26.8.1]: https://github.com/l0ng-ai/tty7/compare/v26.8.0...v26.8.1
-[26.8.0]: https://github.com/l0ng-ai/tty7/compare/v26.7.6...v26.8.0
-[26.7.6]: https://github.com/l0ng-ai/tty7/compare/v26.7.5...v26.7.6
-[26.7.5]: https://github.com/l0ng-ai/tty7/compare/v26.7.4...v26.7.5
-[26.7.4]: https://github.com/l0ng-ai/tty7/compare/v26.7.3...v26.7.4
-[26.7.3]: https://github.com/l0ng-ai/tty7/compare/v26.7.2...v26.7.3
-[26.7.2]: https://github.com/l0ng-ai/tty7/compare/v26.7.1...v26.7.2
-[26.7.1]: https://github.com/l0ng-ai/tty7/compare/v26.7.0...v26.7.1
-[26.7.0]: https://github.com/l0ng-ai/tty7/compare/v0.17.0...v26.7.0
-[0.10.0]: https://github.com/l0ng-ai/tty7/compare/v0.9.0...v0.10.0
-[0.9.0]: https://github.com/l0ng-ai/tty7/compare/v0.8.0...v0.9.0
-[0.8.0]: https://github.com/l0ng-ai/tty7/compare/v0.7.0...v0.8.0
-[0.7.0]: https://github.com/l0ng-ai/tty7/compare/v0.6.2...v0.7.0
-[0.6.2]: https://github.com/l0ng-ai/tty7/compare/v0.6.1...v0.6.2
-[0.6.1]: https://github.com/l0ng-ai/tty7/compare/v0.6.0...v0.6.1
-[0.6.0]: https://github.com/l0ng-ai/tty7/compare/v0.5.0...v0.6.0
-[0.5.0]: https://github.com/l0ng-ai/tty7/compare/v0.4.0...v0.5.0
-[0.4.0]: https://github.com/l0ng-ai/tty7/compare/v0.3.0...v0.4.0
-[0.3.0]: https://github.com/l0ng-ai/tty7/compare/v0.2.0...v0.3.0
-[0.2.0]: https://github.com/l0ng-ai/tty7/compare/v0.1.0...v0.2.0
-[0.1.0]: https://github.com/l0ng-ai/tty7/releases/tag/v0.1.0
+[26.8.3]: https://github.com/cloudy-liu/hitty/compare/v26.8.2...v26.8.3
+[26.8.2]: https://github.com/cloudy-liu/hitty/compare/v26.8.1...v26.8.2
+[26.8.1]: https://github.com/cloudy-liu/hitty/compare/v26.8.0...v26.8.1
+[26.8.0]: https://github.com/cloudy-liu/hitty/compare/v26.7.6...v26.8.0
+[26.7.6]: https://github.com/cloudy-liu/hitty/compare/v26.7.5...v26.7.6
+[26.7.5]: https://github.com/cloudy-liu/hitty/compare/v26.7.4...v26.7.5
+[26.7.4]: https://github.com/cloudy-liu/hitty/compare/v26.7.3...v26.7.4
+[26.7.3]: https://github.com/cloudy-liu/hitty/compare/v26.7.2...v26.7.3
+[26.7.2]: https://github.com/cloudy-liu/hitty/compare/v26.7.1...v26.7.2
+[26.7.1]: https://github.com/cloudy-liu/hitty/compare/v26.7.0...v26.7.1
+[26.7.0]: https://github.com/cloudy-liu/hitty/compare/v0.17.0...v26.7.0
+[0.10.0]: https://github.com/cloudy-liu/hitty/compare/v0.9.0...v0.10.0
+[0.9.0]: https://github.com/cloudy-liu/hitty/compare/v0.8.0...v0.9.0
+[0.8.0]: https://github.com/cloudy-liu/hitty/compare/v0.7.0...v0.8.0
+[0.7.0]: https://github.com/cloudy-liu/hitty/compare/v0.6.2...v0.7.0
+[0.6.2]: https://github.com/cloudy-liu/hitty/compare/v0.6.1...v0.6.2
+[0.6.1]: https://github.com/cloudy-liu/hitty/compare/v0.6.0...v0.6.1
+[0.6.0]: https://github.com/cloudy-liu/hitty/compare/v0.5.0...v0.6.0
+[0.5.0]: https://github.com/cloudy-liu/hitty/compare/v0.4.0...v0.5.0
+[0.4.0]: https://github.com/cloudy-liu/hitty/compare/v0.3.0...v0.4.0
+[0.3.0]: https://github.com/cloudy-liu/hitty/compare/v0.2.0...v0.3.0
+[0.2.0]: https://github.com/cloudy-liu/hitty/compare/v0.1.0...v0.2.0
+[0.1.0]: https://github.com/cloudy-liu/hitty/releases/tag/v0.1.0
 [gpui]: https://github.com/zed-industries/zed

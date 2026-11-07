@@ -1,4 +1,4 @@
-# ctty7 release notes
+# hitty release notes
 
 This workspace brings terminals and project documents together.
 

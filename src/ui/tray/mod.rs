@@ -172,7 +172,7 @@ pub(crate) fn menu_spec(snap: &TraySnapshot) -> Vec<SpecItem> {
         checked: None,
         avatar: None,
     };
-    let mut items = vec![item("show", t(L10nKey::TrayShowTty7)), SpecItem::Separator];
+    let mut items = vec![item("show", t(L10nKey::TrayShowHitty)), SpecItem::Separator];
     for a in &snap.agents {
         let state = match a.status {
             AgentStatus::Waiting => {
@@ -255,7 +255,7 @@ mod tests {
                 leaf_id: 42,
                 agent: crate::core::cli_agent::CLIAgent::Claude,
                 status,
-                detail: "tty7 @ main".into(),
+                detail: "hitty @ main".into(),
             }],
             notify_mode: NotifyMode::Unfocused,
             attention: false,
@@ -297,11 +297,11 @@ mod tests {
         assert_eq!(
             snapshot_with_agent(AgentStatus::Waiting).tooltip(),
             format!(
-                "ctty7 — 1 {}",
+                "hitty — 1 {}",
                 t(crate::ui::i18n::L10nKey::PanelAgentWaiting)
             )
         );
-        assert_eq!(TraySnapshot::default().tooltip(), "ctty7");
+        assert_eq!(TraySnapshot::default().tooltip(), "hitty");
     }
 
     #[test]
@@ -319,7 +319,7 @@ mod tests {
         assert_eq!(
             labels,
             [
-                t(L10nKey::TrayShowTty7),
+                t(L10nKey::TrayShowHitty),
                 t(L10nKey::TrayNotifications),
                 t(L10nKey::AppMenuSettings),
                 t(L10nKey::AppMenuCheckForUpdates),
@@ -408,7 +408,7 @@ fn dispatch(action: TrayAction, cx: &mut App) {
 }
 
 /// Hand an action to the window that owns `workspace`.
-fn deliver(action: TrayAction, workspace: tty7_core::core::session::WorkspaceId, cx: &mut App) {
+fn deliver(action: TrayAction, workspace: hitty_core::core::session::WorkspaceId, cx: &mut App) {
     use crate::ui::windows::WindowRegistry;
 
     let (Some(handle), Some(weak)) = (

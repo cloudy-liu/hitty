@@ -3,7 +3,7 @@ title: "The sidebar"
 description: "Tabs grouped by repository, with branch, diff counts, and agent status on every row."
 ---
 
-The left sidebar is tty7's tab bar, and it is the default because a vertical row
+The left sidebar is hitty's tab bar, and it is the default because a vertical row
 has room for things a horizontal chip does not: the repository a tab belongs to,
 the branch it is on, how much has changed there, and what a coding agent in it
 is doing.
@@ -11,7 +11,7 @@ is doing.
 <kbd>⌘ B</kbd> shows and hides it. Drag its right edge to resize.
 
 <Frame caption="Placeholder — screenshot: the sidebar with two repo groups, agent avatars and status symbols, branch and +N −M counts">
-  <img src="/images/placeholder.svg" alt="The tty7 tab sidebar" />
+  <img src="/images/placeholder.svg" alt="The hitty tab sidebar" />
 </Frame>
 
 ## Grouped by repository
@@ -84,7 +84,7 @@ addresses retain the user and any non-default port. Unknown remote paths show
 the connection name; a local SSH client's directory is never used as the
 remote location.
 
-`tty7 tab ls` answers the same question with more evidence, because a script has
+`hitty tab ls` answers the same question with more evidence, because a script has
 no screen to look at. Its `label` falls back through the name, then the coding
 agent running in the tab ("Claude Code"), then the last segment of the working
 directory, then the foreground process — while `name` stays literal, so a script
@@ -100,7 +100,7 @@ From here you can also rename a workspace, open one in a new window, stop one,
 or connect to a machine you have a profile for.
 
 The sidebar, top tab strip, and switcher identify a split tab by its focused
-tty7 pane. A background tab uses its last focused pane. When Herdr runs in that
+hitty pane. A background tab uses its last focused pane. When Herdr runs in that
 pane, its purple sheep avatar stays visible even if a Herdr workspace launches
-Codex or Claude Code. A separate tty7 split running an agent shows that agent's
+Codex or Claude Code. A separate hitty split running an agent shows that agent's
 avatar when you focus the split. Status symbols follow the selected pane.

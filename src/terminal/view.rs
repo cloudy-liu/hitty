@@ -66,7 +66,7 @@ fn input_caret_paint(
 /// map. The chrome (tab strip, sidebar, switcher) reads every pane entity
 /// while the window draws, so gpui tracks them all and `notify()` from a
 /// hidden pane still dirties the window — this flag is the out-of-band answer
-/// the output pump consults instead. `Tty7App::render` declares it each frame
+/// the output pump consults instead. `HittyApp::render` declares it each frame
 /// for its own tabs; a pane nobody has declared yet counts as displayed, so a
 /// missed path can only cost extra repaints, never a frozen grid.
 ///
@@ -162,7 +162,7 @@ pub struct NativeSshParts {
 }
 
 /// What a pane is called when nothing running in it has said otherwise.
-pub(crate) const DEFAULT_TITLE: &str = "tty7";
+pub(crate) const DEFAULT_TITLE: &str = "hitty";
 
 pub struct ShellParts {
     terminal: RemoteTerminal,
@@ -260,7 +260,7 @@ pub struct TerminalView {
     pending_title: Option<String>,
     /// What the pane is called before anything running in it says otherwise —
     /// and what it goes back to when the program resets the title or the
-    /// session ends. "tty7" for a local shell; for an SSH pane it is the host
+    /// session ends. "hitty" for a local shell; for an SSH pane it is the host
     /// it dialled, so a window full of them is still readable (#438); for a
     /// workspace pane it is the workspace's name, set in `set_workspace`.
     pub(super) default_title: String,
@@ -574,7 +574,7 @@ fn compose_notification_title(
     match (lead.or(host), workspace) {
         (Some(lead), Some(workspace)) => format!("{lead} · {workspace}"),
         (Some(only), None) | (None, Some(only)) => only,
-        (None, None) => "tty7".to_string(),
+        (None, None) => "hitty".to_string(),
     }
 }
 
@@ -757,7 +757,7 @@ fn clipboard_paste_text(item: &ClipboardItem, shell: Option<&str>) -> Option<Str
 
 fn write_clipboard_image(img: &gpui::Image) -> Option<std::path::PathBuf> {
     use gpui::ImageFormat;
-    let dir = std::env::temp_dir().join("tty7-clipboard");
+    let dir = std::env::temp_dir().join("hitty-clipboard");
     std::fs::create_dir_all(&dir).ok()?;
     let (ext, transcoded) = match img.format {
         ImageFormat::Png => ("png", None),
@@ -858,7 +858,7 @@ fn wsl_share_path(distro: &str, posix: &str) -> Option<std::path::PathBuf> {
 /// distro of whichever machine *hosts* it — so only this machine's panes may
 /// take the share; a remote host's same-named distro would list the wrong
 /// files. A pane in a WSL workspace is tagged by its workspace target instead,
-/// and needs no such check: tty7 reaches those distros by running `wsl.exe`
+/// and needs no such check: hitty reaches those distros by running `wsl.exe`
 /// here, so the share is this machine's by construction — even though the
 /// pane's host, being the distro's own server, is not `HostId::LOCAL`.
 fn wsl_share_distro(
@@ -894,7 +894,7 @@ fn staged_path_for_pane(local: &str, shares_localhost: bool) -> String {
 /// world-writable `/tmp`, where any local account could pre-create the
 /// directory, read what lands in it, or swap a pasted screenshot for one of
 /// its own before the pane's agent opens it.
-const REMOTE_CLIPBOARD_PATH: [&str; 3] = [".cache", "tty7", "clipboard"];
+const REMOTE_CLIPBOARD_PATH: [&str; 3] = [".cache", "hitty", "clipboard"];
 
 /// Owner-only, and *only* owner: a staging directory anyone else can enter is
 /// one anyone else can read the pasted screenshots out of.
@@ -904,7 +904,7 @@ const REMOTE_CLIPBOARD_MODE: u32 = 0o700;
 ///
 /// The mode is what a `stat` reported *after* a `chmod 0700` the daemon
 /// watched succeed, which is the ownership proof: POSIX only lets a file's
-/// owner change its mode, so a directory tty7 can chmod and then observe at
+/// owner change its mode, so a directory hitty can chmod and then observe at
 /// exactly `0700` is one the SSH user owns and nobody else can enter. A
 /// symlink is refused outright because `stat` follows links, so a link planted
 /// at the staging path would otherwise be judged by its target.
@@ -1526,7 +1526,7 @@ impl TerminalView {
     ///
     /// The pane's own host answers, never this machine on its behalf (#580).
     /// A shell that has ssh'd somewhere gets no answer at all: the paths it
-    /// reports are on a third machine tty7 has no link to, and neither this
+    /// reports are on a third machine hitty has no link to, and neither this
     /// laptop's home nor the pane host's describes it — the same reason #568
     /// stopped resolving file links in those panes.
     pub fn display_home(&self, cx: &gpui::App) -> Option<std::path::PathBuf> {
@@ -1771,7 +1771,7 @@ impl TerminalView {
         // Prefer what the shell said it was running. `running_title` is only
         // the window title as it stood when the command began, and a prompt
         // that titles by directory — a very common setup — made this ask
-        // "tty7 is still running. Closing ends it." about a folder. The
+        // "hitty is still running. Closing ends it." about a folder. The
         // OSC 133;C mark carries the submitted line itself.
         let named = Some(clamp_command(&unescape_mark_text(
             &self.terminal.running_command(),
@@ -2192,7 +2192,7 @@ impl TerminalView {
         }
 
         // Ctrl-R landing on the PTY is only worth a notice when the user still
-        // expects tty7's menu. With the prompt editor off, the shell owning
+        // expects hitty's menu. With the prompt editor off, the shell owning
         // Ctrl-R is exactly what was asked for.
         if m.control
             && !m.platform
@@ -3672,7 +3672,7 @@ impl TerminalView {
         // is scoped to the *inner* target, and seeding that scope from the
         // workspace host's ~/.zsh_history would offer commands from the wrong
         // box — the exact confusion scoping exists to prevent. Those panes
-        // start from what tty7 recorded for the inner target, like bare ssh.
+        // start from what hitty recorded for the inner target, like bare ssh.
         if self.remote_context().is_some() {
             return Vec::new();
         }
@@ -4010,7 +4010,7 @@ impl TerminalView {
         self.input_inactive_reason().is_none()
     }
 
-    /// Moves this pane between tty7's inline editor and the shell's own line
+    /// Moves this pane between hitty's inline editor and the shell's own line
     /// editor while it is live.
     ///
     /// A line the user already typed is not dropped on the floor: it is handed
@@ -4081,7 +4081,7 @@ impl TerminalView {
     fn shell_owns_prompt(&self) -> bool {
         // With the prompt editor off the shell owns every prompt, always. That
         // is what keeps the gap hold and the typeahead record — both of which
-        // exist to feed tty7's editor, and one of which erases the line with
+        // exist to feed hitty's editor, and one of which erases the line with
         // ^U before doing it — away from a line only ZLE is editing.
         !self.prompt_editor || self.shell_vi_prompt() || self.handoff_active()
     }
@@ -4545,11 +4545,11 @@ impl TerminalView {
             return;
         }
         if let Some(reason) = self.link_inactive_reason(cx) {
-            log::debug!(target: "tty7::completion", "Tab does nothing and the line stays: {reason}");
+            log::debug!(target: "hitty::completion", "Tab does nothing and the line stays: {reason}");
             return;
         }
         if let Some(reason) = self.input_inactive_reason() {
-            log::debug!(target: "tty7::completion", "Tab goes straight to the PTY: {reason}");
+            log::debug!(target: "hitty::completion", "Tab goes straight to the PTY: {reason}");
             let bytes = self.tab_bytes(!forward);
             self.send_to_pty(&bytes, cx);
             return;
@@ -4567,7 +4567,7 @@ impl TerminalView {
             return;
         }
         if !cx.global::<Config>().tab_completion {
-            log::debug!(target: "tty7::completion", "handing the line to the shell: tab_completion is off");
+            log::debug!(target: "hitty::completion", "handing the line to the shell: tab_completion is off");
             self.handoff_tab_to_shell(!forward, cx);
             return;
         }
@@ -4601,7 +4601,7 @@ impl TerminalView {
                 return;
             }
             log::debug!(
-                target: "tty7::completion",
+                target: "hitty::completion",
                 "handing the line to the shell: no candidates for {line:?} at {cursor} \
                  (local cwd {cwd:?}, share cwd {share_cwd:?}, remote cwd {:?})",
                 self.remote_ssh_cwd(),
@@ -4723,7 +4723,7 @@ impl TerminalView {
         };
         let Some(req) = completion::remote_path_request(line, cursor, &cwd) else {
             log::debug!(
-                target: "tty7::completion",
+                target: "hitty::completion",
                 "no remote listing to ask for: {line:?} at {cursor} against {cwd}"
             );
             return false;
@@ -4739,7 +4739,7 @@ impl TerminalView {
         let route = crate::ui::sftp::SftpRoute::new(self.pane_id, self.workspace.clone());
         let dir = req.dir.clone();
         let line = line.to_string();
-        log::debug!(target: "tty7::completion", "listing {dir} over the remote's own connection");
+        log::debug!(target: "hitty::completion", "listing {dir} over the remote's own connection");
         cx.spawn(async move |this, cx| {
             let listed = cx.background_spawn(async move { route.list(&dir) }).await;
             let (entries, failed) = match listed {
@@ -4748,7 +4748,7 @@ impl TerminalView {
                     // A failure is not an empty directory: the two used to
                     // end in the same silence (#585).
                     log::warn!(
-                        target: "tty7::completion",
+                        target: "hitty::completion",
                         "remote listing failed, treating it as no candidates: {e}"
                     );
                     (Vec::new(), Some(e.to_string()))
@@ -4786,14 +4786,14 @@ impl TerminalView {
             .or_else(|| self.input_inactive_reason())
         {
             log::debug!(
-                target: "tty7::completion",
+                target: "hitty::completion",
                 "dropping a remote listing for {line:?}: {reason}"
             );
             return;
         }
         if self.cmd.text() != line || self.cmd.cursor() != cursor {
             log::debug!(
-                target: "tty7::completion",
+                target: "hitty::completion",
                 "dropping a remote listing for {line:?}: the line has moved on"
             );
             return;
@@ -4807,7 +4807,7 @@ impl TerminalView {
             .collect();
         let cands = completion::remote_path_candidates(&req, &entries);
         log::debug!(
-            target: "tty7::completion",
+            target: "hitty::completion",
             "{} entries in {}, {} match the word",
             entries.len(),
             req.dir,
@@ -4982,7 +4982,7 @@ impl TerminalView {
         }
         // Typing goes to the prompt, so the view has to be looking at it.
         // Only the last branch below used to do this, which is the branch
-        // taken when tty7 is *not* driving the line — so scrolling up and
+        // taken when hitty is *not* driving the line — so scrolling up and
         // typing did the one thing it must never do at a shell prompt:
         // accepted the characters somewhere the user could not see them.
         // `handle_editor_key` has always jumped, so Left and Backspace came
@@ -5227,7 +5227,7 @@ impl TerminalView {
     /// standing behind you has to work the same whether or not what is running
     /// asked for the wheel. Steps go out as the same actions the keyboard and
     /// the View menu send, so the min/max clamp and the saved setting live in
-    /// one place — [`Tty7App::change_font_size`](crate::ui::app::Tty7App).
+    /// one place — [`HittyApp::change_font_size`](crate::ui::app::HittyApp).
     fn zoom_scroll(&mut self, ev: &ScrollWheelEvent, window: &mut Window, cx: &mut Context<Self>) {
         // Whatever the scrollback still had in flight is dropped: it was
         // travelling in lines of a font that is about to change size.
@@ -6684,7 +6684,7 @@ impl Render for TerminalView {
                     );
 
                 let view = menu_view.read(cx);
-                // `fork_label` is tty7-core's capability probe, and core has no
+                // `fork_label` is hitty-core's capability probe, and core has no
                 // locale table — take the answer, not its English wording.
                 let can_fork = view.agent().and_then(|a| a.fork_label()).is_some();
                 let fork_ready = can_fork
@@ -6928,14 +6928,14 @@ enum SelectEndCopy {
     Editor,
 }
 
-/// Whether a right-click belongs to tty7's own context menu rather than to the
+/// Whether a right-click belongs to hitty's own context menu rather than to the
 /// terminal application.
 ///
 /// A TUI that has turned mouse reporting on (vim with `set mouse=a`, lazygit,
 /// tmux, …) draws its own right-button menus, so popping the host menu on top
 /// of the application's is a double delivery of one click — #251. While
 /// reporting is active the unmodified click is the application's alone; Shift
-/// is the escape hatch that reaches tty7, matching how Shift already overrides
+/// is the escape hatch that reaches hitty, matching how Shift already overrides
 /// mouse reporting for selection (`register_mouse_handlers`) and for the wheel
 /// (`wheel_route`).
 ///
@@ -7548,23 +7548,23 @@ mod tests {
 
     #[test]
     fn a_notification_title_keeps_at_most_two_segments() {
-        let ws = || Some("tty7".to_string());
+        let ws = || Some("hitty".to_string());
         assert_eq!(
             compose_notification_title(None, Some("build-box".into()), ws()),
-            "build-box · tty7"
+            "build-box · hitty"
         );
         // An agent takes the machine's place rather than adding a third part.
         assert_eq!(
             compose_notification_title(Some("Claude".into()), Some("build-box".into()), ws()),
-            "Claude · tty7"
+            "Claude · hitty"
         );
         // A local pane has no machine label; a nameless workspace has no name.
-        assert_eq!(compose_notification_title(None, None, ws()), "tty7");
+        assert_eq!(compose_notification_title(None, None, ws()), "hitty");
         assert_eq!(
             compose_notification_title(Some("Claude".into()), None, None),
             "Claude"
         );
-        assert_eq!(compose_notification_title(None, None, None), "tty7");
+        assert_eq!(compose_notification_title(None, None, None), "hitty");
     }
 
     #[test]
@@ -7913,10 +7913,10 @@ mod tests {
         // differs — so this is a rewrite, not an upload.
         assert_eq!(
             staged_path_for_pane(
-                r"C:\Users\me\AppData\Local\Temp\tty7-clipboard\paste-1.png",
+                r"C:\Users\me\AppData\Local\Temp\hitty-clipboard\paste-1.png",
                 true
             ),
-            "/mnt/c/Users/me/AppData/Local/Temp/tty7-clipboard/paste-1.png"
+            "/mnt/c/Users/me/AppData/Local/Temp/hitty-clipboard/paste-1.png"
         );
         assert_eq!(wsl_path(r"D:\x\y.png").as_deref(), Some("/mnt/d/x/y.png"));
 
@@ -7929,8 +7929,8 @@ mod tests {
 
         // Every other pane keeps the path exactly as staged.
         assert_eq!(
-            staged_path_for_pane("/tmp/tty7-clipboard/paste-1.png", false),
-            "/tmp/tty7-clipboard/paste-1.png"
+            staged_path_for_pane("/tmp/hitty-clipboard/paste-1.png", false),
+            "/tmp/hitty-clipboard/paste-1.png"
         );
         assert_eq!(
             staged_path_for_pane(r"C:\Temp\paste-1.png", false),
@@ -7969,8 +7969,8 @@ mod tests {
     #[test]
     fn a_failed_staging_preparation_is_retried_rather_than_latched() {
         assert_eq!(
-            staging_cache(&Ok("/home/me/.cache/tty7/clipboard".to_string())),
-            Some("/home/me/.cache/tty7/clipboard".to_string())
+            staging_cache(&Ok("/home/me/.cache/hitty/clipboard".to_string())),
+            Some("/home/me/.cache/hitty/clipboard".to_string())
         );
         // Nothing was created, so the next paste must try again instead of
         // handing out a path under a directory that does not exist.
@@ -7983,7 +7983,7 @@ mod tests {
         for component in super::REMOTE_CLIPBOARD_PATH {
             dir = crate::daemon::ssh::sftp::remote_join(&dir, component);
         }
-        assert_eq!(dir, "/home/me/.cache/tty7/clipboard");
+        assert_eq!(dir, "/home/me/.cache/hitty/clipboard");
         assert!(
             !dir.starts_with("/tmp"),
             "a world-writable staging dir is exactly what this avoids"
@@ -8069,7 +8069,7 @@ mod tests {
     fn a_file_command_that_cannot_spawn_comes_back_as_an_error() {
         let path = Path::new("/tmp/wherever.rs");
         // The binary does not exist, so the spawn itself fails.
-        assert!(super::run_file_command("tty7-no-such-binary {path}", path, None, None).is_err());
+        assert!(super::run_file_command("hitty-no-such-binary {path}", path, None, None).is_err());
         // A template whose tokens all expand to nothing is a config error,
         // not a silent no-op.
         assert!(super::run_file_command("{line}", path, None, None).is_err());
@@ -8242,7 +8242,7 @@ mod tests {
         assert!(
             !should_show_context_menu(true, false),
             "an unmodified right-click in mouse mode is the application's event, \
-             so tty7 must not also pop its own menu over it"
+             so hitty must not also pop its own menu over it"
         );
     }
 
@@ -8250,7 +8250,7 @@ mod tests {
     fn shift_right_click_stays_the_escape_hatch_in_mouse_mode() {
         assert!(
             should_show_context_menu(true, true),
-            "Shift is the documented way to reach tty7's own menu inside a \
+            "Shift is the documented way to reach hitty's own menu inside a \
              mouse-reporting TUI"
         );
     }
@@ -9531,7 +9531,7 @@ mod gpui_tests {
     /// A 1x1 red placement anchored at an absolute scrollback row, built the way
     /// the decode worker hands one to the store.
     fn placed_at(anchor_row: i64) -> crate::terminal::images::PlacedImage {
-        use tty7_core::core::kitty_graphics::{Image, WireFormat};
+        use hitty_core::core::kitty_graphics::{Image, WireFormat};
 
         let mut img = Image {
             id: 1,
@@ -9691,7 +9691,7 @@ mod gpui_tests {
     /// can say why rather than doing nothing at all.
     #[gpui::test]
     fn a_relative_path_links_against_the_panes_own_directory(cx: &mut TestAppContext) {
-        let dir = std::env::temp_dir().join(format!("tty7-view-link-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("hitty-view-link-{}", std::process::id()));
         std::fs::create_dir_all(dir.join("scratchpad")).expect("create scratchpad dir");
         let notes = dir.join("scratchpad/notes.md");
         std::fs::write(&notes, b"# notes").expect("create notes.md");
@@ -9752,7 +9752,7 @@ mod gpui_tests {
     /// opened the local copy without a word about it.
     #[gpui::test]
     fn a_pane_whose_paths_are_elsewhere_does_not_link_local_files(cx: &mut TestAppContext) {
-        let file = std::env::temp_dir().join(format!("tty7-elsewhere-{}.txt", std::process::id()));
+        let file = std::env::temp_dir().join(format!("hitty-elsewhere-{}.txt", std::process::id()));
         std::fs::write(&file, b"local").expect("create local file");
         let line = format!("open {} now\r\n", file.display());
 
@@ -9958,7 +9958,7 @@ mod gpui_tests {
         let (window, _daemon) = harness(cx);
         window
             .update(cx, |view, _, cx| {
-                assert_eq!(view.title, "tty7");
+                assert_eq!(view.title, "hitty");
                 view.handle_event(AlacEvent::Title("vim — main.rs".into()), cx);
             })
             .unwrap();
@@ -9971,7 +9971,7 @@ mod gpui_tests {
             .unwrap();
         settle(cx);
         window
-            .update(cx, |view, _, _| assert_eq!(view.title, "tty7"))
+            .update(cx, |view, _, _| assert_eq!(view.title, "hitty"))
             .unwrap();
     }
 
@@ -10025,7 +10025,7 @@ mod gpui_tests {
 
     /// An SSH pane answers to the host it dialled, and keeps answering to it
     /// after the remote program hands the title back (#438). Before this every
-    /// SSH tab in the window read "tty7" until — and only if — the far shell
+    /// SSH tab in the window read "hitty" until — and only if — the far shell
     /// had integration enough to title itself.
     #[gpui::test]
     fn an_ssh_pane_is_named_after_its_host(cx: &mut TestAppContext) {
@@ -10255,7 +10255,7 @@ mod gpui_tests {
             }
             std::thread::sleep(std::time::Duration::from_millis(5));
         }
-        panic!("an emacs-mode prompt should re-enable tty7's local editor");
+        panic!("an emacs-mode prompt should re-enable hitty's local editor");
     }
 
     fn wait_for_input_active(window: &gpui::WindowHandle<TerminalView>, cx: &mut TestAppContext) {
@@ -10450,7 +10450,7 @@ mod gpui_tests {
                 assert_eq!(
                     view.cmd.text(),
                     "n",
-                    "the first character on the fresh line belongs to tty7's editor"
+                    "the first character on the fresh line belongs to hitty's editor"
                 );
             })
             .unwrap();
@@ -10523,7 +10523,7 @@ mod gpui_tests {
                     type_char(view, ch, window, cx);
                 }
                 view.complete_tab(true, cx);
-                assert!(view.completion.is_none(), "no tty7 menu while opted out");
+                assert!(view.completion.is_none(), "no hitty menu while opted out");
                 assert_eq!(view.cmd.text(), "");
             })
             .unwrap();
@@ -11004,7 +11004,7 @@ mod gpui_tests {
 
     #[gpui::test]
     fn insert_newline_action_extends_the_line_and_enter_submits_it(cx: &mut TestAppContext) {
-        let dir = std::env::temp_dir().join(format!("tty7-covtest-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("hitty-covtest-{}", std::process::id()));
         std::fs::create_dir_all(&dir).ok();
         crate::core::config::set_config_dir(dir);
 
@@ -11558,7 +11558,7 @@ mod gpui_tests {
                 view.handle_editor_key(&key("ctrl-r"), cx);
                 assert!(
                     view.reverse_search.is_none(),
-                    "no tty7 menu while opted out"
+                    "no hitty menu while opted out"
                 );
                 assert_eq!(view.cmd.text(), "", "the line went to the shell");
             })
@@ -11611,10 +11611,10 @@ mod gpui_tests {
                 };
                 view.on_key_down(&up, window, cx);
 
-                assert_eq!(view.cmd.text(), "", "nothing was typed into tty7's editor");
+                assert_eq!(view.cmd.text(), "", "nothing was typed into hitty's editor");
                 assert!(
                     view.history_nav.is_none(),
-                    "Up never touched tty7's own history"
+                    "Up never touched hitty's own history"
                 );
             })
             .unwrap();
@@ -11639,7 +11639,7 @@ mod gpui_tests {
 
     /// Tab and Ctrl-R are the two keys with their own opt-outs; turning the
     /// editor off has to hand them over too, without the missing-integration
-    /// notice that Ctrl-R raises when tty7 *wanted* the key and could not have
+    /// notice that Ctrl-R raises when hitty *wanted* the key and could not have
     /// it.
     #[gpui::test]
     fn prompt_editor_off_hands_over_tab_and_ctrl_r(cx: &mut TestAppContext) {
@@ -11665,8 +11665,8 @@ mod gpui_tests {
                     prefer_character_input: false,
                 };
                 view.on_key_down(&ctrl_r, window, cx);
-                assert!(view.completion.is_none(), "no tty7 completion menu");
-                assert!(view.reverse_search.is_none(), "no tty7 history menu");
+                assert!(view.completion.is_none(), "no hitty completion menu");
+                assert!(view.reverse_search.is_none(), "no hitty history menu");
                 assert!(
                     view.integration_notice.is_none(),
                     "the shell owning ^R is what was asked for, not a gap to report"
@@ -11787,7 +11787,7 @@ mod gpui_tests {
         .unwrap();
         wait(cx, &|v| v.terminal.at_prompt(), "the initial prompt report");
 
-        let marker = format!("tty7_gpui_exit_marker_{}", std::process::id());
+        let marker = format!("hitty_gpui_exit_marker_{}", std::process::id());
         window
             .update(cx, |view, _, cx| {
                 view.cmd.set(&marker);
@@ -12862,18 +12862,18 @@ mod gpui_tests {
             .update(cx, |view, _, cx| {
                 bind_to_a_disconnected_remote_workspace(view, cx);
                 view.handle_event(AlacEvent::Exit, cx);
-                assert_eq!(view.title, "tty7 — disconnected");
+                assert_eq!(view.title, "hitty — disconnected");
 
                 view.set_workspace(None);
                 view.handle_event(AlacEvent::Exit, cx);
-                assert_eq!(view.title, "tty7 — process exited");
+                assert_eq!(view.title, "hitty — process exited");
             })
             .unwrap();
     }
 
     /// A workspace pane answers to its workspace's name: untitled tabs show
     /// it, and a dead link's suffix hangs off it — not off the bare app name,
-    /// which read "tty7 — disconnected" no matter whose link died.
+    /// which read "hitty — disconnected" no matter whose link died.
     #[gpui::test]
     fn a_workspace_pane_answers_to_its_workspaces_name(cx: &mut TestAppContext) {
         use crate::core::session::{RemoteTarget, WorkspaceId};
@@ -13021,7 +13021,7 @@ mod gpui_tests {
                 )
                 .expect("the swap itself cannot fail");
                 assert_eq!(
-                    view.title, "tty7",
+                    view.title, "hitty",
                     "a relinked pane is not \"process exited\""
                 );
             })
@@ -13488,7 +13488,7 @@ mod gpui_tests {
             .update(cx, |view, _, cx| {
                 view.handle_event(AlacEvent::Exit, cx);
                 assert!(view.terminal.exited);
-                assert_eq!(view.title, "tty7 — process exited");
+                assert_eq!(view.title, "hitty — process exited");
             })
             .unwrap();
     }
@@ -13779,7 +13779,7 @@ mod gpui_tests {
             .update(cx, |view, window, cx| {
                 assert!(
                     !view.input_active(),
-                    "the foreground process, not tty7's editor, owns input"
+                    "the foreground process, not hitty's editor, owns input"
                 );
                 view.on_key_down(
                     &KeyDownEvent {
@@ -14676,7 +14676,7 @@ mod native_history_gpui_tests {
                 view.shell_spec = Some(ShellSpec {
                     program: r"C:\Windows\System32\cmd.exe".into(),
                     args: Vec::new(),
-                    args_are_tty7_defaults: false,
+                    args_are_hitty_defaults: false,
                 });
                 view.history = vec!["git status".into()];
                 view.cmd.set(".venv\\");
@@ -14717,7 +14717,7 @@ mod native_history_gpui_tests {
                 view.shell_spec = Some(ShellSpec {
                     program: "/bin/zsh".into(),
                     args: Vec::new(),
-                    args_are_tty7_defaults: false,
+                    args_are_hitty_defaults: false,
                 });
                 view.history = vec!["a command from another shell".into()];
                 view.cmd.set("git st");
@@ -14778,7 +14778,7 @@ mod native_history_gpui_tests {
                 view.shell_spec = Some(ShellSpec {
                     program: r"C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe".into(),
                     args: Vec::new(),
-                    args_are_tty7_defaults: false,
+                    args_are_hitty_defaults: false,
                 });
                 view.history = vec!["git status".into()];
                 view.cmd.set(".venv\\");
@@ -15049,7 +15049,7 @@ mod agent_notification_tests {
         cx.update(crate::ui::keymap::init);
         let settings = cx.add_window(|window, cx| {
             let app = cx.new(|cx| {
-                let mut app = crate::ui::app::Tty7App::with_session(
+                let mut app = crate::ui::app::HittyApp::with_session(
                     None,
                     Some(crate::core::session::Session::default()),
                     window,
@@ -15123,7 +15123,7 @@ mod agent_notification_tests {
         cx.update(crate::ui::keymap::init);
         let settings = cx.add_window(|window, cx| {
             let app = cx.new(|cx| {
-                let mut app = crate::ui::app::Tty7App::with_session(
+                let mut app = crate::ui::app::HittyApp::with_session(
                     None,
                     Some(crate::core::session::Session::default()),
                     window,

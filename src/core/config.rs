@@ -1,6 +1,6 @@
-pub use tty7_core::core::config::*;
+pub use hitty_core::core::config::*;
 
-pub use tty7_core::core::config::Config as CoreConfig;
+pub use hitty_core::core::config::Config as CoreConfig;
 
 #[derive(Debug, Clone, Default)]
 pub struct Config(pub CoreConfig);
@@ -44,7 +44,7 @@ fn assert_scratch_config_dir(what: &str) {
 
 #[cfg(test)]
 pub(crate) fn pin_test_config_dir() {
-    let dir = std::env::temp_dir().join(format!("tty7-covtest-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("hitty-covtest-{}", std::process::id()));
     std::fs::create_dir_all(&dir).ok();
     set_config_dir(dir);
 }
@@ -85,7 +85,7 @@ mod tests {
             assert!(!is_real_user_config_dir(Some(&real.join("scratch"))));
         }
         assert!(!is_real_user_config_dir(Some(Path::new(
-            "/tmp/tty7-scratch"
+            "/tmp/hitty-scratch"
         ))));
         assert!(!is_real_user_config_dir(None));
     }

@@ -1,1 +1,1 @@
-pub use tty7_core::daemon::*;
+pub use hitty_core::daemon::*;

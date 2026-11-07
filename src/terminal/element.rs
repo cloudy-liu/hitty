@@ -1643,7 +1643,7 @@ impl TerminalElement {
                 }
                 // The mirror image of the context-menu gate in
                 // `TerminalView::render`: a click the application gets is never
-                // also a click tty7 acts on, and vice versa.
+                // also a click hitty acts on, and vice versa.
                 if !should_show_context_menu(v.mouse_mode(), mods.shift) {
                     v.mouse_press(button, col, row, &mods);
                     return;

@@ -6,12 +6,12 @@ use crate::ui::host_ops::{Entry, Host, HostId, Meta, Output, SearchHit, SharedHo
 use crate::ui::host_registry::HostRegistry;
 use crate::ui::pane::{Pane, PaneSlot};
 use gpui::{Entity, TestAppContext, VisualTestContext};
+use hitty_core::host::ShellInventory;
 use std::io;
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::{Arc, Condvar, Mutex};
 use std::time::{Duration, Instant};
-use tty7_core::host::ShellInventory;
 
 // Substitute only the Host I/O boundary, as the document-resource tests do.
 // Pane selection, cache, sidebar mouse input, Git parser and diff renderer run

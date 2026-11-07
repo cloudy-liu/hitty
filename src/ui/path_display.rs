@@ -29,7 +29,7 @@ use gpui::App;
 use std::borrow::Cow;
 use std::path::{Path, PathBuf};
 
-/// The directory `~` stands for on the machine tty7 is running on, or `None`
+/// The directory `~` stands for on the machine hitty is running on, or `None`
 /// when it won't say.
 ///
 /// `USERPROFILE` is the fallback rather than the only source on Windows so
@@ -155,7 +155,7 @@ pub(crate) fn readable_path(path: &Path, host: HostId) -> Cow<'_, Path> {
 /// directory of the machine `path` is on, not of this one.
 ///
 /// A `None` home is a path this process cannot place: a pane on a host with
-/// no link, or one whose shell has ssh'd somewhere tty7 never spoke to. It
+/// no link, or one whose shell has ssh'd somewhere hitty never spoke to. It
 /// comes back untouched rather than measured against a home that belongs to
 /// somebody else (#580).
 ///
@@ -306,12 +306,12 @@ mod tests {
         // with backslash-joined entries yields a mixed path, which
         // `ParseDisplayName` rejects. Every `/` must become `\`.
         assert_eq!(
-            native_separators(Path::new("D:/code/tty7\\skills")),
-            Path::new("D:\\code\\tty7\\skills")
+            native_separators(Path::new("D:/code/hitty\\skills")),
+            Path::new("D:\\code\\hitty\\skills")
         );
         assert_eq!(
-            native_separators(Path::new("D:/code/tty7")),
-            Path::new("D:\\code\\tty7")
+            native_separators(Path::new("D:/code/hitty")),
+            Path::new("D:\\code\\hitty")
         );
     }
 
@@ -324,7 +324,7 @@ mod tests {
         for p in [
             "\\\\wsl$\\Ubuntu\\home",
             "\\\\?\\C:\\code",
-            "C:\\code\\tty7",
+            "C:\\code\\hitty",
         ] {
             let got = native_separators(Path::new(p));
             assert_eq!(got.as_ref(), Path::new(p), "{p:?}");
@@ -371,7 +371,7 @@ mod tests {
     fn native_separators_is_a_no_op_off_windows() {
         // On Unix the OS separator is `/`; a path that happens to contain
         // backslashes is legitimate and must be left alone.
-        for p in ["/home/u/tty7", "C:\\Users\\dev", "mixed/path\\here"] {
+        for p in ["/home/u/hitty", "C:\\Users\\dev", "mixed/path\\here"] {
             let got = native_separators(Path::new(p));
             assert_eq!(got.as_ref(), Path::new(p), "{p:?}");
             assert!(matches!(got, Cow::Borrowed(_)));

@@ -2,10 +2,10 @@
 use super::*;
 use gpui::{Bounds, MouseButton, MouseMoveEvent, MouseUpEvent};
 use gpui_component::InteractiveElementExt as _;
+use hitty_core::core::date::format_date;
 use std::cell::Cell;
-use tty7_core::core::date::format_date;
 
-impl Tty7App {
+impl HittyApp {
     pub(crate) fn has_commit_document(&self) -> bool {
         self.tabs
             .get(self.active)
@@ -190,7 +190,7 @@ impl Tty7App {
                         .children(commit.refs.iter().take(8).enumerate().map(
                             |(index, reference)| {
                                 let (background, foreground) =
-                                    if reference.kind == tty7_core::core::git::log::RefKind::Tag {
+                                    if reference.kind == hitty_core::core::git::log::RefKind::Tag {
                                         (cx.theme().warning.opacity(0.16), cx.theme().warning)
                                     } else {
                                         (cx.theme().accent.opacity(0.16), muted)
@@ -429,7 +429,7 @@ impl CommitSplit {
         .into_any_element()
     }
 
-    pub(super) fn divider(&self, cx: &mut Context<Tty7App>) -> AnyElement {
+    pub(super) fn divider(&self, cx: &mut Context<HittyApp>) -> AnyElement {
         let ratio = self.ratio.clone();
         let dragging = self.dragging.clone();
         let focus = self.focus.clone();

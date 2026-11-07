@@ -144,7 +144,7 @@ fn returning_to_another_tab_clears_the_app_badge_but_keeps_the_result_unread(
 ) {
     use crate::core::cli_agent::CLIAgent;
     use crate::core::session::{Session, WorkspaceId, WorkspaceStore};
-    use crate::ui::app::{Tab, Tty7App};
+    use crate::ui::app::{HittyApp, Tab};
     use crate::ui::pane::{Pane, PaneSlot};
     use crate::ui::windows::WindowRegistry;
 
@@ -164,7 +164,7 @@ fn returning_to_another_tab_clears_the_app_badge_but_keeps_the_result_unread(
     let mut built = None;
     let window = cx.add_window(|window, cx| {
         let app = cx.new(|cx| {
-            Tty7App::with_session(
+            HittyApp::with_session(
                 Some(WorkspaceId::new()),
                 Some(Session::default()),
                 window,
@@ -239,7 +239,7 @@ fn returning_to_another_tab_clears_the_app_badge_but_keeps_the_result_unread(
 
     let another_window = cx.add_window(|window, cx| {
         let app = cx.new(|cx| {
-            Tty7App::with_session(
+            HittyApp::with_session(
                 Some(WorkspaceId::new()),
                 Some(Session::default()),
                 window,
@@ -266,7 +266,7 @@ fn returning_to_another_tab_clears_the_app_badge_but_keeps_the_result_unread(
         assert_eq!(agent.read(cx).agent_status(), Some(AgentStatus::Waiting));
         assert!(
             !crate::ui::tray::app_snapshot(cx).attention(),
-            "activating any ctty7 window acknowledges the background event"
+            "activating any hitty window acknowledges the background event"
         );
     });
     report(AgentStatus::Working, &mut daemon, window, &agent, cx);
@@ -274,7 +274,7 @@ fn returning_to_another_tab_clears_the_app_badge_but_keeps_the_result_unread(
     cx.update(|cx| {
         assert!(
             !crate::ui::tray::app_snapshot(cx).attention(),
-            "another active ctty7 window prevents a background badge"
+            "another active hitty window prevents a background badge"
         );
     });
     let mut second_visual = gpui::VisualTestContext::from_window(another_window.into(), cx);

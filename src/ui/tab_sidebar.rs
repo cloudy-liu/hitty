@@ -18,7 +18,7 @@ use std::path::{Path, PathBuf};
 use crate::core::config::{Config, SidebarGrouping};
 use crate::daemon::protocol::RemoteKind;
 use crate::terminal::git_status::GitStatusCache;
-use crate::ui::app::{TITLE_BAR_HEIGHT, Tty7App};
+use crate::ui::app::{HittyApp, TITLE_BAR_HEIGHT};
 use crate::ui::hints::tab_badge_label;
 use crate::ui::i18n::{L10nKey, t, t_fmt};
 use crate::ui::reorder::{self, Reorder, Surface};
@@ -110,7 +110,7 @@ struct SidebarInfo {
     host: Option<SharedString>,
 }
 
-impl Tty7App {
+impl HittyApp {
     /// Whether the tab rail is on screen — the same three conditions `render`
     /// assembles the layout from, in one place the panel opposite can ask.
     pub(crate) fn sidebar_open(&self, cx: &gpui::App) -> bool {
@@ -358,7 +358,7 @@ impl Tty7App {
         // would scroll the whole group, so headers, dividers, and rows are
         // counted as their own children except while a group is being dragged.
         let mut painted: usize = 0;
-        let mut painted_rows: Vec<(tty7_core::core::machine::TabId, usize)> = Vec::new();
+        let mut painted_rows: Vec<(hitty_core::core::machine::TabId, usize)> = Vec::new();
 
         for (group_slot, group_ix) in blocks {
             let section = &sections[group_ix];
@@ -1033,7 +1033,7 @@ impl Tty7App {
 
                 let menu_app = cx.entity().downgrade();
                 rows.push(row.context_menu(move |menu, window, cx| {
-                    Tty7App::tab_context_menu(menu, i, true, &menu_app, window, cx)
+                    HittyApp::tab_context_menu(menu, i, true, &menu_app, window, cx)
                 }));
             }
 
@@ -1063,7 +1063,7 @@ impl Tty7App {
                 }
                 None => (0..rows.len()).collect(),
             };
-            let row_ids: Vec<tty7_core::core::machine::TabId> = row_display
+            let row_ids: Vec<hitty_core::core::machine::TabId> = row_display
                 .iter()
                 .map(|&slot| self.tabs[visible_tabs[slot]].tree_id.get())
                 .collect();
@@ -1538,7 +1538,7 @@ impl Tty7App {
                     _ => block.into_any_element(),
                 });
             } else {
-                let mut pieces: Vec<(Option<tty7_core::core::machine::TabId>, AnyElement)> =
+                let mut pieces: Vec<(Option<hitty_core::core::machine::TabId>, AnyElement)> =
                     Vec::new();
                 if let Some(header) = header {
                     pieces.push((None, header));
@@ -2241,7 +2241,7 @@ fn header_shows_chevron(is_project: bool, show_arrow: bool, show_folder: bool) -
     show_arrow || (!is_project && show_folder)
 }
 
-/// A hop this pane made with `ssh` (or tty7's own SSH engine) from a local
+/// A hop this pane made with `ssh` (or hitty's own SSH engine) from a local
 /// window. The far side is not a Host we can git-probe, so the tab must not
 /// keep the local repo group it started in.
 fn in_pane_ssh_hop(host_is_local: bool, kind: Option<RemoteKind>) -> bool {
@@ -2820,10 +2820,10 @@ mod tests {
     #[test]
     fn custom_group_titles_override_derived_names_by_key() {
         let mut cfg = Config::default();
-        let repo = Some(p("/w/tty7"));
+        let repo = Some(p("/w/hitty"));
         assert_eq!(
-            effective_group_name(&cfg, &repo, "tty7".into()),
-            "tty7",
+            effective_group_name(&cfg, &repo, "hitty".into()),
+            "hitty",
             "no entry: the derived name stands"
         );
 
@@ -2831,7 +2831,7 @@ mod tests {
             .insert(group_name_key(&repo), "mine".into());
         cfg.sidebar_group_names
             .insert(group_name_key(&None), "inbox".into());
-        assert_eq!(effective_group_name(&cfg, &repo, "tty7".into()), "mine");
+        assert_eq!(effective_group_name(&cfg, &repo, "hitty".into()), "mine");
         assert_eq!(
             effective_group_name(&cfg, &None, "Scratch".into()),
             "inbox",
@@ -3188,10 +3188,10 @@ mod tests {
         let (a, b, c) = (
             p("/home/u/work/app"),
             p("/home/u/fork/app"),
-            p("/home/u/tty7"),
+            p("/home/u/hitty"),
         );
         let names = group_names(&[&a, &b, &c]);
-        assert_eq!(names, vec!["work/app", "fork/app", "tty7"]);
+        assert_eq!(names, vec!["work/app", "fork/app", "hitty"]);
     }
 
     #[test]

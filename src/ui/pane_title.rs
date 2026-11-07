@@ -291,14 +291,14 @@ mod gpui_tests {
     use crate::core::config::Config;
     use crate::daemon::protocol::DaemonMsg;
     use crate::terminal::view::quiet_test_pane;
-    use crate::ui::app::{Tab, Tty7App, test_window::harness};
+    use crate::ui::app::{HittyApp, Tab, test_window::harness};
     use crate::ui::pane::{Pane, PaneSlot};
 
     type Streams = Vec<std::os::unix::net::UnixStream>;
 
     fn split(
         cx: &mut TestAppContext,
-    ) -> (Entity<Tty7App>, VisualTestContext, [EntityId; 2], Streams) {
+    ) -> (Entity<HittyApp>, VisualTestContext, [EntityId; 2], Streams) {
         let (app, mut vcx) = harness(cx);
         vcx.update(|_, cx| {
             let mut cfg = cx.global::<Config>().clone();

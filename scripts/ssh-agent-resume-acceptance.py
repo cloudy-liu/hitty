@@ -94,10 +94,10 @@ def main():
 
         def check_channel_exec_request(self, channel, command):
             script = command.decode("utf8")
-            if script == "echo __tty7_shell; echo $SHELL":
+            if script == "echo __hitty_shell; echo $SHELL":
                 def probe():
                     time.sleep(0.02)
-                    channel.sendall("__tty7_shell\n/bin/bash\n")
+                    channel.sendall("__hitty_shell\n/bin/bash\n")
                     channel.send_exit_status(0)
                     channel.close()
                 threading.Thread(target=probe, daemon=True).start()

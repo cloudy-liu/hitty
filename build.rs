@@ -7,7 +7,7 @@ fn main() {
         // gpui-component's own Cargo config reserves a larger Windows stack,
         // but dependency configs do not reach this application. Match the
         // component's 8 MiB reserve instead of the linker's 1 MiB default.
-        println!("cargo:rustc-link-arg-bin=tty7-app=/STACK:8388608");
+        println!("cargo:rustc-link-arg-bin=hitty-app=/STACK:8388608");
     }
 
     #[cfg(windows)]
@@ -15,8 +15,8 @@ fn main() {
         println!("cargo:rerun-if-changed=assets/favicon.ico");
         let mut res = winresource::WindowsResource::new();
         res.set_icon("assets/favicon.ico");
-        res.set("ProductName", "ctty7");
-        res.set("FileDescription", "ctty7 terminal workbench");
+        res.set("ProductName", "Hitty");
+        res.set("FileDescription", "Hitty terminal workbench");
         if let Err(e) = res.compile() {
             println!("cargo:warning=failed to embed Windows icon: {e}");
         }
@@ -68,7 +68,7 @@ fn embed_file_icons() {
 }
 
 /// Put the bundled ConPTY beside cargo's output, the way the packaged app has
-/// it beside `tty7-app.exe`.
+/// it beside `hitty-app.exe`.
 ///
 /// `portable-pty` picks a sideloaded `conpty.dll` over the one in `kernel32`,
 /// and finds it through the DLL search path — which starts at the directory of
@@ -114,7 +114,7 @@ fn stage_bundled_conpty() {
             // directory comes back on the next build instead of staying gone
             // behind a cached build script.
             println!("cargo:rerun-if-changed={}", to.display());
-            // Re-copying would fail while a previously built tty7 is running,
+            // Re-copying would fail while a previously built hitty is running,
             // and the pair only changes when it is deliberately updated.
             let same = std::fs::metadata(&to)
                 .ok()

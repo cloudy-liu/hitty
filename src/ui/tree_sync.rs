@@ -4,15 +4,15 @@ use std::sync::Arc;
 
 use gpui::{App, Global};
 use gpui_component::WindowExt as _;
-use tty7_core::core::machine::{
+use hitty_core::core::machine::{
     AgentFacts, Axis as TreeAxis, LayoutDelta, Machine, PaneNode, PaneRecord, PaneSeed, Side,
     Tab as TreeTab, TabId, Workspace,
 };
-use tty7_core::daemon::control::{ControlClient, ControlRequest, ReplyOk};
-use tty7_core::host::HostId;
+use hitty_core::daemon::control::{ControlClient, ControlRequest, ReplyOk};
+use hitty_core::host::HostId;
 
 use crate::core::session::{Session, SessionPane, SessionTab, WorkspaceId, WorkspaceStore};
-use crate::ui::app::Tty7App;
+use crate::ui::app::HittyApp;
 use crate::ui::i18n::{L10nKey, t};
 use crate::ui::pane::{Pane, PaneSlot};
 
@@ -41,7 +41,7 @@ fn classify_tree_link(client: Option<Arc<ControlClient>>) -> TreeLink {
         Some(client)
             if client
                 .hello()
-                .has_feature(tty7_core::daemon::control::feature::MACHINE_TREE) =>
+                .has_feature(hitty_core::daemon::control::feature::MACHINE_TREE) =>
         {
             TreeLink::Ready(client)
         }
@@ -110,7 +110,7 @@ impl DesiredNode {
 }
 
 pub(crate) fn desired_tabs(
-    app: &Tty7App,
+    app: &HittyApp,
     cx: &App,
 ) -> (Vec<DesiredTab>, Option<TabId>, Vec<TabId>) {
     let remote = WorkspaceStore::all(cx)
@@ -996,7 +996,7 @@ pub(crate) struct TreeSync {
 
 impl Global for TreeSync {}
 
-pub(crate) fn sync_window(app: &Tty7App, cx: &mut App) {
+pub(crate) fn sync_window(app: &HittyApp, cx: &mut App) {
     let client_ws = app.workspace;
     if !cx.has_global::<crate::core::session::WorkspaceStore>() {
         return;
@@ -1138,7 +1138,7 @@ pub(crate) fn mark_window_informed(cx: &mut App, client_ws: WorkspaceId) {
         .informed = true;
 }
 
-fn adopt_tab_ids(app: &Tty7App, cx: &App) {
+fn adopt_tab_ids(app: &HittyApp, cx: &App) {
     let Some(TreeSync { windows }) = cx.try_global::<TreeSync>() else {
         return;
     };
@@ -1352,7 +1352,7 @@ pub(crate) fn fresh_workspace_name(cx: &App, host: HostId) -> String {
                 .filter_map(|w| w.label.clone()),
         );
     }
-    tty7_core::core::codename::unique(|name| taken.iter().any(|t| t == name))
+    hitty_core::core::codename::unique(|name| taken.iter().any(|t| t == name))
 }
 
 /// This workspace's layout, and the name the machine has for it.
@@ -1549,7 +1549,7 @@ fn desync(cx: &mut App, client_ws: WorkspaceId, why: &str) {
 }
 
 pub(crate) fn session_from_tree(
-    ws: &tty7_core::core::machine::Workspace,
+    ws: &hitty_core::core::machine::Workspace,
     panes: &[PaneRecord],
 ) -> Session {
     let tabs: Vec<SessionTab> = ws
@@ -1641,8 +1641,8 @@ pub(crate) fn hydrate_window_with_tabs(cx: &mut App, client_ws: WorkspaceId, sho
 
 /// Pulls this window's layout, then opens `path` as one more tab in it.
 ///
-/// This is what a launch carrying a directory does — Explorer's "Open in tty7",
-/// or `tty7 <PATH>` with no window up. Both halves are wanted: the layout the
+/// This is what a launch carrying a directory does — Explorer's "Open in hitty",
+/// or `hitty <PATH>` with no window up. Both halves are wanted: the layout the
 /// user left, and the folder they just double-clicked.
 pub(crate) fn hydrate_window_then_open(
     cx: &mut App,
@@ -1811,7 +1811,7 @@ fn hydrate_with(cx: &mut App, client_ws: WorkspaceId, adopt: Adopt, showing: Vec
 ///
 /// An empty window is also what a window with no tabs looks like, and the retry
 /// that would fill it in is as quiet as the failure was — so a server one
-/// dialect behind reads as "tty7 lost my tabs" with nothing anywhere to say
+/// dialect behind reads as "hitty lost my tabs" with nothing anywhere to say
 /// otherwise. This is that "otherwise", said in the window it happened to.
 fn say_why_the_window_is_empty(cx: &mut App, client_ws: WorkspaceId) {
     match cx.default_global::<TreeSync>().windows.get_mut(&client_ws) {
@@ -1841,7 +1841,7 @@ fn say_why_the_window_is_empty(cx: &mut App, client_ws: WorkspaceId) {
 /// link, or a create that lost its race with `start_prime` — and then no link
 /// ever comes back up to notice, and an empty window has nothing to edit. The
 /// window sat empty until the app was restarted, with every tab and every
-/// shell still on the machine: "tty7 lost my session" for a request that
+/// shell still on the machine: "hitty lost my session" for a request that
 /// needed asking twice.
 ///
 /// Returns whether the debt was taken on. A superseded attempt gets `false`:
@@ -1961,7 +1961,7 @@ fn pull_workspace(
     // A name the user typed beats a rolled one. This create and `start_prime`'s
     // race each other (see the `Err` arm below), so both have to offer it —
     // whichever wins, the workspace ends up called what was asked for.
-    let name = chosen.unwrap_or_else(|| tty7_core::core::codename::unique(|n| taken.contains(&n)));
+    let name = chosen.unwrap_or_else(|| hitty_core::core::codename::unique(|n| taken.contains(&n)));
     match client.call(ControlRequest::WorkspaceCreate {
         name: Some(name),
         workspace: Some(machine_ws),
@@ -2241,7 +2241,7 @@ fn settle_rebuild(
     }
 }
 
-/// Someone else removed this workspace from its machine — `tty7 ws rm`, or
+/// Someone else removed this workspace from its machine — `hitty ws rm`, or
 /// another client.
 ///
 /// With no window on it, it stops existing here too. Left in the store it
@@ -2432,7 +2432,7 @@ pub(crate) fn note_instance(seen: &mut String, instance: &str) -> bool {
     let before = std::mem::replace(seen, instance.to_string());
     if !before.is_empty() && before != instance {
         log::info!(
-            "the tty7-server on this machine is a new process ({before} → {instance}); \
+            "the hitty-server on this machine is a new process ({before} → {instance}); \
              its panes are gone"
         );
         return true;
@@ -2477,7 +2477,7 @@ pub(crate) fn resync_local_windows_from_tree(cx: &mut App) {
     }
 }
 
-impl Tty7App {
+impl HittyApp {
     pub(crate) fn apply_layout_delta(
         &mut self,
         delta: &LayoutDelta,
@@ -2858,7 +2858,7 @@ mod tests {
             let (ws, view) = primed_window(cx, Some("deploy"));
             let epoch = cx.default_global::<TreeSync>().windows[&ws].epoch;
             let pulled = Machine {
-                workspaces: vec![tty7_core::core::machine::Workspace {
+                workspaces: vec![hitty_core::core::machine::Workspace {
                     id: ws,
                     name: Some("keen-marten".into()),
                     ..Default::default()
@@ -2916,8 +2916,8 @@ mod tests {
         cx: &mut App,
         chosen: Option<&str>,
     ) -> (WorkspaceId, crate::core::session::WindowView) {
-        tty7_core::core::config::set_config_dir(
-            std::env::temp_dir().join(format!("tty7-chosen-name-{}", std::process::id())),
+        hitty_core::core::config::set_config_dir(
+            std::env::temp_dir().join(format!("hitty-chosen-name-{}", std::process::id())),
         );
         let view = crate::core::session::WindowView::default();
         let ws = view.id;
@@ -2945,9 +2945,9 @@ mod tests {
     #[cfg(unix)]
     #[test]
     fn a_peer_without_the_machine_tree_bit_classifies_as_unserved() {
-        use tty7_core::daemon::control::ControlHello;
-        use tty7_core::host::local::LocalHost;
-        use tty7_core::host::server::{Services, serve_with};
+        use hitty_core::daemon::control::ControlHello;
+        use hitty_core::host::local::LocalHost;
+        use hitty_core::host::server::{Services, serve_with};
 
         let connect = |services: Services| {
             let (server, client) = std::os::unix::net::UnixStream::pair().unwrap();
@@ -2956,7 +2956,7 @@ mod tests {
             });
             let hello = ControlHello::host_rpc("test-token", "test-host");
             Arc::new(
-                tty7_core::daemon::control::ControlClient::over_unix(
+                hitty_core::daemon::control::ControlClient::over_unix(
                     client,
                     &hello,
                     Box::new(|_| {}),
@@ -2971,10 +2971,10 @@ mod tests {
             TreeLink::Unserved
         ));
 
-        let dir = std::env::temp_dir().join(format!("tty7-treelink-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("hitty-treelink-{}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
-        let store = tty7_core::core::machine::MachineStore::open(
-            dir.join(tty7_core::core::machine::MACHINE_FILE),
+        let store = hitty_core::core::machine::MachineStore::open(
+            dir.join(hitty_core::core::machine::MACHINE_FILE),
         );
         let serving = connect(Services::with_machine(store));
         assert!(matches!(
@@ -3070,7 +3070,7 @@ mod tests {
     /// holds — geometry, the label, a remote binding — so the fence in front of
     /// it ("no window is showing this workspace") is the whole safety of it.
     ///
-    /// The other half needs a live `Tty7App` in a real window to reach, so it
+    /// The other half needs a live `HittyApp` in a real window to reach, so it
     /// is not tested here; what it does is hydrate, which the hydration tests
     /// cover, and it touches neither the store nor the registry.
     #[gpui::test]
@@ -3080,8 +3080,8 @@ mod tests {
         cx.update(|cx| {
             // Removing a workspace saves the views, and a test has no business
             // writing the real ones.
-            let _ = tty7_core::core::config::set_config_dir(
-                std::env::temp_dir().join(format!("tty7-deleted-test-{}", std::process::id())),
+            let _ = hitty_core::core::config::set_config_dir(
+                std::env::temp_dir().join(format!("hitty-deleted-test-{}", std::process::id())),
             );
             crate::ui::windows::WindowRegistry::init(cx);
 
@@ -3398,8 +3398,8 @@ mod tests {
         cx: &mut gpui::TestAppContext,
     ) {
         cx.update(|cx| {
-            tty7_core::core::config::set_config_dir(
-                std::env::temp_dir().join(format!("tty7-prime-name-{}", std::process::id())),
+            hitty_core::core::config::set_config_dir(
+                std::env::temp_dir().join(format!("hitty-prime-name-{}", std::process::id())),
             );
             let view = crate::core::session::WindowView::default();
             let ws = view.id;
@@ -3448,8 +3448,8 @@ mod tests {
     #[gpui::test]
     fn the_backoff_count_ends_with_the_run_of_failures(cx: &mut gpui::TestAppContext) {
         cx.update(|cx| {
-            let _ = tty7_core::core::config::set_config_dir(
-                std::env::temp_dir().join(format!("tty7-backoff-count-{}", std::process::id())),
+            let _ = hitty_core::core::config::set_config_dir(
+                std::env::temp_dir().join(format!("hitty-backoff-count-{}", std::process::id())),
             );
             let view = crate::core::session::WindowView::default();
             let ws = view.id;
@@ -4798,9 +4798,9 @@ mod tests {
 
     #[test]
     fn a_lowered_leaf_carries_its_pane_id_and_its_agent_whatever_live_says() {
-        use tty7_core::core::cli_agent::CLIAgent;
+        use hitty_core::core::cli_agent::CLIAgent;
         let tab_id = TabId::new();
-        let ws = tty7_core::core::machine::Workspace {
+        let ws = hitty_core::core::machine::Workspace {
             tabs: vec![TreeTab {
                 id: tab_id,
                 name: Some("build".into()),
@@ -4899,7 +4899,7 @@ mod tests {
     #[test]
     fn a_pane_the_tree_calls_dead_still_goes_down_by_its_id() {
         let tab_id = TabId::new();
-        let ws = tty7_core::core::machine::Workspace {
+        let ws = hitty_core::core::machine::Workspace {
             tabs: vec![TreeTab {
                 id: tab_id,
                 name: None,
@@ -4929,7 +4929,7 @@ mod tests {
 
     #[test]
     fn a_dangling_active_tab_in_the_pulled_tree_falls_back_to_the_first() {
-        let ws = tty7_core::core::machine::Workspace {
+        let ws = hitty_core::core::machine::Workspace {
             tabs: vec![TreeTab {
                 id: TabId::new(),
                 name: None,

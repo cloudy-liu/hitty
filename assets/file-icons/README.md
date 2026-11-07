@@ -21,7 +21,7 @@ default) and rasterises the multi-colour SVGs at the device size.
 ```powershell
 git clone --depth 1 --branch <tag> https://github.com/miguelsolorio/vscode-symbols
 python scripts/sync-symbols-icons.py vscode-symbols
-cargo test -p tty7 --bin tty7-app file_icons
+cargo test -p hitty --bin hitty-app file_icons
 ```
 
 An installed copy of the extension works as the source too

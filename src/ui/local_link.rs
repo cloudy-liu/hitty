@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use gpui::{App, Global};
-use tty7_core::daemon::control::ControlClient;
+use hitty_core::daemon::control::ControlClient;
 
 use crate::ui::remote_workspace::Backoff;
 
@@ -135,7 +135,7 @@ impl LocalLink {
                         link.next_attempt = None;
                         crate::ui::machine_mirror::MachineMirrors::refresh(
                             cx,
-                            tty7_core::host::HostId::LOCAL,
+                            hitty_core::host::HostId::LOCAL,
                         );
                         if restarted {
                             // The link installed just above is this new
@@ -148,7 +148,7 @@ impl LocalLink {
                             // tabs on screen never claims back.
                             crate::ui::tree_sync::resync_local_windows_from_tree(cx);
                         } else {
-                            crate::ui::tree_sync::on_link_up(cx, tty7_core::host::HostId::LOCAL);
+                            crate::ui::tree_sync::on_link_up(cx, hitty_core::host::HostId::LOCAL);
                         }
                     }
                     Err(e) => match dialect_refusal(&e) {
@@ -209,27 +209,27 @@ fn due(
 }
 
 fn connect_blocking() -> std::io::Result<Arc<ControlClient>> {
-    use tty7_core::daemon::control::ControlHello;
+    use hitty_core::daemon::control::ControlHello;
 
     crate::daemon::spawn::ensure_running().map_err(std::io::Error::other)?;
     let hello = ControlHello::gui(uuid::Uuid::new_v4().to_string(), "this computer");
-    let sink: tty7_core::daemon::control::EventSink = Box::new(local_event_sink);
+    let sink: hitty_core::daemon::control::EventSink = Box::new(local_event_sink);
     #[cfg(unix)]
     let client = {
         let stream = std::os::unix::net::UnixStream::connect(
-            tty7_core::host::server::control_socket_path()?,
+            hitty_core::host::server::control_socket_path()?,
         )?;
         // Every other client socket goes through `tune` on its way up — 256 KiB
         // buffers on Unix, nodelay on Windows — because it is `connect_endpoint`
         // that calls it, and this is the one connect that does not go through
         // there. It is also the busiest: the control link carries every event
         // the window redraws from.
-        tty7_core::daemon::transport::tune(&stream);
+        hitty_core::daemon::transport::tune(&stream);
         ControlClient::over_unix(stream, &hello, sink)?
     };
     #[cfg(windows)]
     let client =
-        ControlClient::over_tcp(tty7_core::host::server::connect_control()?, &hello, sink)?;
+        ControlClient::over_tcp(hitty_core::host::server::connect_control()?, &hello, sink)?;
     Ok(Arc::new(client))
 }
 
@@ -237,12 +237,12 @@ fn connect_blocking() -> std::io::Result<Arc<ControlClient>> {
 ///
 /// It arrives as the handshake's own wording rather than a typed error, so this
 /// is where the string becomes the fact again.
-fn dialect_refusal(e: &std::io::Error) -> Option<tty7_core::daemon::control::DialectRefusal> {
-    tty7_core::daemon::control::parse_dialect_refusal(&e.to_string())
+fn dialect_refusal(e: &std::io::Error) -> Option<hitty_core::daemon::control::DialectRefusal> {
+    hitty_core::daemon::control::parse_dialect_refusal(&e.to_string())
 }
 
-fn local_event_sink(event: tty7_core::daemon::control::ControlEvent) {
-    tty7_core::daemon::control::observe_event(tty7_core::host::HostId::LOCAL, event);
+fn local_event_sink(event: hitty_core::daemon::control::ControlEvent) {
+    hitty_core::daemon::control::observe_event(hitty_core::host::HostId::LOCAL, event);
 }
 
 #[cfg(test)]

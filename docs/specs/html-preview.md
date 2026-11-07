@@ -34,10 +34,10 @@ dialogs and menus must remain usable above the preview.
 Linux retains source editing and does not link WRY, GTK or WebKitGTK through
 this feature. Its potential integration paths are distinct:
 
-| Environment | Underlying path | ctty7 status |
+| Environment | Underlying path | hitty status |
 | --- | --- | --- |
 | X11 | WRY supports native child windows; GTK initialization and event-loop integration are still needed. | Not implemented or validated with GPUI. |
-| XWayland on a Wayland desktop | May use the X11 path when ctty7 itself runs its X11 backend. | Future compatibility path; not native Wayland support. |
+| XWayland on a Wayland desktop | May use the X11 path when hitty itself runs its X11 backend. | Future compatibility path; not native Wayland support. |
 | Native Wayland | WRY offers a GTK container approach. | The current GPUI window and adapter have no ready integration; requires separate design and validation. |
 
 See the [WRY platform notes](https://github.com/tauri-apps/wry#child-webviews)

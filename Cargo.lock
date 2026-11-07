@@ -11141,8 +11141,8 @@ dependencies = [
 ]
 
 [[package]]
-name = "tty7"
-version = "0.11.1"
+name = "hitty"
+version = "0.1.0"
 dependencies = [
  "alacritty_terminal",
  "anyhow",
@@ -11193,7 +11193,7 @@ dependencies = [
  "toml 0.8.23",
  "tray-icon",
  "tree-sitter",
- "tty7-core",
+ "hitty-core",
  "unicode-segmentation",
  "unicode-width",
  "url",
@@ -11206,8 +11206,8 @@ dependencies = [
 ]
 
 [[package]]
-name = "tty7-cli"
-version = "0.11.1"
+name = "hitty-cli"
+version = "0.1.0"
 dependencies = [
  "alacritty_terminal",
  "anyhow",
@@ -11215,14 +11215,14 @@ dependencies = [
  "libc",
  "serde_json",
  "tempfile",
- "tty7-core",
+ "hitty-core",
  "unicode-width",
  "windows-sys 0.59.0",
 ]
 
 [[package]]
-name = "tty7-core"
-version = "0.11.1"
+name = "hitty-core"
+version = "0.1.0"
 dependencies = [
  "anyhow",
  "base64 0.22.1",
@@ -11258,12 +11258,12 @@ dependencies = [
 ]
 
 [[package]]
-name = "tty7-server"
-version = "0.11.1"
+name = "hitty-server"
+version = "0.1.0"
 dependencies = [
  "libc",
  "tempfile",
- "tty7-core",
+ "hitty-core",
 ]
 
 [[package]]

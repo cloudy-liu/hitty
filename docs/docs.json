@@ -1,7 +1,7 @@
 {
   "$schema": "https://mintlify.com/docs.json",
   "theme": "mint",
-  "name": "ctty7",
+  "name": "Hitty",
   "description": "A terminal workbench: persistent sessions, remote work, agents.",
   "colors": {
     "primary": "#0FA968",
@@ -12,7 +12,7 @@
   "logo": {
     "light": "/logo/logo.svg",
     "dark": "/logo/logo.svg",
-    "href": "https://github.com/cloudy-liu/ctty7"
+    "href": "https://github.com/cloudy-liu/hitty"
   },
   "navigation": {
     "tabs": [
@@ -90,7 +90,7 @@
         "tab": "CLI",
         "groups": [
           {
-            "group": "The tty7 command",
+            "group": "The hitty command",
             "pages": [
               "cli/overview",
               "cli/reference",
@@ -121,22 +121,22 @@
     "links": [
       {
         "label": "GitHub",
-        "href": "https://github.com/cloudy-liu/ctty7"
+        "href": "https://github.com/cloudy-liu/hitty"
       },
       {
-        "label": "Upstream tty7 Discord",
+        "label": "Upstream hitty Discord",
         "href": "https://discord.gg/s3dethqz2V"
       }
     ],
     "primary": {
       "type": "button",
       "label": "Download",
-      "href": "https://github.com/cloudy-liu/ctty7/releases"
+      "href": "https://github.com/cloudy-liu/hitty/releases"
     }
   },
   "footer": {
     "socials": {
-      "github": "https://github.com/cloudy-liu/ctty7",
+      "github": "https://github.com/cloudy-liu/hitty",
       "discord": "https://discord.gg/s3dethqz2V"
     }
   }

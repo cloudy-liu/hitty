@@ -213,7 +213,7 @@ impl Theme {
         (r as u32) << 16 | (g as u32) << 8 | b as u32
     }
 
-    /// Clears a seed colour for use as ink on any of tty7's neutral fills.
+    /// Clears a seed colour for use as ink on any of hitty's neutral fills.
     ///
     /// An error line lands on a popover or a sidebar row as often as on the
     /// window, and both of those fills sit a step toward the foreground. Clear

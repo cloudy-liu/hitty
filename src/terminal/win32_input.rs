@@ -2,7 +2,7 @@
 //!
 //! Windows ConPTY asks the host to encode keys as `KEY_EVENT_RECORD`s
 //! (`CSI Vk;Sc;Uc;Kd;Cs;Rc _`) so Shift+Enter is distinguishable from Enter.
-//! WezTerm honours that request; tty7 used to ignore it, so Codex on Windows
+//! WezTerm honours that request; hitty used to ignore it, so Codex on Windows
 //! saw Shift+Enter as a plain CR. Kitty remains the higher-priority encoding
 //! when an application has negotiated it (Claude Code, Cursor, Agy).
 

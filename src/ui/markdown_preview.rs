@@ -32,7 +32,7 @@ use crate::core::{
 };
 use crate::ui::i18n::{L10nKey, t};
 use crate::ui::{
-    app::Tty7App,
+    app::HittyApp,
     host_ops::{HostOps, SharedHost},
 };
 use gpui_component::{WindowExt as _, text::TextViewImageSource};
@@ -52,7 +52,7 @@ fn extensions() -> gpui_component::text::MarkdownExtensions {
                     let [Node::Image(image)] = paragraph.children.as_slice() else {
                         return None;
                     };
-                    if !image.url.starts_with("ctty7-mermaid://") {
+                    if !image.url.starts_with("hitty-mermaid://") {
                         return None;
                     }
                     Some(
@@ -70,7 +70,7 @@ impl Global for Registry {}
 struct ReadingFonts(Arc<Vec<String>>);
 impl Global for ReadingFonts {}
 
-impl crate::ui::app::Tty7App {
+impl crate::ui::app::HittyApp {
     pub(crate) fn set_markdown_theme(&mut self, id: &str, cx: &mut Context<Self>) {
         if !cx
             .try_global::<Registry>()
@@ -160,14 +160,14 @@ fn rust_reading_language() -> SharedString {
         .get_or_init(|| {
             let registry = gpui_component::highlighter::LanguageRegistry::singleton();
             let mut config = registry.language("rust").expect("bundled Rust grammar");
-            config.name = "ctty7-markdown-rust".into();
+            config.name = "hitty-markdown-rust".into();
             let captures = regex::Regex::new(r"@type(?:\.[A-Za-z0-9_.-]+)?\b").unwrap();
             config.highlights = format!(
                 "(reference_type \"&\" @github.rust.reference)\n{}",
                 captures.replace_all(&config.highlights, "@github.rust.type")
             )
             .into();
-            registry.register("ctty7-markdown-rust", &config);
+            registry.register("hitty-markdown-rust", &config);
             config.name
         })
         .clone()
@@ -472,7 +472,7 @@ pub(crate) fn reading_style(
 }
 
 /// The bundled GitHub palette uses `#f0f6fc` for dark-mode body text. That is
-/// faithful to github.com, but it is brighter than tty7's surrounding dark
+/// faithful to github.com, but it is brighter than hitty's surrounding dark
 /// surfaces. Keep GitHub's semantic and syntax colors while borrowing the
 /// application's neutral foreground for the Markdown reading surface.
 fn align_dark_github_foreground(
@@ -566,7 +566,7 @@ pub(crate) struct MarkdownPreview {
     source: Entity<InputState>,
     host: SharedHost,
     path: PathBuf,
-    app: gpui::WeakEntity<Tty7App>,
+    app: gpui::WeakEntity<HittyApp>,
     images: HashMap<PathBuf, TextViewImageSource>,
     diagrams: HashMap<String, TextViewImageSource>,
     diagram_views: HashMap<String, Entity<crate::ui::markdown_mermaid::DiagramViewer>>,
@@ -606,7 +606,7 @@ impl MarkdownPreview {
         index: usize,
         cx: &App,
     ) -> (gpui::ImageSource, SharedString, f32) {
-        let TextViewImageSource::Ready(image) = &self.diagrams[&format!("ctty7-mermaid://{index}")]
+        let TextViewImageSource::Ready(image) = &self.diagrams[&format!("hitty-mermaid://{index}")]
         else {
             panic!("profile diagram must be ready");
         };
@@ -632,7 +632,7 @@ impl MarkdownPreview {
         source: Entity<InputState>,
         host: SharedHost,
         path: PathBuf,
-        app: gpui::WeakEntity<Tty7App>,
+        app: gpui::WeakEntity<HittyApp>,
         mermaid_enabled: bool,
         cx: &mut Context<Self>,
     ) -> Self {
@@ -730,7 +730,7 @@ impl MarkdownPreview {
             _ => 2.,
         };
         let index = url
-            .strip_prefix("ctty7-mermaid://")?
+            .strip_prefix("hitty-mermaid://")?
             .parse::<usize>()
             .ok()?;
         let source = self.source.read(cx).text().to_string();
@@ -1020,7 +1020,7 @@ impl MarkdownPreview {
         let mut count = 0;
         let processed = Self::mermaid_fences()
             .replace_all(content, |_: &regex::Captures| {
-                let image = format!("\n![Mermaid diagram](ctty7-mermaid://{count})\n");
+                let image = format!("\n![Mermaid diagram](hitty-mermaid://{count})\n");
                 count += 1;
                 image
             })
@@ -1047,7 +1047,7 @@ impl MarkdownPreview {
             }
         }
         self.diagrams = (0..count)
-            .map(|i| (format!("ctty7-mermaid://{i}"), TextViewImageSource::Loading))
+            .map(|i| (format!("hitty-mermaid://{i}"), TextViewImageSource::Loading))
             .collect();
         self.text.update(cx, |text, cx| {
             text.set_text(&processed, cx);
@@ -1107,7 +1107,7 @@ impl MarkdownPreview {
         let processed = mermaid_fence
             .replace_all(content, |caps: &regex::Captures| {
                 let source = &caps[1];
-                let url = format!("ctty7-mermaid://{index}");
+                let url = format!("hitty-mermaid://{index}");
                 index += 1;
                 match crate::ui::markdown_mermaid::render_mermaid(source, theme, dark) {
                     Ok(svg) => {
@@ -1542,6 +1542,7 @@ impl Render for MarkdownPreview {
 mod tests {
     use super::*;
     use gpui::{TestAppContext, VisualTestContext};
+    use hitty_core::host::{self, Host, HostId, Meta};
     use std::{
         io,
         path::Path,
@@ -1552,7 +1553,6 @@ mod tests {
         },
         time::{Duration, Instant},
     };
-    use tty7_core::host::{self, Host, HostId, Meta};
 
     #[test]
     fn markdown_mermaid_crlf_fences_reach_the_renderer() {
@@ -1565,7 +1565,7 @@ mod tests {
         let (processed, diagrams) =
             MarkdownPreview::preprocess_mermaid(content, &markdown_theme::builtin(), false);
         assert_eq!(processed, placeholder);
-        let svg = &diagrams["ctty7-mermaid://0"];
+        let svg = &diagrams["hitty-mermaid://0"];
         assert!(svg.contains("<svg"));
         assert!(svg.contains("choose command"));
         assert!(svg.contains("stream result"));
@@ -1579,7 +1579,7 @@ mod tests {
         assert!(diagrams.is_empty());
         assert!(processed.starts_with("```mermaid\nnot-a-diagram\r\n```"));
         assert!(processed.contains("Mermaid render error:"));
-        assert!(!processed.contains("ctty7-mermaid://"));
+        assert!(!processed.contains("hitty-mermaid://"));
     }
 
     #[gpui::test]
@@ -1600,7 +1600,7 @@ mod tests {
             let reading = vcx.new(|cx| {
                 MarkdownPreview::new(
                     source.clone(),
-                    tty7_core::host::local::LocalHost::new(),
+                    hitty_core::host::local::LocalHost::new(),
                     PathBuf::from("/repo/SKILL.md"),
                     app.downgrade(),
                     mermaid_enabled,
@@ -2743,11 +2743,11 @@ mod tests {
         text.update(&mut vcx, |text, cx| text.select_all(cx));
         let parsed = text.read_with(&vcx, |text, _| text.source());
         assert!(parsed.starts_with("<table style=\"white-space: normal\">\n"));
-        assert!(parsed.contains("ctty7-mermaid://0"));
+        assert!(parsed.contains("hitty-mermaid://0"));
         let selected = text.read_with(&vcx, |text, _| text.selected_text());
         let first = reading.read_with(
             &vcx,
-            |reading, _| match &reading.diagrams["ctty7-mermaid://0"] {
+            |reading, _| match &reading.diagrams["hitty-mermaid://0"] {
                 TextViewImageSource::Ready(gpui::ImageSource::Image(image)) => image.clone(),
                 _ => panic!("diagram SVG must be ready"),
             },
@@ -2772,7 +2772,7 @@ mod tests {
                 assert_eq!(reading.source.read(cx).text().to_string(), content);
                 assert!(reading.images.is_empty());
                 let TextViewImageSource::Ready(gpui::ImageSource::Image(image)) =
-                    &reading.diagrams["ctty7-mermaid://0"]
+                    &reading.diagrams["hitty-mermaid://0"]
                 else {
                     panic!("diagram")
                 };
@@ -2996,7 +2996,7 @@ mod tests {
             app.tabs
                 .push(crate::ui::app::Tab::new(crate::ui::pane::Pane::Empty));
             app.active = app.tabs.len() - 1;
-            app.editor_open_on_host(tty7_core::host::local::LocalHost::new(), &path, window, cx);
+            app.editor_open_on_host(hitty_core::host::local::LocalHost::new(), &path, window, cx);
         });
         vcx.simulate_resize(gpui::size(px(1000.), px(800.)));
         settle(&mut vcx, |cx| {
@@ -3055,7 +3055,7 @@ mod tests {
             app.tabs
                 .push(crate::ui::app::Tab::new(crate::ui::pane::Pane::Empty));
             app.active = app.tabs.len() - 1;
-            app.editor_open_on_host(tty7_core::host::local::LocalHost::new(), &path, window, cx);
+            app.editor_open_on_host(hitty_core::host::local::LocalHost::new(), &path, window, cx);
         });
         vcx.simulate_resize(gpui::size(px(1000.), px(800.)));
         settle(&mut vcx, |cx| {

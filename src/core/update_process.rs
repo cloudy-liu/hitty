@@ -183,7 +183,7 @@ mod platform {
 
     impl Group {
         pub(super) fn prepare(command: &mut Command) -> io::Result<Self> {
-            const PARENT: &str = "TTY7_UPDATE_COMMAND_PARENT";
+            const PARENT: &str = "HITTY_UPDATE_COMMAND_PARENT";
             // The GUI supervises the verifier, which supervises ditto,
             // codesign or AppImage extraction. Those nested commands must
             // stay in the outer group so cancelling it reaches every child.
@@ -392,17 +392,17 @@ mod tests {
         let mut command = Command::new(std::env::current_exe().unwrap());
         command
             .args(["--exact", test_name, "--ignored", "--nocapture"])
-            .env("TTY7_UPDATE_PROCESS_FIXTURE", mode)
-            .env("TTY7_UPDATE_PROCESS_PID_FILE", pid_file);
+            .env("HITTY_UPDATE_PROCESS_FIXTURE", mode)
+            .env("HITTY_UPDATE_PROCESS_PID_FILE", pid_file);
         command
     }
 
     #[test]
     #[ignore = "child process fixture, invoked by the other tests"]
     fn process_fixture() {
-        let path = std::env::var_os("TTY7_UPDATE_PROCESS_PID_FILE").unwrap();
+        let path = std::env::var_os("HITTY_UPDATE_PROCESS_PID_FILE").unwrap();
         let path = Path::new(&path);
-        match std::env::var("TTY7_UPDATE_PROCESS_FIXTURE")
+        match std::env::var("HITTY_UPDATE_PROCESS_FIXTURE")
             .unwrap()
             .as_str()
         {

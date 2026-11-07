@@ -9,7 +9,7 @@ use std::path::PathBuf;
 use crate::core::config::{Config, RightPanelTab};
 use crate::daemon::protocol::PaneProcs;
 use crate::ui::app::{
-    CONTENT_INSET, TILE_GLYPH_XS, TILE_SIZE, TILE_SIZE_SM, TILE_SIZE_XS, Tty7App,
+    CONTENT_INSET, HittyApp, TILE_GLYPH_XS, TILE_SIZE, TILE_SIZE_SM, TILE_SIZE_XS,
     tile_trailing_inset, tile_trailing_inset_sm,
 };
 use crate::ui::i18n::{L10nKey, t};
@@ -253,7 +253,7 @@ fn info_label_column(rows: &[InfoRow], window: &mut Window, cx: &gpui::App) -> g
     px(widest.clamp(min, max).ceil())
 }
 
-impl Tty7App {
+impl HittyApp {
     pub(crate) fn right_panel_open(&self, _cx: &gpui::App) -> bool {
         self.right_panel_visible && !self.tabs.is_empty()
     }
@@ -1589,7 +1589,7 @@ mod tests {
     #[test]
     fn the_head_and_leaf_rejoin_into_the_path_they_came_from() {
         for p in [
-            "~/repo/tty7",
+            "~/repo/hitty",
             "/private/tmp/claude-501/a-very-long-directory/and-another-level",
             "/",
             "relative",

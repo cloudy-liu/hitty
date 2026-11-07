@@ -4,13 +4,13 @@ use std::time::{Duration, Instant};
 
 use gpui::{Context, PromptLevel, Window};
 use gpui_component::WindowExt as _;
-use tty7_core::host::HostId;
-use tty7_core::host::remote::RemoteHost;
+use hitty_core::host::HostId;
+use hitty_core::host::remote::RemoteHost;
 
 use crate::core::session::{RemoteRef, RemoteTarget, WorkspaceId, WorkspaceStore};
 use crate::daemon::control::{ControlEvent, ControlRequest, ReplyOk};
 use crate::daemon::install::InstallDecision;
-use crate::ui::app::Tty7App;
+use crate::ui::app::HittyApp;
 use crate::ui::i18n::{L10nKey, t, t_fmt};
 use crate::ui::remote_connect::{self, HostChoice, RemoteWorkspaceRow};
 
@@ -44,7 +44,7 @@ pub enum RemoteStatus {
         by: String,
     },
     Failed(String),
-    /// The machine answered, and answered as tty7 — with a server the other
+    /// The machine answered, and answered as hitty — with a server the other
     /// side of a control-dialect bump. Carries the refusal verbatim so it can
     /// be restated for a reader. Parked like `RouteLost`, because a retry is
     /// just as hopeless: nothing about either build changes between attempts.
@@ -98,7 +98,7 @@ impl RemoteStatus {
                 L10nKey::RemoteStripFailed,
                 &[("machine", machine), ("error", e)],
             )),
-            // The protocol layer's wording reads like the far end is not tty7
+            // The protocol layer's wording reads like the far end is not hitty
             // at all, and it is 20 words of dialect numbers. Say which side is
             // behind instead. Nothing becomes `ServerMismatch` unless the
             // refusal parsed — `is_dialect_refusal` is that same parse — so the
@@ -158,7 +158,7 @@ impl RemoteStatus {
 /// Both directions do the same thing — put *this* build's server on that
 /// machine — and that is an update only while the machine is behind. On one
 /// that is ahead it is a downgrade, and the copy beside the button says so:
-/// updating tty7 here is the first suggestion, replacing the server there the
+/// updating hitty here is the first suggestion, replacing the server there the
 /// second. The button is the second one, so it should not wear the first one's
 /// word.
 pub(crate) fn mismatch_action_key(refusal: &str) -> L10nKey {
@@ -333,7 +333,7 @@ impl AuthSheetQueue {
     }
 }
 
-impl Tty7App {
+impl HittyApp {
     pub(crate) fn spawn_host(&self, cx: &gpui::App) -> HostId {
         WorkspaceStore::host_of(cx, self.workspace)
     }
@@ -862,7 +862,7 @@ impl Tty7App {
         let host = header.target.origin_key();
         let host_id = target.host_id();
         let target_for_error = target.clone();
-        log::info!("restarting tty7's server on {label} at the user's request");
+        log::info!("restarting hitty's server on {label} at the user's request");
         let running = Arc::new(std::sync::atomic::AtomicBool::new(true));
         self.watch_for_restart_consent(host_id, running.clone(), cx);
         cx.spawn(async move |this, cx| {
@@ -879,7 +879,7 @@ impl Tty7App {
                     this.server_replaced(&target_for_error, &label, &host, cx);
                 }
                 Err(e) => {
-                    log::warn!("could not restart tty7's server on {label}: {e}");
+                    log::warn!("could not restart hitty's server on {label}: {e}");
                     this.report_remote_host_error(Some(&target_for_error), &label, &e, window, cx);
                 }
             });
@@ -936,7 +936,7 @@ impl Tty7App {
         let host = route.target.origin_key();
         let host_id = target.host_id();
         let target_for_error = target.clone();
-        log::info!("replacing tty7's server on {label} at the user's request");
+        log::info!("replacing hitty's server on {label} at the user's request");
         let running = Arc::new(std::sync::atomic::AtomicBool::new(true));
         self.watch_for_restart_consent(host_id, running.clone(), cx);
         cx.spawn(async move |this, cx| {
@@ -953,7 +953,7 @@ impl Tty7App {
                     this.server_replaced(&target_for_error, &label, &host, cx);
                 }
                 Err(e) => {
-                    log::warn!("could not replace tty7's server on {label}: {e}");
+                    log::warn!("could not replace hitty's server on {label}: {e}");
                     this.report_remote_host_error(Some(&target_for_error), &label, &e, window, cx);
                 }
             });
@@ -1034,7 +1034,7 @@ impl Tty7App {
     fn prompt_remote_daemon_mismatch_later(&self, cx: &mut Context<Self>) {
         cx.spawn(async move |this, cx| {
             let _ = this.update_in(cx, |_, window, cx| {
-                Tty7App::prompt_remote_daemon_mismatch(window, cx);
+                HittyApp::prompt_remote_daemon_mismatch(window, cx);
             });
         })
         .detach();
@@ -2454,7 +2454,7 @@ mod tests {
     /// A refusal as the daemon writes it — what `finish_connect` receives when
     /// the machine's server is the other side of a dialect bump.
     fn a_dialect_refusal() -> String {
-        "build-box answered, but not as a tty7 server: control peer (build 26.7.7-nightly) \
+        "build-box answered, but not as a hitty server: control peer (build 26.7.7-nightly) \
          speaks control v4, this build speaks v5"
             .to_string()
     }
@@ -2463,9 +2463,9 @@ mod tests {
     /// a thread — what a connect that finally landed hands `finish_connect`.
     #[cfg(unix)]
     fn fake_connected(connection_key: &str) -> remote_connect::Connected {
-        use tty7_core::daemon::control::ControlHello;
-        use tty7_core::host::local::LocalHost;
-        use tty7_core::host::server::{Services, serve_with};
+        use hitty_core::daemon::control::ControlHello;
+        use hitty_core::host::local::LocalHost;
+        use hitty_core::host::server::{Services, serve_with};
 
         let (server, client) = std::os::unix::net::UnixStream::pair().unwrap();
         std::thread::spawn(move || {
@@ -2504,7 +2504,7 @@ mod tests {
             crate::ui::windows::WindowRegistry::register(cx, app.workspace, handle, weak);
         });
         let target = RemoteTarget::Alias {
-            alias: "tty7-test-refused-box".into(),
+            alias: "hitty-test-refused-box".into(),
         };
         let choice = HostChoice {
             target: target.clone(),
@@ -2527,7 +2527,7 @@ mod tests {
         // whether over `server_replaced`'s kick or the band's own retry, it
         // ends in the same place.
         app.update_in(&mut vcx, |app, window, cx| {
-            app.finish_connect(Ok(fake_connected("tty7-test-refused-box")), window, cx);
+            app.finish_connect(Ok(fake_connected("hitty-test-refused-box")), window, cx);
         });
 
         app.update(cx, |app, cx| {
@@ -2549,7 +2549,7 @@ mod tests {
     fn a_server_replacement_connects_back_for_the_parked_create(cx: &mut gpui::TestAppContext) {
         let (app, mut vcx) = crate::ui::app::test_window::harness(cx);
         let target = RemoteTarget::Alias {
-            alias: "tty7-test-refused-box".into(),
+            alias: "hitty-test-refused-box".into(),
         };
         let choice = HostChoice {
             target: target.clone(),
@@ -2569,7 +2569,7 @@ mod tests {
         });
 
         app.update(cx, |app, cx| {
-            app.server_replaced(&target, "refused-box", "tty7-test-unknown-origin", cx);
+            app.server_replaced(&target, "refused-box", "hitty-test-unknown-origin", cx);
             // The old refusal is still `Failed { target }` too, so the target
             // alone proves nothing — what has to change is the failure itself:
             // a fresh attempt ran and left its own outcome in its place.
@@ -2598,7 +2598,7 @@ mod tests {
     #[gpui::test]
     fn a_restart_retires_the_mismatch_note_it_answers(cx: &mut gpui::TestAppContext) {
         cx.update(|cx| {
-            let origin = "tty7-test-stale-origin";
+            let origin = "hitty-test-stale-origin";
             crate::daemon::install::record_remote_mismatches(vec![
                 crate::daemon::install::MismatchedRemoteDaemon {
                     host: origin.into(),
@@ -3220,7 +3220,7 @@ mod tests {
             "control peer (build 26.8.1) speaks control v{peer}, this build speaks v{ours}"
         );
         t_fmt(
-            L10nKey::RemoteHostNotTty7,
+            L10nKey::RemoteHostNotHitty,
             &[("machine", "build-box"), ("error", &error)],
         )
     }

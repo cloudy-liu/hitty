@@ -7,7 +7,7 @@ use std::{path::PathBuf, time::Duration};
 
 use crate::{
     core::config::Config,
-    ui::{app::Tty7App, markdown_preview::MarkdownPreview},
+    ui::{app::HittyApp, markdown_preview::MarkdownPreview},
 };
 
 #[derive(Deserialize)]
@@ -33,7 +33,7 @@ fn default_hold_seconds() -> u64 {
 
 struct Fixture {
     reading: Entity<MarkdownPreview>,
-    _owner: Entity<Tty7App>,
+    _owner: Entity<HittyApp>,
     scale: f32,
 }
 
@@ -89,7 +89,7 @@ pub(crate) fn run(path: &std::ffi::OsStr) {
                 eprintln!("NATIVE_MARKDOWN_APPLYING_THEME");
                 crate::ui::theme::apply_theme(Some(window), cx);
                 eprintln!("NATIVE_MARKDOWN_CREATING_OWNER");
-                let owner = cx.new(|cx| Tty7App::with_session(None,
+                let owner = cx.new(|cx| HittyApp::with_session(None,
                     Some(crate::core::session::Session::default()), window, cx));
                 eprintln!("NATIVE_MARKDOWN_OWNER_READY");
                 window.set_window_title("Markdown visual acceptance");
@@ -99,7 +99,7 @@ pub(crate) fn run(path: &std::ffi::OsStr) {
                     input
                 });
                 let view = cx.new(|cx| MarkdownPreview::new(input,
-                    tty7_core::host::local::LocalHost::new(), options.source.clone(),
+                    hitty_core::host::local::LocalHost::new(), options.source.clone(),
                     owner.downgrade(), true, cx));
                 window.focus(&view.focus_handle(cx), cx);
                 reading = Some(view.clone());

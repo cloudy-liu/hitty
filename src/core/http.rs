@@ -3,9 +3,9 @@ use gpui::App;
 use reqwest_client::ReqwestClient;
 
 pub fn build_http_client(manual_proxy: Option<&str>) -> Result<ReqwestClient> {
-    let user_agent = concat!("tty7/", env!("CARGO_PKG_VERSION"));
+    let user_agent = concat!("hitty/", env!("CARGO_PKG_VERSION"));
     if let Some(proxy) = manual_proxy
-        .and_then(tty7_core::daemon::install::proxy::normalize_manual)
+        .and_then(hitty_core::daemon::install::proxy::normalize_manual)
         .and_then(|url| gpui::http_client::Url::parse(&url).ok())
     {
         ReqwestClient::proxy_and_user_agent(Some(proxy), user_agent).context("building HTTP client")

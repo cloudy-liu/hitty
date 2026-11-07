@@ -7,10 +7,10 @@ use gpui_component::{
 };
 
 use crate::core::config::Config;
-use crate::ui::app::Tty7App;
+use crate::ui::app::HittyApp;
 use crate::ui::i18n::{L10nKey, t, t_plural};
 
-impl Tty7App {
+impl HittyApp {
     /// The caller must capture the owning host and exact targets before calling.
     pub(crate) fn confirm_file_delete(
         &mut self,

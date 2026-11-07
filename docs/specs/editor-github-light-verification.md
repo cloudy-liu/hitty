@@ -2,7 +2,7 @@
 
 Issue [#89](https://github.com/cloudy-liu/ctty7/issues/89) was completed when
 [PR #90](https://github.com/cloudy-liu/ctty7/pull/90) merged on 2026-10-06.
-All nine [CI checks](https://github.com/cloudy-liu/ctty7/actions/runs/37444566340)
+All nine [CI checks](https://github.com/cloudy-liu/hitty/actions/runs/37444566340)
 passed on `73e99d52`. The current source appearance and typography contract
 is in the [specification](editor-github-light.md).
 
@@ -46,7 +46,7 @@ This is a palette illustration from bundled values, not a native screenshot.
 
 ```powershell
 python scripts/sync-editor-themes.py
-cargo test --locked -j 2 --features updater --bin tty7-app editor_
+cargo test --locked -j 2 --features updater --bin hitty-app editor_
 cargo test --locked -j 2 --workspace --features updater
 cargo build --locked -j 2 --workspace --features updater
 cargo fmt --all --check

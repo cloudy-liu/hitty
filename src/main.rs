@@ -48,7 +48,7 @@ fn config_watch_change(
     markdown_dir: &std::path::Path,
 ) -> Option<ConfigWatchChange> {
     // Reading a file can itself emit an event on Linux.
-    if !tty7_core::host::is_content_change(&event.kind) {
+    if !hitty_core::host::is_content_change(&event.kind) {
         return None;
     }
     if event
@@ -374,9 +374,9 @@ fn explorer_menu_action_from(args: &[std::ffi::OsString]) -> Option<bool> {
 fn forward_open_path_with(
     open_path: Option<&std::path::Path>,
     daemon_gone: impl FnOnce() -> bool,
-    dispatch: impl FnOnce(Option<String>) -> std::io::Result<tty7_core::daemon::control::ReplyOk>,
+    dispatch: impl FnOnce(Option<String>) -> std::io::Result<hitty_core::daemon::control::ReplyOk>,
 ) -> bool {
-    use tty7_core::daemon::control::ReplyOk;
+    use hitty_core::daemon::control::ReplyOk;
 
     if daemon_gone() {
         return false;
@@ -428,15 +428,15 @@ fn forward_open_path_with(
 /// target. This short probe must never replace the actual running GUI while it
 /// asks that GUI to open the requested folder.
 fn forward_open_path(open_path: Option<&std::path::Path>) -> bool {
-    use tty7_core::client::ControlClient;
-    use tty7_core::daemon::control::{ControlHello, ControlRequest};
+    use hitty_core::client::ControlClient;
+    use hitty_core::daemon::control::{ControlHello, ControlRequest};
 
     forward_open_path_with(
         open_path,
         crate::daemon::spawn::recorded_daemon_is_dead,
         |path| {
             let hello = ControlHello::host_rpc(
-                format!("tty7-app-open-{}", std::process::id()),
+                format!("hitty-app-open-{}", std::process::id()),
                 "this computer",
             );
             let client = ControlClient::connect(&hello)?;
@@ -601,7 +601,7 @@ fn main() {
             // The verb labels are localized, and this process stops at the
             // `return` below — it never reaches the `set_locale` on the GUI
             // path. Without this read every install would write English
-            // entries, whatever language the user runs tty7 in.
+            // entries, whatever language the user runs hitty in.
             crate::ui::i18n::set_locale(&Config::load().gui_language);
             crate::core::explorer_context_menu::register()
         } else {
@@ -637,7 +637,7 @@ fn main() {
             // files in `dir` until it exits — and a daemon spawned in that
             // window would relock them. The guard needs no clearing; it goes
             // stale the moment that parent is gone.
-            tty7_core::daemon::update_guard::hold_for_parent();
+            hitty_core::daemon::update_guard::hold_for_parent();
             if let Err(error) = crate::daemon::spawn::stop_for_update(&dir) {
                 log::error!(
                     "preparing {} for replacement failed: {error}",
@@ -682,7 +682,7 @@ fn main() {
     // carry the CLI's directory in its environment.
     crate::core::cli_install::install(config.install_cli_on_path);
 
-    // Give desktop toasts the tty7 icon and name instead of notify-rust's
+    // Give desktop toasts the hitty icon and name instead of notify-rust's
     // PowerShell fallback. Best-effort; no-op off Windows.
     #[cfg(target_os = "windows")]
     crate::core::aumid::init();
@@ -791,7 +791,7 @@ mod config_reload_tests {
     /// An app running on `config`, as far as the config watcher can tell:
     /// the globals its tick reads, and a keymap built from that config.
     fn running_on(cx: &mut App, config: Config) {
-        let dir = std::env::temp_dir().join(format!("tty7-reload-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("hitty-reload-{}", std::process::id()));
         std::fs::create_dir_all(&dir).ok();
         crate::core::config::set_config_dir(dir);
 
@@ -1099,9 +1099,9 @@ mod argument_tests {
     use super::{
         config_dir_from, explorer_menu_action_from, forward_open_path_with, open_path_from,
     };
+    use hitty_core::daemon::control::ReplyOk;
     use std::ffi::OsString;
     use std::path::PathBuf;
-    use tty7_core::daemon::control::ReplyOk;
 
     /// The installer passes exactly one of these; every other launch — above
     /// all a plain `--open-path` from the very menu they register — must fall
@@ -1283,7 +1283,7 @@ mod argument_tests {
         use std::ffi::OsString;
         use std::os::unix::ffi::OsStringExt as _;
 
-        let path = std::env::temp_dir().join(OsString::from_vec(b"tty7-\xff".to_vec()));
+        let path = std::env::temp_dir().join(OsString::from_vec(b"hitty-\xff".to_vec()));
         let delivered = forward_open_path_with(
             Some(&path),
             || false,

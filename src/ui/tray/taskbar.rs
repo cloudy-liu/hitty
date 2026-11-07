@@ -293,7 +293,7 @@ mod tests {
         ) -> windows::Win32::Foundation::LRESULT {
             unsafe { DefWindowProcW(hwnd, message, wparam, lparam) }
         }
-        let class = w!("ctty7-taskbar-class-icon-test");
+        let class = w!("hitty-taskbar-class-icon-test");
         let icon = unsafe { LoadIconW(None, IDI_APPLICATION).unwrap() };
         assert_ne!(
             unsafe {

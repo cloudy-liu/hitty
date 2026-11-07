@@ -1,6 +1,6 @@
 # Mermaid diagram support
 
-ctty7 renders Mermaid diagrams in Markdown preview.
+hitty renders Mermaid diagrams in Markdown preview.
 
 ## Usage
 
@@ -101,7 +101,7 @@ The colors adapt automatically when switching between light and dark modes.
 To customize how Mermaid diagrams look, edit your Markdown theme file:
 
 ```yaml
-# ~/.config/tty7/markdown-themes/my-theme.yaml
+# ~/.config/hitty/markdown-themes/my-theme.yaml
 schema_version: 2
 id: my-theme
 name: My Custom Theme

@@ -677,7 +677,7 @@ mod tests {
 
     #[test]
     fn github_is_the_only_builtin_and_missing_custom_themes_fall_back() {
-        let config: tty7_core::core::config::Config = serde_json::from_str("{}").unwrap();
+        let config: hitty_core::core::config::Config = serde_json::from_str("{}").unwrap();
         assert_eq!(config.markdown_theme, "github");
         let mut registry = Registry::default();
         assert_eq!(registry.entries.keys().collect::<Vec<_>>(), vec!["github"]);
@@ -879,7 +879,7 @@ mod tests {
 
     #[test]
     fn markdown_config_round_trip_keeps_selection_separate_from_application_theme() {
-        use tty7_core::core::config::Config;
+        use hitty_core::core::config::Config;
         let mut config: Config = serde_json::from_str("{}").unwrap();
         assert_eq!(config.markdown_theme, DEFAULT_ID);
         let application_theme = config.theme.clone();

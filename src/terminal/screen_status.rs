@@ -1,13 +1,13 @@
 //! An agent's status read off its screen, the way herdr reads it.
 //!
 //! The hooks only report what an agent chooses to announce, and some agents
-//! announce nothing. Antigravity and Cursor have no hooks tty7 can install,
+//! announce nothing. Antigravity and Cursor have no hooks hitty can install,
 //! and Codex's hooks say nothing about a permission prompt. Herdr reads all of
 //! them from the screen instead: each agent has a manifest of rules, a rule is
 //! a set of text matches over one region of the live bottom of the pane, and
 //! the highest-priority rule that matches names the state.
 //!
-//! The manifests in `assets/agent-detection/` are herdr's own, with tty7's
+//! The manifests in `assets/agent-detection/` are herdr's own, with hitty's
 //! additions kept in `extensions/` (Apache-2.0; see the README there).
 //! The matcher and region functions below follow herdr's
 //! `src/detect/manifest.rs`, because a manifest
@@ -119,7 +119,7 @@ fn manifest_source(agent: CLIAgent) -> Option<&'static str> {
 
 /// The agents whose hooks herdr trusts over the screen once they report,
 /// because they cover the whole turn: permission answers and interrupts
-/// included. Herdr's list also has Kilo and Mastra Code, which tty7 does not
+/// included. Herdr's list also has Kilo and Mastra Code, which hitty does not
 /// recognise.
 fn hooks_are_authority(agent: CLIAgent) -> bool {
     matches!(
@@ -146,7 +146,7 @@ pub(crate) struct ScreenStatus {
 /// Herdr rarely has to choose. Its hooks for Claude, Codex, Cursor and
 /// Antigravity only name the session, so for those the screen alone says what
 /// the agent is doing; only the agents in [`hooks_are_authority`] report a
-/// state, and that state wins. tty7's hooks report a state for every agent
+/// state, and that state wins. hitty's hooks report a state for every agent
 /// they are installed for, and they can miss an Esc or an approval, so outside
 /// that list the screen keeps herdr's word whenever a rule backs it, and the
 /// hooks fill in where none does.
@@ -180,7 +180,7 @@ pub(crate) fn merge(
 
 /// How many more looks a drop from working to a plain idle has to survive
 /// before it counts, because an agent's screen goes quiet between the steps of
-/// one turn. Herdr rechecks three times 100 ms apart; tty7 only looks every
+/// one turn. Herdr rechecks three times 100 ms apart; hitty only looks every
 /// 300 ms, so two more looks hold the drop for about 600 ms.
 const IDLE_CONFIRMATIONS: u8 = 2;
 
@@ -780,7 +780,7 @@ mod tests {
 
     #[test]
     fn codex_159_visible_prompt_is_idle_and_finishes_work() {
-        let prompt = "› Ask Codex to do anything\n\n  GPT-6-Astra xhigh · D:\\gh-prj\\tty7 · Context 4% used · Fast on\n  ← for agents · ? for shortcuts\n";
+        let prompt = "› Ask Codex to do anything\n\n  GPT-6-Astra xhigh · D:\\gh-prj\\hitty · Context 4% used · Fast on\n  ← for agents · ? for shortcuts\n";
         let ready = screen(CLIAgent::Codex, prompt);
         assert_eq!(ready.state, ScreenState::Idle);
         assert!(ready.visible_idle);
@@ -832,7 +832,7 @@ mod tests {
         // Codex keeps a static OSC title while a draft is being edited. Herdr
         // uses that title as idle evidence; the spinner and approval rules
         // above it still win when a turn is active.
-        let draft = "previous response\n────────────────\n› dd\n────────────────\n  GPT-6.1-Sol xhigh · D:\\gh-prj\\ctty7 · Fast on\n";
+        let draft = "previous response\n────────────────\n› dd\n────────────────\n  GPT-6.1-Sol xhigh · D:\\gh-prj\\hitty · Fast on\n";
         let reading = read(
             CLIAgent::Codex,
             &Input {
@@ -1139,7 +1139,7 @@ mod tests {
         // Reconstructed from Cursor 2026.10.14 inside Herdr: the outer terminal
         // includes Herdr's sidebar and divider before Cursor's live footer.
         let text = concat!(
-            "  ctty7                    │ $ git branch -vv\n",
+            "  hitty                    │ $ git branch -vv\n",
             "  working · cursor         │   322 output lines hidden · ctrl+o to expand\n",
             "                           │ ?? .release-verify/\n",
             "                           │ ?? .release-verify2/\n",
@@ -1175,7 +1175,7 @@ mod tests {
 
     #[test]
     fn cursor_nested_spinner_requires_a_pane_boundary_and_live_footer() {
-        for prefix in ["", "  ", "│ ", "  ctty7 │ ", "  ctty7 │ shell │ "] {
+        for prefix in ["", "  ", "│ ", "  hitty │ ", "  hitty │ shell │ "] {
             let reading = screen(CLIAgent::Cursor, &format!("{prefix}⠋ Running 591 tokens\n"));
             assert_eq!(reading.state, ScreenState::Working, "prefix: {prefix:?}");
             assert!(reading.matched);
@@ -1200,7 +1200,7 @@ mod tests {
         for prompt in ["Allow command (y)", "→ Run command (y)"] {
             let reading = screen(
                 CLIAgent::Cursor,
-                &format!("ctty7 │ ⠋ Running 591 tokens\n      │ {prompt}\n"),
+                &format!("hitty │ ⠋ Running 591 tokens\n      │ {prompt}\n"),
             );
             assert_eq!(reading.state, ScreenState::Blocked, "{prompt}");
             assert!(reading.matched);

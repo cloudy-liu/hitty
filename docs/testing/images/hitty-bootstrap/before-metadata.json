@@ -1,0 +1,25 @@
+{
+  "phase": "before",
+  "binary": "D:\\tmp\\hitty-build\\debug\\tty7-app.exe",
+  "window_logical_size": [
+    1100,
+    700
+  ],
+  "capture": "hwnd=4327618 client=1925x1225 frame=1929x1227 printwindow=True pointer=none size=50727",
+  "cli_version": "tty7 0.11.1",
+  "terminal_input_output": "passed",
+  "configuration": "C:\\Users\\cloudy\\AppData\\Local\\Temp\\hitty-bootstrap-smoke-6nfnil9m",
+  "test_preferences": {
+    "check_for_updates": false,
+    "auto_download_updates": false,
+    "install_cli_on_path": false,
+    "show_tray_icon": false,
+    "shell": {
+      "program": "powershell.exe",
+      "args": [
+        "-NoLogo",
+        "-NoProfile"
+      ]
+    }
+  }
+}

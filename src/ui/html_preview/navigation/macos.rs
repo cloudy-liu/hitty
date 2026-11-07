@@ -20,7 +20,7 @@ pub(crate) struct State {
 
 define_class!(
     #[unsafe(super(NSObject))]
-    #[name = "Ctty7HtmlNavigationDelegate"]
+    #[name = "HittyHtmlNavigationDelegate"]
     #[thread_kind = MainThreadOnly]
     #[ivars = State]
     pub(crate) struct NavigationDelegate;

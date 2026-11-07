@@ -1,9 +1,9 @@
 use std::collections::HashMap;
 
 use gpui::{App, Global};
-use tty7_core::core::machine::{LayoutDelta, Machine, PaneRecord, Tab, TabId, Workspace};
-use tty7_core::daemon::control::{ControlRequest, ReplyOk};
-use tty7_core::host::HostId;
+use hitty_core::core::machine::{LayoutDelta, Machine, PaneRecord, Tab, TabId, Workspace};
+use hitty_core::daemon::control::{ControlRequest, ReplyOk};
+use hitty_core::host::HostId;
 
 use crate::core::session::WorkspaceId;
 use crate::ui::i18n::{L10nKey, t};
@@ -199,7 +199,7 @@ impl MachineMirrors {
     /// learns the name of the workspace it is showing, and without it the chip
     /// read the directory until some later full pull produced the name and
     /// looked like a rename (#604). `None` is an answer too: a workspace made
-    /// by `tty7 new` really has no name, and reads its directory on purpose.
+    /// by `hitty new` really has no name, and reads its directory on purpose.
     pub fn note_workspace_name(
         cx: &mut App,
         host: HostId,
@@ -339,7 +339,7 @@ fn apply(machine: &mut Machine, workspace: WorkspaceId, delta: &LayoutDelta) -> 
                 return false;
             };
             match t.root.descend_mut(path) {
-                Some(tty7_core::core::machine::PaneNode::Split { ratio: r, .. }) => {
+                Some(hitty_core::core::machine::PaneNode::Split { ratio: r, .. }) => {
                     *r = *ratio;
                     true
                 }
@@ -410,8 +410,8 @@ pub fn display_name_for(cx: &App, client_ws: WorkspaceId) -> Option<String> {
 /// One tab of some workspace, flattened down to what a list row needs. The
 /// mirror is the only place that knows about workspaces this window does not
 /// own, so the switcher's tab column reads them from here — and so does
-/// `tty7 tab ls`, which is why the reading itself lives in the core.
-pub use tty7_core::core::tab_view::{TabLabel, TabView, tab_views_of};
+/// `hitty tab ls`, which is why the reading itself lives in the core.
+pub use hitty_core::core::tab_view::{TabLabel, TabView, tab_views_of};
 
 pub fn tab_views_for(cx: &App, client_ws: WorkspaceId) -> Option<(Vec<TabView>, Option<TabId>)> {
     let (ws, panes) = match crate::core::session::WorkspaceStore::all(cx).get(client_ws) {
@@ -448,7 +448,7 @@ pub struct UnclaimedWorkspace {
 
 /// Workspaces made by the CLI, or by another client — as real as any other,
 /// the only thing they lack is a window here. The switcher lists them so that
-/// `tty7 new` does not look like it did nothing.
+/// `hitty new` does not look like it did nothing.
 pub fn unclaimed_local_workspaces(cx: &App) -> Vec<UnclaimedWorkspace> {
     let Some(machine) = MachineMirrors::machine(cx, HostId::LOCAL) else {
         return Vec::new();
@@ -503,7 +503,7 @@ pub fn pane_count(cx: &App, entry: &crate::core::session::WindowView) -> Option<
 
 #[cfg(test)]
 mod tests {
-    use tty7_core::core::machine::{Axis, PaneNode, PaneSeed, Tab, TabId};
+    use hitty_core::core::machine::{Axis, PaneNode, PaneSeed, Tab, TabId};
 
     use super::*;
 
@@ -618,7 +618,7 @@ mod tests {
             assert_eq!(display_name(cx, &entry).as_deref(), Some("deploy"));
 
             // And "the machine has no name for it" is an answer too — that is
-            // what `tty7 new` leaves behind, and it reads as its directory.
+            // what `hitty new` leaves behind, and it reads as its directory.
             MachineMirrors::install(cx, HostId::LOCAL, pulled(None));
             assert_eq!(display_name(cx, &entry).as_deref(), Some("verify-main"));
             MachineMirrors::note_workspace_name(cx, HostId::LOCAL, id, None);
@@ -848,7 +848,7 @@ mod tests {
                 },
             );
 
-            // What `tty7 new` leaves behind: on the machine, named, with a
+            // What `hitty new` leaves behind: on the machine, named, with a
             // tab — and no window here has ever heard of it.
             let theirs = Workspace {
                 name: Some("demo".into()),
@@ -1045,10 +1045,10 @@ mod tests {
             "a pane's process title must not rename its workspace"
         );
 
-        ws.tabs[0].sidebar_group = Some("/repo/tty7".into());
+        ws.tabs[0].sidebar_group = Some("/repo/hitty".into());
         assert_eq!(
             display_name_of(&ws, &panes),
-            "tty7",
+            "hitty",
             "the repo group wins over the raw cwd"
         );
 

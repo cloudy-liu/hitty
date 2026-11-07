@@ -20,7 +20,7 @@ use crate::daemon::protocol::{
 };
 use crate::daemon::ssh::sftp::{remote_basename, remote_join, remote_parent, safe_local_name};
 use crate::terminal::RemoteTerminal;
-use crate::ui::app::{CONTENT_INSET, TILE_GLYPH_SM, TILE_SIZE_SM, Tty7App};
+use crate::ui::app::{CONTENT_INSET, HittyApp, TILE_GLYPH_SM, TILE_SIZE_SM};
 use crate::ui::file_icons::{FileIcon, ROW_ICON};
 use crate::ui::i18n::{L10nKey, t, t_fmt};
 use crate::ui::right_panel::{META, TEXT};
@@ -207,7 +207,7 @@ pub(crate) struct SftpPanelState {
     jobs_error: Option<String>,
     /// Uploads this panel started whose landing it has not listed yet.
     ///
-    /// An upload is written to `<name>.tty7-upload-<hex>` and renamed into
+    /// An upload is written to `<name>.hitty-upload-<hex>` and renamed into
     /// place at the very end, so any listing taken while one is in flight
     /// shows the temporary name. These are the jobs a listing is owed to.
     uploads_awaiting_listing: HashSet<u64>,
@@ -231,7 +231,7 @@ pub(crate) struct SftpPanelState {
 }
 
 impl SftpPanelState {
-    pub(crate) fn new(window: &mut Window, cx: &mut Context<Tty7App>) -> Self {
+    pub(crate) fn new(window: &mut Window, cx: &mut Context<HittyApp>) -> Self {
         let filter_input = cx.new(|cx| {
             InputState::new(window, cx)
                 .placeholder(crate::ui::i18n::t(crate::ui::i18n::L10nKey::SearchFiles))
@@ -415,7 +415,7 @@ fn free_local_path(dir: &Path, name: &str, claimed: &HashSet<PathBuf>) -> Option
         .find(|candidate| !taken(candidate))
 }
 
-impl Tty7App {
+impl HittyApp {
     pub(crate) fn toggle_sftp(&mut self, _window: &mut Window, cx: &mut Context<Self>) {
         use crate::core::config::RightPanelTab;
         if self.right_panel_visible && self.right_panel_tab == RightPanelTab::Files {
@@ -1343,7 +1343,7 @@ impl Tty7App {
     /// that were running have stopped running.
     ///
     /// Nothing used to ask for that listing. An upload lands under
-    /// `<name>.tty7-upload-<hex>` and is renamed into place at the end, so the
+    /// `<name>.hitty-upload-<hex>` and is renamed into place at the end, so the
     /// listing on screen was the one taken while the temporary name existed —
     /// and it stayed, so a finished upload read as a file with a hash glued to
     /// its name.
@@ -2540,11 +2540,11 @@ mod gpui_tests {
     use super::*;
     use crate::core::config::{Config, RightPanelTab};
     use crate::core::session::Session;
-    use crate::ui::app::Tty7App;
+    use crate::ui::app::HittyApp;
     use gpui::{AppContext, Entity, TestAppContext, VisualTestContext};
 
     struct ListWindow {
-        app: Entity<Tty7App>,
+        app: Entity<HittyApp>,
     }
     impl gpui::Render for ListWindow {
         fn render(
@@ -2567,7 +2567,7 @@ mod gpui_tests {
         let mut app_entity = None;
         let window = cx.add_window(|window, cx| {
             let app =
-                cx.new(|cx| Tty7App::with_session(None, Some(Session::default()), window, cx));
+                cx.new(|cx| HittyApp::with_session(None, Some(Session::default()), window, cx));
             app.update(cx, |app, _| {
                 app.sftp_panel.open_pane_id = Some(42);
                 app.sftp_panel.entries = ["a", "b", "c"]
@@ -2615,7 +2615,7 @@ mod gpui_tests {
         });
     }
 
-    fn harness(cx: &mut TestAppContext) -> (Entity<Tty7App>, VisualTestContext) {
+    fn harness(cx: &mut TestAppContext) -> (Entity<HittyApp>, VisualTestContext) {
         crate::core::config::pin_test_config_dir();
         cx.executor().allow_parking();
         cx.update(|cx| {
@@ -2625,7 +2625,7 @@ mod gpui_tests {
         });
         let window = cx.add_window(|window, cx| {
             let app =
-                cx.new(|cx| Tty7App::with_session(None, Some(Session::default()), window, cx));
+                cx.new(|cx| HittyApp::with_session(None, Some(Session::default()), window, cx));
             gpui_component::Root::new(app, window, cx)
         });
         cx.background_executor.run_until_parked();
@@ -2633,15 +2633,15 @@ mod gpui_tests {
             .update(cx, |root, _, _| {
                 root.view()
                     .clone()
-                    .downcast::<Tty7App>()
-                    .unwrap_or_else(|_| panic!("window root wraps a Tty7App"))
+                    .downcast::<HittyApp>()
+                    .unwrap_or_else(|_| panic!("window root wraps a HittyApp"))
             })
             .unwrap();
         let vcx = VisualTestContext::from_window(window.into(), cx);
         (app, vcx)
     }
 
-    fn panel(app: &Entity<Tty7App>, vcx: &mut VisualTestContext) -> (bool, RightPanelTab) {
+    fn panel(app: &Entity<HittyApp>, vcx: &mut VisualTestContext) -> (bool, RightPanelTab) {
         vcx.update(|_, cx| {
             let app = app.read(cx);
             (app.right_panel_visible, app.right_panel_tab)

@@ -1,6 +1,6 @@
 ---
 title: "Updates"
-description: "How cctty7 checks, verifies and installs official releases."
+description: "How chitty checks, verifies and installs official releases."
 ---
 
 **Settings → About** is where everything lives: the version you are on and the button that installs what is waiting.
@@ -9,7 +9,7 @@ description: "How cctty7 checks, verifies and installs official releases."
 
 <Steps>
   <Step title="Check">
-    ctty7 checks at launch and every six hours after that. Turn it off entirely
+    hitty checks at launch and every six hours after that. Turn it off entirely
     with `check_for_updates: false`, or check on demand with **Check now**.
   </Step>
   <Step title="Download and verify, in the background">
@@ -22,7 +22,7 @@ description: "How cctty7 checks, verifies and installs official releases."
     (`auto_download_updates: false`)
   </Step>
   <Step title="Update and relaunch">
-    A dedicated `tty7-updater` helper verifies the release checksum, the bundle
+    A dedicated `hitty-updater` helper verifies the release checksum, the bundle
     version, and — on macOS — the code-signing requirement, before replacing the
     installation. Portable, macOS and AppImage updates attempt to restore the
     previous copy if replacement or relaunch fails.
@@ -33,7 +33,7 @@ Declining an update defers it rather than retiring it; it comes back later.
 
 ## Official releases
 
-ctty7 follows the latest official Release. There is no channel selector.
+hitty follows the latest official Release. There is no channel selector.
 Legacy `update_channel` configuration is ignored. Version numbers increase
 from 0.1.0; old 26.x installations need one manual replacement before ordinary
 updates resume. See the [migration guide](https://github.com/cloudy-liu/ctty7/blob/main/docs/maintenance/migration.md).
@@ -84,7 +84,7 @@ a partial installation can require running Setup manually.
 
 ## "The background server is still running &lt;build&gt;"
 
-If Settings tells you this, ctty7 was updated in place: the app is the new build,
+If Settings tells you this, hitty was updated in place: the app is the new build,
 but your panes are still served by the previous one. Restarting the server picks
 up the new one — **and ends every process running in your panes**, shells,
 agents, and SSH sessions alike.

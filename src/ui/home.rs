@@ -9,7 +9,7 @@ use gpui_component::kbd::Kbd;
 use gpui_component::{ActiveTheme as _, IconName, Sizable as _, h_flex, v_flex};
 
 use crate::core::session::{SessionPane, SessionTab};
-use crate::ui::app::Tty7App;
+use crate::ui::app::HittyApp;
 use crate::ui::i18n::{L10nKey, t, t_fmt, t_plural};
 
 const LOGO: [&str; 4] = [
@@ -166,7 +166,7 @@ fn home_shortcut_label(action: &str, closed: Option<&str>) -> String {
     label.to_string()
 }
 
-impl Tty7App {
+impl HittyApp {
     pub(crate) fn render_home(&self, cx: &mut Context<Self>) -> impl IntoElement + use<> {
         let theme = cx.theme();
         let (muted, foreground, accent) = (theme.muted_foreground, theme.foreground, theme.primary);
@@ -481,7 +481,7 @@ mod tests {
         let home = Some(std::path::Path::new("/Users/tester"));
         let shown = |p: &str| display_path(std::path::Path::new(p), home);
 
-        assert_eq!(shown("/Users/tester/repo/tty7"), "~/repo/tty7");
+        assert_eq!(shown("/Users/tester/repo/hitty"), "~/repo/hitty");
         assert_eq!(shown("/opt/work"), "/opt/work");
 
         let long = shown("/Users/tester/very/deeply/nested/projects/area/thing");

@@ -4,7 +4,7 @@ use std::io;
 use std::path::Path;
 
 pub(crate) const RECOVERY_BACKUPS: [&str; 2] = ["previous.app", "previous.AppImage"];
-pub(crate) const RUNNING_PROCESS: &str = ".tty7-update-process";
+pub(crate) const RUNNING_PROCESS: &str = ".hitty-update-process";
 
 pub(crate) fn mark_running_process(stage: &Path, pid: u32, detail: &str) -> io::Result<()> {
     std::fs::write(

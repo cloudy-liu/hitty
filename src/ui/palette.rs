@@ -68,7 +68,6 @@ pub enum CommandKind {
     About,
     CheckForUpdates,
     OpenDocumentation,
-    OpenDiscord,
     ReportIssue,
     Quit,
     RestartDaemon,
@@ -174,7 +173,6 @@ impl CommandKind {
             About => "about",
             CheckForUpdates => "check-for-updates",
             OpenDocumentation => "documentation",
-            OpenDiscord => "discord",
             ReportIssue => "report-issue",
             Quit => "quit",
             RestartDaemon => "restart-daemon",
@@ -276,7 +274,6 @@ impl CommandKind {
             About => "About",
             CheckForUpdates => "CheckForUpdates",
             OpenDocumentation => "OpenDocumentation",
-            OpenDiscord => "OpenDiscord",
             ReportIssue => "ReportIssue",
             Quit => "Quit",
             RestartDaemon => "RestartDaemon",
@@ -567,15 +564,14 @@ impl Command {
         let application = [
             Command::localized(L10nKey::CmdSettings, OpenSettings),
             Command::localized(L10nKey::CmdKeyboardShortcuts, ShowKeyboardShortcuts),
-            Command::localized(L10nKey::CmdAboutTty7, About),
+            Command::localized(L10nKey::CmdAboutHitty, About),
             Command::localized(L10nKey::CmdCheckForUpdates, CheckForUpdates),
             Command::localized(L10nKey::CmdDocumentation, OpenDocumentation),
-            Command::localized(L10nKey::CmdJoinDiscord, OpenDiscord),
             Command::localized(L10nKey::CmdReportIssue, ReportIssue),
             Command::localized(L10nKey::CmdRestartServer, RestartDaemon)
                 .with_subtitle(t(L10nKey::CmdRestartServerSubtitle)),
-            Command::localized(L10nKey::CmdQuitTty7, Quit)
-                .with_subtitle(t(L10nKey::CmdQuitTty7Subtitle)),
+            Command::localized(L10nKey::CmdQuitHitty, Quit)
+                .with_subtitle(t(L10nKey::CmdQuitHittySubtitle)),
         ];
 
         let mut out = Vec::new();

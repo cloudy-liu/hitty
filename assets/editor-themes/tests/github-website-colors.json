@@ -2,7 +2,7 @@
   {
     "mode": "light",
     "language": "rust",
-    "source": "fn config_watch_change(\n    event: &notify::Event,\n    config_file: &std::path::Path,\n    markdown_dir: &std::path::Path,\n) -> Option<ConfigWatchChange> {\n    // Reading a file can itself emit an event on Linux.\n    if !tty7_core::host::is_content_change(&event.kind) {\n        return None;\n    }\n    if event\n        .paths\n        .iter()\n        .any(|path| path == config_file || is_theme_file(path))\n    {\n        Some(ConfigWatchChange::Application)\n    } else if event\n        .paths\n        .iter()\n        .any(|path| crate::core::markdown_theme::is_theme_path(path, markdown_dir))\n    {\n        Some(ConfigWatchChange::Markdown)\n    } else {\n        None\n    }\n}\n",
+    "source": "fn config_watch_change(\n    event: &notify::Event,\n    config_file: &std::path::Path,\n    markdown_dir: &std::path::Path,\n) -> Option<ConfigWatchChange> {\n    // Reading a file can itself emit an event on Linux.\n    if !hitty_core::host::is_content_change(&event.kind) {\n        return None;\n    }\n    if event\n        .paths\n        .iter()\n        .any(|path| path == config_file || is_theme_file(path))\n    {\n        Some(ConfigWatchChange::Application)\n    } else if event\n        .paths\n        .iter()\n        .any(|path| crate::core::markdown_theme::is_theme_path(path, markdown_dir))\n    {\n        Some(ConfigWatchChange::Markdown)\n    } else {\n        None\n    }\n}\n",
     "tokens": [
       {
         "text": "fn",
@@ -95,7 +95,7 @@
         "color": "#CF222E"
       },
       {
-        "text": " !tty7_core::host::",
+        "text": " !hitty_core::host::",
         "start": 218,
         "end": 237,
         "color": "#1F2328"
@@ -425,7 +425,7 @@
         "color": "#1F2328"
       }
     ],
-    "source_url": "https://github.com/cloudy-liu/ctty7/blob/814b4036a05b877a1c3cf3a04e764bbb4822e807/src/main.rs#L35-L59",
+    "source_url": "https://github.com/cloudy-liu/hitty/blob/814b4036a05b877a1c3cf3a04e764bbb4822e807/src/main.rs#L35-L59",
     "captured": "2026-10-06",
     "stylesheet": "https://github.githubassets.com/assets/light-5c4e9fc574bf49f3.css"
   }

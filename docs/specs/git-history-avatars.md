@@ -142,6 +142,6 @@ the commit page or using the document-close shortcut preserves the terminal.
 
 The user approved the compact HTML prototype and requested one implementation
 ticket, implementation, review, commit, and a PR. The project's tracker and PR
-destination are cloudy-liu/ctty7. Preserve the parent spec when completing the
+destination are cloudy-liu/hitty. Preserve the parent spec when completing the
 implementation ticket. If native visual capture is blocked, retain a draft PR
 and record the exact blocker and unverified visual acceptance.

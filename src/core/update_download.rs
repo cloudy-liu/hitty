@@ -6,11 +6,11 @@ use std::time::Duration;
 
 use anyhow::{Context as _, Result, bail};
 use gpui::http_client::{AsyncBody, HttpClient as _, HttpRequestExt as _, RedirectPolicy, Request};
+use hitty_core::daemon::install::download::CANCELLED;
+use hitty_core::daemon::install::proxy::{self, Proxy};
 use reqwest_client::ReqwestClient;
 use smol::future::FutureExt as _;
 use smol::io::AsyncReadExt as _;
-use tty7_core::daemon::install::download::CANCELLED;
-use tty7_core::daemon::install::proxy::{self, Proxy};
 
 const DOWNLOAD_TIMEOUT: Duration = Duration::from_secs(15 * 60);
 const CONNECT_TIMEOUT: Duration = Duration::from_secs(30);
@@ -24,7 +24,7 @@ async fn client(proxy: Option<&Proxy>) -> Result<ReqwestClient> {
     let mut builder = reqwest::Client::builder()
         .no_proxy()
         .connect_timeout(CONNECT_TIMEOUT)
-        .user_agent(concat!("tty7/", env!("CARGO_PKG_VERSION")))
+        .user_agent(concat!("hitty/", env!("CARGO_PKG_VERSION")))
         .use_preconfigured_tls(http_client_tls::tls_config());
     if let Some(proxy) = proxy {
         let mut proxy_url =

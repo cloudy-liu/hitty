@@ -2,7 +2,7 @@
 
 ## Problem Statement
 
-Opening a file in ctty7 appears to replace the previous document. Although multiple buffers already exist, the document panel exposes only the current filename and path. Readers cannot see their open files or switch and close them directly. Markdown's bottom preview icon also hides both the available modes and the selected mode.
+Opening a file in hitty appears to replace the previous document. Although multiple buffers already exist, the document panel exposes only the current filename and path. Readers cannot see their open files or switch and close them directly. Markdown's bottom preview icon also hides both the available modes and the selected mode.
 
 ## Solution
 
@@ -70,4 +70,4 @@ Provide a document workspace within each terminal session. A horizontal file tab
 
 ## Further Notes
 
-The user's Cursor screenshots define the layout: filename-only tabs, a separate path row, and Preview/Markdown text segments on that row's right. The bottom preview icon is removed. Publish the spec and implementation tickets in cloudy-liu/ctty7 with ready-for-agent; keep the spec issue as the parent and close implementation tickets through the fork PR. The PR must include visual Before/After evidence, not only test logs or design mockups.
+The user's Cursor screenshots define the layout: filename-only tabs, a separate path row, and Preview/Markdown text segments on that row's right. The bottom preview icon is removed. Publish the spec and implementation tickets in cloudy-liu/hitty with ready-for-agent; keep the spec issue as the parent and close implementation tickets through the fork PR. The PR must include visual Before/After evidence, not only test logs or design mockups.

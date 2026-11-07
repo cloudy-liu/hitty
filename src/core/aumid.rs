@@ -11,9 +11,9 @@
 //! It is deliberately reluctant to write. The installer stamps its own
 //! shortcuts (see `windows-installer.iss`), so the runtime write only has to
 //! cover the portable zip and installs that predate that change. It therefore
-//! touches at most the single per-user `ctty7.lnk` that Inno's default install
+//! touches at most the single per-user `Hitty.lnk` that Inno's default install
 //! owns anyway — never a second Start Menu entry beside an all-users install
-//! (which would show "ctty7" twice and outlive the uninstaller), and never
+//! (which would show "hitty" twice and outlive the uninstaller), and never
 //! anything at all from a `cargo` build directory (which would repoint the
 //! user's installed shortcut at `target\debug`).
 //!
@@ -32,9 +32,9 @@ use std::time::{Duration, Instant};
 /// The toast/taskbar identity. Keep in sync with the `AppUserModelID` on the
 /// installer shortcuts in `.github/scripts/windows-installer.iss` — a
 /// mismatch silently splits the identity in two (a unit test checks this).
-pub(crate) const AUMID: &str = "com.github.tty7";
+pub(crate) const AUMID: &str = "com.github.hitty";
 
-const DEV_AUMID: &str = "com.github.tty7.dev";
+const DEV_AUMID: &str = "com.github.hitty.dev";
 
 pub(crate) fn taskbar_app_id(exe: &Path) -> &'static str {
     if is_build_output(exe) {
@@ -121,8 +121,8 @@ enum Decision {
 fn decide() -> Result<Decision, String> {
     let exe = std::env::current_exe().map_err(|e| format!("current exe: {e}"))?;
 
-    // An elevated install owns `%ProgramData%\...\ctty7.lnk`, which we cannot
-    // rewrite unelevated. A per-user twin beside it would list "ctty7" twice in
+    // An elevated install owns `%ProgramData%\...\Hitty.lnk`, which we cannot
+    // rewrite unelevated. A per-user twin beside it would list "hitty" twice in
     // the Start Menu and survive the uninstaller, so that file settles the
     // question on its own: branded if the installer stamped our AUMID on it,
     // unbranded until the user upgrades to an installer that does.
@@ -176,7 +176,7 @@ fn decide() -> Result<Decision, String> {
 /// True when `exe` sits in a `cargo` build directory rather than an install.
 ///
 /// Two independent signals. The layout check is the offline half:
-/// `target[\<triple>]\{debug,release}\tty7-app.exe`. `CACHEDIR.TAG` is the
+/// `target[\<triple>]\{debug,release}\hitty-app.exe`. `CACHEDIR.TAG` is the
 /// half that does not care about names — cargo writes it into every build
 /// directory precisely to mark the tree as derived, so it also covers a
 /// renamed `CARGO_TARGET_DIR` and the `target\...\deps\` binaries the test
@@ -219,15 +219,15 @@ fn programs_dir(env_var: &str) -> Option<PathBuf> {
 }
 
 /// The only shortcut we ever write: the per-user Start Menu, which is also
-/// where Inno's default (non-elevated) install puts `ctty7.lnk` — so refreshing
+/// where Inno's default (non-elevated) install puts `Hitty.lnk` — so refreshing
 /// it adds no entry the uninstaller does not already know how to remove.
 fn start_menu_shortcut_path() -> Option<PathBuf> {
-    Some(programs_dir("APPDATA")?.join("ctty7.lnk"))
+    Some(programs_dir("APPDATA")?.join("Hitty.lnk"))
 }
 
 /// The all-users twin an elevated install writes. Read-only for us.
 fn all_users_shortcut_path() -> Option<PathBuf> {
-    Some(programs_dir("ProgramData")?.join("ctty7.lnk"))
+    Some(programs_dir("ProgramData")?.join("Hitty.lnk"))
 }
 
 #[derive(Default)]
@@ -335,24 +335,6 @@ fn write_shortcut(lnk: &Path) -> Result<(), String> {
             .Save(&lnk_w, true)
             .map_err(|e| format!("Save: {e}"))?;
     }
-    // Portable upgrades do not run Inno's shortcut cleanup. Remove only the
-    // legacy entry belonging to this executable after its replacement exists.
-    if lnk.file_name().and_then(|name| name.to_str()) == Some("ctty7.lnk") {
-        let legacy = lnk.with_file_name("tty7.lnk");
-        if let Ok(old) = read_shortcut(&legacy)
-            && old.aumid.as_deref() == Some(AUMID)
-            && old
-                .target
-                .as_deref()
-                .is_some_and(|target| same_path(target, &exe))
-            && let Err(error) = std::fs::remove_file(&legacy)
-        {
-            log::warn!(
-                "could not remove legacy shortcut {}: {error}",
-                legacy.display()
-            );
-        }
-    }
     Ok(())
 }
 
@@ -361,22 +343,20 @@ mod tests {
     use std::path::Path;
 
     #[test]
-    fn portable_upgrade_reconciles_only_its_own_legacy_shortcut() {
+    fn writing_a_shortcut_preserves_the_created_entry() {
         let dir = tempfile::tempdir().unwrap();
-        let old = dir.path().join("tty7.lnk");
-        let new = dir.path().join("ctty7.lnk");
-        super::write_shortcut(&old).unwrap();
-        super::write_shortcut(&new).unwrap();
-        assert!(
-            !old.exists(),
-            "one Start-menu entry after portable migration"
-        );
-        assert!(super::read_shortcut(&new).is_ok());
-
-        // An unrecognized shortcut is not this installation's to remove.
-        std::fs::write(&old, b"unrelated shortcut").unwrap();
-        super::write_shortcut(&new).unwrap();
-        assert_eq!(std::fs::read(&old).unwrap(), b"unrelated shortcut");
+        let shortcut = dir.path().join("Hitty.lnk");
+        let unrelated = dir.path().join("Other app.lnk");
+        std::fs::write(&unrelated, b"unrelated shortcut").unwrap();
+        super::write_shortcut(&shortcut).unwrap();
+        super::write_shortcut(&shortcut).unwrap();
+        let saved = super::read_shortcut(&shortcut).unwrap();
+        assert_eq!(saved.aumid.as_deref(), Some(super::AUMID));
+        assert!(super::same_path(
+            saved.target.as_deref().unwrap(),
+            &std::env::current_exe().unwrap()
+        ));
+        assert_eq!(std::fs::read(&unrelated).unwrap(), b"unrelated shortcut");
     }
 
     #[test]
@@ -398,7 +378,7 @@ mod tests {
         let Some(lnk) = super::start_menu_shortcut_path() else {
             return; // no APPDATA in this environment — nothing to assert
         };
-        assert_eq!(lnk.file_name().and_then(|n| n.to_str()), Some("ctty7.lnk"));
+        assert_eq!(lnk.file_name().and_then(|n| n.to_str()), Some("Hitty.lnk"));
         assert_eq!(
             lnk.parent()
                 .and_then(|p| p.file_name())
@@ -423,10 +403,10 @@ mod tests {
     #[test]
     fn cargo_layouts_are_recognized_as_build_output() {
         for exe in [
-            r"C:\src\tty7\target\debug\tty7-app.exe",
-            r"C:\src\tty7\target\release\tty7-app.exe",
-            r"C:\src\tty7\target\x86_64-pc-windows-msvc\release\tty7-app.exe",
-            r"C:\src\tty7\TARGET\Debug\tty7-app.exe",
+            r"C:\src\hitty\target\debug\hitty-app.exe",
+            r"C:\src\hitty\target\release\hitty-app.exe",
+            r"C:\src\hitty\target\x86_64-pc-windows-msvc\release\hitty-app.exe",
+            r"C:\src\hitty\TARGET\Debug\hitty-app.exe",
         ] {
             assert!(
                 super::has_build_layout(Path::new(exe)),
@@ -439,12 +419,12 @@ mod tests {
     #[test]
     fn install_layouts_are_not_build_output() {
         for exe in [
-            r"C:\Program Files\tty7\tty7-app.exe",
-            r"C:\Users\me\AppData\Local\Programs\tty7\tty7-app.exe",
+            r"C:\Program Files\hitty\hitty-app.exe",
+            r"C:\Users\me\AppData\Local\Programs\hitty\hitty-app.exe",
             // Portable zip, extracted anywhere the user likes.
-            r"D:\tools\tty7\tty7-app.exe",
+            r"D:\tools\hitty\hitty-app.exe",
             // A "release" *install* directory with no `target` above it.
-            r"D:\tty7\release\tty7-app.exe",
+            r"D:\hitty\release\hitty-app.exe",
         ] {
             let exe = Path::new(exe);
             assert!(!super::has_build_layout(exe), "{} misread", exe.display());
@@ -469,12 +449,12 @@ mod tests {
     #[test]
     fn same_path_ignores_case_for_paths_that_do_not_exist() {
         assert!(super::same_path(
-            Path::new(r"C:\Program Files\tty7\TTY7-APP.EXE"),
-            Path::new(r"c:\program files\tty7\tty7-app.exe"),
+            Path::new(r"C:\Program Files\hitty\HITTY-APP.EXE"),
+            Path::new(r"c:\program files\hitty\hitty-app.exe"),
         ));
         assert!(!super::same_path(
-            Path::new(r"C:\Program Files\tty7\tty7-app.exe"),
-            Path::new(r"C:\src\tty7\target\debug\tty7-app.exe"),
+            Path::new(r"C:\Program Files\hitty\hitty-app.exe"),
+            Path::new(r"C:\src\hitty\target\debug\hitty-app.exe"),
         ));
     }
 
@@ -484,9 +464,9 @@ mod tests {
     /// Start Menu.
     #[test]
     fn a_written_shortcut_reads_back_as_ours() {
-        let dir = std::env::temp_dir().join(format!("tty7-aumid-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("hitty-aumid-{}", std::process::id()));
         std::fs::create_dir_all(&dir).expect("create temp dir");
-        let lnk = dir.join("ctty7.lnk");
+        let lnk = dir.join("Hitty.lnk");
 
         let written = super::write_shortcut(&lnk);
         let read = written.as_ref().ok().map(|()| super::read_shortcut(&lnk));
@@ -506,7 +486,7 @@ mod tests {
     }
 
     /// Manual end-to-end check, never run by CI (`--ignored` to opt in). Prints
-    /// what `decide()` chose and pops a real toast, which should carry the tty7
+    /// what `decide()` chose and pops a real toast, which should carry the hitty
     /// icon and name rather than PowerShell's. On a machine that had no
     /// shortcut yet the first run writes one and stays unbranded for
     /// `INDEX_GRACE`; run it a second time to see the branded toast.
@@ -520,7 +500,7 @@ mod tests {
         };
         println!("decision: {decision}");
         println!("toast_app_id: {:?}", super::toast_app_id());
-        crate::terminal::notify_desktop(Some("tty7"), "AUMID toast test");
+        crate::terminal::notify_desktop(Some("hitty"), "AUMID toast test");
         std::thread::sleep(std::time::Duration::from_secs(3));
     }
 }

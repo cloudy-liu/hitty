@@ -15,7 +15,7 @@ def main():
     output = Path(sys.argv[2]).resolve()
     output.mkdir(parents=True, exist_ok=True)
     root = Path(__file__).resolve().parents[1]
-    with tempfile.TemporaryDirectory(prefix="ctty7-tooltip-", ignore_cleanup_errors=True) as scratch:
+    with tempfile.TemporaryDirectory(prefix="hitty-tooltip-", ignore_cleanup_errors=True) as scratch:
         for label, disabled in [("unclipped", True), ("fixed", False)]:
             result = output / f"{label}.json"
             result.unlink(missing_ok=True)

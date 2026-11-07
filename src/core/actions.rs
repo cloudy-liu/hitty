@@ -1,7 +1,7 @@
 use gpui::actions;
 
 actions!(
-    tty7,
+    hitty,
     [
         NewTab,
         NewWorkspace,
@@ -96,7 +96,6 @@ actions!(
         MinimizeWindow,
         ZoomWindow,
         OpenDocumentation,
-        OpenDiscord,
         ReportIssue,
         RestartDaemon,
         ToggleSftp,

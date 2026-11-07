@@ -3,7 +3,7 @@ title: "SSH"
 description: "A native Rust SSH stack: quick connects, saved profiles, keychain credentials, jump hosts."
 ---
 
-tty7 speaks SSH itself, over [russh](https://github.com/Eugeny/russh). It never
+hitty speaks SSH itself, over [russh](https://github.com/Eugeny/russh). It never
 shells out to the `ssh` binary, and there is no compatibility mode that does.
 
 That is what makes the rest possible: credentials in the OS keychain,
@@ -12,7 +12,7 @@ you can add mid-session, and authentication prompts drawn as sheets in the pane
 instead of a password echoing into your shell.
 
 <Frame caption="Placeholder — screenshot: an SSH connection sheet asking for a key passphrase inside a pane">
-  <img src="/images/placeholder.svg" alt="Connecting over SSH in tty7" />
+  <img src="/images/placeholder.svg" alt="Connecting over SSH in hitty" />
 </Frame>
 
 ## Four ways to connect
@@ -35,7 +35,7 @@ instead of a password echoing into your shell.
   </Accordion>
 
   <Accordion title="An alias from ~/.ssh/config">
-    Type an alias you already have and tty7 resolves it natively — common fields,
+    Type an alias you already have and hitty resolves it natively — common fields,
     best effort — then connects over russh. **Settings → SSH → Import from
     ~/.ssh/config** turns aliases into real profiles.
 
@@ -113,7 +113,7 @@ Also under Security: **Warn before closing** a live connection, off by default.
 the current pane. Useful after a laptop sleeps or a network changes.
 
 Saved native SSH panes reattach to a live connection when the application reopens.
-If the pane no longer exists, tty7 reconnects over SSH using the saved connection
+If the pane no longer exists, hitty reconnects over SSH using the saved connection
 and remote working directory. Known Claude Code and Codex conversations resume
 with their exact session IDs and original flags after the remote shell reports
 a prompt; manual Reconnect uses the same path. User input cancels a queued resume.
@@ -124,14 +124,14 @@ are respected. Unknown session IDs leave an interactive remote shell.
 
 With the tab bar on the left and sidebar grouping enabled, in-pane SSH sessions
 started from a local workspace appear in groups named for their displayed
-connection target. This includes native SSH tabs and `ssh` commands tty7
+connection target. This includes native SSH tabs and `ssh` commands hitty
 detects inside a pane. Local project groups appear first and Scratch appears
 last. Choose `none` for sidebar grouping to keep a flat list.
 
 SSH groups can be folded and renamed. They cannot be pinned or used to create a
 local tab because their host is not a local project directory. Group identity is
 the displayed target: profiles or aliases with the same display name can share
-a group, while a command tty7 cannot identify may stay in its existing group.
+a group, while a command hitty cannot identify may stay in its existing group.
 Remote workspace windows and WSL hops keep their existing grouping behavior.
 
 ## Git in a native SSH tab
@@ -144,7 +144,7 @@ External edits refresh while the tab is active; disconnecting clears stale Git
 results, and reconnecting starts a new pane identity.
 
 Git commands use the pane's existing SSH connection. This does not require
-installing `tty7-server` or turning the local workspace into a remote workspace.
+installing `hitty-server` or turning the local workspace into a remote workspace.
 A remote workspace remains the option for a complete remote file tree and
 workspace-wide Git operations. Native-tab Git requires a POSIX shell and remote
 Git support for `--path-format=absolute`; manually nested SSH commands are outside

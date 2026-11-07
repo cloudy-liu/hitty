@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>gpui-component 分支策略与 ctty7 集成</title>
+  <title>gpui-component 分支策略与 hitty 集成</title>
   <style>
     :root {
       color-scheme: light;
@@ -257,13 +257,13 @@
 </head>
 <body>
   <main>
-    <div class="eyebrow">ctty7 dependency strategy</div>
+    <div class="eyebrow">hitty dependency strategy</div>
     <h1>gpui-component 分支策略</h1>
-    <p class="lede">推荐的关系是：上游同步进入临时分支，经过验证后合入 fork 的 <code>ctty7</code> 稳定集成分支，ctty7 再固定到该分支上的精确 commit。</p>
+    <p class="lede">推荐的关系是：上游同步进入临时分支，经过验证后合入 fork 的 <code>hitty</code> 稳定集成分支，hitty 再固定到该分支上的精确 commit。</p>
 
     <div class="answer">
       <strong>直接回答</strong>
-      <p>组件 fork 已经创建 <code>ctty7</code> 稳定集成分支。ctty7 不应直接跟 fork 的 <code>main</code>，生产构建也不应依赖可移动 branch，而应 pin 一个经过测试的 commit。</p>
+      <p>组件 fork 已经创建 <code>hitty</code> 稳定集成分支。hitty 不应直接跟 fork 的 <code>main</code>，生产构建也不应依赖可移动 branch，而应 pin 一个经过测试的 commit。</p>
     </div>
 
     <section>
@@ -275,19 +275,19 @@
         <article class="card blue">
           <span class="status blue">上游基线</span>
           <h3>cloudy-liu/gpui-component:main</h3>
-          <p>fork 的默认分支仍是旧基线，不包含 ctty7 当前使用的全部 Markdown 定制。</p>
+          <p>fork 的默认分支仍是旧基线，不包含 hitty 当前使用的全部 Markdown 定制。</p>
           <p class="sha"><code>1505b148</code></p>
         </article>
         <article class="card green">
           <span class="status green">现有集成线</span>
-          <h3>cloudy-liu/gpui-component:ctty7</h3>
-          <p>承载 ctty7 的通用 UI 定制。应用固定到这条分支上的已验证提交。</p>
+          <h3>cloudy-liu/gpui-component:hitty</h3>
+          <p>承载 hitty 的通用 UI 定制。应用固定到这条分支上的已验证提交。</p>
           <p class="sha">分支头 <code>e49721c7</code></p>
         </article>
         <article class="card orange">
           <span class="status orange">合入前历史线</span>
           <h3>codex/markdown-reader-selection</h3>
-          <p>这些功能已经合入 <code>ctty7</code> 稳定线，应用不再直接 pin 这个临时分支。</p>
+          <p>这些功能已经合入 <code>hitty</code> 稳定线，应用不再直接 pin 这个临时分支。</p>
           <p class="sha"><code>e7711b27</code></p>
         </article>
       </div>
@@ -305,7 +305,7 @@
           <ul>
             <li>上游功能和修复</li>
             <li>只作为同步来源</li>
-            <li>不直接作为 ctty7 依赖</li>
+            <li>不直接作为 hitty 依赖</li>
           </ul>
         </article>
         <div class="connector">-&gt;<small>merge 上游</small></div>
@@ -315,27 +315,27 @@
           <ul>
             <li>临时解决冲突</li>
             <li>运行组件库测试</li>
-            <li>运行 ctty7 兼容性测试</li>
+            <li>运行 hitty 兼容性测试</li>
           </ul>
         </article>
         <div class="connector">-&gt;<small>验证后合入</small></div>
         <article class="flow-node green">
           <h3>cloudy-liu/gpui-component</h3>
-          <p><code>ctty7</code></p>
+          <p><code>hitty</code></p>
           <ul>
             <li>上游更新</li>
-            <li>ctty7 通用 UI 定制</li>
+            <li>hitty 通用 UI 定制</li>
             <li>已验证的稳定组合</li>
           </ul>
         </article>
       </div>
-      <div class="flow-note"><strong>ctty7 的依赖箭头：</strong> ctty7 -&gt; <code>cloudy-liu/gpui-component@&lt;exact-ctty7-commit&gt;</code>。不要把依赖直接写成 <code>main</code> 或长期写成 <code>branch = "ctty7"</code>。</div>
+      <div class="flow-note"><strong>hitty 的依赖箭头：</strong> hitty -&gt; <code>cloudy-liu/gpui-component@&lt;exact-hitty-commit&gt;</code>。不要把依赖直接写成 <code>main</code> 或长期写成 <code>branch = "hitty"</code>。</div>
     </section>
 
     <section>
       <div class="two-col">
         <article class="card">
-          <h2>ctty7 如何引用</h2>
+          <h2>hitty 如何引用</h2>
           <p>三个相关 crate 使用同一个组件库 revision，避免 UI、资源和宏来自不同版本。</p>
           <div class="pin">gpui-component = {
     git = "https://github.com/cloudy-liu/gpui-component",
@@ -350,12 +350,12 @@ gpui-component-assets = {
 }</div>
         </article>
         <article class="card">
-          <h2>是否创建 ctty7 分支</h2>
-          <p>现在已经创建。<code>ctty7</code> 表达的是“给 ctty7 使用的稳定集成线”。</p>
+          <h2>是否创建 hitty 分支</h2>
+          <p>现在已经创建。<code>hitty</code> 表达的是“给 hitty 使用的稳定集成线”。</p>
           <ul class="rule-list">
             <li><code>main</code>：跟踪 fork 的主线或上游基线。</li>
-            <li><code>ctty7</code>：ctty7 的稳定集成分支。</li>
-            <li><code>feature/*</code>、<code>fix/*</code>：短期开发分支，完成后合入 <code>ctty7</code>。</li>
+            <li><code>hitty</code>：hitty 的稳定集成分支。</li>
+            <li><code>feature/*</code>、<code>fix/*</code>：短期开发分支，完成后合入 <code>hitty</code>。</li>
             <li><code>sync/upstream-*</code>：临时同步分支，不作为应用依赖。</li>
           </ul>
         </article>
@@ -365,19 +365,19 @@ gpui-component-assets = {
     <section>
       <div class="section-head">
         <h2>一次上游更新的流程</h2>
-        <p>组件库和 ctty7 各自保持清晰的职责</p>
+        <p>组件库和 hitty 各自保持清晰的职责</p>
       </div>
       <div class="timeline">
         <div class="step"><div class="step-no">1</div><div class="step-body"><h3>从上游更新同步分支</h3><p>把 <code>l0ng-ai/gpui-component:main</code> 合入 <code>sync/upstream-*</code>。</p></div></div>
-        <div class="step"><div class="step-no">2</div><div class="step-body"><h3>解决定制冲突</h3><p>保留 ctty7 需要的通用 UI 能力；能回馈上游的改动，单独准备 upstream PR。</p></div></div>
-        <div class="step"><div class="step-no">3</div><div class="step-body"><h3>验证组件库和 ctty7</h3><p>先跑 gpui-component 测试，再跑 ctty7 的 Markdown、编辑器和完整构建测试。</p></div></div>
-        <div class="step"><div class="step-no">4</div><div class="step-body"><h3>合入稳定集成线</h3><p>把通过验证的同步结果合入 <code>cloudy-liu/gpui-component:ctty7</code>。</p></div></div>
-        <div class="step"><div class="step-no">5</div><div class="step-body"><h3>ctty7 更新精确 revision</h3><p>只改 ctty7 的 <code>Cargo.toml</code> 和 <code>Cargo.lock</code>，让发布结果可重复。</p></div></div>
+        <div class="step"><div class="step-no">2</div><div class="step-body"><h3>解决定制冲突</h3><p>保留 hitty 需要的通用 UI 能力；能回馈上游的改动，单独准备 upstream PR。</p></div></div>
+        <div class="step"><div class="step-no">3</div><div class="step-body"><h3>验证组件库和 hitty</h3><p>先跑 gpui-component 测试，再跑 hitty 的 Markdown、编辑器和完整构建测试。</p></div></div>
+        <div class="step"><div class="step-no">4</div><div class="step-body"><h3>合入稳定集成线</h3><p>把通过验证的同步结果合入 <code>cloudy-liu/gpui-component:hitty</code>。</p></div></div>
+        <div class="step"><div class="step-no">5</div><div class="step-body"><h3>hitty 更新精确 revision</h3><p>只改 hitty 的 <code>Cargo.toml</code> 和 <code>Cargo.lock</code>，让发布结果可重复。</p></div></div>
       </div>
     </section>
 
     <footer>
-      GPUI 也应遵循同一原则：组件库和 ctty7 使用匹配的 GPUI revision。当前 ctty7 的组件依赖已经是 fork，但 GPUI 的 patch 仍使用 <code>l0ng-ai/zed:tty7</code> 分支，后续应同样收敛到精确 commit。
+      GPUI 也应遵循同一原则：组件库和 hitty 使用匹配的 GPUI revision。当前 hitty 的组件依赖已经是 fork，但 GPUI 的 patch 仍使用 <code>l0ng-ai/zed:hitty</code> 分支，后续应同样收敛到精确 commit。
     </footer>
   </main>
 </body>

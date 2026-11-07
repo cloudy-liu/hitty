@@ -1,0 +1,3 @@
+PS C:\Users\cloudy\AppData\Local\Temp\hitty-bootstrap-smoke-f6bdgik7> Write-Output ('BOOTSTRAP_' + 'OK')
+BOOTSTRAP_OK
+PS C:\Users\cloudy\AppData\Local\Temp\hitty-bootstrap-smoke-f6bdgik7>

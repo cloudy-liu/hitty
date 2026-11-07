@@ -1,6 +1,7 @@
 use anyhow::{Context as _, Result};
 use gpui::http_client::{AsyncBody, HttpClient as _, HttpRequestExt as _, RedirectPolicy};
 use gpui::{AnyWindowHandle, App, AsyncApp, Global, PromptLevel, Window, http_client};
+use hitty_core::daemon::install::asset::{CHECKSUMS_ASSET, download_url};
 use reqwest_client::ReqwestClient;
 use smol::future::FutureExt as _;
 use std::ops::ControlFlow;
@@ -9,13 +10,12 @@ use std::process::{Command, Stdio};
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::time::Duration;
-use tty7_core::daemon::install::asset::{CHECKSUMS_ASSET, download_url};
 
 use crate::core::config::Config;
 use crate::core::http::build_http_client;
 use crate::ui::i18n::{L10nKey, t, t_fmt};
 
-pub const RELEASES_URL: &str = "https://github.com/cloudy-liu/ctty7/releases/latest";
+pub const RELEASES_URL: &str = "https://github.com/cloudy-liu/hitty/releases/latest";
 
 const CHECK_TIMEOUT: Duration = Duration::from_secs(15);
 
@@ -63,19 +63,19 @@ struct DownloadProgress {
 const PROGRESS_TICK: Duration = Duration::from_millis(120);
 
 #[cfg(target_os = "windows")]
-const WINDOWS_INNO_INSTALL_MARKER: &str = ".tty7-inno-install";
+const WINDOWS_INNO_INSTALL_MARKER: &str = ".hitty-inno-install";
 #[cfg(target_os = "windows")]
-const WINDOWS_PORTABLE_MARKER: &str = ".tty7-portable";
+const WINDOWS_PORTABLE_MARKER: &str = ".hitty-portable";
 #[cfg(target_os = "windows")]
 const WINDOWS_PORTABLE_MARKER_CONTENT: &[u8] = b"portable-v1";
 /// What the updater names the directory it moves the old portable files into.
 #[cfg(target_os = "windows")]
-const WINDOWS_PORTABLE_BACKUP_PREFIX: &str = ".tty7-update-backup-";
+const WINDOWS_PORTABLE_BACKUP_PREFIX: &str = ".hitty-update-backup-";
 /// Present inside that backup from before the first installed file moves
 /// until the replacement is complete — see `PORTABLE_BACKUP_INCOMPLETE` in
-/// src/bin/tty7-updater.rs, which this duplicates like the markers above.
+/// src/bin/hitty-updater.rs, which this duplicates like the markers above.
 #[cfg(target_os = "windows")]
-const WINDOWS_PORTABLE_BACKUP_INCOMPLETE: &str = ".tty7-replace-incomplete";
+const WINDOWS_PORTABLE_BACKUP_INCOMPLETE: &str = ".hitty-replace-incomplete";
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct AvailableUpdate {
@@ -134,7 +134,7 @@ impl UpdateInstallHint {
     fn english(&self) -> String {
         match self {
             #[cfg(target_os = "macos")]
-            Self::UnsupportedMacos => "This copy is not running from a writable tty7.app bundle, so replacing it would be unsafe. Move tty7 to Applications or another writable folder, or open the release page to install the update.".to_string(),
+            Self::UnsupportedMacos => "This copy is not running from a writable Hitty.app bundle, so replacing it would be unsafe. Move hitty to Applications or another writable folder, or open the release page to install the update.".to_string(),
             #[cfg(target_os = "linux")]
             Self::UnsupportedLinux => "The release has no Linux package for this architecture. Build from source or use your package manager.".to_string(),
             #[cfg(target_os = "linux")]
@@ -144,13 +144,13 @@ impl UpdateInstallHint {
             #[cfg(target_os = "windows")]
             Self::UnsupportedWindows => "Automatic Windows updates are available for recognized Inno Setup and portable ZIP installations. This copy is missing a valid installation marker, updater, or writable portable directory, so open the release page to update it manually.".to_string(),
             #[cfg(target_os = "windows")]
-            Self::WindowsAllUsersInstall => "tty7 is installed for all users, which needs administrator rights to replace. tty7 will not raise an elevation prompt on its own behalf, so open the release page and run the installer yourself to update it.".to_string(),
+            Self::WindowsAllUsersInstall => "hitty is installed for all users, which needs administrator rights to replace. hitty will not raise an elevation prompt on its own behalf, so open the release page and run the installer yourself to update it.".to_string(),
             #[cfg(not(any(target_os = "macos", target_os = "linux", target_os = "windows")))]
             Self::UnsupportedPlatform => "Automatic installation is not available on this platform. Open the release page.".to_string(),
             Self::MissingPackage(name) => format!(
                 "The release has no {name} package for this installation. Open the release page to choose another package."
             ),
-            Self::MissingChecksums => "The release has no checksums.txt, so tty7 refuses to install it automatically.".to_string(),
+            Self::MissingChecksums => "The release has no checksums.txt, so hitty refuses to install it automatically.".to_string(),
         }
     }
 }
@@ -927,7 +927,7 @@ pub fn open_url(url: &str) {
 /// reports whether this process should now get out of the way.
 ///
 /// This is what makes "Install on Next Launch" worth offering: the user never
-/// waits for a download and never answers a second question — they quit tty7
+/// waits for a download and never answers a second question — they quit hitty
 /// one evening and start a new version the next morning.
 ///
 /// Must run before the daemon is contacted and before any window exists.
@@ -1007,7 +1007,7 @@ pub fn apply_pending_at_launch() -> bool {
 /// before any window exists; `spawn_check`'s hydration carries the result
 /// into Settings.
 pub fn absorb_update_outcome_at_launch() {
-    use tty7_core::daemon::install::outcome::{UpdateOutcome, read_outcome};
+    use hitty_core::daemon::install::outcome::{UpdateOutcome, read_outcome};
 
     let Some(path) = update_outcome_path() else {
         return;
@@ -1152,10 +1152,10 @@ fn stage_roots() -> Vec<PathBuf> {
 /// The prefixes `update_staging_dir` and `system_update_staging_dir` hand to
 /// `tempfile`.
 fn is_stage_name(name: &str) -> bool {
-    name.starts_with(".tty7-update-") || name.starts_with("tty7-update-")
+    name.starts_with(".hitty-update-") || name.starts_with("hitty-update-")
 }
 
-/// Deals with `.tty7-update-backup-*` directories a previous portable update
+/// Deals with `.hitty-update-backup-*` directories a previous portable update
 /// left in the installation.
 ///
 /// One still carrying the incomplete marker means the replacement was cut
@@ -1311,7 +1311,7 @@ fn human_bytes(bytes: u64) -> String {
 /// launched: its staged helper is the *old* build's updater and would not
 /// understand this build's arguments. Absent from pre-parameterization
 /// plans, which deserialize as 0 and never match.
-// ctty7 changes the distribution identity: invalidate pre-migration plans
+// hitty changes the distribution identity: invalidate pre-migration plans
 // even when their old 26.x version sorts above the new version line.
 const PLAN_VERSION: u32 = 3;
 
@@ -1437,7 +1437,7 @@ impl PendingUpdate {
         // prompt — and the elevated half's `<install-dir>` — at a binary of
         // the plan writer's choosing.
         let installed_updater =
-            bundled_updater().context("tty7-updater.exe is not installed beside this app")?;
+            bundled_updater().context("hitty-updater.exe is not installed beside this app")?;
         let installed_dir = installed_updater
             .parent()
             .context("the installed updater names no directory")?
@@ -1482,7 +1482,7 @@ impl PendingUpdate {
         if let Some(dir) = &self.config_dir {
             watcher.arg("--config-dir").arg(dir);
         }
-        let mut watcher = tty7_core::core::proc::hide_console(&mut watcher)
+        let mut watcher = hitty_core::core::proc::hide_console(&mut watcher)
             .stdin(Stdio::null())
             .stdout(Stdio::null())
             .stderr(Stdio::null())
@@ -1551,7 +1551,7 @@ fn elevated_stage_arguments(
 ///
 /// Wrapping in quotes is not enough on its own. A backslash is an escape
 /// character only in front of a quote, so a path that *ends* in one
-/// (`--config-dir "D:\tty7\"`) escapes its own closing quote and swallows the
+/// (`--config-dir "D:\hitty\"`) escapes its own closing quote and swallows the
 /// rest of the command line into a single argument; an embedded quote splits
 /// one argument into several. Neither can be reached across the integrity
 /// boundary — every value here comes from this user's own session — but the
@@ -1730,12 +1730,12 @@ fn tag_from_release_location(location: &str) -> Option<&str> {
 /// built from the tag rather than listed through the REST API.
 fn published_gui_assets(tag: &str, version: &str) -> Vec<GitHubAsset> {
     [
-        format!("ctty7-{version}-linux-x86_64.AppImage"),
-        format!("ctty7-{version}-linux-x86_64.tar.gz"),
-        format!("ctty7-{version}-macos-arm64.zip"),
-        format!("ctty7-{version}-macos-x86_64.zip"),
-        format!("ctty7-{version}-windows-x86_64-setup.exe"),
-        format!("ctty7-{version}-windows-x86_64.zip"),
+        format!("hitty-{version}-linux-x86_64.AppImage"),
+        format!("hitty-{version}-linux-x86_64.tar.gz"),
+        format!("hitty-{version}-macos-arm64.zip"),
+        format!("hitty-{version}-macos-x86_64.zip"),
+        format!("hitty-{version}-windows-x86_64-setup.exe"),
+        format!("hitty-{version}-windows-x86_64.zip"),
         CHECKSUMS_ASSET.to_string(),
     ]
     .into_iter()
@@ -1923,7 +1923,7 @@ fn package_for_current_install(version: &str) -> Result<PackageOffer, UpdateInst
             return Err(UpdateInstallHint::UnsupportedMacos);
         };
         return Ok(PackageOffer::plain(format!(
-            "ctty7-{version}-macos-{arch}.zip"
+            "hitty-{version}-macos-{arch}.zip"
         )));
     }
     #[cfg(target_os = "linux")]
@@ -1956,7 +1956,7 @@ fn package_for_current_install(version: &str) -> Result<PackageOffer, UpdateInst
             WindowsUpdatability::NeedsElevation => true,
             WindowsUpdatability::Unsupported(hint) => return Err(hint),
         };
-        if !layout.directory().join("tty7-updater.exe").is_file() {
+        if !layout.directory().join("hitty-updater.exe").is_file() {
             return Err(UpdateInstallHint::UnsupportedWindows);
         }
         // UAC is pointed at the *installed* updater, so the elevated chain is
@@ -1987,7 +1987,7 @@ fn package_for_current_install(version: &str) -> Result<PackageOffer, UpdateInst
 /// verb exits with its usage error, which is the same "no".
 #[cfg(target_os = "windows")]
 fn updater_speaks_elevation(install_dir: &Path) -> bool {
-    let updater = install_dir.join("tty7-updater.exe");
+    let updater = install_dir.join("hitty-updater.exe");
     let mut command = Command::new(&updater);
     command
         .arg("capabilities")
@@ -2036,7 +2036,7 @@ fn prepare_update(
         .is_break()
     };
     if cancelled() {
-        anyhow::bail!(tty7_core::daemon::install::download::CANCELLED);
+        anyhow::bail!(hitty_core::daemon::install::download::CANCELLED);
     }
     progress.verifying.store(true, Ordering::Relaxed);
     #[cfg(target_os = "macos")]
@@ -2111,7 +2111,7 @@ impl PreparedUpdate {
             // otherwise be read as having written *that* one.
             let _ = std::fs::remove_file(outcome);
         }
-        tty7_core::core::proc::hide_console(&mut command)
+        hitty_core::core::proc::hide_console(&mut command)
             .stdin(Stdio::null())
             .stdout(Stdio::null())
             .stderr(Stdio::null())
@@ -2119,7 +2119,7 @@ impl PreparedUpdate {
             .inspect_err(|_| {
                 let _ = super::update_stage::remove_stage(&self.stage);
             })
-            .context("launching tty7-updater")?;
+            .context("launching hitty-updater")?;
         Ok(())
     }
 }
@@ -2127,7 +2127,7 @@ impl PreparedUpdate {
 /// Where the updater records how the install ended; the next launch merges it
 /// into the update state (`absorb_update_outcome_at_launch`).
 fn update_outcome_path() -> Option<PathBuf> {
-    crate::core::config::config_path(tty7_core::daemon::install::outcome::OUTCOME_FILE_NAME)
+    crate::core::config::config_path(hitty_core::daemon::install::outcome::OUTCOME_FILE_NAME)
 }
 
 /// The file the privileged first stage writes its pid into so the de-elevated
@@ -2144,7 +2144,7 @@ fn update_elevation_status_path() -> Option<PathBuf> {
 /// The named options after the positional arguments. Everything the updater
 /// must know about this process's configuration crosses as arguments, never
 /// the environment: on Windows an elevated (UAC) child does not inherit the
-/// spawning process's environment, so a `TTY7_CONFIG_DIR` set there would
+/// spawning process's environment, so a `HITTY_CONFIG_DIR` set there would
 /// fall back to the administrator's config directory exactly in the case
 /// that needs the caller's (#504). The updater re-exports the variable for
 /// the children it spawns itself.
@@ -2164,7 +2164,7 @@ fn updater_tail_args(config_dir: Option<&Path>, outcome: Option<&Path>) -> Vec<s
 #[cfg(any(target_os = "macos", target_os = "linux"))]
 fn update_staging_dir(parent: &Path) -> Result<tempfile::TempDir> {
     tempfile::Builder::new()
-        .prefix(".tty7-update-")
+        .prefix(".hitty-update-")
         .tempdir_in(parent)
         .context("creating update staging directory")
 }
@@ -2172,7 +2172,7 @@ fn update_staging_dir(parent: &Path) -> Result<tempfile::TempDir> {
 #[cfg(target_os = "windows")]
 fn system_update_staging_dir() -> Result<tempfile::TempDir> {
     tempfile::Builder::new()
-        .prefix("tty7-update-")
+        .prefix("hitty-update-")
         .tempdir()
         .context("creating the Windows update staging directory")
 }
@@ -2192,11 +2192,11 @@ fn prepare_macos_update(
     cancelled: &dyn Fn() -> bool,
 ) -> Result<PreparedUpdate> {
     let current =
-        current_macos_app_bundle().context("tty7 is not running from an application bundle")?;
+        current_macos_app_bundle().context("hitty is not running from an application bundle")?;
     let parent = current
         .parent()
-        .context("tty7.app has no parent directory")?;
-    let updater = bundled_updater().context("tty7-updater is not bundled with this app")?;
+        .context("Hitty.app has no parent directory")?;
+    let updater = bundled_updater().context("hitty-updater is not bundled with this app")?;
     let staging = update_staging_dir(parent)?;
     let dir = staging.path().to_path_buf();
     let archive = write_staged_asset(&dir, asset_name, archive)?;
@@ -2259,11 +2259,11 @@ fn prepare_linux_update(
     checksums: &[u8],
     cancelled: &dyn Fn() -> bool,
 ) -> Result<PreparedUpdate> {
-    let current = current_appimage().context("tty7 is not running from an AppImage")?;
+    let current = current_appimage().context("hitty is not running from an AppImage")?;
     let parent = current
         .parent()
         .context("the AppImage has no parent directory")?;
-    let bundled = bundled_updater().context("tty7-updater is not bundled with this image")?;
+    let bundled = bundled_updater().context("hitty-updater is not bundled with this image")?;
     let staging = update_staging_dir(parent)?;
     let dir = staging.path().to_path_buf();
     let archive = write_staged_asset(&dir, asset_name, archive)?;
@@ -2283,7 +2283,7 @@ fn prepare_linux_update(
             cancelled,
         ),
     )?;
-    let updater = dir.join("tty7-updater");
+    let updater = dir.join("hitty-updater");
     std::fs::copy(&bundled, &updater)
         .with_context(|| format!("copying the updater to {}", updater.display()))?;
     let log =
@@ -2320,7 +2320,7 @@ fn prepare_windows_update(
     cancelled: &dyn Fn() -> bool,
 ) -> Result<PreparedUpdate> {
     let layout = current_windows_update_layout()
-        .context("tty7 is not running from a recognized Windows installation")?;
+        .context("hitty is not running from a recognized Windows installation")?;
     // Re-checked here rather than trusting the check that produced the offer:
     // an installation can be relocated, or its privileges changed, between the
     // update check and the user pressing the button.
@@ -2336,7 +2336,7 @@ fn prepare_windows_update(
         }
     };
     let install_dir = layout.directory().to_path_buf();
-    let bundled = bundled_updater().context("tty7-updater.exe is not bundled with this app")?;
+    let bundled = bundled_updater().context("hitty-updater.exe is not bundled with this app")?;
 
     // The digest the elevated chain trusts, taken from the downloaded
     // manifest rather than the staged copy of it: the staged file lands in a
@@ -2347,8 +2347,8 @@ fn prepare_windows_update(
         let manifest =
             std::str::from_utf8(checksums).context("checksums.txt is not valid UTF-8")?;
         Some(
-            tty7_core::daemon::install::checksums::expected_digest(manifest, asset_name)
-                .map(|digest| tty7_core::daemon::install::checksums::hex(&digest))
+            hitty_core::daemon::install::checksums::expected_digest(manifest, asset_name)
+                .map(|digest| hitty_core::daemon::install::checksums::hex(&digest))
                 .context("reading the staged package's digest from checksums.txt")?,
         )
     } else {
@@ -2380,7 +2380,7 @@ fn prepare_windows_update(
 
     // Windows locks a running executable. Run a private copy from the staging
     // directory so Inno can replace the bundled helper in the installation.
-    let updater = dir.join("tty7-updater.exe");
+    let updater = dir.join("hitty-updater.exe");
     std::fs::copy(&bundled, &updater)
         .with_context(|| format!("copying the Windows updater to {}", updater.display()))?;
 
@@ -2423,7 +2423,7 @@ fn is_macos_update_writable(app: &Path) -> bool {
 
 #[cfg(target_os = "macos")]
 fn bundled_updater() -> Option<PathBuf> {
-    let updater = current_macos_app_bundle()?.join("Contents/MacOS/tty7-updater");
+    let updater = current_macos_app_bundle()?.join("Contents/MacOS/hitty-updater");
     updater.is_file().then_some(updater)
 }
 
@@ -2431,7 +2431,7 @@ fn bundled_updater() -> Option<PathBuf> {
 fn bundled_updater() -> Option<PathBuf> {
     let updater = current_windows_update_layout()?
         .directory()
-        .join("tty7-updater.exe");
+        .join("hitty-updater.exe");
     updater.is_file().then_some(updater)
 }
 
@@ -2441,7 +2441,10 @@ fn bundled_updater() -> Option<PathBuf> {
 /// that is not the one this process actually runs beside.
 #[cfg(target_os = "linux")]
 fn bundled_updater() -> Option<PathBuf> {
-    let updater = std::env::current_exe().ok()?.parent()?.join("tty7-updater");
+    let updater = std::env::current_exe()
+        .ok()?
+        .parent()?
+        .join("hitty-updater");
     updater.is_file().then_some(updater)
 }
 
@@ -2481,10 +2484,10 @@ fn linux_package_for(
 ) -> Result<PackageOffer, UpdateInstallHint> {
     if !is_appimage {
         return Err(UpdateInstallHint::LinuxManualPackage(format!(
-            "ctty7-{version}-linux-{arch}.tar.gz"
+            "hitty-{version}-linux-{arch}.tar.gz"
         )));
     }
-    let name = format!("ctty7-{version}-linux-{arch}.AppImage");
+    let name = format!("hitty-{version}-linux-{arch}.AppImage");
     if can_self_update {
         Ok(PackageOffer::plain(name))
     } else {
@@ -2516,8 +2519,8 @@ fn windows_package_for_layout(version: &str, layout: &WindowsUpdateLayout) -> Op
         return None;
     };
     Some(match layout {
-        WindowsUpdateLayout::Inno(_) => format!("ctty7-{version}-windows-{arch}-setup.exe"),
-        WindowsUpdateLayout::Portable(_) => format!("ctty7-{version}-windows-{arch}.zip"),
+        WindowsUpdateLayout::Inno(_) => format!("hitty-{version}-windows-{arch}-setup.exe"),
+        WindowsUpdateLayout::Portable(_) => format!("hitty-{version}-windows-{arch}.zip"),
     })
 }
 
@@ -2541,7 +2544,7 @@ fn windows_update_layout_for(executable: &Path) -> Option<WindowsUpdateLayout> {
 #[cfg(target_os = "windows")]
 fn windows_directory_is_writable(directory: &Path) -> bool {
     tempfile::Builder::new()
-        .prefix(".tty7-update-write-test-")
+        .prefix(".hitty-update-write-test-")
         .tempfile_in(directory)
         .is_ok()
 }
@@ -2601,7 +2604,7 @@ fn windows_inno_needs_elevation(install_dir: &Path) -> bool {
 ///     *second* copy while the real installation goes untouched — or Inno
 ///     re-launches itself elevated and the user gets a bare UAC prompt for an
 ///     unsigned executable in `%TEMP%`, seconds after the GUI vanished.
-///     Neither outcome is one tty7 should produce on its own initiative.
+///     Neither outcome is one hitty should produce on its own initiative.
 ///   * A directory this process cannot write is one Setup cannot write
 ///     either, whatever the registry says. This also catches an installation
 ///     whose uninstall entry was pruned, relocated, or written by a different
@@ -2623,7 +2626,7 @@ fn windows_inno_needs_elevation_for(
 
 /// Compares two Windows directory paths the way the filesystem does: without
 /// regard to case, and without letting a trailing separator make
-/// `C:\Program Files\tty7\` a different place from `C:\Program Files\tty7`.
+/// `C:\Program Files\hitty\` a different place from `C:\Program Files\hitty`.
 /// Deliberately textual — `canonicalize` would hit the disk and answers
 /// `\\?\`-prefixed, which is not what the registry stores.
 #[cfg(target_os = "windows")]
@@ -2638,7 +2641,7 @@ fn same_windows_directory(left: &Path, right: &Path) -> bool {
     }
 }
 
-/// The `{app}` directory of an all-users tty7 installation, read from the
+/// The `{app}` directory of an all-users hitty installation, read from the
 /// machine hive. `AppId` is frozen in `windows-installer.iss` for exactly this
 /// kind of lookup, and Inno stamps the resolved install directory into
 /// `Inno Setup: App Path`. Absent for a per-user install, whose uninstall
@@ -2653,7 +2656,7 @@ fn windows_all_users_install_path() -> Option<PathBuf> {
 
     const UNINSTALL_KEY: &str = concat!(
         r"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\",
-        r"{9A3F6C1E-4B7D-4E2A-8C5F-D01B92E64A37}_is1"
+        r"{C8AFFE59-EF17-4079-BD64-2560017505CB}_is1"
     );
     const APP_PATH_VALUE: &str = "Inno Setup: App Path";
 
@@ -2679,7 +2682,7 @@ fn windows_all_users_install_path() -> Option<PathBuf> {
     let path = wide(UNINSTALL_KEY);
     let mut key: HKEY = std::ptr::null_mut();
     // SAFETY: `path` is NUL-terminated and live for the call; `key` is a valid
-    // out-parameter, wrapped only when the call reports success. The tty7
+    // out-parameter, wrapped only when the call reports success. The hitty
     // installer is x64-only, so the native 64-bit view is the only one its
     // uninstall entry can appear in.
     let code = unsafe { RegOpenKeyExW(HKEY_LOCAL_MACHINE, path.as_ptr(), 0, KEY_READ, &mut key) };
@@ -2734,7 +2737,7 @@ fn windows_all_users_install_path() -> Option<PathBuf> {
 #[cfg(any(target_os = "macos", target_os = "linux"))]
 fn can_stage_replacement_in(dir: &Path) -> bool {
     tempfile::Builder::new()
-        .prefix(".tty7-update-write-test-")
+        .prefix(".hitty-update-write-test-")
         .tempfile_in(dir)
         .is_ok()
 }
@@ -2751,10 +2754,10 @@ fn run_updater(
         super::update_process::VERIFY_TIMEOUT,
         cancelled,
     )
-    .context("running tty7-updater verification")?;
+    .context("running hitty-updater verification")?;
     if !output.status.success() {
         anyhow::bail!(
-            "tty7-updater verification failed: {}",
+            "hitty-updater verification failed: {}",
             String::from_utf8_lossy(&output.stderr).trim()
         )
     }
@@ -2818,9 +2821,9 @@ mod tests {
     #[test]
     fn expired_stage_cleanup_preserves_pending_updates_and_recovery_files() {
         let root = tempfile::tempdir().unwrap();
-        let ordinary = root.path().join("tty7-update-old");
-        let pending = root.path().join("tty7-update-pending");
-        let recovery = root.path().join(".tty7-update-recovery");
+        let ordinary = root.path().join("hitty-update-old");
+        let pending = root.path().join("hitty-update-pending");
+        let recovery = root.path().join(".hitty-update-recovery");
         let unrelated = root.path().join("unrelated");
         for dir in [&ordinary, &pending, &recovery, &unrelated] {
             std::fs::create_dir(dir).unwrap();
@@ -2983,18 +2986,18 @@ mod tests {
         assert!(!is_update_available("0.1.0", "26.8.3-c.9"));
         let offer = select_release_asset_for(
             Ok(PackageOffer::plain(
-                "ctty7-0.1.1-windows-x86_64-setup.exe".into(),
+                "hitty-0.1.1-windows-x86_64-setup.exe".into(),
             )),
             &release.assets,
         );
         let asset = offer.asset.unwrap();
         assert_eq!(
             asset.url,
-            "https://github.com/cloudy-liu/ctty7/releases/download/v0.1.1/ctty7-0.1.1-windows-x86_64-setup.exe"
+            "https://github.com/cloudy-liu/hitty/releases/download/v0.1.1/hitty-0.1.1-windows-x86_64-setup.exe"
         );
         assert_eq!(
             asset.checksums_url,
-            "https://github.com/cloudy-liu/ctty7/releases/download/v0.1.1/checksums.txt"
+            "https://github.com/cloudy-liu/hitty/releases/download/v0.1.1/checksums.txt"
         );
     }
 
@@ -3034,7 +3037,7 @@ mod tests {
 
     #[test]
     fn release_asset_requires_the_platform_package_and_checksums() {
-        let name = "ctty7-27.1.0-macos-arm64.zip";
+        let name = "hitty-27.1.0-macos-arm64.zip";
         let assets = [github_asset(name), github_asset("checksums.txt")];
         let selected = select_release_asset_for(Ok(PackageOffer::plain(name.to_string())), &assets);
         assert_eq!(
@@ -3050,7 +3053,7 @@ mod tests {
 
     #[test]
     fn release_without_checksums_is_never_installable() {
-        let name = "ctty7-27.1.0-macos-arm64.zip";
+        let name = "hitty-27.1.0-macos-arm64.zip";
         let selected = select_release_asset_for(
             Ok(PackageOffer::plain(name.to_string())),
             &[github_asset(name)],
@@ -3063,10 +3066,10 @@ mod tests {
     fn release_without_the_exact_platform_package_is_never_guessed() {
         let selected = select_release_asset_for(
             Ok(PackageOffer::plain(
-                "ctty7-27.1.0-macos-arm64.zip".to_string(),
+                "hitty-27.1.0-macos-arm64.zip".to_string(),
             )),
             &[
-                github_asset("ctty7-27.1.0-macos-x86_64.zip"),
+                github_asset("hitty-27.1.0-macos-x86_64.zip"),
                 github_asset("checksums.txt"),
             ],
         );
@@ -3074,7 +3077,7 @@ mod tests {
         assert_eq!(
             selected.reason,
             Some(UpdateInstallHint::MissingPackage(
-                "ctty7-27.1.0-macos-arm64.zip".to_string()
+                "hitty-27.1.0-macos-arm64.zip".to_string()
             ))
         );
     }
@@ -3086,7 +3089,7 @@ mod tests {
     fn an_appimage_that_can_replace_itself_is_offered_the_appimage() {
         let offer = linux_package_for("27.1.0", "x86_64", true, true)
             .expect("a self-updating AppImage yields an offer");
-        assert_eq!(offer.name, "ctty7-27.1.0-linux-x86_64.AppImage");
+        assert_eq!(offer.name, "hitty-27.1.0-linux-x86_64.AppImage");
     }
 
     /// Everything else keeps the manual hint, and the hint names the exact
@@ -3099,12 +3102,12 @@ mod tests {
         // helper shipped: still an AppImage, still updated by hand.
         assert_eq!(
             linux_package_for("27.1.0", "x86_64", true, false).unwrap_err(),
-            UpdateInstallHint::LinuxManualPackage("ctty7-27.1.0-linux-x86_64.AppImage".to_string())
+            UpdateInstallHint::LinuxManualPackage("hitty-27.1.0-linux-x86_64.AppImage".to_string())
         );
         // A tarball (or distro-packaged) install is never guessed at.
         assert_eq!(
             linux_package_for("27.1.0", "x86_64", false, false).unwrap_err(),
-            UpdateInstallHint::LinuxManualPackage("ctty7-27.1.0-linux-x86_64.tar.gz".to_string())
+            UpdateInstallHint::LinuxManualPackage("hitty-27.1.0-linux-x86_64.tar.gz".to_string())
         );
         // `can_self_update` without an AppImage cannot happen (the probe is
         // gated on the variable), but the policy must not invent an offer if
@@ -3118,10 +3121,10 @@ mod tests {
     #[cfg(target_os = "linux")]
     #[test]
     fn appimage_selection_matches_the_published_asset_names() {
-        let name = "ctty7-27.1.0-linux-x86_64.AppImage";
+        let name = "hitty-27.1.0-linux-x86_64.AppImage";
         let offer = linux_package_for("27.1.0", "x86_64", true, true).unwrap();
         let assets = [
-            github_asset("ctty7-27.1.0-linux-x86_64.tar.gz"),
+            github_asset("hitty-27.1.0-linux-x86_64.tar.gz"),
             github_asset(name),
             github_asset("checksums.txt"),
         ];
@@ -3141,14 +3144,14 @@ mod tests {
     #[test]
     fn portable_backup_scan_separates_interrupted_from_finished() {
         let root = tempfile::tempdir().unwrap();
-        let interrupted = root.path().join(".tty7-update-backup-cut");
+        let interrupted = root.path().join(".hitty-update-backup-cut");
         std::fs::create_dir(&interrupted).unwrap();
         std::fs::write(interrupted.join(WINDOWS_PORTABLE_BACKUP_INCOMPLETE), b"").unwrap();
-        let finished = root.path().join(".tty7-update-backup-done");
+        let finished = root.path().join(".hitty-update-backup-done");
         std::fs::create_dir(&finished).unwrap();
         // Neither a user's directory nor a stray file may be touched.
         std::fs::create_dir(root.path().join("completions")).unwrap();
-        std::fs::write(root.path().join(".tty7-update-backup-not-a-dir"), b"file").unwrap();
+        std::fs::write(root.path().join(".hitty-update-backup-not-a-dir"), b"file").unwrap();
 
         let (got_interrupted, got_finished) = scan_portable_backups(root.path());
         assert_eq!(got_interrupted, vec![interrupted]);
@@ -3209,22 +3212,22 @@ mod tests {
     fn latest_redirect_location_yields_the_tag() {
         assert_eq!(
             tag_from_release_location(
-                "https://github.com/cloudy-liu/ctty7/releases/tag/v26.8.3-c.1"
+                "https://github.com/cloudy-liu/hitty/releases/tag/v26.8.3-c.1"
             ),
             Some("v26.8.3-c.1")
         );
         assert_eq!(
-            tag_from_release_location("/cloudy-liu/ctty7/releases/tag/v26.8.3-c.1"),
+            tag_from_release_location("/cloudy-liu/hitty/releases/tag/v26.8.3-c.1"),
             Some("v26.8.3-c.1")
         );
         assert_eq!(
             tag_from_release_location(
-                "https://github.com/cloudy-liu/ctty7/releases/tag/v26.8.3-c.1?foo=1#assets"
+                "https://github.com/cloudy-liu/hitty/releases/tag/v26.8.3-c.1?foo=1#assets"
             ),
             Some("v26.8.3-c.1")
         );
         assert_eq!(
-            tag_from_release_location("https://github.com/cloudy-liu/ctty7/releases/latest"),
+            tag_from_release_location("https://github.com/cloudy-liu/hitty/releases/latest"),
             None
         );
     }
@@ -3238,12 +3241,12 @@ mod tests {
             .expect("checksums.txt");
         assert_eq!(
             checksums.browser_download_url,
-            "https://github.com/cloudy-liu/ctty7/releases/download/v26.8.3-c.1/checksums.txt"
+            "https://github.com/cloudy-liu/hitty/releases/download/v26.8.3-c.1/checksums.txt"
         );
         assert!(
             assets
                 .iter()
-                .any(|asset| asset.name == "ctty7-26.8.3-c.1-windows-x86_64-setup.exe")
+                .any(|asset| asset.name == "hitty-26.8.3-c.1-windows-x86_64-setup.exe")
         );
     }
 
@@ -3279,9 +3282,9 @@ mod tests {
                 version: "27.0.0".into(),
                 apply_on_launch: true,
                 plan_version: PLAN_VERSION,
-                updater: PathBuf::from("/tmp/tty7-updater"),
+                updater: PathBuf::from("/tmp/hitty-updater"),
                 command: "install".into(),
-                rest: vec![PathBuf::from("/tmp/stage/tty7.zip")],
+                rest: vec![PathBuf::from("/tmp/stage/hitty.zip")],
                 config_dir: None,
                 stage: PathBuf::from("/tmp/stage"),
                 needs_elevation: false,
@@ -3339,7 +3342,7 @@ mod tests {
         // The bookkeeping half of `record_failure`, which needs an App to run.
         state.last_failure = Some(FailureRecord {
             version: "27.0.0".into(),
-            detail: "downloading ctty7-27.0.0-macos-arm64.zip: timed out".into(),
+            detail: "downloading hitty-27.0.0-macos-arm64.zip: timed out".into(),
         });
         if state.last_prompted.as_deref() == Some("27.0.0") {
             state.last_prompted = None;
@@ -3456,7 +3459,7 @@ mod tests {
     /// writing both would race each other.
     #[test]
     fn an_updater_outcome_is_absorbed_exactly_once() {
-        use tty7_core::daemon::install::outcome::{UpdateOutcome, write_outcome};
+        use hitty_core::daemon::install::outcome::{UpdateOutcome, write_outcome};
 
         let _lock = UPDATE_STATE_LOCK.lock().unwrap();
         crate::core::config::pin_test_config_dir();
@@ -3581,19 +3584,19 @@ mod tests {
 
     #[test]
     fn only_our_own_staging_directories_are_swept() {
-        assert!(is_stage_name(".tty7-update-abc123"));
-        assert!(is_stage_name("tty7-update-abc123"));
-        assert!(!is_stage_name("tty7.app"));
+        assert!(is_stage_name(".hitty-update-abc123"));
+        assert!(is_stage_name("hitty-update-abc123"));
+        assert!(!is_stage_name("Hitty.app"));
         assert!(!is_stage_name(".Trash"));
-        assert!(!is_stage_name("tty7-update"));
+        assert!(!is_stage_name("hitty-update"));
     }
 
     #[test]
     fn a_staged_plan_supplies_a_fresh_parent_pid() {
         let prepared = PreparedUpdate {
-            updater: PathBuf::from("/tmp/tty7-updater"),
+            updater: PathBuf::from("/tmp/hitty-updater"),
             command: "install".into(),
-            rest: vec![PathBuf::from("/tmp/stage/tty7.zip")],
+            rest: vec![PathBuf::from("/tmp/stage/hitty.zip")],
             config_dir: None,
             stage: PathBuf::from("/tmp/stage"),
             needs_elevation: false,
@@ -3604,14 +3607,14 @@ mod tests {
         // The pid is the one argument that cannot be persisted: a plan written
         // today names a process that is gone by the time it runs.
         assert_eq!(args[1], PathBuf::from(std::process::id().to_string()));
-        assert_eq!(args[2], PathBuf::from("/tmp/stage/tty7.zip"));
+        assert_eq!(args[2], PathBuf::from("/tmp/stage/hitty.zip"));
     }
 
     #[cfg(target_os = "windows")]
     #[test]
     fn windows_markers_distinguish_inno_portable_and_unknown_layouts() {
         let root = tempfile::tempdir().unwrap();
-        let executable = root.path().join("tty7-app.exe");
+        let executable = root.path().join("hitty-app.exe");
         std::fs::write(&executable, b"test app").unwrap();
         assert_eq!(windows_update_layout_for(&executable), None);
 
@@ -3635,27 +3638,27 @@ mod tests {
     #[cfg(target_os = "windows")]
     #[test]
     fn windows_layout_selects_the_matching_release_package() {
-        let directory = PathBuf::from(r"C:\tty7");
+        let directory = PathBuf::from(r"C:\hitty");
         assert_eq!(
             windows_package_for_layout("26.8.2", &WindowsUpdateLayout::Inno(directory.clone()))
                 .as_deref(),
-            Some("ctty7-26.8.2-windows-x86_64-setup.exe")
+            Some("hitty-26.8.2-windows-x86_64-setup.exe")
         );
         assert_eq!(
             windows_package_for_layout("26.8.2", &WindowsUpdateLayout::Portable(directory))
                 .as_deref(),
-            Some("ctty7-26.8.2-windows-x86_64.zip")
+            Some("hitty-26.8.2-windows-x86_64.zip")
         );
     }
 
     #[cfg(target_os = "windows")]
     #[test]
     fn an_all_users_inno_install_is_never_updated_in_place() {
-        let all_users = PathBuf::from(r"C:\Program Files\tty7");
-        let per_user = PathBuf::from(r"C:\Users\someone\AppData\Local\Programs\tty7");
+        let all_users = PathBuf::from(r"C:\Program Files\hitty");
+        let per_user = PathBuf::from(r"C:\Users\someone\AppData\Local\Programs\hitty");
 
         // The machine-hive entry names this directory: elevation would be
-        // required, so tty7 declines however writable the directory looks.
+        // required, so hitty declines however writable the directory looks.
         assert!(windows_inno_needs_elevation_for(
             Some(&all_users),
             &all_users,
@@ -3664,12 +3667,12 @@ mod tests {
         // Inno stores the path with a trailing separator in `InstallLocation`
         // and without one in `Inno Setup: App Path`; both name one place.
         assert!(windows_inno_needs_elevation_for(
-            Some(Path::new(r"C:\Program Files\tty7\")),
+            Some(Path::new(r"C:\Program Files\hitty\")),
             &all_users,
             true
         ));
         assert!(windows_inno_needs_elevation_for(
-            Some(Path::new(r"c:\program files\TTY7")),
+            Some(Path::new(r"c:\program files\HITTY")),
             &all_users,
             true
         ));
@@ -3692,7 +3695,7 @@ mod tests {
     #[test]
     fn an_all_users_inno_install_reports_the_elevation_hint() {
         let root = tempfile::tempdir().unwrap();
-        let executable = root.path().join("tty7-app.exe");
+        let executable = root.path().join("hitty-app.exe");
         std::fs::write(&executable, b"test app").unwrap();
         std::fs::write(root.path().join(WINDOWS_INNO_INSTALL_MARKER), b"inno-v1").unwrap();
         let layout = windows_update_layout_for(&executable).unwrap();
@@ -3759,7 +3762,7 @@ mod tests {
     #[test]
     fn a_plan_from_another_protocol_version_is_not_usable() {
         let root = tempfile::tempdir().unwrap();
-        let updater = root.path().join("tty7-updater");
+        let updater = root.path().join("hitty-updater");
         std::fs::write(&updater, b"test updater").unwrap();
         let stage = root.path().join("stage");
         std::fs::create_dir(&stage).unwrap();
@@ -3770,7 +3773,7 @@ mod tests {
             plan_version,
             updater: updater.clone(),
             command: "install".into(),
-            rest: vec![stage.join("tty7.zip")],
+            rest: vec![stage.join("hitty.zip")],
             config_dir: None,
             stage: stage.clone(),
             needs_elevation: false,
@@ -3779,7 +3782,7 @@ mod tests {
         assert!(plan(PLAN_VERSION).is_usable());
         // Plans written before the field existed deserialize it as 0.
         assert!(!plan(0).is_usable());
-        assert!(!plan(2).is_usable(), "discard pre-ctty7 staged packages");
+        assert!(!plan(2).is_usable(), "discard pre-hitty staged packages");
         assert!(!plan(PLAN_VERSION + 1).is_usable());
     }
 
@@ -3796,7 +3799,7 @@ mod tests {
         // An old updater exits with a usage error: no tokens, no chain, and
         // the install falls back to pointing at the release page.
         assert!(!capabilities_cover_elevation(
-            b"usage: tty7-updater <command> [args]"
+            b"usage: hitty-updater <command> [args]"
         ));
         assert!(!capabilities_cover_elevation(b""));
         // Two of the three verbs is not the chain.
@@ -3809,25 +3812,25 @@ mod tests {
     #[test]
     fn an_elevated_plan_names_every_piece_the_chain_needs() {
         let digest = "ab".repeat(32);
-        let stage = PathBuf::from(r"C:\Users\someone\AppData\Local\Temp\tty7-update-x");
+        let stage = PathBuf::from(r"C:\Users\someone\AppData\Local\Temp\hitty-update-x");
         let plan = |needs_elevation, expected_sha256: Option<&str>| PendingUpdate {
             version: "27.0.0".into(),
             apply_on_launch: false,
             plan_version: PLAN_VERSION,
-            updater: stage.join("tty7-updater.exe"),
+            updater: stage.join("hitty-updater.exe"),
             command: "install".into(),
             // The order `prepare_windows_update` pushes: installer, checksums,
             // asset name, install dir, version, log, stage.
             rest: vec![
-                stage.join("ctty7-27.0.0-windows-x86_64-setup.exe"),
+                stage.join("hitty-27.0.0-windows-x86_64-setup.exe"),
                 stage.join("checksums.txt"),
-                PathBuf::from("ctty7-27.0.0-windows-x86_64-setup.exe"),
-                PathBuf::from(r"C:\Program Files\tty7"),
+                PathBuf::from("hitty-27.0.0-windows-x86_64-setup.exe"),
+                PathBuf::from(r"C:\Program Files\hitty"),
                 PathBuf::from("27.0.0"),
                 stage.join("update.log"),
                 stage.clone(),
             ],
-            config_dir: Some(PathBuf::from(r"C:\Users\someone\.config\tty7")),
+            config_dir: Some(PathBuf::from(r"C:\Users\someone\.config\hitty")),
             stage: stage.clone(),
             needs_elevation,
             expected_sha256: expected_sha256.map(str::to_string),
@@ -3838,10 +3841,10 @@ mod tests {
             .expect("a complete elevated plan yields its parts");
         assert_eq!(
             parts.installer,
-            stage.join("ctty7-27.0.0-windows-x86_64-setup.exe")
+            stage.join("hitty-27.0.0-windows-x86_64-setup.exe")
         );
-        assert_eq!(parts.asset_name, "ctty7-27.0.0-windows-x86_64-setup.exe");
-        assert_eq!(parts.install_dir, PathBuf::from(r"C:\Program Files\tty7"));
+        assert_eq!(parts.asset_name, "hitty-27.0.0-windows-x86_64-setup.exe");
+        assert_eq!(parts.install_dir, PathBuf::from(r"C:\Program Files\hitty"));
         assert_eq!(parts.version, "27.0.0");
         assert_eq!(parts.expected_sha256, digest);
 
@@ -3859,8 +3862,8 @@ mod tests {
     fn the_elevated_command_line_quotes_every_argument() {
         let parts = ElevatedPlanParts {
             installer: PathBuf::from(r"C:\Users\some one\stage\setup.exe"),
-            asset_name: "ctty7-27.0.0-windows-x86_64-setup.exe".into(),
-            install_dir: PathBuf::from(r"C:\Program Files\tty7"),
+            asset_name: "hitty-27.0.0-windows-x86_64-setup.exe".into(),
+            install_dir: PathBuf::from(r"C:\Program Files\hitty"),
             version: "27.0.0".into(),
             log: PathBuf::from(r"C:\Users\some one\stage\update.log"),
             stage: PathBuf::from(r"C:\Users\some one\stage"),
@@ -3868,9 +3871,9 @@ mod tests {
         };
         let line = elevated_stage_arguments(
             &parts,
-            Path::new(r"C:\Users\some one\.config\tty7\update-elevation.status"),
-            Path::new(r"C:\Users\some one\.config\tty7\update-outcome.json"),
-            Some(Path::new(r"C:\Users\some one\.config\tty7")),
+            Path::new(r"C:\Users\some one\.config\hitty\update-elevation.status"),
+            Path::new(r"C:\Users\some one\.config\hitty\update-outcome.json"),
+            Some(Path::new(r"C:\Users\some one\.config\hitty")),
         )
         .into_string()
         .expect("the test paths are valid Unicode");
@@ -3881,7 +3884,7 @@ mod tests {
             "{line}"
         );
         // A space in a path must never reach the CRT splitter unquoted.
-        assert!(line.contains(r#""C:\Program Files\tty7""#), "{line}");
+        assert!(line.contains(r#""C:\Program Files\hitty""#), "{line}");
         assert!(
             line.contains(r#""C:\Users\some one\stage\setup.exe""#),
             "{line}"
@@ -3895,17 +3898,17 @@ mod tests {
         );
         assert!(
             line.contains(
-                r#""--status-file" "C:\Users\some one\.config\tty7\update-elevation.status""#
+                r#""--status-file" "C:\Users\some one\.config\hitty\update-elevation.status""#
             ),
             "{line}"
         );
         assert!(
-            line.contains(r#""--config-dir" "C:\Users\some one\.config\tty7""#),
+            line.contains(r#""--config-dir" "C:\Users\some one\.config\hitty""#),
             "{line}"
         );
         assert!(
             line.contains(
-                r#""--result-file" "C:\Users\some one\.config\tty7\update-outcome.json""#
+                r#""--result-file" "C:\Users\some one\.config\hitty\update-outcome.json""#
             ),
             "{line}"
         );
@@ -3926,12 +3929,12 @@ mod tests {
         };
 
         assert_eq!(
-            quote(r"C:\Program Files\tty7"),
-            r#""C:\Program Files\tty7""#
+            quote(r"C:\Program Files\hitty"),
+            r#""C:\Program Files\hitty""#
         );
         // Doubled only in front of the closing quote.
-        assert_eq!(quote(r"D:\tty7\"), r#""D:\tty7\\""#);
-        assert_eq!(quote(r"D:\tty7\\"), r#""D:\tty7\\\\""#);
+        assert_eq!(quote(r"D:\hitty\"), r#""D:\hitty\\""#);
+        assert_eq!(quote(r"D:\hitty\\"), r#""D:\hitty\\\\""#);
         // An embedded quote is escaped, and the run in front of it doubled.
         assert_eq!(quote(r#"a"b"#), r#""a\"b""#);
         assert_eq!(quote(r#"a\"b"#), r#""a\\\"b""#);

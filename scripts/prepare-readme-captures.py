@@ -12,7 +12,7 @@ def main():
     repo = Path(__file__).resolve().parents[1]
     output = Path(sys.argv[1]).resolve()
     output.mkdir(parents=True, exist_ok=False)
-    project = output / "ctty7"
+    project = output / "hitty"
     for directory in ("src", "docs", "archive"):
         (project / directory).mkdir(parents=True)
     for source, target in (

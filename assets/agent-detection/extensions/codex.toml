@@ -1,4 +1,4 @@
-# ctty7 extension: a live prompt with the shortcuts footer is positive idle
+# hitty extension: a live prompt with the shortcuts footer is positive idle
 # evidence. Upstream working and approval rules still win while a turn is active.
 [[rules]]
 id = "ready_prompt"

@@ -15,7 +15,7 @@ use crate::{
     daemon::{protocol::DaemonMsg, transport::Stream},
     terminal::view::{TerminalView, quiet_test_pane},
     ui::{
-        app::{Tab, Tty7App},
+        app::{HittyApp, Tab},
         pane::{Pane, PaneSlot},
         windows::WindowRegistry,
     },
@@ -60,7 +60,7 @@ fn report(stream: &mut Stream, status: AgentStatus, window: usize, pane: usize) 
 }
 
 fn open(index: usize, split: bool, cx: &mut App) -> NativeWindow {
-    let title = format!("ctty7 badge acceptance {}", index + 1);
+    let title = format!("hitty badge acceptance {}", index + 1);
     let mut built = None;
     let handle = cx
         .open_window(
@@ -81,7 +81,7 @@ fn open(index: usize, split: bool, cx: &mut App) -> NativeWindow {
             |window, cx| {
                 crate::ui::theme::apply_theme(Some(window), cx);
                 let owner = cx.new(|cx| {
-                    Tty7App::with_session(
+                    HittyApp::with_session(
                         Some(WorkspaceId::new()),
                         Some(Session::default()),
                         window,

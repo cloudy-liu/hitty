@@ -11,7 +11,7 @@ use crate::ui::palette::CommandGroup;
 use crate::ui::settings::humanize_action;
 use crate::ui::theme::set_menus;
 
-/// The bindings that were already in the keymap before tty7 put its own
+/// The bindings that were already in the keymap before hitty put its own
 /// there. gpui-component installs a table of its own from `gpui_component::
 /// init` — the `Input` context's editing keys, the list and menu navigation,
 /// the escape that closes a dialog — and it has no entry point to install
@@ -62,7 +62,7 @@ fn fixed_bindings() -> Vec<KeyBinding> {
     bindings
 }
 
-/// Replaces the keymap with the full set: the bindings tty7 inherited, then
+/// Replaces the keymap with the full set: the bindings hitty inherited, then
 /// the ones the live config asks for, then the fixed ones.
 ///
 /// gpui's `Keymap::add_bindings` only ever pushes — it never dedups and
@@ -72,7 +72,7 @@ fn fixed_bindings() -> Vec<KeyBinding> {
 /// it safe to drive from the config watcher: a hand edit that only reorders
 /// or re-comments the file reloads to an identical triple and never reaches
 /// here, while a real change rebuilds once (#548). The order is the order
-/// `init` bound them in, and gpui reads the map back to front, so tty7's
+/// `init` bound them in, and gpui reads the map back to front, so hitty's
 /// bindings still win over the inherited ones.
 fn rebuild_keymap(cx: &mut App) {
     let effective = effective_bindings(cx);
@@ -242,7 +242,7 @@ fn steals_a_control_code(chord: &str) -> bool {
 /// `EditorSave` stays on Ctrl+S because its handler in `app.rs` calls
 /// `cx.propagate()` whenever the editor does not have focus, so the keystroke
 /// reaches the terminal as XOFF instead of dying at the window. Ctrl+V is the
-/// paste chord every Windows and Linux desktop trains its users on; tty7
+/// paste chord every Windows and Linux desktop trains its users on; hitty
 /// answers it the way Windows Terminal does, and keeps it off the alternate
 /// screen (see `alternate_paste_default`), so it is allowed under any action —
 /// including a `PasteText` a user deliberately moves onto it (#677).
@@ -415,7 +415,6 @@ pub(crate) fn default_bindings() -> Vec<(&'static str, &'static str)> {
         ("About", ""),
         ("CheckForUpdates", ""),
         ("OpenDocumentation", ""),
-        ("OpenDiscord", ""),
         ("ReportIssue", ""),
         (
             "HideApp",
@@ -752,7 +751,7 @@ fn authored_entry(action: &str) -> Option<(CommandGroup, String)> {
         ),
         "About" => (
             CommandGroup::Application,
-            t(L10nKey::CmdAboutTty7).to_string(),
+            t(L10nKey::CmdAboutHitty).to_string(),
         ),
         "CheckForUpdates" => (
             CommandGroup::Application,
@@ -761,10 +760,6 @@ fn authored_entry(action: &str) -> Option<(CommandGroup, String)> {
         "OpenDocumentation" => (
             CommandGroup::Application,
             t(L10nKey::CmdDocumentation).to_string(),
-        ),
-        "OpenDiscord" => (
-            CommandGroup::Application,
-            t(L10nKey::CmdJoinDiscord).to_string(),
         ),
         "ReportIssue" => (
             CommandGroup::Application,
@@ -792,7 +787,7 @@ fn authored_entry(action: &str) -> Option<(CommandGroup, String)> {
         ),
         "Quit" => (
             CommandGroup::Application,
-            t(L10nKey::CmdQuitTty7).to_string(),
+            t(L10nKey::CmdQuitHitty).to_string(),
         ),
         // The source control verbs wear their palette names, so the
         // Keybindings page and the palette agree on what a chord does.
@@ -1131,7 +1126,6 @@ fn make_binding(action: &str, keystroke: &str) -> Option<KeyBinding> {
         "About" => KeyBinding::new(keystroke, About, None),
         "CheckForUpdates" => KeyBinding::new(keystroke, CheckForUpdates, None),
         "OpenDocumentation" => KeyBinding::new(keystroke, OpenDocumentation, None),
-        "OpenDiscord" => KeyBinding::new(keystroke, OpenDiscord, None),
         "ReportIssue" => KeyBinding::new(keystroke, ReportIssue, None),
         "HideApp" => KeyBinding::new(keystroke, HideApp, None),
         "HideOthers" => KeyBinding::new(keystroke, HideOthers, None),
@@ -1868,7 +1862,7 @@ mod gpui_tests {
     }
 
     #[gpui::test]
-    fn a_rebuild_keeps_the_bindings_tty7_did_not_install(cx: &mut TestAppContext) {
+    fn a_rebuild_keeps_the_bindings_hitty_did_not_install(cx: &mut TestAppContext) {
         cx.update(|cx| {
             // gpui-component binds the whole `Input` editing table — backspace
             // among it — from its own `init`, which runs once, before ours. A
@@ -1891,7 +1885,7 @@ mod gpui_tests {
             let inherited = backspace(cx);
             assert!(
                 !inherited.is_empty(),
-                "gpui-component binds backspace before tty7 touches the keymap"
+                "gpui-component binds backspace before hitty touches the keymap"
             );
 
             init(cx);

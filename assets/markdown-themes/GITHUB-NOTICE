@@ -27,7 +27,7 @@ stop and link
 https://github.com/primer/octicons/tree/923a31b34542702800cb90a0fd390e2e60dd92ac
 Copyright (c) GitHub, Inc. MIT license; see OCTICONS-LICENSE.
 
-ctty7 changes: converted CSS values to native rendering parameters and mapped
+hitty changes: converted CSS values to native rendering parameters and mapped
 TextMate colors to tree-sitter captures. Chinese fallback fonts are non-GitHub
 values. The built-in reading surface uses the application's background by user
 request; explicit custom backgrounds remain unchanged. Font rasterization and

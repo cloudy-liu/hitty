@@ -126,7 +126,7 @@ def prepare(destination: Path, download_avatars: bool, profile_commits: int = 0,
     if download_avatars:
         for _, email, account_id in AUTHORS:
             url = f"https://avatars.githubusercontent.com/u/{account_id}?s=96&v=4"
-            request = urllib.request.Request(url, headers={"User-Agent": "ctty7-acceptance"})
+            request = urllib.request.Request(url, headers={"User-Agent": "hitty-acceptance"})
             with urllib.request.urlopen(request, timeout=15) as response:
                 data = response.read(256 * 1024 + 1)
             if len(data) > 256 * 1024:

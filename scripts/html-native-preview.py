@@ -14,7 +14,7 @@ def main():
     binary = Path(sys.argv[1]).resolve()
     output = Path(sys.argv[2]).resolve()
     output.mkdir(parents=True, exist_ok=True)
-    with tempfile.TemporaryDirectory(prefix="ctty7-html-") as temporary:
+    with tempfile.TemporaryDirectory(prefix="hitty-html-") as temporary:
         scratch = Path(temporary)
         # A literal # in the filename must stay distinct from URL fragments.
         fixture = scratch / "HTML 页面 with spaces"

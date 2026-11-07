@@ -42,7 +42,7 @@ pub(crate) fn set_menus(cx: &mut App) {
             MenuItem::action(t(L10nKey::AppMenuNewWorkspace), NewWorkspace),
             MenuItem::action(t(L10nKey::AppMenuNewWorktreeTab), NewWorktreeTab),
             MenuItem::separator(),
-            // SSH is one of the reasons to pick tty7 and it had no entry in the
+            // SSH is one of the reasons to pick hitty and it had no entry in the
             // menu bar at all — the only routes were ⌘P and Settings, both of
             // which you have to already know about. Same labels as the palette,
             // so there is still one name per thing.
@@ -120,7 +120,6 @@ pub(crate) fn set_menus(cx: &mut App) {
             MenuItem::action(t(L10nKey::AppMenuDocumentation), OpenDocumentation),
             MenuItem::action(t(L10nKey::AppMenuKeyboardShortcuts), ShowKeyboardShortcuts),
             MenuItem::separator(),
-            MenuItem::action(t(L10nKey::AppMenuJoinDiscord), OpenDiscord),
             MenuItem::action(t(L10nKey::AppMenuReportIssue), ReportIssue),
             MenuItem::separator(),
             MenuItem::action(t(L10nKey::AppMenuRestartServer), RestartDaemon),
@@ -551,7 +550,7 @@ pub(crate) fn apply_theme(mut window: Option<&mut Window>, cx: &mut App) {
     let theme = presets::by_id(cx, &effective_preset_id(cx));
     // Cache the mode beside the machine tree: the daemon is a separate process
     // and reads it back when it spawns a Windows pane, where ConPTY drops an
-    // OSC 11 background query before tty7's emulator can answer it. Derived
+    // OSC 11 background query before hitty's emulator can answer it. Derived
     // state, so it deliberately stays out of the user's `config.json`.
     crate::core::machine::note_appearance(theme.dark);
     let config = cx.global::<Config>();
