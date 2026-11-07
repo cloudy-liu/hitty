@@ -66,8 +66,13 @@ evidence; the native application screenshots above remain the application proof.
 
 ## Pending acceptance
 
-- macOS ARM64, macOS x86_64, and Linux builds/tests and native runtime evidence
-  require their respective runners.
+- CI run `42401272370` at `d554ec1` passed Windows x86_64, Linux x86_64,
+  and macOS ARM64 builds/tests, plus native visual checks where configured.
+  All four remote-server build targets and the formatting/boundary checks passed.
+- macOS x86_64 reached the 30-minute build limit while still compiling; no
+  compiler error preceded the timeout, and its tests did not run. That target
+  now has a 45-minute build limit and a 90-minute job limit. Other targets retain
+  their existing limits. The updated workflow requires a complete validation run.
 - The selected source had two macOS Intel CI failures: Markdown partial
   selection after double-click, and the commit-detail back-to-all-files action.
   They remain unresolved until reproduced and fixed or verified with evidence;
@@ -96,6 +101,6 @@ passed after the correction. Production animation behavior is unchanged.
 Linux CI also found an inherited integration test that still required old-data
 adoption, which is explicitly outside Hitty's scope. It now verifies that a
 successful fresh server startup leaves data in other directories untouched,
-for both default and explicitly selected profiles. That Unix-only correction
-awaits the next platform CI run. A local WSL offline attempt could not resolve
-the uncached pinned framework checkout and did not execute the test.
+for both default and explicitly selected profiles. That correction passed Linux
+and macOS ARM64 CI. A local WSL offline attempt could not resolve the uncached
+pinned framework checkout and did not execute the test.
