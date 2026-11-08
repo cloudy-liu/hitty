@@ -3,21 +3,38 @@ name: Release
 on:
   push:
     tags: ["v*"]
+  pull_request:
+    paths:
+      - '.github/workflows/release.yml'
+      - '.github/scripts/**'
+      - 'Cargo.toml'
+      - 'Cargo.lock'
+      - 'crates/**/Cargo.toml'
+      - 'build.rs'
+      - 'assets/**'
+      - 'scripts/bootstrap-native-smoke.py'
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   validate-release:
     name: validate release version
     runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
     steps:
       - uses: actions/checkout@v4
         with:
           path: hitty
 
       - name: Match tag and package version
+        id: version
         working-directory: hitty
         shell: bash
         run: |
@@ -32,6 +49,7 @@ jobs:
             echo "::error::releases must use X.Y.Z (got ${VERSION})"
             exit 1
           fi
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
           echo "validated release ${EXPECTED_TAG}"
 
   build:
@@ -84,7 +102,8 @@ jobs:
           sudo apt-get install -y pkg-config cmake clang libxkbcommon-dev \
             libxkbcommon-x11-dev libfontconfig1-dev libfreetype6-dev \
             libwayland-dev libx11-dev libxcb1-dev libzstd-dev libssl-dev \
-            libkrb5-dev libpulse-dev libfuse2 file imagemagick
+            libkrb5-dev libpulse-dev libfuse2 file imagemagick \
+            xvfb mesa-vulkan-drivers
           echo "LIBGSSAPI_IMPL=mit" >> "$GITHUB_ENV"
 
       - uses: dtolnay/rust-toolchain@stable
@@ -118,15 +137,16 @@ jobs:
         if: matrix.os == 'macos'
         working-directory: hitty
         env:
-          # macOS code signing — the cert is imported into a throwaway keychain.
-          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
-          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
-          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
-          KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
+          # PRs use ad-hoc signing; release credentials are withheld.
+          # Developer ID certificates use a throwaway keychain.
+          APPLE_CERTIFICATE: ${{ github.event_name != 'pull_request' && secrets.APPLE_CERTIFICATE || '' }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ github.event_name != 'pull_request' && secrets.APPLE_CERTIFICATE_PASSWORD || '' }}
+          APPLE_SIGNING_IDENTITY: ${{ github.event_name != 'pull_request' && secrets.APPLE_SIGNING_IDENTITY || '' }}
+          KEYCHAIN_PASSWORD: ${{ github.event_name != 'pull_request' && secrets.KEYCHAIN_PASSWORD || '' }}
           # Notarization — required for Developer ID builds to pass Gatekeeper.
-          APPLE_ID: ${{ secrets.APPLE_ID }}
-          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
-          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          APPLE_ID: ${{ github.event_name != 'pull_request' && secrets.APPLE_ID || '' }}
+          APPLE_PASSWORD: ${{ github.event_name != 'pull_request' && secrets.APPLE_PASSWORD || '' }}
+          APPLE_TEAM_ID: ${{ github.event_name != 'pull_request' && secrets.APPLE_TEAM_ID || '' }}
         run: bash .github/scripts/bundle-macos.sh "${{ matrix.target }}" "${{ matrix.arch }}"
 
       - name: Package Linux tarball
@@ -208,6 +228,45 @@ jobs:
             hitty/dist/*-setup.exe
             hitty/dist/*.AppImage
           if-no-files-found: error
+
+      - name: Exercise Windows portable and installer packages
+        if: matrix.os == 'windows'
+        timeout-minutes: 10
+        working-directory: hitty
+        shell: pwsh
+        run: '& ./.github/scripts/smoke-windows-package.ps1 "${{ matrix.arch }}"'
+
+      - name: Exercise packaged application and session reconnect
+        if: matrix.os != 'windows'
+        timeout-minutes: 5
+        working-directory: hitty
+        shell: bash
+        env:
+          PACKAGE_VERSION: ${{ needs.validate-release.outputs.version }}
+          LIBGL_ALWAYS_SOFTWARE: '1'
+        run: |
+          set -euo pipefail
+          SMOKE_ROOT="$RUNNER_TEMP/hitty-package-smoke"
+          mkdir -p "$SMOKE_ROOT"
+          if [[ "${{ matrix.os }}" == "macos" ]]; then
+            ditto -x -k "dist/hitty-${PACKAGE_VERSION}-macos-${{ matrix.arch }}.zip" "$SMOKE_ROOT"
+            BIN="$SMOKE_ROOT/Hitty.app/Contents/MacOS"
+            python3 scripts/bootstrap-native-smoke.py "$BIN/hitty-app" "$BIN/hitty" \
+              package-smoke --phase after --no-capture --reconnect
+          else
+            tar -xzf "dist/hitty-${PACKAGE_VERSION}-linux-${{ matrix.arch }}.tar.gz" -C "$SMOKE_ROOT"
+            BIN="$SMOKE_ROOT/hitty-${PACKAGE_VERSION}-linux-${{ matrix.arch }}"
+            xvfb-run -a -s '-screen 0 1800x1200x24' python3 scripts/bootstrap-native-smoke.py \
+              "$BIN/hitty-app" "$BIN/hitty" package-smoke --phase after --no-capture --reconnect
+          fi
+
+      - name: Upload package runtime evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: package-smoke-${{ matrix.os }}-${{ matrix.arch }}
+          path: hitty/package-smoke/
+          if-no-files-found: warn
 
   # The headless server binary remote workspaces install on the far machine
   # (decision D10). Statically linked against musl so a single binary runs
@@ -409,19 +468,19 @@ jobs:
   # created as a **draft** and left that way: a draft is invisible to both
   # /releases/latest and the releases page, so nothing can prompt a user to
   # download a version whose asset set is incomplete or whose notes are still
-  # empty. A maintainer verifies the assets and checksums, writes the release
-  # notes, and publishes the draft only after the complete custom build exists.
-  draft-release:
-    needs: [build, server-musl, server-macos]
-    if: startsWith(github.ref, 'refs/tags/')
+  # empty. PRs and manual branch runs verify the same complete package set.
+  # Only tags create a draft; publication remains a separate maintainer action.
+  verify-assets:
+    needs: [validate-release, build, server-musl, server-macos]
     runs-on: ubuntu-latest
     env:
-      GH_TOKEN: ${{ github.token }}
+      RELEASE_VERSION: ${{ needs.validate-release.outputs.version }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v8
         with:
           path: dist
+          pattern: release-*
           merge-multiple: true
 
       # sha256 over every asset, so the remote-server installer can verify what
@@ -434,7 +493,7 @@ jobs:
       - name: Generate checksums.txt
         run: |
           set -euo pipefail
-          python3 .github/scripts/verify-release-assets.py dist "${GITHUB_REF_NAME#v}"
+          python3 .github/scripts/verify-release-assets.py dist "$RELEASE_VERSION"
           cd dist
           rm -f checksums.txt
           # `find -type f` rather than a glob: nested files (should any appear)
@@ -454,7 +513,27 @@ jobs:
           sha256sum -c checksums.txt
           cat checksums.txt
           cd ..
-          python3 .github/scripts/verify-release-assets.py dist "${GITHUB_REF_NAME#v}" --checksums
+          python3 .github/scripts/verify-release-assets.py dist "$RELEASE_VERSION" --checksums
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: verified-release-assets
+          path: dist/*
+          if-no-files-found: error
+
+  draft-release:
+    needs: verify-assets
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: verified-release-assets
+          path: dist
 
       # Only an unpublished draft may be amended by a rerun.
       - name: Assemble the draft release

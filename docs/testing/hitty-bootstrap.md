@@ -64,22 +64,74 @@ evidence; the native application screenshots above remain the application proof.
 
 ![Approved light and dark logos](images/hitty-bootstrap/final-brand.png)
 
+## Cross-platform CI
+
+CI run [42427069652](https://github.com/cloudy-liu/hitty/actions/runs/42427069652)
+passed all 10 jobs at `cec12e0aa159d82e8d150765edc2d52c567024d0` on
+November 8, 2026 (Asia/Shanghai):
+
+| Target | Locked build, workspace tests, updater tests | Native fixtures |
+| --- | --- | --- |
+| Windows x86_64 | Passed | Local before/after application evidence above |
+| Linux x86_64 | Passed | Markdown and SSH-tab fixture captures |
+| macOS ARM64 | Passed | Markdown and HTML preview checks |
+| macOS x86_64 | Passed | Markdown and HTML preview checks |
+
+Both Linux musl server architectures, both macOS server architectures,
+formatting, pinned Agent detection manifests, and the host boundary check also
+passed. The earlier run `42401272370` exhausted the Intel build's 30-minute
+limit while compiling. The current workflow allows 45 minutes for that build
+and 90 for its job; no tests or visual steps were removed. In this completed
+run the cached Intel build took 13m 36s, followed by successful tests and captures.
+
+The two failures recorded on the source baseline both passed in the complete
+Intel test job `128567512741`:
+
+```text
+ui::markdown_preview::tests::fill_and_restore_preserve_a_partial_markdown_selection ... ok
+ui::scm::graph::tests::selected_commit_shows_message_details_above_the_existing_diff ... ok
+```
+
+This verifies their current result on Intel; it does not establish the cause
+of the earlier failures or claim a production behavior fix for them.
+
+Representative CI images were downloaded and inspected. The saved files retain
+the original artifact bytes; `images/hitty-bootstrap/ci-cec12e0.json` records
+their source paths and SHA-256 values. Markdown content, theme colors, and the
+HTML page are visible. The ARM64 runner's small desktop clips the fixture
+window, so those captures do not establish complete window-layout acceptance.
+Both HTML result records passed resource loading, script interaction, refresh,
+scroll ownership, tab switching, and navigation-failure recovery.
+
+![Linux Markdown fixture](images/hitty-bootstrap/linux-markdown-light.png)
+
+![macOS Intel Markdown fixture](images/hitty-bootstrap/macos-intel-markdown-dark.png)
+
+![macOS Intel native HTML preview](images/hitty-bootstrap/macos-intel-html.png)
+
+## Package acceptance
+
+The release workflow was unavailable for manual branch dispatch because it is
+not yet on the repository's default branch. It now also builds packaging-related
+PR changes with read-only repository access and ad-hoc macOS signing. Branch
+runs assemble and verify the complete 12-asset set and SHA-256 file as an Actions
+artifact. Only a version tag can reach the existing draft-release job.
+
+Package runtime checks exercise the extracted application and public CLI with
+isolated user data, then restart the GUI and verify the existing pane still
+accepts commands. The Windows check additionally installs into a temporary
+location, checks its product registration, runs the installed app, and uninstalls
+it on the disposable CI runner. The smoke harness extension passed locally with
+the Windows debug build; final package results remain pending.
+
 ## Pending acceptance
 
-- CI run `42401272370` at `d554ec1` passed Windows x86_64, Linux x86_64,
-  and macOS ARM64 builds/tests, plus native visual checks where configured.
-  All four remote-server build targets and the formatting/boundary checks passed.
-- macOS x86_64 reached the 30-minute build limit while still compiling; no
-  compiler error preceded the timeout, and its tests did not run. That target
-  now has a 45-minute build limit and a 90-minute job limit. Other targets retain
-  their existing limits. The updated workflow requires a complete validation run.
-- The selected source had two macOS Intel CI failures: Markdown partial
-  selection after double-click, and the commit-detail back-to-all-files action.
-  They remain unresolved until reproduced and fixed or verified with evidence;
-  a Windows build does not establish their status.
-- Final installer execution, remote SSH/WSL services, and updates between actual
-  Hitty packages remain unverified. Inno Setup is unavailable on this host.
-- No tag, public release, signing claim, or three-platform completion is made.
+- Run the new package workflow and inspect its runtime evidence, installer
+  results, complete artifact set, and checksums. The macOS PR packages are
+  ad-hoc signed and do not establish notarized distribution acceptance.
+- Actual remote SSH/WSL deployment and updates between distinct packaged Hitty
+  versions remain unverified. Existing automated updater tests are passing.
+- No tag, public release, signing claim, or completed first-release gate is made.
 
 ## Follow-up regression checks
 
