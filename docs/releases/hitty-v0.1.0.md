@@ -36,8 +36,11 @@ Create SSH and WSL connections through the desktop interface. The CLI's
 
 ## Source baseline
 
-This release starts from ctty7 source revision
-[`7f430a8f5f89a3a2963250b196b0baea02569299`](https://github.com/cloudy-liu/ctty7/commit/7f430a8f5f89a3a2963250b196b0baea02569299),
-imported as an independent snapshot with the original licenses and attribution.
-It does not import the earlier repository's Git ancestry or release history.
+Hitty builds on [tty7](https://github.com/l0ng-ai/tty7). The reviewed source
+snapshot is preserved in Hitty's
+[source import commit](https://github.com/cloudy-liu/hitty/commit/4699e7eb4294883c324bf0c630bcde22fd709946),
+with the original licenses and attribution retained. The exact export revision
+and import details are recorded in
+[source provenance](https://github.com/cloudy-liu/hitty/blob/main/docs/provenance/source-baseline.md).
+Hitty has independent Git and release history.
 Subsequent Hitty release comparisons will use Hitty tags.

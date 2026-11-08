@@ -128,7 +128,7 @@ cargo dev
 
 ## 致谢与许可证
 
-Hitty 采用 [Apache License 2.0](LICENSE)。项目最初以 [ctty7](https://github.com/cloudy-liu/ctty7) 的源码为基础，后者源自 [tty7](https://github.com/l0ng-ai/tty7)。原始版权和署名均予以保留，具体源码版本及导入说明见[来源记录](docs/provenance/source-baseline.md)。
+Hitty 基于 [tty7](https://github.com/l0ng-ai/tty7) 持续开发，采用 [Apache License 2.0](LICENSE)。原始版权和署名均予以保留，具体源码版本及导入说明见[来源记录](docs/provenance/source-baseline.md)。
 
 感谢以下项目及其贡献者提供的基础能力与资源：
 
