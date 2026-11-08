@@ -2,7 +2,7 @@
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="assets/hitty-logo-dark.svg" />
-  <img src="assets/hitty-logo-light.svg" alt="Hitty" width="360" />
+  <img src="assets/hitty-logo-light.svg" alt="Hitty" width="240" />
 </picture>
 
 **为编码 Agent 准备的终端工作台。**
