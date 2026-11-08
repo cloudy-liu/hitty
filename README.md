@@ -11,9 +11,9 @@ Hitty is starting as an independent project based on a source snapshot of [ctty7
 
 ## Project status
 
-The selected application source has been imported as a separate baseline. Application-owned code, runtime paths, installers, and branding now use Hitty. First-release validation is in progress, and no Hitty release is available yet.
+Hitty v0.1.0 is available for Windows x86_64, Linux x86_64, and macOS ARM64/Intel. Download the packages from [GitHub Releases](https://github.com/cloudy-liu/hitty/releases/tag/v0.1.0).
 
-The first release will ship Windows, macOS, and Linux together after acceptance. See the [verification record](docs/testing/hitty-bootstrap.md), [release procedure](docs/maintenance/hitty-release.md), and [source provenance](docs/provenance/source-baseline.md).
+The three desktop platforms were released together after focused functional and packaging checks. Windows packages are unsigned; macOS packages are ad-hoc signed and not notarized. See the [verification record](docs/testing/hitty-bootstrap.md), [release procedure](docs/maintenance/hitty-release.md), and [source provenance](docs/provenance/source-baseline.md).
 
 ## A fresh start
 

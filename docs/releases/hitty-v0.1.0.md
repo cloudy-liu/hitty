@@ -27,9 +27,9 @@ Hitty is a fresh installation. It does not import another product's settings,
 credentials, workspaces, or live sessions. Customize your new installation
 through Hitty's settings.
 
-Windows packages are unsigned. The macOS packages use ad-hoc
-signatures and have not been notarized; operating-system download protection
-may prevent an ordinary first launch. The macOS packages are not Developer ID signed or notarized.
+Windows packages are unsigned. macOS packages use ad-hoc signatures and
+have not been notarized. Operating-system download protection may prevent
+an ordinary first launch.
 
 Create SSH and WSL connections through the desktop interface. The CLI's
 `machine connect` and `machine disconnect` commands are not implemented.
