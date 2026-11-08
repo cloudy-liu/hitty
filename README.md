@@ -174,9 +174,8 @@ Pull requests target this repository's `main` branch. See [contributor guidance]
 
 ## Credits and license
 
-Hitty is distributed under the [Apache License 2.0](LICENSE). It began from
-[ctty7](https://github.com/cloudy-liu/ctty7), which was developed from
-[tty7](https://github.com/l0ng-ai/tty7). Original copyright and attribution notices
+Hitty builds on [tty7](https://github.com/l0ng-ai/tty7) and is distributed under
+the [Apache License 2.0](LICENSE). Original copyright and attribution notices
 are retained; the exact source revision and import details are recorded in
 [source provenance](docs/provenance/source-baseline.md).
 
