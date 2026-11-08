@@ -1,0 +1,26 @@
+{
+  "phase": "after",
+  "binary": "D:\\tmp\\hitty-v0.1.0-local-final\\portable\\hitty-app.exe",
+  "window_logical_size": [
+    1100,
+    700
+  ],
+  "capture": "hwnd=8260068 client=1925x1225 frame=1929x1227 printwindow=True pointer=none size=62891",
+  "cli_version": "hitty 0.1.0",
+  "terminal_input_output": "passed",
+  "configuration": "C:\\Users\\cloudy\\AppData\\Local\\Temp\\hitty-bootstrap-smoke-dlnaqqql",
+  "session_after_gui_restart": "passed",
+  "test_preferences": {
+    "check_for_updates": false,
+    "auto_download_updates": false,
+    "install_cli_on_path": false,
+    "show_tray_icon": false,
+    "shell": {
+      "program": "powershell.exe",
+      "args": [
+        "-NoLogo",
+        "-NoProfile"
+      ]
+    }
+  }
+}

@@ -1,0 +1,20 @@
+CLAUDE QUESTION REPLAY — no model request
+
+Replays the named-session question and U+25FE active-task marker.
+
+Which implementation should we use?
+
+  1. Keep the current behavior
+  2. Apply the recommended change
+  3. Review another approach
+  4. Type something.
+  ──────────────────
+    5. Chat about this
+
+Enter to select · ↑/↓ to navigate · Esc to cancel
+──────────────────── probe named ─
+    3 tasks (1 done, 1 in progress, 1 open)
+    ✔ completed task
+    ◾ active task
+    ◻ open task
+    … +2 pending

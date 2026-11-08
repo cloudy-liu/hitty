@@ -1,0 +1,28 @@
+{
+  "capture_date": "2026-10-29",
+  "capture_tool": "LCU cua.getScreenshot",
+  "format": "Original JPEG bytes via loopback receiver",
+  "scale_factor": 1.75,
+  "logical_client": [
+    1440,
+    900
+  ],
+  "capture_pixels": [
+    1442,
+    901
+  ],
+  "theme": "Dark",
+  "fixture": "example.rs working-tree replacements at lines 28 and 68",
+  "before_source": "cb0bc217",
+  "after_source": "a223138cb93e842c09cdbf8ef07128149bd75c67",
+  "binary_sha256": {
+    "before": "49d63387143c06e4df1eaf9335fcf3650ec5ac123bc12ac3bd6d6bddca0bf1f2",
+    "after": "d09564625364522015165eb112104615d34c93afd374df723397b174b7b8b170"
+  },
+  "captures": {
+    "after-docked-lcu.jpg": "9ea8f729764a9aa7f2065b4dfeeb0a293932d1fac0d11675205e5711b181203b",
+    "after-full-lcu.jpg": "a40e3c8618d218bbdb81441abe7b7c9daea910bf23f69928b6ea7dda630ae048",
+    "before-docked-lcu.jpg": "edf9594c5a99604c416ed00991dd8010f18aea64a605657a0312aed3b1d7aa89",
+    "before-full-lcu.jpg": "4f1ca47648212bf9d49badf116e271efd61e31ea3a509cd3c7bcdefe8f0897e1"
+  }
+}

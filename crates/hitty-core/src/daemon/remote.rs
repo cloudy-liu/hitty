@@ -1,0 +1,479 @@
+use std::path::Path;
+
+use crate::daemon::protocol::{RemoteContext, RemoteKind};
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub(crate) struct SshInvocation {
+    pub context: RemoteContext,
+    pub forward_args: Vec<String>,
+}
+
+impl RemoteContext {
+    /// Display identity only. Keep the destination/argv unchanged for routing,
+    /// while retaining explicit login and port options in a tab's name.
+    pub fn display_target(&self) -> String {
+        if self.kind != RemoteKind::Ssh {
+            return self.target.clone();
+        }
+        let Some(invocation) = parse_ssh_invocation(&self.argv) else {
+            return self.target.clone();
+        };
+        let Some(mut address) = crate::core::ssh_profile::parse_quick_connect(&self.target) else {
+            return self.target.clone();
+        };
+        let mut explicit_user = None;
+        let mut explicit_port = None;
+        let mut args = invocation.forward_args.iter();
+        while let Some(arg) = args.next() {
+            let Some(flag) = arg.as_bytes().get(1).copied().map(char::from) else {
+                continue;
+            };
+            if !option_takes_value(flag) {
+                continue;
+            }
+            let value = arg
+                .get(2..)
+                .filter(|s| !s.is_empty())
+                .or_else(|| args.next().map(String::as_str))
+                .unwrap_or_default();
+            match flag {
+                'l' if explicit_user.is_none() => explicit_user = Some(value.to_owned()),
+                'p' if explicit_port.is_none() => {
+                    explicit_port = value.parse::<u16>().ok().filter(|p| *p != 0)
+                }
+                'o' => {
+                    if let Some((key, value)) = value
+                        .split_once('=')
+                        .or_else(|| value.split_once(char::is_whitespace))
+                    {
+                        match key.to_ascii_lowercase().as_str() {
+                            "user" if explicit_user.is_none() => {
+                                explicit_user = Some(value.trim().to_owned())
+                            }
+                            "port" if explicit_port.is_none() => {
+                                explicit_port = value.trim().parse::<u16>().ok().filter(|p| *p != 0)
+                            }
+                            _ => {}
+                        }
+                    }
+                }
+                _ => {}
+            }
+        }
+        if explicit_user.is_none() && explicit_port.is_none() {
+            return self.target.clone();
+        }
+        address.user = explicit_user.or(address.user);
+        address.port = explicit_port.or(address.port);
+        let port = address.port_or_default();
+        let host = if address.host.contains(':') {
+            format!("[{}]", address.host)
+        } else {
+            address.host
+        };
+        crate::core::session::RemoteTarget::Direct {
+            user: address.user.unwrap_or_default(),
+            host,
+            port,
+        }
+        .to_string()
+    }
+}
+
+/// Whether `program` is the OpenSSH client — `ssh`, `ssh.exe`, or a path
+/// whose stem is `ssh`. `ssh-agent` / `sshd` / `scp` stay out.
+pub(crate) fn is_ssh_program(program: &str) -> bool {
+    let file_name = program.rsplit(['/', '\\']).next().unwrap_or(program);
+    Path::new(file_name)
+        .file_stem()
+        .is_some_and(|stem| stem.eq_ignore_ascii_case("ssh"))
+}
+
+pub(crate) fn parse_ssh_invocation(argv: &[String]) -> Option<SshInvocation> {
+    let program = argv.first()?;
+    if !is_ssh_program(program) {
+        return None;
+    }
+
+    let mut forward_args = Vec::new();
+    let mut target = None;
+    let mut i = 1;
+    while i < argv.len() {
+        let arg = &argv[i];
+        if arg == "--" {
+            i += 1;
+            break;
+        }
+        if !arg.starts_with('-') || arg == "-" {
+            target = Some(arg.clone());
+            i += 1;
+            break;
+        }
+
+        if arg == "-W" || arg == "-w" || arg == "-L" || arg == "-R" || arg == "-D" {
+            return None;
+        }
+        if arg == "-N" || arg == "-f" {
+            return None;
+        }
+        if let Some(short) = arg.strip_prefix('-')
+            && !short.starts_with('-')
+            && short.len() > 1
+        {
+            let mut chars = short.chars();
+            let Some(flag) = chars.next() else {
+                return None;
+            };
+            if option_takes_value(flag) {
+                if chars.as_str().is_empty() {
+                    i += 1;
+                    if i >= argv.len() {
+                        return None;
+                    }
+                    forward_args.push(arg.clone());
+                    forward_args.push(argv[i].clone());
+                } else {
+                    forward_args.push(arg.clone());
+                }
+            } else {
+                forward_args.push(arg.clone());
+            }
+            i += 1;
+            continue;
+        }
+
+        if arg.starts_with("--") {
+            return None;
+        }
+
+        forward_args.push(arg.clone());
+        if arg.len() == 2 {
+            let flag = arg.as_bytes()[1] as char;
+            if option_takes_value(flag) {
+                i += 1;
+                if i >= argv.len() {
+                    return None;
+                }
+                forward_args.push(argv[i].clone());
+            }
+        }
+        i += 1;
+    }
+
+    let target = target?;
+    if i < argv.len() {
+        return None;
+    }
+
+    Some(SshInvocation {
+        context: RemoteContext {
+            kind: RemoteKind::Ssh,
+            argv: argv.to_vec(),
+            target: target.clone(),
+        },
+        forward_args,
+    })
+}
+
+fn option_takes_value(flag: char) -> bool {
+    matches!(
+        flag,
+        'B' | 'b'
+            | 'c'
+            | 'D'
+            | 'E'
+            | 'e'
+            | 'F'
+            | 'I'
+            | 'i'
+            | 'J'
+            | 'L'
+            | 'l'
+            | 'm'
+            | 'O'
+            | 'o'
+            | 'p'
+            | 'Q'
+            | 'R'
+            | 'S'
+            | 'W'
+            | 'w'
+    )
+}
+
+pub(crate) fn foreground_argv(pid: i32) -> Option<Vec<String>> {
+    platform_foreground_argv(pid)
+}
+
+#[cfg(target_os = "linux")]
+fn platform_foreground_argv(pid: i32) -> Option<Vec<String>> {
+    if pid <= 0 {
+        return None;
+    }
+    let bytes = std::fs::read(format!("/proc/{pid}/cmdline")).ok()?;
+    let argv: Vec<String> = bytes
+        .split(|&b| b == 0)
+        .filter(|part| !part.is_empty())
+        .map(|part| String::from_utf8_lossy(part).into_owned())
+        .collect();
+    (!argv.is_empty()).then_some(argv)
+}
+
+#[cfg(target_os = "macos")]
+fn platform_foreground_argv(pid: i32) -> Option<Vec<String>> {
+    if pid <= 0 {
+        return None;
+    }
+    let mut mib = [libc::CTL_KERN, libc::KERN_PROCARGS2, pid as libc::c_int];
+    let mut len = 0usize;
+    if unsafe {
+        libc::sysctl(
+            mib.as_mut_ptr(),
+            mib.len() as u32,
+            std::ptr::null_mut(),
+            &mut len,
+            std::ptr::null_mut(),
+            0,
+        )
+    } != 0
+        || len < std::mem::size_of::<libc::c_int>()
+    {
+        return None;
+    }
+    let mut buf = vec![0u8; len];
+    if unsafe {
+        libc::sysctl(
+            mib.as_mut_ptr(),
+            mib.len() as u32,
+            buf.as_mut_ptr() as *mut libc::c_void,
+            &mut len,
+            std::ptr::null_mut(),
+            0,
+        )
+    } != 0
+    {
+        return None;
+    }
+    buf.truncate(len);
+    parse_macos_procargs(&buf)
+}
+
+#[cfg(target_os = "macos")]
+fn parse_macos_procargs(buf: &[u8]) -> Option<Vec<String>> {
+    if buf.len() < std::mem::size_of::<libc::c_int>() {
+        return None;
+    }
+    let argc = i32::from_ne_bytes(buf[..4].try_into().ok()?) as usize;
+    let mut i = 4;
+    while i < buf.len() && buf[i] != 0 {
+        i += 1;
+    }
+    while i < buf.len() && buf[i] == 0 {
+        i += 1;
+    }
+    let mut argv = Vec::new();
+    for _ in 0..argc {
+        if i >= buf.len() {
+            break;
+        }
+        let start = i;
+        while i < buf.len() && buf[i] != 0 {
+            i += 1;
+        }
+        if i > start {
+            argv.push(String::from_utf8_lossy(&buf[start..i]).into_owned());
+        }
+        while i < buf.len() && buf[i] == 0 {
+            i += 1;
+        }
+    }
+    (!argv.is_empty()).then_some(argv)
+}
+
+#[cfg(not(any(target_os = "linux", target_os = "macos")))]
+fn platform_foreground_argv(_pid: i32) -> Option<Vec<String>> {
+    None
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn argv(parts: &[&str]) -> Vec<String> {
+        parts.iter().map(|s| s.to_string()).collect()
+    }
+
+    #[test]
+    fn parses_basic_ssh_invocation() {
+        let inv = parse_ssh_invocation(&argv(&["ssh", "user@dev"])).unwrap();
+        assert_eq!(inv.context.target, "user@dev");
+        assert_eq!(inv.forward_args, Vec::<String>::new());
+    }
+
+    #[test]
+    fn display_identity_keeps_login_port_alias_and_ipv6_without_changing_routing() {
+        for (parts, expected) in [
+            (
+                vec!["ssh", "-p", "2222", "-l", "deploy", "10.0.0.5"],
+                "deploy@10.0.0.5:2222",
+            ),
+            (
+                vec!["ssh", "-p2222", "-ldeploy", "prod-web"],
+                "deploy@prod-web:2222",
+            ),
+            (
+                vec!["ssh", "-o", "Port=2222", "-oUser=deploy", "prod-web"],
+                "deploy@prod-web:2222",
+            ),
+            (vec!["ssh", "prod-web"], "prod-web"),
+            (vec!["ssh", "deploy@2001:db8::1"], "deploy@2001:db8::1"),
+            (vec!["ssh", "-p2222", "-p2200", "prod-web"], "prod-web:2222"),
+            (
+                vec!["ssh", "-oPort=2222", "-p2200", "prod-web"],
+                "prod-web:2222",
+            ),
+            (
+                vec!["ssh", "-oUser=deploy", "other@prod-web"],
+                "deploy@prod-web",
+            ),
+            (
+                vec!["ssh", "-p", "22", "deploy@prod-web"],
+                "deploy@prod-web",
+            ),
+            (
+                vec!["ssh", "-p", "2222", "deploy@[2001:db8::1]"],
+                "deploy@[2001:db8::1]:2222",
+            ),
+        ] {
+            let invocation = parse_ssh_invocation(&argv(&parts)).unwrap();
+            let original = invocation.context.target.clone();
+            assert_eq!(invocation.context.display_target(), expected);
+            assert_eq!(invocation.context.target, original);
+        }
+    }
+
+    #[test]
+    fn windows_ssh_exe_is_the_same_program() {
+        assert!(is_ssh_program("ssh"));
+        assert!(is_ssh_program("ssh.exe"));
+        assert!(is_ssh_program(r"C:\Windows\System32\OpenSSH\ssh.exe"));
+        assert!(is_ssh_program("SSH.EXE"));
+        assert!(!is_ssh_program("ssh-agent.exe"));
+        assert!(!is_ssh_program("sshd"));
+        assert!(!is_ssh_program("scp"));
+
+        let inv =
+            parse_ssh_invocation(&argv(&[r"C:\Windows\System32\OpenSSH\ssh.exe", "user@dev"]))
+                .unwrap();
+        assert_eq!(inv.context.target, "user@dev");
+    }
+
+    #[test]
+    fn preserves_safe_options_before_target() {
+        let inv = parse_ssh_invocation(&argv(&[
+            "/usr/bin/ssh",
+            "-F",
+            "/tmp/config",
+            "-p",
+            "2222",
+            "-Jjump",
+            "dev",
+        ]))
+        .unwrap();
+        assert_eq!(inv.context.target, "dev");
+        assert_eq!(
+            inv.forward_args,
+            argv(&["-F", "/tmp/config", "-p", "2222", "-Jjump"])
+        );
+    }
+
+    #[test]
+    fn rejects_remote_commands_and_existing_forward_modes() {
+        assert!(parse_ssh_invocation(&argv(&["ssh", "dev", "htop"])).is_none());
+        assert!(parse_ssh_invocation(&argv(&["ssh", "-N", "dev"])).is_none());
+        assert!(parse_ssh_invocation(&argv(&["ssh", "-W", "host:22", "dev"])).is_none());
+        assert!(parse_ssh_invocation(&argv(&["scp", "dev:/x", "."])).is_none());
+    }
+}
+
+#[cfg(target_os = "macos")]
+#[cfg(test)]
+mod procargs_tests {
+    use super::*;
+
+    /// Build a KERN_PROCARGS2 buffer: argc, the exec path, then argc
+    /// NUL-terminated arguments, with the alignment padding the kernel leaves
+    /// between the path and the first argument.
+    fn procargs(argc: i32, exec_path: &str, args: &[&str], pad: usize) -> Vec<u8> {
+        let mut buf = argc.to_ne_bytes().to_vec();
+        buf.extend_from_slice(exec_path.as_bytes());
+        buf.push(0);
+        buf.extend(std::iter::repeat_n(0u8, pad));
+        for a in args {
+            buf.extend_from_slice(a.as_bytes());
+            buf.push(0);
+        }
+        buf
+    }
+
+    #[test]
+    fn the_exec_path_is_skipped_and_argv_comes_back_in_order() {
+        let buf = procargs(3, "/usr/bin/ssh", &["ssh", "-p", "2222"], 0);
+        assert_eq!(
+            parse_macos_procargs(&buf),
+            Some(vec!["ssh".into(), "-p".into(), "2222".into()])
+        );
+    }
+
+    /// The kernel pads between the exec path and argv, and the amount varies.
+    /// Miscounting it would return the tail of the path as argv[0].
+    #[test]
+    fn alignment_padding_after_the_exec_path_is_skipped_however_long() {
+        for pad in 0..8 {
+            let buf = procargs(1, "/usr/bin/ssh", &["ssh"], pad);
+            assert_eq!(
+                parse_macos_procargs(&buf),
+                Some(vec!["ssh".to_string()]),
+                "{pad} bytes of padding"
+            );
+        }
+    }
+
+    /// argc counts what to read, so anything after it — the environment —
+    /// stays out of argv.
+    #[test]
+    fn the_environment_after_argv_is_not_read() {
+        let buf = procargs(
+            2,
+            "/usr/bin/ssh",
+            &["ssh", "host", "PATH=/bin", "HOME=/me"],
+            0,
+        );
+        assert_eq!(
+            parse_macos_procargs(&buf),
+            Some(vec!["ssh".into(), "host".into()])
+        );
+    }
+
+    /// A buffer that ends mid-argv stops there rather than running off the end.
+    #[test]
+    fn a_truncated_buffer_returns_what_it_had() {
+        let full = procargs(4, "/usr/bin/ssh", &["ssh", "-p", "2222", "host"], 0);
+        let cut = &full[..full.len() - 6];
+        let got = parse_macos_procargs(cut).expect("what survived is still argv");
+        assert!(got.len() < 4, "{got:?}");
+        assert_eq!(got[0], "ssh");
+    }
+
+    #[test]
+    fn a_buffer_too_short_to_hold_argc_is_rejected() {
+        assert_eq!(parse_macos_procargs(&[]), None);
+        assert_eq!(parse_macos_procargs(&[0, 0, 0]), None);
+    }
+
+    #[test]
+    fn a_process_with_no_arguments_at_all_is_none_rather_than_empty() {
+        let buf = procargs(0, "/usr/bin/ssh", &[], 0);
+        assert_eq!(parse_macos_procargs(&buf), None);
+    }
+}

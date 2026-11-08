@@ -1,0 +1,20 @@
+{
+  "wide": {
+    "default": "Width fits reading area; full horizontal diagram initially shown; zoom and pan controls remain"
+  },
+  "url": "https://github.com/cloudy-liu/ctty7/blob/9b0fd9a3d66214788b32ccacf170c3c3432753c9/tests/fixtures/markdown/large-navigation.md",
+  "tall": {
+    "svg_width": 340.5000305175781,
+    "final_node": "TALL_END_36",
+    "dialog_width": 1152,
+    "default": "Natural SVG width, full height, top visible, vertical scrollbar",
+    "dialog_height": 576,
+    "client_height": 575,
+    "svg_height": 4672,
+    "scroll_height": 4735,
+    "overflow_y": "auto",
+    "final_scroll_top": 4160
+  },
+  "method": "Live GitHub browser interaction and read-only DOM measurements",
+  "date": "2026-10-14"
+}

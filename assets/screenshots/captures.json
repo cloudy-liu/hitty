@@ -1,0 +1,110 @@
+{
+  "captured_on": "2026-10-23",
+  "platform": "Windows",
+  "production_revision": "b0b573163c0fc3f30b34f57500511d2ef9aa2ad6",
+  "fixture_changes": "This PR extends the opt-in document fixture and gives both fixture windows production titlebar options. Application renderers are unchanged.",
+  "binary_sha256": "e9934fbc056adb82f484d738379834d0ecf3f88ab637257df22bbc0d1a2b6006",
+  "capture_method": "Local Computer Use Alt+PrintScreen; original Windows clipboard bitmap saved as PNG",
+  "display_scale": 1.75,
+  "encoding": "Lossless WebP; decoded RGBA bytes verified against each native PNG",
+  "images": [
+    {
+      "file": "assets/screenshots/workspace-light.webp",
+      "width": 2419,
+      "height": 1332,
+      "native_png_sha256": "2db4e9bff9c22b0773fda661a59211c8e310a8bc1c2e8eb54adeb2256cc11240",
+      "webp_sha256": "4d90d21702023ad38667ca225c05fa2137bd714b52c55edff98aeb1f10641d38",
+      "rgba_sha256": "de90226729458bb20897d1e15818ffe9624c90c3c3e5816649f1583273f503f1",
+      "captured_at": "2026-10-23T23:27:43+08:00",
+      "pixel_equivalent": true,
+      "viewport": [
+        1380.0,
+        760.0
+      ],
+      "preview": true,
+      "active_file": "README.md"
+    },
+    {
+      "file": "assets/screenshots/workspace-dark.webp",
+      "width": 2419,
+      "height": 1332,
+      "native_png_sha256": "f63bac530162763c42cfa6635c0941e922bf37c680bfe894b943c46f77e71292",
+      "webp_sha256": "5028f4886280cdead90bee95239427a3e9f597df70d98c324a9035a5d165429b",
+      "rgba_sha256": "01c3e12d64709e767a628bbd5b96f60f941905b1e54bbec3216fe4ebfae16cf2",
+      "captured_at": "2026-10-23T23:28:11+08:00",
+      "pixel_equivalent": true,
+      "viewport": [
+        1380.0,
+        760.0
+      ],
+      "preview": true,
+      "active_file": "README.md"
+    },
+    {
+      "file": "assets/screenshots/editor-light.webp",
+      "width": 2419,
+      "height": 1332,
+      "native_png_sha256": "625aa96a10a0b5c34a204f47753645dd55e9b4a2189afe5218888ff60bb495a9",
+      "webp_sha256": "d71b876983cc8ddc2e4aef68767e9f3714b753895ac782d2ad156ee5468db1d5",
+      "rgba_sha256": "cdd12eb37f4d845c0794766f5d1f1adbb412434c03d10cca702c255d8dd3edd2",
+      "captured_at": "2026-10-23T23:28:42+08:00",
+      "pixel_equivalent": true,
+      "viewport": [
+        1380.0,
+        760.0
+      ],
+      "preview": false,
+      "active_file": "settings.rs"
+    },
+    {
+      "file": "assets/screenshots/html-preview-light.webp",
+      "width": 2419,
+      "height": 1332,
+      "native_png_sha256": "cc8da59c062a29c3153cbdf1824b915c448474efcfc7d145ea9feded2d193046",
+      "webp_sha256": "cc97def664cb2e60413adb46b0bdc4e1a80a661382c83789e3b9ebd1a27eed60",
+      "rgba_sha256": "06d47eeade98176d4797e45005b6557f6fa0628e585f17a5954d1adadf167c99",
+      "captured_at": "2026-10-23T23:29:26+08:00",
+      "pixel_equivalent": true,
+      "viewport": [
+        1380.0,
+        760.0
+      ],
+      "preview": true,
+      "active_file": "overview.html"
+    },
+    {
+      "file": "assets/screenshots/remote-top.webp",
+      "width": 2104,
+      "height": 1157,
+      "native_png_sha256": "fca3a35fa10e8d20af3f259497757d883ba737ff7a031de5a725733858694a33",
+      "webp_sha256": "a6d1625afa459209cdedb4c5fe531c6282474f848783b0074820a2cb29c69240",
+      "rgba_sha256": "88da1cfb90150ccf9253a250f04c53f5d06ddaf723981c545c5db2dc339d0157",
+      "captured_at": "2026-10-23T23:30:10+08:00",
+      "pixel_equivalent": true,
+      "viewport": [
+        1200,
+        660
+      ],
+      "auto_names": true
+    },
+    {
+      "file": "assets/screenshots/remote-sidebar.webp",
+      "width": 2104,
+      "height": 1157,
+      "native_png_sha256": "72fbedfd1659df05371de8875eb9b93ee3526aa5f914de221468be6a81cb988d",
+      "webp_sha256": "02ae28fac6765a61a878531c2ab05c1bc1a7ffa51a1f70459b7006a7e3252435",
+      "rgba_sha256": "1fe6201212c46c3364ba6c272af35bace3a2e8a01f4f99d1260b216e616c8c40",
+      "captured_at": "2026-10-23T23:30:41+08:00",
+      "pixel_equivalent": true,
+      "viewport": [
+        1200,
+        660
+      ],
+      "auto_names": true
+    }
+  ],
+  "hero_aliases": [
+    "assets/hero.webp",
+    "docs/images/hero.webp"
+  ]
+}

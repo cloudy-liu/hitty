@@ -1,0 +1,9 @@
+# Herdr's named-session rule omits the U+25FE active-task marker used by Claude.
+# Accept that marker and the trailing padding preserved by terminal grid rows.
+[[rules]]
+id = "named_session_form_active_task_glyph"
+state = "blocked"
+priority = 981
+region = "whole_recent"
+visible_blocker = true
+regex = ['(?i)(?:^|\n)[ \t]*enter\s+to\s+(?:confirm|select\s+·\s+(?:(?:tab/arrow|arrow)\s+keys|arrows|↑/↓|↑↓)\s+to\s+navigate)\s+·\s+esc\s+to\s+cancel[ \t]*\n(?:[ \t]*\n)*[ \t]*─{3,}[^\n]*(?:\n(?:[ \t]*\n)*[ \t]+\d+ tasks? \(\d+ done, (?:\d+ in progress, )?\d+ open\)[ \t]*(?:\n[ \t]+[\x{25FB}\x{25FC}\x{25FE}\x{2714}][ \t]+[^\n]+)+(?:\n[ \t]+…[ \t]+\+\d+[ \t]+pending[ \t]*)?)?(?:\n[ \t]*)*\z']

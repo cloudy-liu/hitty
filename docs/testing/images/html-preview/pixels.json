@@ -1,0 +1,11 @@
+{
+  "width": 1682,
+  "height": 1461,
+  "pixels": 2457402,
+  "changed_pixels": 2631,
+  "changed_pixel_percent": 0.10706428984757073,
+  "mean_absolute_rgb_error_0_to_255": 0.0016783307465906407,
+  "maximum_channel_error_0_to_255": 83,
+  "reference_height": 1461,
+  "actual_height": 1462
+}

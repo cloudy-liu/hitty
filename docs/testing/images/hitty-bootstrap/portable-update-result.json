@@ -1,0 +1,23 @@
+{
+  "old_version": "0.0.0",
+  "new_version": "0.1.0",
+  "package_sha256": "23f520cde9cc721b1b8bd6046fac3c2f62bbf47e0fbe30615f955e5b3b01e65c",
+  "checksum_rejection": "passed",
+  "update": "passed",
+  "gui_relaunch": "passed",
+  "workspace_restoration": "passed",
+  "custom_settings": "passed",
+  "unmanaged_file": "passed",
+  "outcome": {
+    "version": "0.1.0",
+    "ok": true
+  },
+  "old_package": "unpublished 0.0.0 debug build from a separate checkout, with only workspace version changed",
+  "new_package_run": 42443650571,
+  "new_package_head": "30a4413cef465f91430381532dea8dfa3dd738ae",
+  "window_logical_size": [
+    1100,
+    700
+  ],
+  "display_scale": 1.75
+}

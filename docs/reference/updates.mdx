@@ -1,0 +1,120 @@
+---
+title: "Updates"
+description: "How chitty checks, verifies and installs official releases."
+---
+
+**Settings → About** is where everything lives: the version you are on and the button that installs what is waiting.
+
+## How it works
+
+<Steps>
+  <Step title="Check">
+    hitty checks at launch and every six hours after that. Turn it off entirely
+    with `check_for_updates: false`, or check on demand with **Check now**.
+  </Step>
+  <Step title="Download and verify, in the background">
+    A found release is fetched and verified before you are asked to do anything
+    — which turns "spend five minutes downloading" into "press restart".
+    Nothing is ever *installed* without an explicit choice; the staged package
+    waits in Settings.
+
+    Turn this off on a metered connection: the packages run 25–30 MB.
+    (`auto_download_updates: false`)
+  </Step>
+  <Step title="Update and relaunch">
+    A dedicated `hitty-updater` helper verifies the release checksum, the bundle
+    version, and — on macOS — the code-signing requirement, before replacing the
+    installation. Portable, macOS and AppImage updates attempt to restore the
+    previous copy if replacement or relaunch fails.
+  </Step>
+</Steps>
+
+Declining an update defers it rather than retiring it; it comes back later.
+
+## Official releases
+
+hitty follows the latest official Release. There is no channel selector.
+Legacy `update_channel` configuration is ignored. Version numbers increase
+from 0.1.0; old 26.x installations need one manual replacement before ordinary
+updates resume. See the [migration guide](https://github.com/cloudy-liu/ctty7/blob/main/docs/maintenance/migration.md).
+
+## Cancellation and failed updates
+
+Cancelling a download also cancels requests waiting for a connection, TLS,
+headers, or checksums. Cancelling during verification stops the verification
+helper. A cancelled attempt cannot install itself later.
+If a configured proxy cannot be resolved, the attempt reports a failure.
+
+The updater waits up to two minutes for the GUI to close. If it remains open,
+the attempt stops before changing installed files. Verification helpers,
+Windows Setup and the elevated install stage also have time limits.
+
+Failed or cancelled preparation removes its temporary files after its helper
+has stopped. Windows cleanup retries temporary file locks; ordinary leftovers
+can be removed at a later launch after 24 hours.
+
+If restoration fails, the updater preserves the previous app or image and
+records its backup path. Cleanup also preserves files when an installer's
+termination could not be confirmed. Close any remaining installer before
+retrying. Such attempts do not relaunch automatically; their stage and
+update logs retain the failure details. Windows Setup does not provide a
+complete app-managed rollback;
+a partial installation can require running Setup manually.
+
+## Platform notes
+
+<AccordionGroup>
+  <Accordion title="macOS">
+    The new GUI reuses a running local server when its wire protocol is
+    compatible, so your shells survive the update. An incompatible server keeps
+    its shells too and raises an explicit keep-or-restart prompt.
+  </Accordion>
+  <Accordion title="Windows">
+    Windows cannot replace a running daemon's image, so the install path stops
+    the service first — and the dialog says so before you agree.
+
+    All-users installations require elevation when supported by the installed
+    updater. Otherwise use the release-page fallback and run Setup manually.
+  </Accordion>
+  <Accordion title="Linux">
+    Writable AppImage installations can update through the application.
+    Tarball installations use the release-page download.
+  </Accordion>
+</AccordionGroup>
+
+## "The background server is still running &lt;build&gt;"
+
+If Settings tells you this, hitty was updated in place: the app is the new build,
+but your panes are still served by the previous one. Restarting the server picks
+up the new one — **and ends every process running in your panes**, shells,
+agents, and SSH sessions alike.
+
+There is no hurry. Pick a moment when your panes are idle.
+
+## Proxies
+
+Update checks and downloads resolve a proxy from, in order:
+
+1. `http_proxy` in `config.json` — `http://127.0.0.1:7890` or
+   `socks5://127.0.0.1:1080`
+2. The platform system proxy (Windows registry, macOS `SCDynamicStore`)
+3. `HTTP_PROXY` / `HTTPS_PROXY` / `ALL_PROXY`
+
+Programs running in a pane are deliberately unaffected — they inherit their
+proxy from their own environment, as in any other terminal.
+
+## Certificate environment differences
+
+Some computers have a certificate environment that differs from the
+downloader's bundled roots. Release downloads use the operating system's
+certificate verifier to honor the CAs trusted on that computer. Certificate
+verification and release checksum checks remain enabled.
+
+If an older installation cannot download updates because of `UnknownIssuer`,
+install a release containing this fix manually once. Future downloads then use
+system trust. Network restrictions that block GitHub or its release asset hosts
+still require separate handling.
+
+After an upgrade, Settings clears download failures for the running version or
+an older version. Failures for a newer version and installation errors remain
+visible until resolved or dismissed.

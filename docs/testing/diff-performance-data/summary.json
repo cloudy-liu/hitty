@@ -1,0 +1,60 @@
+[
+  {
+    "mode": "split",
+    "trials_per_revision": 3,
+    "statistic": "Median of the three trial statistics, not a pooled percentile",
+    "first_frame_ms": {
+      "before": 694.7211,
+      "after": 29.3243,
+      "reduction_percent": 95.78,
+      "ratio": 23.69
+    },
+    "scroll_median_ms": {
+      "before": 445.5332,
+      "after": 8.7744,
+      "reduction_percent": 98.03,
+      "ratio": 50.78
+    },
+    "scroll_p95_ms": {
+      "before": 460.3992,
+      "after": 9.7214,
+      "reduction_percent": 97.89,
+      "ratio": 47.36
+    },
+    "git_probe_ms": {
+      "before": 181.6251,
+      "after": 195.0875,
+      "reduction_percent": -7.41,
+      "ratio": 0.93
+    }
+  },
+  {
+    "mode": "unified",
+    "trials_per_revision": 3,
+    "statistic": "Median of the three trial statistics, not a pooled percentile",
+    "first_frame_ms": {
+      "before": 927.5231,
+      "after": 29.72,
+      "reduction_percent": 96.8,
+      "ratio": 31.21
+    },
+    "scroll_median_ms": {
+      "before": 626.8647000000001,
+      "after": 9.377500000000001,
+      "reduction_percent": 98.5,
+      "ratio": 66.85
+    },
+    "scroll_p95_ms": {
+      "before": 647.1916,
+      "after": 10.118200000000002,
+      "reduction_percent": 98.44,
+      "ratio": 63.96
+    },
+    "git_probe_ms": {
+      "before": 184.91,
+      "after": 198.85539999999997,
+      "reduction_percent": -7.54,
+      "ratio": 0.93
+    }
+  }
+]

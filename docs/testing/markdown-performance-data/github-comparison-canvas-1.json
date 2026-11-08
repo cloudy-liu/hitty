@@ -1,0 +1,578 @@
+{
+  "os": "windows",
+  "dpi_scale": 1.75,
+  "window": [
+    1200.0,
+    850.2857055664062
+  ],
+  "source_bytes": 101027,
+  "parsed_source_bytes": 92246,
+  "all_content_ready_ms": 1122.1475,
+  "scroll_cpu_frame": {
+    "samples": 100,
+    "median_ms": 5.4079999999999995,
+    "p95_ms": 11.5031,
+    "max_ms": 28.8455
+  },
+  "scroll_detail": [
+    {
+      "frame": 0,
+      "cpu_ms": 4.2303999999999995,
+      "offset": -120.0
+    },
+    {
+      "frame": 1,
+      "cpu_ms": 107.2379,
+      "offset": -240.0
+    },
+    {
+      "frame": 2,
+      "cpu_ms": 3.8192999999999997,
+      "offset": -360.0
+    },
+    {
+      "frame": 3,
+      "cpu_ms": 3.3404,
+      "offset": -480.0
+    },
+    {
+      "frame": 4,
+      "cpu_ms": 19.0654,
+      "offset": -600.0
+    },
+    {
+      "frame": 5,
+      "cpu_ms": 3.7683999999999997,
+      "offset": -720.0
+    },
+    {
+      "frame": 6,
+      "cpu_ms": 3.1233,
+      "offset": -840.0
+    },
+    {
+      "frame": 7,
+      "cpu_ms": 7.5741000000000005,
+      "offset": -960.0
+    },
+    {
+      "frame": 8,
+      "cpu_ms": 5.6322,
+      "offset": -1080.0
+    },
+    {
+      "frame": 9,
+      "cpu_ms": 2.775,
+      "offset": -1200.0
+    },
+    {
+      "frame": 10,
+      "cpu_ms": 28.8455,
+      "offset": -1320.0
+    },
+    {
+      "frame": 11,
+      "cpu_ms": 3.3089999999999997,
+      "offset": -1440.0
+    },
+    {
+      "frame": 12,
+      "cpu_ms": 2.6368,
+      "offset": -1560.0
+    },
+    {
+      "frame": 13,
+      "cpu_ms": 2.7674000000000003,
+      "offset": -1680.0
+    },
+    {
+      "frame": 14,
+      "cpu_ms": 2.5328,
+      "offset": -1800.0
+    },
+    {
+      "frame": 15,
+      "cpu_ms": 2.6402,
+      "offset": -1920.0
+    },
+    {
+      "frame": 16,
+      "cpu_ms": 8.7369,
+      "offset": -2040.0
+    },
+    {
+      "frame": 17,
+      "cpu_ms": 3.6587,
+      "offset": -2160.0
+    },
+    {
+      "frame": 18,
+      "cpu_ms": 3.5109999999999997,
+      "offset": -2280.0
+    },
+    {
+      "frame": 19,
+      "cpu_ms": 3.0972999999999997,
+      "offset": -2400.0
+    },
+    {
+      "frame": 20,
+      "cpu_ms": 3.2112,
+      "offset": -2520.0
+    },
+    {
+      "frame": 21,
+      "cpu_ms": 2.9965,
+      "offset": -2640.0
+    },
+    {
+      "frame": 22,
+      "cpu_ms": 14.3636,
+      "offset": -2760.0
+    },
+    {
+      "frame": 23,
+      "cpu_ms": 3.4089,
+      "offset": -2880.0
+    },
+    {
+      "frame": 24,
+      "cpu_ms": 2.8529,
+      "offset": -3000.0
+    },
+    {
+      "frame": 25,
+      "cpu_ms": 2.4977,
+      "offset": -3119.999755859375
+    },
+    {
+      "frame": 26,
+      "cpu_ms": 2.3739,
+      "offset": -3239.999755859375
+    },
+    {
+      "frame": 27,
+      "cpu_ms": 4.0893,
+      "offset": -3359.999755859375
+    },
+    {
+      "frame": 28,
+      "cpu_ms": 14.27,
+      "offset": -3479.999755859375
+    },
+    {
+      "frame": 29,
+      "cpu_ms": 3.0911,
+      "offset": -3599.999755859375
+    },
+    {
+      "frame": 30,
+      "cpu_ms": 2.4998,
+      "offset": -3719.999755859375
+    },
+    {
+      "frame": 31,
+      "cpu_ms": 3.335,
+      "offset": -3840.0
+    },
+    {
+      "frame": 32,
+      "cpu_ms": 2.5334,
+      "offset": -3960.0
+    },
+    {
+      "frame": 33,
+      "cpu_ms": 2.6593,
+      "offset": -4080.0
+    },
+    {
+      "frame": 34,
+      "cpu_ms": 3.4003,
+      "offset": -4200.0
+    },
+    {
+      "frame": 35,
+      "cpu_ms": 3.8489,
+      "offset": -4320.0
+    },
+    {
+      "frame": 36,
+      "cpu_ms": 7.7886,
+      "offset": -4440.0
+    },
+    {
+      "frame": 37,
+      "cpu_ms": 6.5106,
+      "offset": -4560.0
+    },
+    {
+      "frame": 38,
+      "cpu_ms": 9.7983,
+      "offset": -4679.99951171875
+    },
+    {
+      "frame": 39,
+      "cpu_ms": 8.076699999999999,
+      "offset": -4799.99951171875
+    },
+    {
+      "frame": 40,
+      "cpu_ms": 10.413499999999999,
+      "offset": -4919.99951171875
+    },
+    {
+      "frame": 41,
+      "cpu_ms": 9.2954,
+      "offset": -5039.99951171875
+    },
+    {
+      "frame": 42,
+      "cpu_ms": 8.668000000000001,
+      "offset": -5159.99951171875
+    },
+    {
+      "frame": 43,
+      "cpu_ms": 8.039100000000001,
+      "offset": -5279.99951171875
+    },
+    {
+      "frame": 44,
+      "cpu_ms": 8.7813,
+      "offset": -5400.0
+    },
+    {
+      "frame": 45,
+      "cpu_ms": 9.245,
+      "offset": -5520.0
+    },
+    {
+      "frame": 46,
+      "cpu_ms": 9.2361,
+      "offset": -5640.0
+    },
+    {
+      "frame": 47,
+      "cpu_ms": 9.2239,
+      "offset": -5760.0
+    },
+    {
+      "frame": 48,
+      "cpu_ms": 7.9314,
+      "offset": -5880.0
+    },
+    {
+      "frame": 49,
+      "cpu_ms": 10.088,
+      "offset": -6000.0
+    },
+    {
+      "frame": 50,
+      "cpu_ms": 7.883400000000001,
+      "offset": -6120.0
+    },
+    {
+      "frame": 51,
+      "cpu_ms": 10.9009,
+      "offset": -6240.0
+    },
+    {
+      "frame": 52,
+      "cpu_ms": 9.212100000000001,
+      "offset": -6360.0
+    },
+    {
+      "frame": 53,
+      "cpu_ms": 9.0703,
+      "offset": -6480.0
+    },
+    {
+      "frame": 54,
+      "cpu_ms": 8.5456,
+      "offset": -6600.0
+    },
+    {
+      "frame": 55,
+      "cpu_ms": 11.5031,
+      "offset": -6480.0
+    },
+    {
+      "frame": 56,
+      "cpu_ms": 8.708300000000001,
+      "offset": -6360.0
+    },
+    {
+      "frame": 57,
+      "cpu_ms": 8.072799999999999,
+      "offset": -6240.0
+    },
+    {
+      "frame": 58,
+      "cpu_ms": 8.6092,
+      "offset": -6120.0
+    },
+    {
+      "frame": 59,
+      "cpu_ms": 8.277800000000001,
+      "offset": -6000.0
+    },
+    {
+      "frame": 60,
+      "cpu_ms": 9.8802,
+      "offset": -5880.0
+    },
+    {
+      "frame": 61,
+      "cpu_ms": 8.183,
+      "offset": -5760.0
+    },
+    {
+      "frame": 62,
+      "cpu_ms": 11.8452,
+      "offset": -5640.0
+    },
+    {
+      "frame": 63,
+      "cpu_ms": 10.6188,
+      "offset": -5520.0
+    },
+    {
+      "frame": 64,
+      "cpu_ms": 9.1567,
+      "offset": -5400.0
+    },
+    {
+      "frame": 65,
+      "cpu_ms": 9.6288,
+      "offset": -5280.0
+    },
+    {
+      "frame": 66,
+      "cpu_ms": 8.691600000000001,
+      "offset": -5160.0
+    },
+    {
+      "frame": 67,
+      "cpu_ms": 9.609,
+      "offset": -5039.99951171875
+    },
+    {
+      "frame": 68,
+      "cpu_ms": 7.9392000000000005,
+      "offset": -4919.99951171875
+    },
+    {
+      "frame": 69,
+      "cpu_ms": 7.1291,
+      "offset": -4799.99951171875
+    },
+    {
+      "frame": 70,
+      "cpu_ms": 6.2562,
+      "offset": -4679.99951171875
+    },
+    {
+      "frame": 71,
+      "cpu_ms": 6.0595,
+      "offset": -4559.99951171875
+    },
+    {
+      "frame": 72,
+      "cpu_ms": 6.2866,
+      "offset": -4440.0
+    },
+    {
+      "frame": 73,
+      "cpu_ms": 4.4903,
+      "offset": -4320.0
+    },
+    {
+      "frame": 74,
+      "cpu_ms": 3.7060999999999997,
+      "offset": -4200.0
+    },
+    {
+      "frame": 75,
+      "cpu_ms": 6.747999999999999,
+      "offset": -4080.0
+    },
+    {
+      "frame": 76,
+      "cpu_ms": 6.3567,
+      "offset": -3960.0
+    },
+    {
+      "frame": 77,
+      "cpu_ms": 3.5961000000000003,
+      "offset": -3840.0
+    },
+    {
+      "frame": 78,
+      "cpu_ms": 4.7891,
+      "offset": -3719.999755859375
+    },
+    {
+      "frame": 79,
+      "cpu_ms": 3.4715000000000003,
+      "offset": -3599.999755859375
+    },
+    {
+      "frame": 80,
+      "cpu_ms": 3.6641,
+      "offset": -3479.999755859375
+    },
+    {
+      "frame": 81,
+      "cpu_ms": 3.1206,
+      "offset": -3359.999755859375
+    },
+    {
+      "frame": 82,
+      "cpu_ms": 3.9484000000000004,
+      "offset": -3239.999755859375
+    },
+    {
+      "frame": 83,
+      "cpu_ms": 3.5593,
+      "offset": -3119.999755859375
+    },
+    {
+      "frame": 84,
+      "cpu_ms": 3.1934,
+      "offset": -3000.0
+    },
+    {
+      "frame": 85,
+      "cpu_ms": 3.153,
+      "offset": -2880.0
+    },
+    {
+      "frame": 86,
+      "cpu_ms": 4.6966,
+      "offset": -2760.0
+    },
+    {
+      "frame": 87,
+      "cpu_ms": 6.8866,
+      "offset": -2640.0
+    },
+    {
+      "frame": 88,
+      "cpu_ms": 3.2173000000000003,
+      "offset": -2520.0
+    },
+    {
+      "frame": 89,
+      "cpu_ms": 3.0687,
+      "offset": -2400.0
+    },
+    {
+      "frame": 90,
+      "cpu_ms": 2.888,
+      "offset": -2280.0
+    },
+    {
+      "frame": 91,
+      "cpu_ms": 5.5089,
+      "offset": -2160.0
+    },
+    {
+      "frame": 92,
+      "cpu_ms": 3.9365,
+      "offset": -2040.0
+    },
+    {
+      "frame": 93,
+      "cpu_ms": 3.6188000000000002,
+      "offset": -1920.0
+    },
+    {
+      "frame": 94,
+      "cpu_ms": 2.9518,
+      "offset": -1800.0
+    },
+    {
+      "frame": 95,
+      "cpu_ms": 4.7038,
+      "offset": -1680.0
+    },
+    {
+      "frame": 96,
+      "cpu_ms": 3.315,
+      "offset": -1560.0
+    },
+    {
+      "frame": 97,
+      "cpu_ms": 3.3103,
+      "offset": -1440.0
+    },
+    {
+      "frame": 98,
+      "cpu_ms": 3.1145,
+      "offset": -1320.0
+    },
+    {
+      "frame": 99,
+      "cpu_ms": 2.6232,
+      "offset": -1200.0
+    },
+    {
+      "frame": 100,
+      "cpu_ms": 5.4079999999999995,
+      "offset": -1080.0
+    },
+    {
+      "frame": 101,
+      "cpu_ms": 3.7172,
+      "offset": -960.0
+    },
+    {
+      "frame": 102,
+      "cpu_ms": 4.2959000000000005,
+      "offset": -840.0
+    },
+    {
+      "frame": 103,
+      "cpu_ms": 4.024500000000001,
+      "offset": -720.0
+    },
+    {
+      "frame": 104,
+      "cpu_ms": 5.893,
+      "offset": -600.0
+    },
+    {
+      "frame": 105,
+      "cpu_ms": 6.090199999999999,
+      "offset": -480.0
+    },
+    {
+      "frame": 106,
+      "cpu_ms": 4.1857,
+      "offset": -360.0
+    },
+    {
+      "frame": 107,
+      "cpu_ms": 7.7188,
+      "offset": -240.0
+    },
+    {
+      "frame": 108,
+      "cpu_ms": 4.822500000000001,
+      "offset": -120.0
+    },
+    {
+      "frame": 109,
+      "cpu_ms": 5.4986999999999995,
+      "offset": -0.0
+    }
+  ],
+  "expanded_drag_cpu_frame": {
+    "samples": 100,
+    "median_ms": 0.7031000000000001,
+    "p95_ms": 1.3497999999999999,
+    "max_ms": 2.1326
+  },
+  "min_scroll_offset": -6600.0,
+  "visible_scroll_verified": true,
+  "measurement": "event dispatch plus GPUI CPU layout/prepaint/paint; excludes present and GPU time"
+}

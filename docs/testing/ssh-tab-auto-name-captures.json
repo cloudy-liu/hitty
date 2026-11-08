@@ -1,0 +1,73 @@
+{
+  "method": "Computer Use skill, @oai/sky.get_window_state",
+  "platform": "Windows / native GPUI",
+  "logical_content_size": [
+    1200,
+    660
+  ],
+  "theme": "light",
+  "fixture_options": {
+    "auto_names": true,
+    "hold_seconds": 600
+  },
+  "fixture": "Deterministic daemon messages through production renderers; no network SSH connection or remote Agent detection.",
+  "composition": "Original JPEG payloads returned by Computer Use; no cropping, resizing, redrawing, or re-encoding.",
+  "before": {
+    "renderer_revision": "90bc795c653f40f6d29d3fa9be932b7bf1af160a",
+    "overlay": "Same auto_names fixture; unused naming helpers do not change baseline render paths.",
+    "binary_sha256": "006423cb8a3a71ae46e7877a1e9d6c894eeaf33c85b894b74147a1f06fc08b09"
+  },
+  "after": {
+    "binary_sha256": "e5fc1975b4fc65f19fdc75e3b75cd1ce95f7d553594a6e893a0cc7f8800a32f6",
+    "source_sha256": {
+      "crates/tty7-cli/src/output.rs": "6891da5341c09ea93e9d7b68b683d9e2999687055d603e332506121dba28fc76",
+      "crates/tty7-core/src/core/tab_view.rs": "f616493182635084146d04b6bf6254802804d66443df96dc6070f46a7963874f",
+      "crates/tty7-core/src/daemon/remote.rs": "d6fa91dc15cbcb318bb39dbe3962a3549832cb7edcc39bb141bea50472f076e3",
+      "src/ssh_tab_visual.rs": "55696d5dc8b498a6ef63f74f44df9e261a292c21df65e3bb97dbdb18e8116e9e",
+      "src/ui/app.rs": "32623f840c5d22d69900610be629177342e5c57b87f6934f0ee4a94d850922cf",
+      "src/ui/remote_connect.rs": "20153c8a925afca6e9eb6e1f356fbe3961f8d7306de38480e5c51b3a3b099140",
+      "src/ui/ssh_connect.rs": "b5fed96430b4a9786d757115a7cf954b0abee19ccc2422f3876661f6a541d5d4",
+      "src/ui/switcher.rs": "1d432953824fb06d64a5b01062e63a60ec9b1d95b1c49961048842e5d84ec19f",
+      "src/ui/tab_sidebar.rs": "64b9d74a8bd52ac3b47c9bbca6f81dd992e98b04ca2e77f9165b796d611b0c1d",
+      "src/ui/tab_strip.rs": "43e2901da0cffc2d0399fcb8172619e2e842202613beac978a93b189a1ef0a74"
+    }
+  },
+  "captures": [
+    {
+      "file": "images/ssh-tab-auto-name/after-sidebar.jpg",
+      "captured_at": "2026-10-16T00:56:14.390088+00:00",
+      "sha256": "4cd4560bd45c773dee122f97ddbde92675ce0a25db0f1057a7c20e39457ced18",
+      "image_size": [
+        1202,
+        691
+      ]
+    },
+    {
+      "file": "images/ssh-tab-auto-name/after-top.jpg",
+      "captured_at": "2026-10-16T00:57:07.781680+00:00",
+      "sha256": "63aeaa37277a366448d85c2edbc7c3adf62d554227483dacc8317b7a8eb0d5dd",
+      "image_size": [
+        1202,
+        691
+      ]
+    },
+    {
+      "file": "images/ssh-tab-auto-name/before-sidebar.jpg",
+      "captured_at": "2026-10-15T14:07:37.405325+00:00",
+      "sha256": "5d510f85568a5578060c81ce59f04929b321c6f1d694c40041df9a92efdb5c9b",
+      "image_size": [
+        1202,
+        691
+      ]
+    },
+    {
+      "file": "images/ssh-tab-auto-name/before-top.jpg",
+      "captured_at": "2026-10-15T14:07:58.692519+00:00",
+      "sha256": "397cbcae6a18bab296f6b7938ca016010e7d74924d05b720d309a933df7601f9",
+      "image_size": [
+        1202,
+        691
+      ]
+    }
+  ]
+}

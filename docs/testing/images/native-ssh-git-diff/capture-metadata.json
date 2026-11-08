@@ -1,0 +1,36 @@
+{
+  "baseline_source": "cb0bc217098687c3ed8655cb62ed2f2f52f6a190",
+  "after_source": "04bf73324b71e8c6a0cab8e2018cbae51d4879d4",
+  "platform": "Windows",
+  "display_scale": 1.75,
+  "logical_window": [
+    1200,
+    700
+  ],
+  "native_capture_pixels": [
+    2104,
+    1227
+  ],
+  "theme": "light",
+  "sidebar_width": 290,
+  "sidebar_grouping": "none",
+  "remote": "disposable loopback SSH to WSL Ubuntu",
+  "remote_git": "2.47.0",
+  "repository_path": "/tmp/ctty7-native-ssh-acceptance/api",
+  "branch": "native-ssh-demo",
+  "line_totals": [
+    3,
+    2
+  ],
+  "before_disconnect_pane": 4,
+  "after_reconnect_pane": 5,
+  "capture_method": "LCU native Alt+Print, saved through Paint; lossless crop removes blank Paint canvas only",
+  "captures": {
+    "before-sidebar.png": "Native SSH totals absent",
+    "after-sidebar.png": "Same repositories and totals, remote row now +3 -2",
+    "after-diff.png": "Remote patch retries4 timeout2500 /health",
+    "after-external-edit.png": "Same totals, externally edited retries6 timeout5000 /ready",
+    "after-disconnect.png": "Old row statistics and patch cleared",
+    "after-reconnect.png": "Restored remote file fetched after reconnect"
+  }
+}

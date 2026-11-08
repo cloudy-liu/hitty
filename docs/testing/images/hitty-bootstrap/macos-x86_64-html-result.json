@@ -1,0 +1,31 @@
+{
+  "os": "macos",
+  "arch": "x86_64",
+  "cold_load_poll_ms": 5640.826917,
+  "refresh_poll_ms": 114.712229,
+  "switch_poll_ms": [
+    101.426884,
+    109.700905
+  ],
+  "samples": [
+    {
+      "ready": true,
+      "image": true,
+      "grid": "grid",
+      "url": "file:///private/var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/hitty-html-9fvhgblr/HTML%20%E9%A1%B5%E9%9D%A2%20with%20spaces/pages/report%20%231.HTML",
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko)",
+      "width": 489,
+      "height": 840,
+      "dpr": 1
+    }
+  ],
+  "script_click": true,
+  "refresh": true,
+  "html_tab_scroll": true,
+  "fragment_scroll_and_refresh": true,
+  "markdown_and_source_scroll": true,
+  "session_scroll_ownership": true,
+  "rapid_switch_and_reopen": true,
+  "note": "DOM polling includes resource readiness; it does not measure first visible paint. Screenshot must be inspected separately.",
+  "navigation_failure_recovery": true
+}

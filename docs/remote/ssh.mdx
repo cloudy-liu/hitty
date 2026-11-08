@@ -1,0 +1,160 @@
+---
+title: "SSH"
+description: "A native Rust SSH stack: quick connects, saved profiles, keychain credentials, jump hosts."
+---
+
+hitty speaks SSH itself, over [russh](https://github.com/Eugeny/russh). It never
+shells out to the `ssh` binary, and there is no compatibility mode that does.
+
+That is what makes the rest possible: credentials in the OS keychain,
+[SFTP](/remote/sftp) in a side panel, [port forwards](/remote/port-forwarding)
+you can add mid-session, and authentication prompts drawn as sheets in the pane
+instead of a password echoing into your shell.
+
+<Frame caption="Placeholder — screenshot: an SSH connection sheet asking for a key passphrase inside a pane">
+  <img src="/images/placeholder.svg" alt="Connecting over SSH in hitty" />
+</Frame>
+
+## Four ways to connect
+
+<AccordionGroup>
+  <Accordion title="QuickConnect — type an address">
+    Open the palette (<kbd>⌘ P</kbd>) and type an address. IPv6 works with
+    brackets.
+
+    ```
+    me@devbox
+    me@devbox:2222
+    me@[2001:db8::1]:22
+    ```
+  </Accordion>
+
+  <Accordion title="A saved profile">
+    Profiles live in **Settings → SSH → Hosts**. Start typing the name in the
+    palette, or open the *SSH: Manage Profiles…* command.
+  </Accordion>
+
+  <Accordion title="An alias from ~/.ssh/config">
+    Type an alias you already have and hitty resolves it natively — common fields,
+    best effort — then connects over russh. **Settings → SSH → Import from
+    ~/.ssh/config** turns aliases into real profiles.
+
+    <Note>
+      `Match`, `canonicalize*`, and GSSAPI directives are not supported, and
+      there is no fallback to the system `ssh` when one appears.
+    </Note>
+  </Accordion>
+
+  <Accordion title="A remote workspace">
+    The same connection can host whole workspaces on the far machine rather than
+    a single shell. [Remote workspaces →](/remote/workspaces)
+  </Accordion>
+</AccordionGroup>
+
+## Profiles
+
+**Settings → SSH → Hosts** holds the full connection config. The basics:
+
+| Field | |
+|---|---|
+| **Name** | A label for this connection |
+| **Host** | Hostname or IP |
+| **User** | Login user — blank resolves at connect time |
+| **Auth** | *Auto* (tries every applicable method), *GSSAPI*, *Password*, *Key*, *Agent*, or *2FA* |
+| **Jump host** | Another profile, or a `ProxyJump` chain |
+| **Port forwarding** | Rules opened with the connection |
+
+**Defaults** at the top of the list is inherited by every host, so a setting you
+want everywhere is set once.
+
+Passwords and key passphrases go in the **OS keychain**, never in
+`config.json` and never on disk in plain text. **Forget Password** in a
+profile's menu removes the stored one.
+
+Deleting a profile drops its keychain credentials and forgets the remote
+workspace entries that connected through it — the confirmation counts them
+first. The sessions on the machine itself keep running; [what happens to its
+entries →](/remote/workspaces#deleting-a-profile)
+
+### Advanced
+
+Behind **Advanced** on a profile, grouped:
+
+| Group | Fields |
+|---|---|
+| **Authentication** | Identity files (one path per line, `%h`/`%r` expand), agent forwarding |
+| **Proxies** | ProxyCommand (`%h`/`%p`/`%r` substituted), SOCKS5 proxy, HTTP proxy |
+| **Algorithms** | KEX algorithms, ciphers, MACs, host-key algorithms, compression |
+| **Connection** | Keepalive interval and count, connect timeout, X11 forwarding |
+| **Session** | Shell integration, login scripts, skip banner |
+
+Everything blank means "the library default", so you only fill in what you
+actually need to override.
+
+## Authentication prompts
+
+Password, key passphrase, and 2FA prompts appear as sheets inside the pane, with
+a **Remember (keychain)** option where it makes sense.
+
+## Host keys
+
+Host keys are verified against `known_hosts` by default. A first connection asks
+you to confirm the fingerprint; a **changed** key is a much louder prompt that
+makes you type `yes` to override, because that is what a changed key deserves.
+
+**Settings → SSH → Security → Verify host keys** turns verification off
+entirely. It is on for a reason.
+
+Also under Security: **Warn before closing** a live connection, off by default.
+
+## Reconnecting
+
+<kbd>⌘ ⇧ R</kbd> — or *SSH: Reconnect* in the palette — restarts the session in
+the current pane. Useful after a laptop sleeps or a network changes.
+
+Saved native SSH panes reattach to a live connection when the application reopens.
+If the pane no longer exists, hitty reconnects over SSH using the saved connection
+and remote working directory. Known Claude Code and Codex conversations resume
+with their exact session IDs and original flags after the remote shell reports
+a prompt; manual Reconnect uses the same path. User input cancels a queued resume.
+Restoration settings, session-history opt-outs, and shell-integration settings
+are respected. Unknown session IDs leave an interactive remote shell.
+
+## SSH sessions in a local sidebar
+
+With the tab bar on the left and sidebar grouping enabled, in-pane SSH sessions
+started from a local workspace appear in groups named for their displayed
+connection target. This includes native SSH tabs and `ssh` commands hitty
+detects inside a pane. Local project groups appear first and Scratch appears
+last. Choose `none` for sidebar grouping to keep a flat list.
+
+SSH groups can be folded and renamed. They cannot be pinned or used to create a
+local tab because their host is not a local project directory. Group identity is
+the displayed target: profiles or aliases with the same display name can share
+a group, while a command hitty cannot identify may stay in its existing group.
+Remote workspace windows and WSL hops keep their existing grouping behavior.
+
+## Git in a native SSH tab
+
+Open a managed SSH tab from the new-tab menu or a saved profile, then enter a
+remote Git repository. Once shell integration reports its directory, the sidebar
+shows the remote branch and `+N −M` counts. Click the counts to open that pane's
+read-only remote diff, including untracked-file previews and full-file context.
+External edits refresh while the tab is active; disconnecting clears stale Git
+results, and reconnecting starts a new pane identity.
+
+Git commands use the pane's existing SSH connection. This does not require
+installing `hitty-server` or turning the local workspace into a remote workspace.
+A remote workspace remains the option for a complete remote file tree and
+workspace-wide Git operations. Native-tab Git requires a POSIX shell and remote
+Git support for `--path-format=absolute`; manually nested SSH commands are outside
+this feature. See [diffs](/git/diffs) and the
+[native acceptance record](https://github.com/cloudy-liu/ctty7/blob/main/docs/testing/native-ssh-git-diff.md).
+
+## What is not supported
+
+- No fallback to the system `ssh` binary
+- No `Match` or `canonicalize*` directives from `~/.ssh/config`
+- No GSSAPI *directives* from `~/.ssh/config`. Kerberos `gssapi-with-mic` itself
+  is supported — pick **GSSAPI** in a profile's Auth field — it is just not
+  something the config-file resolution path reads
