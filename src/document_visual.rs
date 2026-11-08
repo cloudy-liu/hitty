@@ -52,6 +52,10 @@ struct Options {
     #[serde(default)]
     right_panel: bool,
     #[serde(default)]
+    panel_mode: Option<RightPanelTab>,
+    #[serde(default)]
+    panel_width: Option<f32>,
+    #[serde(default)]
     readme: bool,
     #[serde(default)]
     history: bool,
@@ -173,6 +177,9 @@ pub(crate) fn run(path: &std::ffi::OsStr) {
                     .insert(archive.clone(), "Playground".into());
                 config.sidebar_pinned_groups.push(root);
                 config.sidebar_collapsed_groups.insert(archive);
+            }
+            if let Some(width) = options.panel_width {
+                config.right_panel_width = width;
             }
             if let Some(arrows) = options.sidebar_group_arrows {
                 config.sidebar_group_arrows = arrows;
@@ -325,6 +332,11 @@ pub(crate) fn run(path: &std::ffi::OsStr) {
                         preview,
                         "requested mode is unavailable"
                     );
+                }
+                if let Some(mode) = options.panel_mode {
+                    cx.update_window(handle.into(), |_, _window, cx| app.update(cx, |app, cx| {
+                        app.set_right_panel_tab(mode, cx);
+                    })).unwrap();
                 }
                 let deadline = Instant::now() + Duration::from_secs(30);
                 loop {

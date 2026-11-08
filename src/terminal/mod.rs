@@ -4,6 +4,7 @@ pub(crate) mod agent_notification;
 mod agent_restore;
 mod boxdraw;
 mod cmd_editor;
+pub(crate) mod command_marks;
 mod completion;
 pub mod element;
 pub mod fps;

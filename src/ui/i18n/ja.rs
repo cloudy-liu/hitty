@@ -1187,6 +1187,10 @@ pub fn translate_ja(key: L10nKey) -> Option<&'static str> {
             "圧縮ファイルなど、テキスト以外のファイルを開く際に説明を表示します。読み取りエラーは常に表示されます。"
         }
         L10nKey::PanelInfoTitle => "情報",
+        L10nKey::PanelOutlineTitle => "アウトライン",
+        L10nKey::PanelGitTitle => "Git",
+        L10nKey::PanelOutlineEmpty => "このコンテンツにアウトラインはありません。",
+        L10nKey::PanelOutlineUnavailable => "現在のビューではこの位置に移動できません。",
         L10nKey::PanelChangesTitle => "ソース管理",
         L10nKey::PanelScmTitle => "ソース管理",
         L10nKey::PanelFilesTitle => "ファイル",

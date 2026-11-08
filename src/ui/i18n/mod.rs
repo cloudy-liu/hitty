@@ -812,6 +812,10 @@ l10n_keys! {
     EditorDontShowBinaryNotice,
     EditorPreviewDismiss,
     PanelInfoTitle,
+    PanelOutlineTitle,
+    PanelGitTitle,
+    PanelOutlineEmpty,
+    PanelOutlineUnavailable,
     PanelChangesTitle,
     PanelScmTitle,
     PanelFilesTitle,
@@ -1634,6 +1638,8 @@ mod tests {
             // and no locale renames either.
             L10nKey::PanelShell,
             L10nKey::PanelSsh,
+            // Git is the tool's name in every supported locale.
+            L10nKey::PanelGitTitle,
             // The zh copy calls the background process "server" throughout —
             // this heading is that word on its own.
             L10nKey::SettingsServer,

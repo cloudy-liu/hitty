@@ -1080,6 +1080,10 @@ pub fn translate_zh(key: L10nKey) -> Option<&'static str> {
             "点击压缩包等非文本文件时显示说明，不影响读取错误提示。"
         }
         L10nKey::PanelInfoTitle => "信息",
+        L10nKey::PanelOutlineTitle => "大纲",
+        L10nKey::PanelGitTitle => "Git",
+        L10nKey::PanelOutlineEmpty => "当前内容没有可用的大纲条目。",
+        L10nKey::PanelOutlineUnavailable => "此位置已无法在当前视图中定位。",
         L10nKey::PanelChangesTitle => "源代码管理",
         L10nKey::PanelScmTitle => "源代码管理",
         L10nKey::PanelFilesTitle => "文件",

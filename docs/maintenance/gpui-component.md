@@ -1,40 +1,16 @@
-# gpui-component maintenance
+# UI dependency maintenance
 
-ctty7 uses a maintained fork of `gpui-component` at
-`https://github.com/cloudy-liu/gpui-component`.
+Hitty pins its GPUI component packages to the reviewed revision
+`f95e3b89b9a9ec704f9e3e502e4dc0e02cca636e` in `cloudy-liu/gpui-component`.
+The authoritative revisions and versions are in `Cargo.toml` and `Cargo.lock`.
+All component packages must resolve to the same revision.
 
-## Branches
+Dependency upgrades require a separate maintainer request and validation. A
+right-panel or documentation change must not silently update the component
+fork, other dependencies or CI actions. Build and test with `--locked`.
 
-- `main` follows the fork's general line and is not a ctty7 application dependency.
-- `sync/upstream-*` temporarily imports changes from `l0ng-ai/gpui-component` and resolves conflicts.
-- `feature/*` and `fix/*` hold focused changes before review.
-- `ctty7` is the stable integration branch for ctty7.
-
-The `ctty7` branch contains upstream updates plus reusable UI behavior that ctty7 needs. ctty7-specific business logic remains in the application repository.
-
-## Dependency rule
-
-ctty7 pins an exact commit from the fork's `ctty7` branch. It does not depend on `main` or on a moving branch in release builds. `gpui-component`, `gpui-component-assets`, and `gpui-component-macros` must resolve from the same component revision.
-
-The current application pin is
-`f95e3b89b9a9ec704f9e3e502e4dc0e02cca636e`, which includes the per-input
-scrollbar policy used by the source editor's overflow controls.
-
-```toml
-gpui-component = {
-    git = "https://github.com/cloudy-liu/gpui-component",
-    rev = "f95e3b89b9a9ec704f9e3e502e4dc0e02cca636e",
-    version = "0.5.2",
-}
-```
-
-## Update flow
-
-1. Create `sync/upstream-YYYY-MM-DD` from the current `ctty7` branch.
-2. Merge the upstream `main` branch and resolve conflicts.
-3. Run the component library tests.
-4. Run ctty7's affected tests and a locked build.
-5. Merge the verified result into `ctty7`.
-6. Update ctty7's `Cargo.toml` and `Cargo.lock` to the new exact commit.
-
-If a ctty7 change is useful to the wider project, submit it upstream and remove the duplicate fork change after it lands.
+When an upgrade is requested, review the source difference, run the component
+tests and Hitty's affected application tests, then verify native rendering on
+the supported platforms before updating the pin. Preserve third-party license
+and source notices. Historical dependency branch names are recorded in
+[source provenance](../provenance/source-baseline.md).

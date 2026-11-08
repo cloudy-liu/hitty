@@ -1101,13 +1101,18 @@ impl HittyApp {
         [
             (
                 RightPanelTab::Info,
-                Icon::empty().path("icons/info.svg"),
+                Icon::empty().path("icons/circle-info.svg"),
                 L10nKey::PanelInfoTitle,
+            ),
+            (
+                RightPanelTab::Outline,
+                Icon::empty().path("icons/outline.svg"),
+                L10nKey::PanelOutlineTitle,
             ),
             (
                 RightPanelTab::Scm,
                 Icon::empty().path("icons/git-branch.svg"),
-                L10nKey::PanelChangesTitle,
+                L10nKey::PanelGitTitle,
             ),
             (
                 RightPanelTab::Files,
@@ -1117,47 +1122,65 @@ impl HittyApp {
         ]
         .into_iter()
         .map(|(tab, icon, label_key)| {
+            let active = active_tab == tab;
+            let selector = match tab {
+                RightPanelTab::Info => "right-panel-info",
+                RightPanelTab::Outline => "right-panel-outline",
+                RightPanelTab::Scm => "right-panel-git",
+                RightPanelTab::Files => "right-panel-files",
+            };
             div()
+                .id(selector)
+                .debug_selector(move || selector.into())
+                .role(gpui::Role::Button)
+                .aria_label(t(label_key))
                 .occlude()
                 .flex_shrink_0()
                 .child(
-                    chrome_tile_sized(
-                        Button::new(("right-panel-tab", tab as usize)).icon(icon),
-                        size,
-                        TILE_GLYPH,
-                        active_tab == tab,
-                        cx,
-                    )
-                    .rounded_lg()
-                    .tooltip(match (tab, changed) {
-                        (RightPanelTab::Scm, Some(n)) => {
-                            SharedString::from(format!("{} · {n}", t(label_key)))
-                        }
-                        _ => SharedString::from(t(label_key)),
-                    })
-                    // A tile for another tab switches to it; the lit one puts
-                    // the panel away, the way an activity bar behaves
-                    // everywhere else. Pressing it used to do nothing at all
-                    // — a dead click on the one control in the row that looks
-                    // like it should undo itself. (These tiles only exist
-                    // while the panel is open, so `ToggleRightPanel` and the
-                    // chrome tile beside them are still what brings it back.)
-                    .on_click(cx.listener(move |this, _, window, cx| {
-                        match this.right_panel_open(cx) && this.right_panel_tab == tab {
-                            true => {
-                                this.toggle_right_panel(cx);
-                                // These tiles live inside the panel, so
-                                // closing from one destroys the element that
-                                // holds the focus and leaves it nowhere —
-                                // and a keymap whose bindings are scoped to a
-                                // focused thing goes quiet with it, so the
-                                // ⌘J that would undo this did nothing at all.
-                                // Hand the terminal back what it lost.
-                                this.focus_active(window, cx);
+                    Button::new(("right-panel-tab", tab as usize))
+                        .icon(icon)
+                        .custom(chrome_tile_variant_for(active, cx))
+                        .selected(active)
+                        .with_size(px(16. / BUTTON_ICON_SCALE))
+                        .h(px(size))
+                        .min_w(px(size))
+                        .px(px(7.))
+                        .when(active, |button| {
+                            button
+                                .child(div().max_w(px(60.)).truncate().child(t(label_key)))
+                                .px(px(10.))
+                                .text_size(gpui::rems(14. / 16.))
+                        })
+                        .rounded(px(8.))
+                        .tooltip(match (tab, changed) {
+                            (RightPanelTab::Scm, Some(n)) => {
+                                SharedString::from(format!("{} · {n}", t(label_key)))
                             }
-                            false => this.set_right_panel_tab(tab, cx),
-                        }
-                    })),
+                            _ => SharedString::from(t(label_key)),
+                        })
+                        // A tile for another tab switches to it; the lit one puts
+                        // the panel away, the way an activity bar behaves
+                        // everywhere else. Pressing it used to do nothing at all
+                        // — a dead click on the one control in the row that looks
+                        // like it should undo itself. (These tiles only exist
+                        // while the panel is open, so `ToggleRightPanel` and the
+                        // chrome tile beside them are still what brings it back.)
+                        .on_click(cx.listener(move |this, _, window, cx| {
+                            match this.right_panel_open(cx) && this.right_panel_tab == tab {
+                                true => {
+                                    this.toggle_right_panel(cx);
+                                    // These tiles live inside the panel, so
+                                    // closing from one destroys the element that
+                                    // holds the focus and leaves it nowhere —
+                                    // and a keymap whose bindings are scoped to a
+                                    // focused thing goes quiet with it, so the
+                                    // ⌘J that would undo this did nothing at all.
+                                    // Hand the terminal back what it lost.
+                                    this.focus_active(window, cx);
+                                }
+                                false => this.set_right_panel_tab(tab, cx),
+                            }
+                        })),
                 )
                 .into_any_element()
         })

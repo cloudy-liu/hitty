@@ -21,5 +21,5 @@ To update the theme:
 4. Update `assets/markdown-themes/github.yaml` and the renderer mapping only where
    the source changed. Preserve alpha channels and fractional pixel values.
 5. Refresh the Primer tokens and icons from the recorded commits if needed.
-6. Run the v2 default inheritance and custom-theme switching tests and the visual comparison described
-   in `docs/testing/markdown-github-theme.md`.
+6. Run the v2 default inheritance and custom-theme switching tests and the native
+   visual checks described in `docs/testing/README.md`.

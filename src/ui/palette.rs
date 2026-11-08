@@ -155,6 +155,7 @@ impl CommandKind {
             ToggleLeftPanel => "left-sidebar",
             ToggleRightPanel => "right-panel",
             ShowRightPanel(RightPanelTab::Info) => "right-panel-info",
+            ShowRightPanel(RightPanelTab::Outline) => "right-panel-outline",
             // Frecency is keyed by this string, so it stays `right-panel-changes`
             // even though the panel is now called Source Control.
             ShowRightPanel(RightPanelTab::Scm) => "right-panel-changes",
@@ -261,6 +262,7 @@ impl CommandKind {
             ToggleRightPanel => "ToggleRightPanel",
             ShowRightPanel(tab) => match tab {
                 RightPanelTab::Info => "ShowRightPanelInfo",
+                RightPanelTab::Outline => "ShowRightPanelOutline",
                 RightPanelTab::Scm => "ShowRightPanelChanges",
                 RightPanelTab::Files => "ShowRightPanelFiles",
             },
@@ -503,6 +505,10 @@ impl Command {
             Command::localized(
                 L10nKey::CmdRightPanelInfo,
                 ShowRightPanel(RightPanelTab::Info),
+            ),
+            Command::localized(
+                L10nKey::PanelOutlineTitle,
+                ShowRightPanel(RightPanelTab::Outline),
             ),
             Command::localized(
                 L10nKey::CmdRightPanelChanges,

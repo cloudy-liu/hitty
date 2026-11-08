@@ -3228,6 +3228,121 @@ mod tests {
     }
 
     #[gpui::test]
+    fn right_panel_outline_preserves_document_and_session(cx: &mut TestAppContext) {
+        let (app, mut vcx) = markdown_window(cx);
+        app.update_in(&mut vcx, |app, window, cx| {
+            app.right_panel_visible = true;
+            app.editor_install_file(
+                hitty_core::host::local::LocalHost::new(),
+                "/work/guide.md".into(),
+                "# Guide\n\n## Section\n\nRead here.\n".into(),
+                None,
+                window,
+                cx,
+            );
+            cx.notify();
+        });
+        vcx.run_until_parked();
+        let before = app.read_with(&vcx, |app, _| (app.tabs.len(), app.active));
+        let outline = vcx
+            .debug_bounds("right-panel-outline")
+            .expect("Outline is directly available in the right mode bar");
+        vcx.simulate_click(outline.center(), gpui::Modifiers::none());
+        vcx.run_until_parked();
+        app.read_with(&vcx, |app, cx| {
+            assert_eq!((app.tabs.len(), app.active), before);
+            assert!(app.right_panel_visible);
+            assert_eq!(
+                app.tab_code().unwrap().active_file().unwrap().path,
+                Path::new("/work/guide.md")
+            );
+            assert_eq!(
+                serde_json::to_value(cx.global::<crate::core::config::Config>().right_panel_tab)
+                    .unwrap(),
+                "outline"
+            );
+        });
+        let outline = vcx.debug_bounds("right-panel-outline").unwrap();
+        vcx.simulate_click(outline.center(), gpui::Modifiers::none());
+        vcx.run_until_parked();
+        app.read_with(&vcx, |app, _| {
+            assert!(!app.right_panel_visible);
+            assert_eq!((app.tabs.len(), app.active), before);
+        });
+    }
+
+    #[gpui::test]
+    fn right_panel_markdown_headings_navigate_current_document(cx: &mut TestAppContext) {
+        let (app, mut vcx) = markdown_window(cx);
+        app.update_in(&mut vcx, |app, window, cx| {
+            app.right_panel_visible = true;
+            app.right_panel_tab = crate::core::config::RightPanelTab::Outline;
+            app.editor_install_file(
+                hitty_core::host::local::LocalHost::new(),
+                "/work/guide.md".into(),
+                format!(
+                    "<h1>A</h1>\n\n# Guide\n\n{}\n## <em>A</em>\n\nTarget section.\n\n{}\n## emaem\n\n## **标题** `code`\n\n## 标题 code\n\n[^note]:\n    # Footnote\n\n# Footnote\n\n<h2><em>B </em>C</h2>\n",
+                    "Paragraph.\n\n".repeat(60),
+                    "After.\n\n".repeat(60)
+                ),
+                None,
+                window,
+                cx,
+            );
+            cx.notify();
+        });
+        let before = app.read_with(&vcx, |app, _| (app.tabs.len(), app.active));
+        let deadline = std::time::Instant::now() + std::time::Duration::from_secs(10);
+        let target = loop {
+            vcx.run_until_parked();
+            if let Some(bounds) = vcx.debug_bounds("outline-heading-a-1") {
+                break bounds;
+            }
+            assert!(
+                std::time::Instant::now() < deadline,
+                "document headings must appear without another switch"
+            );
+            std::thread::sleep(std::time::Duration::from_millis(10));
+        };
+        for selector in [
+            "outline-heading-a",
+            "outline-heading-a-1",
+            "outline-heading-emaem",
+            "outline-heading-标题-code",
+            "outline-heading-标题-code-1",
+            "outline-heading-footnote",
+            "outline-heading-bc",
+        ] {
+            assert!(
+                vcx.debug_bounds(selector).is_some(),
+                "rendered heading {selector} must have an Outline entry"
+            );
+        }
+        vcx.simulate_click(target.center(), gpui::Modifiers::none());
+        for _ in 0..4 {
+            vcx.update(|window, cx| {
+                let _ = window.draw(cx);
+            });
+            vcx.run_until_parked();
+        }
+        app.read_with(&vcx, |app, cx| {
+            assert_eq!((app.tabs.len(), app.active), before);
+            let file = app.tab_code().unwrap().active_file().unwrap();
+            assert_eq!(file.path, Path::new("/work/guide.md"));
+            assert!(file.preview);
+            let preview = file.reading.as_ref().unwrap().read(cx);
+            for anchor in ["a", "a-1", "emaem", "标题-code", "标题-code-1", "footnote"] {
+                assert!(preview.text.read(cx).anchor_index(anchor).is_some());
+            }
+            let heading = preview.text.read(cx).anchor_bounds("a-1").unwrap();
+            assert!(
+                (heading.top() - preview.scroll.bounds().top()).abs() < gpui::px(100.),
+                "heading should be visible near the top after navigation"
+            );
+        });
+    }
+
+    #[gpui::test]
     fn document_tabs_open_in_order_switch_and_close_independently(cx: &mut TestAppContext) {
         let (app, mut vcx) = markdown_window(cx);
         app.update_in(&mut vcx, |app, window, cx| {

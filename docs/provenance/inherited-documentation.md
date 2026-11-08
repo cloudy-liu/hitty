@@ -7,7 +7,9 @@ source projects at the time; they are not Hitty releases or Hitty acceptance
 evidence. Earlier bare issue numbers in inherited source comments refer to the
 original repository context, not to Hitty's new tracker.
 
-Active build commands and product instructions have been updated for Hitty.
-Historical release, maintenance, and visual-test records retain their original
-content. Third-party captures and font subsets retain their original bytes and
-source attribution. New Hitty evidence is recorded separately.
+Current build commands and product instructions describe Hitty. Completed
+inherited proposals, earlier product releases and obsolete visual evidence were
+removed from the current tree after review; their original bytes remain in the
+source import commit and Git history. They must not be relabeled as Hitty
+releases or new validation. Current user guides, active test fixtures, original
+licenses, third-party source notices and Hitty verification records remain.

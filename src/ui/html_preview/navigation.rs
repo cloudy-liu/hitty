@@ -25,6 +25,9 @@ pub(super) struct Observer {
 }
 
 impl Observer {
+    pub(super) fn request(&self) -> u64 {
+        self.request.get()
+    }
     pub(super) fn install(webview: &wry::WebView) -> anyhow::Result<Self> {
         let request = Rc::new(Cell::new(1));
         let (tx, events) = smol::channel::unbounded();

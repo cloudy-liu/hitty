@@ -174,6 +174,58 @@ impl HtmlPreview {
         url::Url::from_file_path(&self.path).unwrap().to_string()
     }
 
+    pub(crate) fn outline_generation(&self) -> u64 {
+        self.observer.request()
+    }
+
+    pub(crate) fn outline_headings(
+        &self,
+        cx: &App,
+    ) -> anyhow::Result<smol::channel::Receiver<String>> {
+        let url = serde_json::to_string(&self.file_url())?;
+        self.evaluate(&format!(r#"(() => {{
+            if (location.href.split('#')[0] !== {url}) return [];
+            const nodes = Array.from(document.querySelectorAll('h1,h2,h3,h4,h5,h6'))
+                .filter(el => el.getClientRects().length && getComputedStyle(el).visibility !== 'hidden').slice(0, 2000);
+            const state = window.__hittyOutlineState ??= {{ids: new WeakMap(), nodes: new Map(), next: 1}};
+            const live = new Map();
+            const result = nodes.map(el => {{
+                if (!state.ids.has(el)) state.ids.set(el, state.next++);
+                const id = state.ids.get(el); live.set(id, el);
+                return {{depth: Number(el.tagName[1]), text: el.textContent.trim().slice(0, 512), anchor: String(id)}};
+            }});
+            state.nodes = live;
+            return result;
+        }})()"#), cx)
+    }
+
+    pub(crate) fn navigate_heading(
+        &self,
+        heading: &crate::ui::outline::Heading,
+        generation: u64,
+        cx: &App,
+    ) -> anyhow::Result<smol::channel::Receiver<String>> {
+        anyhow::ensure!(
+            self.ready() && self.outline_generation() == generation,
+            "HTML document changed"
+        );
+        let url = serde_json::to_string(&self.file_url())?;
+        let text = serde_json::to_string(&heading.text)?;
+        let index: usize = heading.anchor.parse()?;
+        self.evaluate(
+            &format!(
+                r#"(() => {{
+            if (location.href.split('#')[0] !== {url}) return false;
+            const el = window.__hittyOutlineState?.nodes.get({index});
+            if (!el?.isConnected || el.textContent.trim().slice(0, 512) !== {text}) return false;
+            el.scrollIntoView({{block: 'start', behavior: 'instant'}});
+            return true;
+        }})()"#
+            ),
+            cx,
+        )
+    }
+
     pub(crate) fn capture_scroll(&self, cx: &App) -> Option<smol::channel::Receiver<String>> {
         // Same-document anchors change the URL without changing its owner.
         self.ready()

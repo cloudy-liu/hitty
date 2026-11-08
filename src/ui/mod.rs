@@ -26,6 +26,7 @@ pub mod local_link;
 pub mod machine_mirror;
 pub mod markdown_mermaid;
 pub mod markdown_preview;
+mod outline;
 pub mod palette;
 pub mod pane;
 pub mod pane_drag;

@@ -12,7 +12,8 @@ use alacritty_terminal::sync::FairMutex;
 use alacritty_terminal::term::{Config, Term, TermMode};
 use alacritty_terminal::vte::ansi::{self, CursorShape, CursorStyle};
 
-use crate::terminal::agent_marks::{AgentTurnScanner, AgentTurns, TurnCut};
+use crate::terminal::agent_marks::AgentTurns;
+use crate::terminal::command_marks::{CommandMarks, OutputOutline};
 
 use std::collections::VecDeque;
 
@@ -87,6 +88,7 @@ struct ReaderSignals {
     /// [`crate::terminal::agent_marks`]. The daemon reads the same events for
     /// the status dot, but only the client holds the rows they point into.
     turns: AgentTurns,
+    commands: CommandMarks,
     /// ConPTY asked the host to encode keys as `KEY_EVENT_RECORD`s
     /// (`CSI ? 9001 h`). Sticky across reconnect: the handshake is often not
     /// in a later snapshot.
@@ -514,6 +516,7 @@ pub struct RemoteTerminal {
     /// The conversation's shape, for the outline in the Info panel: one entry
     /// per agent turn, anchored to the scrollback row it began on.
     turns: AgentTurns,
+    commands: CommandMarks,
     /// ConPTY asked the host to encode keys as `KEY_EVENT_RECORD`s
     /// (`CSI ? 9001 h`). Cloned into each reader so a relink keeps the latch:
     /// the handshake is typically not in a later snapshot.
@@ -808,6 +811,7 @@ impl RemoteTerminal {
         // carries the agent's events with it, so the outline rebuilds itself
         // from the bytes rather than being kept across the reset.
         self.turns.clear();
+        self.commands.clear();
         // Progress belongs to this link's replay. A retired reader must not
         // publish an old report into the newly attached terminal.
         self.osc_progress = Arc::new(Mutex::new(String::new()));
@@ -836,6 +840,7 @@ impl RemoteTerminal {
                 phase: self.ssh_phase.clone(),
                 images: self.images.clone(),
                 turns: self.turns.clone(),
+                commands: self.commands.clone(),
                 win32_input: self.win32_input.clone(),
                 osc_progress: self.osc_progress.clone(),
             },
@@ -892,6 +897,7 @@ impl RemoteTerminal {
         let ssh_phase: Arc<Mutex<Option<SshPhase>>> = Arc::new(Mutex::new(None));
         let images = crate::terminal::images::ImageStore::new();
         let turns = AgentTurns::new();
+        let commands = CommandMarks::new(user_config.scrollback_limit);
         let win32_input = Arc::new(AtomicBool::new(false));
         let osc_progress = Arc::new(Mutex::new(String::new()));
 
@@ -919,6 +925,7 @@ impl RemoteTerminal {
                 phase: ssh_phase.clone(),
                 images: images.clone(),
                 turns: turns.clone(),
+                commands: commands.clone(),
                 win32_input: win32_input.clone(),
                 osc_progress: osc_progress.clone(),
             },
@@ -957,6 +964,7 @@ impl RemoteTerminal {
             agent_session,
             images,
             turns,
+            commands,
             win32_input,
             osc_progress,
             route: PaneRoute::Local,
@@ -1003,6 +1011,7 @@ impl RemoteTerminal {
     pub fn apply_user_config(&self, user_config: &crate::core::config::Config) {
         let mut term = self.term.lock();
         term.set_options(terminal_config_from_user(user_config));
+        self.commands.set_limit(user_config.scrollback_limit);
     }
 
     fn spawn_reader(
@@ -1033,6 +1042,7 @@ impl RemoteTerminal {
                     phase,
                     images,
                     turns,
+            commands,
                     win32_input,
                     osc_progress,
                 } = signals;
@@ -1047,7 +1057,7 @@ impl RemoteTerminal {
                 // Agent frame. The previous link's retained identity cannot
                 // own (or invalidate) this link's freshly restored progress.
                 let mut progress_agent = None;
-                let mut turn_scan = AgentTurnScanner::new();
+                let mut output_outline = OutputOutline::new(turns.clone(), commands.clone());
                 let mut win32_scan = crate::terminal::win32_input::Win32InputModeScanner::new();
                 let mut pending: Vec<u8> = buffered;
                 // Kitty-graphics decode runs on its own thread with newest-frame
@@ -1103,8 +1113,6 @@ impl RemoteTerminal {
                                 // must leave the VT cursor untouched: Vim echoes the next
                                 // key at the position a repaint leaves, even through
                                 // ConPTY (cloudy-liu/hitty#430, cloudy-liu/hitty#774).
-                                let mut cuts: Vec<(usize, TurnCut)> = Vec::new();
-                                turn_scan.feed(&out_batch, |off, cut| cuts.push((off, cut)));
                                 {
                                     let t0 = trace.then(std::time::Instant::now);
                                     let mut term = term.lock();
@@ -1112,17 +1120,7 @@ impl RemoteTerminal {
                                         return;
                                     }
                                     let t1 = trace.then(std::time::Instant::now);
-                                    if cuts.is_empty() {
-                                        processor.advance(&mut *term, &out_batch);
-                                    } else {
-                                        let mut at = 0usize;
-                                        for (off, cut) in cuts {
-                                            processor.advance(&mut *term, &out_batch[at..off]);
-                                            at = off;
-                                            turns.apply(&term, cut);
-                                        }
-                                        processor.advance(&mut *term, &out_batch[at..]);
-                                    }
+                                    output_outline.advance(&mut processor, &mut *term, &out_batch);
                                     if let (Some(t0), Some(t1)) = (t0, t1) {
                                         tr_lock_t += t1 - t0;
                                         tr_adv_t += t1.elapsed();
@@ -1240,7 +1238,7 @@ impl RemoteTerminal {
                             }
                             DaemonMsg::Snapshot(bytes) => {
                                 flush_batch!();
-                                turn_scan.reset();
+                                output_outline.reset();
                                 // Parse state only — the latch is sticky, because
                                 // a later snapshot often omits the 9001 handshake.
                                 win32_scan.reset();
@@ -1250,20 +1248,12 @@ impl RemoteTerminal {
                                 // the same way live output is cut: the outline
                                 // of a conversation is rebuilt by reattaching
                                 // to the pane, not lost with the old client.
-                                let mut turn_cuts: Vec<(usize, TurnCut)> = Vec::new();
-                                turn_scan.feed(&bytes, |off, c| turn_cuts.push((off, c)));
                                 {
                                     let mut term = term.lock();
                                     if quit.load(Ordering::SeqCst) {
                                         return;
                                     }
-                                    let mut at = 0usize;
-                                    for (off, cut) in turn_cuts {
-                                        processor.advance(&mut *term, &bytes[at..off]);
-                                        at = off;
-                                        turns.apply(&term, cut);
-                                    }
-                                    processor.advance(&mut *term, &bytes[at..]);
+                                    output_outline.advance(&mut processor, &mut *term, &bytes);
                                     if processor.sync_timeout().sync_timeout().is_some() {
                                         processor.stop_sync(&mut *term);
                                     }
@@ -1751,6 +1741,38 @@ impl RemoteTerminal {
     /// clone as [`images`](Self::images), shared with the reader thread.
     pub fn agent_turns(&self) -> AgentTurns {
         self.turns.clone()
+    }
+
+    pub(crate) fn command_entries(&self) -> Vec<crate::terminal::command_marks::CommandEntry> {
+        self.commands.list(&self.term.lock())
+    }
+
+    pub(crate) fn scroll_to_command(&self, id: u64) -> bool {
+        use alacritty_terminal::grid::Dimensions as _;
+        // Keep the reader from discarding rows between validation and use.
+        let mut term = self.term.lock();
+        let Some(row) = self
+            .commands
+            .list(&term)
+            .iter()
+            .find(|entry| entry.id == id)
+            .and_then(|entry| entry.row)
+        else {
+            return false;
+        };
+        let history = term.grid().history_size() as i64;
+        if row < 0 || row >= history + term.screen_lines() as i64 {
+            return false;
+        }
+        let target = (history - row).clamp(0, history);
+        let delta = (target - term.grid().display_offset() as i64)
+            .clamp(i32::MIN as i64, i32::MAX as i64) as i32;
+        term.scroll_display(alacritty_terminal::grid::Scroll::Delta(delta));
+        true
+    }
+
+    pub(crate) fn clear_command_entries(&self) {
+        self.commands.clear();
     }
 
     pub fn zle_reading(&self) -> bool {
@@ -5573,6 +5595,87 @@ mod tests {
 #[cfg(test)]
 mod osc_tests {
     use super::*;
+    use std::io::Write as _;
+
+    #[test]
+    fn command_outline_uses_stream_boundaries_and_completion() {
+        crate::core::config::pin_test_config_dir();
+        #[cfg(unix)]
+        let (client_side, mut daemon_side) = std::os::unix::net::UnixStream::pair().unwrap();
+        #[cfg(windows)]
+        let (client_side, mut daemon_side) = {
+            let listener = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
+            let client = std::net::TcpStream::connect(listener.local_addr().unwrap()).unwrap();
+            (client, listener.accept().unwrap().0)
+        };
+        let term = RemoteTerminal::from_stream(client_side, TermSize::new(80, 24)).unwrap();
+        for bytes in [
+            b"earlier\r\n\x1b]133;A\x07$ git status\r\n\x1b]133;C;git sta".as_slice(),
+            b"tus\x07output\r\n\x1b]133;D;1\x07\x1b]133;A\x07".as_slice(),
+        ] {
+            DaemonMsg::Output(bytes.to_vec())
+                .encode(&mut daemon_side)
+                .unwrap();
+        }
+        daemon_side.flush().unwrap();
+        let mut entries = Vec::new();
+        for _ in 0..200 {
+            entries = term.command_entries();
+            if entries.last().is_some_and(|e| e.done) {
+                break;
+            }
+            std::thread::sleep(std::time::Duration::from_millis(5));
+        }
+        assert_eq!(entries.len(), 1);
+        assert_eq!(entries[0].text, "git status");
+        assert_eq!(entries[0].row, Some(1));
+        assert_eq!(entries[0].exit, Some(1));
+        assert!(entries[0].done);
+
+        // PowerShell URI-encodes its entire command; Clink reports completion
+        // with the next prompt, without an exit-status marker.
+        DaemonMsg::Output(
+            b"\x1b]133;C;echo%20%22%E4%B8%AD%E6%96%87%22%0A%1B\x07ok\r\n\x1b]133;A\x07".to_vec(),
+        )
+        .encode(&mut daemon_side)
+        .unwrap();
+        for _ in 0..200 {
+            entries = term.command_entries();
+            if entries.len() == 2 && entries[1].done {
+                break;
+            }
+            std::thread::sleep(std::time::Duration::from_millis(5));
+        }
+        assert_eq!(entries.len(), 2);
+        assert_eq!(entries[1].text.trim(), "echo \"中文\"");
+        assert!(entries[1].done, "a returned prompt completes a command");
+        assert_eq!(entries[1].exit, None, "do not invent an exit code");
+
+        let mut user_config = crate::core::config::Config::default();
+        user_config.scrollback_limit = 100;
+        term.apply_user_config(&user_config);
+        DaemonMsg::Output(
+            format!(
+                "{}\x1b]133;C;last\x07\x1b]133;D;0\x07",
+                "line\r\n".repeat(150)
+            )
+            .into_bytes(),
+        )
+        .encode(&mut daemon_side)
+        .unwrap();
+        for _ in 0..200 {
+            entries = term.command_entries();
+            if entries.len() == 3 && entries[2].done {
+                break;
+            }
+            std::thread::sleep(std::time::Duration::from_millis(5));
+        }
+        assert_eq!(entries.len(), 3);
+        assert!(
+            entries.iter().all(|entry| entry.row.is_none()),
+            "changed scrollback capacity must retire discarded command anchors"
+        );
+    }
 
     #[test]
     fn relink_preserves_progress_replayed_before_a_changed_agent() {

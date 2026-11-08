@@ -1700,6 +1700,16 @@ impl TerminalView {
         }
     }
 
+    pub(crate) fn scroll_to_command(&mut self, id: u64, cx: &mut Context<Self>) -> bool {
+        self.cancel_scroll_anim();
+        if !self.terminal.scroll_to_command(id) {
+            return false;
+        }
+        self.scroll_frac = 0.;
+        cx.notify();
+        true
+    }
+
     /// One entry per turn of the agent's conversation, oldest first — see
     /// [`crate::terminal::agent_marks`].
     pub fn agent_turns(&self) -> Vec<crate::terminal::agent_marks::AgentTurn> {
@@ -3395,6 +3405,7 @@ impl TerminalView {
         // Agent turn anchors are rows in the same discarded history, and unlike
         // images they cannot be redrawn back into place.
         self.terminal.agent_turns().clear();
+        self.terminal.clear_command_entries();
         self.scroll_frac = 0.;
         self.terminal.write(vec![0x0c_u8]);
         cx.notify();

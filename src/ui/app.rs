@@ -8177,6 +8177,9 @@ impl Render for HittyApp {
                 .on_action(cx.listener(|this, _: &ShowRightPanelChanges, _window, cx| {
                     this.set_right_panel_tab(crate::core::config::RightPanelTab::Scm, cx)
                 }))
+                .on_action(cx.listener(|this, _: &ShowRightPanelOutline, _window, cx| {
+                    this.set_right_panel_tab(crate::core::config::RightPanelTab::Outline, cx)
+                }))
                 .on_action(cx.listener(|this, _: &ShowRightPanelFiles, _window, cx| {
                     this.set_right_panel_tab(crate::core::config::RightPanelTab::Files, cx)
                 }))
