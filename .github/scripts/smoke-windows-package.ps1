@@ -1,4 +1,4 @@
-﻿# Run only on disposable Windows CI: the installer owns a per-user uninstall key.
+# Run only on disposable Windows CI: the installer owns a per-user uninstall key.
 param([Parameter(Mandatory = $true)][string]$Arch)
 $ErrorActionPreference = 'Stop'
 if ($env:GITHUB_ACTIONS -ne 'true' -or -not $env:RUNNER_TEMP) {
