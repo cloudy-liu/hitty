@@ -9,6 +9,10 @@ For bootstrap and branding work, read `docs/hitty-bootstrap-plan.md` and
 `docs/adr/0001-independent-source-snapshot.md`. Use `GLOSSARY.md` for product
 terminology. Preserve source provenance and third-party licenses.
 
+Keep dependency versions, pinned Git revisions, and CI action versions aligned
+with the reviewed source baseline. Upgrade them only for a separate maintainer
+request with validation; Dependabot version-update PRs are disabled.
+
 ## Validation
 
 Use locked Cargo builds and the existing workspace and updater tests. Exercise
