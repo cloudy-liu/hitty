@@ -29,7 +29,7 @@ jobs:
     outputs:
       version: ${{ steps.version.outputs.version }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           path: hitty
 
@@ -85,7 +85,7 @@ jobs:
     runs-on: ${{ matrix.runner }}
     steps:
       - name: Checkout hitty
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           path: hitty
 
@@ -297,7 +297,7 @@ jobs:
       RUSTFLAGS: -C strip=symbols
     steps:
       - name: Checkout hitty
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           path: hitty
 
@@ -400,7 +400,7 @@ jobs:
       RUSTFLAGS: -C strip=symbols
     steps:
       - name: Checkout hitty
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           path: hitty
 
@@ -479,7 +479,7 @@ jobs:
     env:
       RELEASE_VERSION: ${{ needs.validate-release.outputs.version }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: actions/download-artifact@v8
         with:
           path: dist
