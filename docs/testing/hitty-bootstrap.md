@@ -2,7 +2,7 @@
 
 The source baseline is `4699e7e`, imported from source revision
 `7f430a8f5f89a3a2963250b196b0baea02569299`. This record covers the rebranding
-work; it does not claim that the first release is ready or published.
+work and the three-platform `v0.1.0` publication on November 8, 2026.
 
 ## Completed locally
 
@@ -230,10 +230,31 @@ commit; the only replacement is README.md. Hitty-specific metadata is additive.
 The focused functional and packaging checks are complete: four desktop targets,
 remote servers, local input/output and persistence, real SSH/WSL connections,
 Windows installation/removal, portable updates, and all 12 assets/checksums.
-The release will retain the inherited distribution posture: Windows is unsigned,
+The release retains the inherited distribution posture: Windows is unsigned,
 and macOS is ad-hoc signed without notarization. Inno/macOS/Linux
 version-to-version updates and a full ARM64 desktop capture remain explicitly
 unverified follow-up coverage, rather than newly added rename acceptance gates.
+
+## Published v0.1.0
+
+The maintainer authorized publication after the focused local regression.
+PR #2 was merged with its separate source-import history intact. Tag `v0.1.0`
+points to `444c8f2d29dd47bb19fb901dd958b9a95b16451d`.
+
+The tag's production source, assets, manifests, dependency pins, packaging
+scripts, and packaged README match verified implementation `30a4413`; only
+project guidance, documentation, and evidence differ. Its 12 verified program
+assets from run `42443650571` were promoted into an unpublished draft with
+`checksums.txt`. The redundant tag rebuild was cancelled before its draft job.
+Every uploaded asset's name, size, and GitHub SHA-256 matched the locally
+verified file before publication.
+
+The release was published at 05:17:17 UTC (13:17:17 Asia/Shanghai) on
+November 8, 2026. GitHub's latest-release endpoint returns `v0.1.0`, all 13
+public download endpoints respond successfully, and the downloaded public
+checksum manifest matches the verified local manifest. The durable release
+record is `docs/testing/hitty-v0.1.0-release.json`. Known distribution and
+unchanged-feature coverage limits above remain explicit.
 
 ## Follow-up regression checks
 

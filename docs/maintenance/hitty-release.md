@@ -2,7 +2,8 @@
 
 Use `cloudy-liu/hitty` and Hitty tags. The older `release.md` and other inherited
 release records describe the source project, not Hitty's release state.
-Hitty's first version is `v0.1.0`; there is no published Hitty baseline yet.
+Hitty's first release, `v0.1.0`, was published on November 8, 2026. Use it as
+the baseline for subsequent Hitty release comparisons.
 
 1. Complete the checks in `docs/testing/hitty-bootstrap.md` and the agreed
    Windows x86_64, Linux x86_64, macOS ARM64, and macOS Intel acceptance gate.

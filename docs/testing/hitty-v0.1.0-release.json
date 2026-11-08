@@ -1,0 +1,114 @@
+{
+  "tag": "v0.1.0",
+  "tag_commit": "444c8f2d29dd47bb19fb901dd958b9a95b16451d",
+  "source_baseline": "7f430a8f5f89a3a2963250b196b0baea02569299",
+  "build_run": 42449587670,
+  "runtime_source_matches_verified_commit": "30a4413cef465f91430381532dea8dfa3dd738ae",
+  "local_package_recheck": "D:/tmp/hitty-v0.1.0-local-final/evidence",
+  "release_scope": "Copy reviewed source, rename application identities, validate affected flows using inherited scripts, publish all three platforms.",
+  "artifact_build_run": 42443650571,
+  "artifact_source_commit": "30a4413cef465f91430381532dea8dfa3dd738ae",
+  "promotion": "Promote verified artifacts because all production source, assets, manifests, dependency pins, packaging scripts, and README match the tag. Only project guidance and documentation differ.",
+  "doc_only_differences": [
+    "AGENTS.md",
+    "docs/hitty-bootstrap-plan.md",
+    "docs/maintenance/hitty-release.md",
+    "docs/releases/hitty-v0.1.0.md",
+    "docs/testing/hitty-bootstrap.md",
+    "docs/testing/images/hitty-bootstrap/after-portable-update.png",
+    "docs/testing/images/hitty-bootstrap/before-portable-update.png",
+    "docs/testing/images/hitty-bootstrap/final-implementation-checks.json",
+    "docs/testing/images/hitty-bootstrap/final-local-package.json",
+    "docs/testing/images/hitty-bootstrap/final-local-package.png",
+    "docs/testing/images/hitty-bootstrap/package-linux.json",
+    "docs/testing/images/hitty-bootstrap/package-macos-arm64.json",
+    "docs/testing/images/hitty-bootstrap/package-macos-intel.json",
+    "docs/testing/images/hitty-bootstrap/package-windows-installed.json",
+    "docs/testing/images/hitty-bootstrap/package-windows-portable.json",
+    "docs/testing/images/hitty-bootstrap/portable-update-result.json",
+    "docs/testing/images/hitty-bootstrap/release-checksums.txt",
+    "docs/testing/images/hitty-bootstrap/windows-installed-identity.json"
+  ],
+  "tag_build": "Cancelled redundant rebuild; draft-release job never ran. Published only the previously verified artifacts whose production inputs match the tag.",
+  "release_id": 438046690,
+  "draft_assets_verified": true,
+  "assets": [
+    {
+      "name": "checksums.txt",
+      "size": 1156,
+      "digest": "sha256:4cfdb5cd59b2c8a6f5749e4254191f67bfa030692dee7a685ae1b2cdbf16b5eb"
+    },
+    {
+      "name": "hitty-0.1.0-linux-x86_64.AppImage",
+      "size": 43944440,
+      "digest": "sha256:ddcbee336867b385cc5a647003eb6b5f8ccc2a91a6925ccec199130a5f10f4ca"
+    },
+    {
+      "name": "hitty-0.1.0-linux-x86_64.tar.gz",
+      "size": 40126472,
+      "digest": "sha256:a9718dfcb023f307753e567e4383d471f062ed3e3c4876d6c06dd258a2135f41"
+    },
+    {
+      "name": "hitty-0.1.0-macos-arm64.dmg",
+      "size": 34973650,
+      "digest": "sha256:6d5162acee0ef588cbf0d386ca8b73ece12e0368d4c479d4b09af1959aae452b"
+    },
+    {
+      "name": "hitty-0.1.0-macos-arm64.zip",
+      "size": 30433913,
+      "digest": "sha256:b6c32225f605ca442e02c09ebc83080f0fcf26605bbcf081ab230b9eafcc6d9a"
+    },
+    {
+      "name": "hitty-0.1.0-macos-x86_64.dmg",
+      "size": 37799386,
+      "digest": "sha256:c4b4611aa6e72b64f2650fbf6648bd4ba0a2548e471b359584fca6d9b7bac7ae"
+    },
+    {
+      "name": "hitty-0.1.0-macos-x86_64.zip",
+      "size": 32658426,
+      "digest": "sha256:21843628cac909bd4c574eefe4261f6d0fcfa3161a8acaae5dec472197ebfec0"
+    },
+    {
+      "name": "hitty-0.1.0-windows-x86_64-setup.exe",
+      "size": 28829056,
+      "digest": "sha256:89417d5bb5d4482ac0e3b2896e3ad0c7cb72b0027c2675ca667704c895f56ddf"
+    },
+    {
+      "name": "hitty-0.1.0-windows-x86_64.zip",
+      "size": 40070681,
+      "digest": "sha256:23f520cde9cc721b1b8bd6046fac3c2f62bbf47e0fbe30615f955e5b3b01e65c"
+    },
+    {
+      "name": "hitty-server-linux-aarch64-musl",
+      "size": 7656544,
+      "digest": "sha256:8a55d626910348ebb0621aeba5ef6a3d7ec35c0c8a4f7f07e974c4f8bb1ae48d"
+    },
+    {
+      "name": "hitty-server-linux-x86_64-musl",
+      "size": 9482984,
+      "digest": "sha256:330f69e50b257905521d1516032015b7e76356854add68c7818c4bba0b3f82dd"
+    },
+    {
+      "name": "hitty-server-macos-aarch64",
+      "size": 8135776,
+      "digest": "sha256:d078dd20383d6bf50ea822674a228412be99172d02e60ea5805abf84ff4a1647"
+    },
+    {
+      "name": "hitty-server-macos-x86_64",
+      "size": 9929680,
+      "digest": "sha256:3058934e4cd79dc13f1bd549f8a74265c3ce316ab6885d098683b100f017253a"
+    }
+  ],
+  "published_at": "2026-11-08T05:17:17Z",
+  "url": "https://github.com/cloudy-liu/hitty/releases/tag/v0.1.0",
+  "latest": true,
+  "published": true,
+  "public_downloads_verified": 13,
+  "public_checksums_sha256": "4cfdb5cd59b2c8a6f5749e4254191f67bfa030692dee7a685ae1b2cdbf16b5eb",
+  "cancelled_duplicate_runs": [
+    42449491504,
+    42449491502,
+    42449580665,
+    42449587670
+  ]
+}
