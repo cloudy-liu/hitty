@@ -1,0 +1,131 @@
+{
+  "source_commit": "e62171a83414c32840884f5c3b9c3dd2c5b9042c",
+  "binary_sha256": "b55c47ab4573e37b89d0e5478b3175f4a895d9ad08990aa2505cddf383eb84ce",
+  "method": "Native HittyApp document fixture plus original PrintWindow script; no pointer movement or compositing",
+  "scenes": [
+    {
+      "name": "workspace-light",
+      "native": {
+        "ready": true,
+        "title": "hitty document acceptance",
+        "os": "windows",
+        "scale_factor": 1.75,
+        "width": 1380.0,
+        "height": 760.0,
+        "dark": false,
+        "dock": false,
+        "right_panel": false,
+        "readme": true,
+        "history": false,
+        "history_width": null,
+        "history_height": null,
+        "history_profile": null,
+        "history_commits": null,
+        "files": [
+          "\\\\?\\D:\\tmp\\hitty-readme-refresh\\scenes\\hitty\\README.md",
+          "\\\\?\\D:\\tmp\\hitty-readme-refresh\\scenes\\hitty\\src\\settings.rs",
+          "\\\\?\\D:\\tmp\\hitty-readme-refresh\\scenes\\hitty\\overview.html"
+        ],
+        "active": "\\\\?\\D:\\tmp\\hitty-readme-refresh\\scenes\\hitty\\README.md",
+        "preview": true,
+        "open_files": 3,
+        "capture": "No GPU image requested"
+      },
+      "capture": "hwnd=5114708 client=2415x1330 frame=2419x1332 printwindow=True pointer=none size=163561",
+      "sha256": "80394d19173ad97e73588ab49f5bce55a47ad7bd4d629ef438df69f9d58bd3b8"
+    },
+    {
+      "name": "workspace-dark",
+      "native": {
+        "ready": true,
+        "title": "hitty document acceptance",
+        "os": "windows",
+        "scale_factor": 1.75,
+        "width": 1380.0,
+        "height": 760.0,
+        "dark": true,
+        "dock": false,
+        "right_panel": false,
+        "readme": true,
+        "history": false,
+        "history_width": null,
+        "history_height": null,
+        "history_profile": null,
+        "history_commits": null,
+        "files": [
+          "\\\\?\\D:\\tmp\\hitty-readme-refresh\\scenes\\hitty\\README.md",
+          "\\\\?\\D:\\tmp\\hitty-readme-refresh\\scenes\\hitty\\src\\settings.rs",
+          "\\\\?\\D:\\tmp\\hitty-readme-refresh\\scenes\\hitty\\overview.html"
+        ],
+        "active": "\\\\?\\D:\\tmp\\hitty-readme-refresh\\scenes\\hitty\\README.md",
+        "preview": true,
+        "open_files": 3,
+        "capture": "No GPU image requested"
+      },
+      "capture": "hwnd=6425126 client=2415x1330 frame=2419x1332 printwindow=True pointer=none size=164567",
+      "sha256": "6bd20ffaf12ee55264d5d9d4006764121c1fcfd7badf3195ce4d761e26d0fffc"
+    },
+    {
+      "name": "editor-light",
+      "native": {
+        "ready": true,
+        "title": "hitty document acceptance",
+        "os": "windows",
+        "scale_factor": 1.75,
+        "width": 1380.0,
+        "height": 760.0,
+        "dark": false,
+        "dock": false,
+        "right_panel": false,
+        "readme": true,
+        "history": false,
+        "history_width": null,
+        "history_height": null,
+        "history_profile": null,
+        "history_commits": null,
+        "files": [
+          "\\\\?\\D:\\tmp\\hitty-readme-refresh\\scenes\\hitty\\README.md",
+          "\\\\?\\D:\\tmp\\hitty-readme-refresh\\scenes\\hitty\\src\\settings.rs",
+          "\\\\?\\D:\\tmp\\hitty-readme-refresh\\scenes\\hitty\\overview.html"
+        ],
+        "active": "\\\\?\\D:\\tmp\\hitty-readme-refresh\\scenes\\hitty\\src\\settings.rs",
+        "preview": false,
+        "open_files": 3,
+        "capture": "No GPU image requested"
+      },
+      "capture": "hwnd=6621798 client=2415x1330 frame=2419x1332 printwindow=True pointer=none size=119950",
+      "sha256": "797a6b38bbaf9a0a729aced3a88d21fd119ad1b48b6b73a17ee9ab0687f6da66"
+    },
+    {
+      "name": "html-preview-light",
+      "native": {
+        "ready": true,
+        "title": "hitty document acceptance",
+        "os": "windows",
+        "scale_factor": 1.75,
+        "width": 1380.0,
+        "height": 760.0,
+        "dark": false,
+        "dock": false,
+        "right_panel": false,
+        "readme": true,
+        "history": false,
+        "history_width": null,
+        "history_height": null,
+        "history_profile": null,
+        "history_commits": null,
+        "files": [
+          "\\\\?\\D:\\tmp\\hitty-readme-refresh\\scenes\\hitty\\README.md",
+          "\\\\?\\D:\\tmp\\hitty-readme-refresh\\scenes\\hitty\\src\\settings.rs",
+          "\\\\?\\D:\\tmp\\hitty-readme-refresh\\scenes\\hitty\\overview.html"
+        ],
+        "active": "\\\\?\\D:\\tmp\\hitty-readme-refresh\\scenes\\hitty\\overview.html",
+        "preview": true,
+        "open_files": 3,
+        "capture": "Use native screenshot: GPUI images omit the child WebView"
+      },
+      "capture": "hwnd=6556198 client=2415x1330 frame=2419x1332 printwindow=True pointer=none size=159015",
+      "sha256": "12b8ee17fb09d9fa76946588d1f56480d283ae3527dbc01eeb9862164322983e"
+    }
+  ]
+}

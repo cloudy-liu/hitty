@@ -1,105 +1,97 @@
 ---
-title: "hitty"
+title: "Hitty"
 sidebarTitle: "Introduction"
-description: "A terminal workbench: persistent sessions, remote work, agents."
+description: "A terminal workspace for coding agents: persistent sessions, project files, and remote work."
 mode: "wide"
 ---
 
-<Frame>
-  <img src="/images/hero.webp" alt="hitty showing agent status tags, pinned and folded groups, file tabs, and Markdown preview" />
+Hitty brings shells, coding agents, project files, and remote machines into one
+native workspace. Keep work running when the window closes, see which agent needs
+you, and review its changes beside the terminal.
+
+<Frame caption="Native Hitty workspace with controlled sample Agent states">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcSet="/images/hitty-workspace-dark.png" />
+    <img src="/images/hitty-workspace-light.png" alt="Hitty with project groups, agent status, file tabs, and Markdown preview" />
+  </picture>
 </Frame>
 
-hitty is a terminal you can leave running. Close the window, reboot the machine,
-walk to a different laptop — the shells you started are still there, and so are
-the coding agents you left working in them.
+## Quick start
 
-It is written in Rust, renders on the GPU through Zed's
-[gpui](https://github.com/zed-industries/zed), and parses VT with Alacritty's
-terminal core. In practice that means roughly twice the throughput of Alacritty,
-Ghostty, or Kitty on a big `cat`, and a frame rate that does not fall over when
-something floods the screen.
+1. Download the package for your system from [GitHub Releases](https://github.com/cloudy-liu/hitty/releases/latest).
+2. Open Hitty, choose your shell in Settings, and open a project directory.
+3. Start an agent such as `codex`, `claude`, or `gemini`. Add a tab or split pane for another task and open files to review its work.
 
-## What makes it different
+[Installation](/getting-started/installation) · [First launch](/getting-started/first-launch) · [中文介绍](https://github.com/cloudy-liu/hitty/blob/main/README.zh-CN.md)
+
+## Core capabilities
 
 <CardGroup cols={2}>
-  <Card title="Sessions that outlive the app" icon="power-off" href="/getting-started/concepts">
-    A background server owns your shells, not the window. Quit hitty and your
-    builds keep building. No tmux to learn or configure.
+  <Card title="Persistent sessions" icon="power-off" href="/getting-started/concepts">
+    Close and reopen the window to reattach to running shells. Restore saved
+    workspaces, scrollback, and supported Agent conversations after a restart.
   </Card>
-  <Card title="Editor-grade input" icon="keyboard" href="/terminal/prompt">
-    Ghost suggestions from your history, tab completion that explains each flag,
-    syntax highlighting, click-to-place-caret, real multi-line editing.
+  <Card title="Agent awareness" icon="robot" href="/agents/overview">
+    Per-pane identity, working and input states, notifications, and conversation
+    resume when the Agent's session ID is known.
   </Card>
-  <Card title="Agent-aware" icon="robot" href="/agents/overview">
-    22 coding CLIs are recognised on sight. Per-pane status symbols, notifications
-    when one needs you, git context, and session resume after a reboot.
+  <Card title="Your preferred shell" icon="terminal" href="/reference/shell-integration">
+    PowerShell, bash, zsh, fish, and Windows CMD/Clink, with prompt editing,
+    history suggestions, and completion. Custom Cmder startup commands work too.
   </Card>
-  <Card title="Remote work that feels local" icon="server" href="/remote/workspaces">
-    A native Rust SSH stack with profiles, SFTP, and port forwarding — plus
-    remote workspaces where files, repos, and panes all stay on the far machine.
+  <Card title="Read and edit" icon="file" href="/window/side-panel">
+    File tabs, source editing, Markdown and Mermaid previews, and local HTML
+    preview on Windows and macOS, alongside your terminal.
   </Card>
-  <Card title="Git where you are looking" icon="code-branch" href="/git/source-control">
-    Branch and diff counts on every sidebar row, a source control panel, a diff
-    overlay, and worktrees in one dialog.
+  <Card title="SSH and WSL" icon="server" href="/remote/workspaces">
+    Saved connections, SFTP, forwarding, and remote workspaces where terminal,
+    file, and Git operations run on the machine that owns them.
   </Card>
-  <Card title="Scriptable" icon="terminal" href="/cli/overview">
-    A bundled `hitty` CLI that opens panes, sends keys, reads screens, and blocks
-    until an agent needs you — so scripts and agents can drive the workbench.
-  </Card>
-</CardGroup>
-
-## Start here
-
-<Steps>
-  <Step title="Install it">
-    Native builds for macOS, Windows, and Linux.
-    [Installation →](/getting-started/installation)
-  </Step>
-  <Step title="Set it up">
-    Five minutes of settings that pay for themselves.
-    [First launch →](/getting-started/first-launch)
-  </Step>
-  <Step title="Learn the three words">
-    Workspace, tab, pane — and the server underneath them.
-    [Core concepts →](/getting-started/concepts)
-  </Step>
-</Steps>
-
-## How fast, exactly
-
-Same machine, same day, same 155×40 grid — Apple M1 Pro, macOS 26.3.1,
-five-run averages.
-
-| | **hitty** | Alacritty | Ghostty | Kitty |
-|---|---:|---:|---:|---:|
-| Plaintext I/O — 11 MB `cat` <sub>(lower is better)</sub> | **95 ms** | 239 ms | 179 ms | 185 ms |
-| [DOOM-fire](https://github.com/const-void/DOOM-fire-zig) frame rate <sub>(higher is better)</sub> | **888 fps** | 485 fps | 552 fps | 617 fps |
-| Cold-launch memory | 116 MB <sup>1</sup> | 105 MB | 128 MB | 130 MB |
-
-<sub><sup>1</sup> GUI 105 MB plus the persistent server at 11 MB.</sub>
-
-The methodology and a one-command reproduction live in
-[`scripts/bench/`](https://github.com/cloudy-liu/hitty/tree/main/scripts/bench).
-
-Three decisions account for most of it:
-
-- **The PTY is read at device speed** and parsed in large batches, off the
-  render path — so drawing never throttles reading.
-- **The hot paths are lock-free.** A big `cat` never waits on the renderer.
-- **The server buffers up to 16 MiB** ahead of the window before backpressure
-  applies, which is enough that a flood finishes writing while the window is
-  still catching up.
-
-## Getting help
-
-<CardGroup cols={3}>
-  <Card title="Discord" icon="discord" href="https://discord.gg/s3dethqz2V">
-    Ask a question, show what you built.
-  </Card>
-  <Card title="Issues" icon="github" href="https://github.com/cloudy-liu/hitty/issues">
-    Bugs and feature requests.
-  </Card>
-  <Card title="Changelog" icon="list" href="https://github.com/l0ng-ai/tty7/blob/main/CHANGELOG.md">
-    Everything that shipped, release by release.
+  <Card title="Git review" icon="code-branch" href="/git/source-control">
+    Working-tree changes, split or unified diffs, commit history, and worktrees
+    without losing the context of your active terminal session.
   </Card>
 </CardGroup>
+
+Closing a window leaves its server and processes running. Restarting the server
+or machine stops those processes; Hitty restores saved state and eligible Agent
+conversations rather than preserving running processes through a reboot.
+
+## Drive it with the CLI
+
+After starting Hitty, use the bundled command from a shell or script:
+
+```bash
+hitty doctor
+hitty ls
+hitty agents
+hitty run -- cargo test
+hitty pane ls --json
+```
+
+Use `hitty send`, `hitty capture`, and `hitty wait` with a pane address to interact
+with a longer task. [CLI guide](/cli/overview) · [Command reference](/cli/reference)
+
+## Customize your workspace
+
+Choose fonts, appearance, keybindings, shell arguments, and layout in Settings.
+The default terminal uses Hack at 15 px with a light theme. Windows selects
+PowerShell 7 when installed, otherwise Windows PowerShell.
+
+[Settings](/customization/settings) · [Themes](/customization/themes) · [Configuration](/reference/configuration)
+
+## Downloads and help
+
+Desktop packages are available for Windows x64, Linux x64, and macOS Apple Silicon
+and Intel. Windows packages are unsigned; macOS packages use ad-hoc signing and
+are not notarized. See the installation guide for platform requirements.
+
+[Downloads](https://github.com/cloudy-liu/hitty/releases/latest) · [Report an issue](https://github.com/cloudy-liu/hitty/issues) · [Release notes](https://github.com/cloudy-liu/hitty/releases)
+
+## Credits and license
+
+Hitty is licensed under [Apache-2.0](https://github.com/cloudy-liu/hitty/blob/main/LICENSE).
+It began from ctty7, itself developed from tty7. Original copyright and attribution
+are retained. See the [credits](https://github.com/cloudy-liu/hitty#credits-and-license)
+for the source history and the licenses of the terminal, UI, fonts, icons, and
+other third-party assets.

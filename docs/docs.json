@@ -2,7 +2,7 @@
   "$schema": "https://mintlify.com/docs.json",
   "theme": "mint",
   "name": "Hitty",
-  "description": "A terminal workbench: persistent sessions, remote work, agents.",
+  "description": "A terminal workspace for coding agents: persistent sessions, project files, and remote work.",
   "colors": {
     "primary": "#0FA968",
     "light": "#3FDD8C",
@@ -124,8 +124,8 @@
         "href": "https://github.com/cloudy-liu/hitty"
       },
       {
-        "label": "Upstream hitty Discord",
-        "href": "https://discord.gg/s3dethqz2V"
+        "label": "Issues",
+        "href": "https://github.com/cloudy-liu/hitty/issues"
       }
     ],
     "primary": {
@@ -136,8 +136,7 @@
   },
   "footer": {
     "socials": {
-      "github": "https://github.com/cloudy-liu/hitty",
-      "discord": "https://discord.gg/s3dethqz2V"
+      "github": "https://github.com/cloudy-liu/hitty"
     }
   }
 }

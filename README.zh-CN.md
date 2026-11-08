@@ -1,47 +1,78 @@
 <div align="center">
 
-<p align="center" style="line-height: 24px;">
-  <img src="assets/logo.svg" alt="hitty" width="120" height="120" style="margin: 0;" />
-  <br />
-  <br />
-  <img src="https://readme-typing-svg.demolab.com?font=JetBrains+Mono&weight=700&size=48&duration=3000&pause=1000&color=FF5FA2&center=true&vCenter=true&width=435&lines=hitty" alt="hitty" style="margin: 0;" />
-</p>
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/hitty-logo-dark.svg" />
+  <img src="assets/hitty-logo-light.svg" alt="Hitty" width="360" />
+</picture>
 
-cloudy 的 hitty 定制版：窗口关掉、工作继续的终端工作台，为编码 Agent 深度打磨。
+**为编码 Agent 准备的终端工作台。**
 
-[下载](https://github.com/cloudy-liu/hitty/releases/latest) · [版本发布](https://github.com/cloudy-liu/hitty/releases) · [文档](docs/index.mdx) · [English](README.md)
+把持久会话、Agent 状态、项目文件和远程工作放进同一个原生应用。
 
 [![Release](https://img.shields.io/github/v/release/cloudy-liu/hitty)](https://github.com/cloudy-liu/hitty/releases/latest)
 [![CI](https://github.com/cloudy-liu/hitty/actions/workflows/ci.yml/badge.svg)](https://github.com/cloudy-liu/hitty/actions/workflows/ci.yml)
-[![License](https://img.shields.io/badge/license-Apache--2.0-blue)](LICENSE)
+[![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-blue)](LICENSE)
+
+[**下载**](https://github.com/cloudy-liu/hitty/releases/latest) · [使用文档](docs/index.mdx) · [问题反馈](https://github.com/cloudy-liu/hitty/issues)
+
+[English](README.md) · **简体中文**
 
 </div>
 
+Hitty 把 shell、编码 Agent 和项目上下文放在一起。启动 Agent、检查代码改动、阅读文档、连接远程机器，都可以在当前工作台中完成。后台服务持有终端会话，关闭窗口后，正在运行的任务仍可继续。
+
+## 快速开始
+
+1. 从 [GitHub Releases](https://github.com/cloudy-liu/hitty/releases/latest) **下载适合你系统的包**。
+2. **打开 Hitty，在设置中选择 shell**。Windows 支持 PowerShell、CMD，以及自定义 Cmder/Clink 启动命令。
+3. **打开项目，启动 `codex`、`claude`、`gemini` 等 Agent**。使用标签页和分屏并行工作，在终端旁打开文件检查结果。
+
+| 平台 | 文件 | 启动方式 |
+| --- | --- | --- |
+| Windows x64 | `hitty-*-windows-x86_64-setup.exe` / `hitty-*-windows-x86_64.zip` | 正常安装，或完整解压 ZIP 后运行 `hitty-app.exe`。 |
+| macOS Apple Silicon | `hitty-*-macos-arm64.dmg` | 将 **Hitty** 拖入 Applications。 |
+| macOS Intel | `hitty-*-macos-x86_64.dmg` | 将 **Hitty** 拖入 Applications。 |
+| Linux x64 | `hitty-*-linux-x86_64.AppImage` | 赋予执行权限后运行；也提供 `.tar.gz` 压缩包。 |
+
+Windows 包未签名；macOS 使用 ad-hoc 签名，尚未公证，系统可能阻止首次启动。Linux 压缩包需要[安装文档](docs/getting-started/installation.mdx)中列出的系统库。每次发布均附带 `checksums.txt`。
+
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="assets/screenshots/workspace-dark.webp" />
-  <img src="assets/screenshots/workspace-light.webp" alt="hitty 工作台，展示 Agent 状态、分组置顶与折叠、多文件标签和 Markdown 预览" width="100%" />
+  <source media="(prefers-color-scheme: dark)" srcset="assets/screenshots/hitty/workspace-dark.png" />
+  <img src="assets/screenshots/hitty/workspace-light.png" alt="Hitty 工作台：Agent 状态、项目分组、文档标签、Markdown 预览和文件树" width="100%" />
 </picture>
 
-*Windows 原生截图，展示当前工作台的 Agent 状态、分组置顶与折叠、多文件标签和 Markdown 预览，随深浅模式切换。[浅色](assets/screenshots/workspace-light.webp) · [深色](assets/screenshots/workspace-dark.webp) · [截图说明](assets/screenshots/README.md)。*
+*Hitty 的 Windows 原生窗口截图。Agent 状态使用受控演示事件，不发起真实 Agent 请求。[截图说明](assets/screenshots/hitty/README.md)。*
 
-## 这是什么
+## 核心能力
 
-hitty 是 cloudy 维护的 [hitty](https://github.com/cloudy-liu/hitty) 定制版本。hitty 是用 Rust 编写的终端工作台：shell 属于后台服务，而不是窗口，关掉应用，构建、Agent 任务和会话都继续运行；重启之后，布局、屏幕内容和受支持的 Agent 对话都会回来，不需要 tmux。这种持久化配上接近编辑器的输入体验、逐面板的 Agent 感知和原生 SSH 与 WSL 支持，全部是纯 Rust、GPU 渲染；上游基准测试中，大文件 `cat` 的吞吐约为 Alacritty、Ghostty 或 Kitty 的两倍。
+### 窗口关闭，工作继续
 
-hitty 完整保留这些，把重心放在日常使用真正需要的地方：Windows shell、编码 Agent，以及同一个窗口里的阅读和编辑。每一项改动及其上游状态都记录在[定制历史](docs/maintenance/fork-history.md)中，适合上游的修改也会提交回上游。
+后台服务持有 shell 和运行中的进程。关闭后重新打开窗口，可以接回原来的会话。服务或电脑重启后，Hitty 会恢复保存的工作区和终端屏幕，并在已知会话 ID 时恢复受支持的 Agent 对话。电脑重启不会让原来的 shell 进程继续运行。
 
-## hitty 改了什么
+通过标签页、分屏、项目分组、置顶和折叠组织工作，并保留布局。[工作区与面板](docs/getting-started/concepts.mdx) · [标签与分屏](docs/window/tabs-and-splits.mdx)
 
-**Windows shell 是一等公民。** 原生 CMD 和 Cmder/Clink 获得提示符边界、工作目录上报、补全、灰色建议和行内编辑；Up/Down 保留 shell 原生历史，模糊搜索读取 PSReadLine 与 Clink 历史文件。Windows 路径可以作为整体选中；带修饰的 Enter 会送达请求 ConPTY win32-input-mode 的程序，而不是直接提交整行。[Shell 集成](docs/reference/shell-integration.mdx)
+### 看清哪个 Agent 需要你
 
-**一眼看清哪个 Agent 需要你。** 侧栏行用紧凑的 `idle`、`run`、`input`、`done` 标签、状态符号、分支名和实时 `+N −M` 工作区变更统计标出状态。分组可以置顶、折叠，并记住布局。命令面板可以把当前选区或仓库 diff 发送给正在运行的 Agent，`hitty wait` 可以让脚本等待 Agent 状态变化。桌面通知、托盘提醒和内置 Agent 声音可以分别设置。已知对话在重启和 daemon 替换后仍能恢复：Claude Code 和 Codex 续上原会话；身份无法识别时，恢复流程留下可用的 shell，而不是弹出会话选择器。Agent 识别沿 Windows 进程树进行，提示符助手和 MCP 子进程不会被误认成前台 Agent；头像跟随主题。[Agent 状态](docs/agents/status.mdx) · [会话恢复](docs/agents/sessions.mdx) · [Agent 编排](docs/agents/orchestration.mdx)
+识别 Claude Code、Codex、Gemini、Cursor、OpenCode 等编码 Agent。每个面板显示工作中、等待输入、空闲或结果未读等状态。桌面通知、托盘提醒和声音让你不必一直盯着终端。
 
-**在同一个窗口里阅读和编辑。** 每个终端会话可以同时打开多个文件，用文档标签切换，各自保留编辑内容和预览模式。Markdown 以 GitHub 风格预览打开，支持 Mermaid 图表、缩放与平移、复制按钮、front matter 表格和可安装的 v2 主题，与源码编辑共用同一缓冲区。已保存的本地 HTML、HTM 文件在 Windows 上通过 WebView2 Runtime、在 macOS 上通过系统 WKWebView 默认进入浏览器预览。顶部路径栏旁的 Preview / Markdown、Preview / HTML 控件切换预览与源码，HTML 还支持刷新和在外部浏览器打开。源码语法配色跟随深浅模式，浅色 GitHub Light、深色 Atom One Dark，编辑区域背景跟随应用主题，字体、字号独立设置。文件树默认显示点文件，使用 Symbols 图标并支持复制名称；文档可以填满和还原，diff 可以切换并排与统一布局。[Markdown 主题](docs/customization/markdown-themes.mdx) · [HTML 预览](docs/specs/html-preview.md) · [Diff](docs/git/diffs.mdx)
+命令面板可以把选区或仓库 diff 发送给当前 Agent；CLI 可以查询状态，或等待状态变化。状态细节和对话恢复能力取决于具体 Agent 及其集成方式。[Agent 状态](docs/agents/status.mdx) · [会话恢复](docs/agents/sessions.mdx)
+
+### 保留熟悉的 shell，改善终端操作
+
+支持多行提示符编辑、历史建议、补全、终端搜索，以及文件和网址链接。Shell 集成覆盖 PowerShell、bash、zsh、fish 和 Windows CMD/Clink，也支持 Cmder 初始化脚本。历史搜索可以读取 PowerShell 和 Clink 的历史记录。
+
+按自己的习惯设置 shell 程序、启动参数、字体、主题和快捷键。[Shell 集成](docs/reference/shell-integration.mdx) · [提示符编辑](docs/terminal/prompt.mdx)
+
+### 在终端旁阅读、编辑和审查
+
+用文档标签同时打开多个文件，各自保留编辑内容和预览模式。Markdown 预览支持 Mermaid 图表、缩放和平移、代码复制、front matter 与自定义阅读主题。本地 HTML 在 Windows 上使用 WebView2，在 macOS 上使用 WKWebView；Linux 使用源码视图。
+
+浏览文件、搜索源码、以并排或统一布局查看 Git diff、阅读提交历史、管理 worktree。需要专注阅读时，可以把文档展开到整个工作区，再恢复原布局。[Markdown 主题](docs/customization/markdown-themes.mdx) · [Git 审查](docs/git/source-control.mdx)
 
 <table>
   <tr>
-    <td><img src="assets/screenshots/editor-light.webp" alt="hitty 多文件标签、项目路径栏和 GitHub Light 源码编辑器" width="100%" /></td>
-    <td><img src="assets/screenshots/html-preview-light.webp" alt="hitty 本地 HTML 预览及顶部 Preview / HTML 切换控件" width="100%" /></td>
+    <td><img src="assets/screenshots/hitty/editor-light.png" alt="Hitty 源码编辑器：文件标签、路径导航和语法高亮" width="100%" /></td>
+    <td><img src="assets/screenshots/hitty/html-preview-light.png" alt="Hitty 中的本地 HTML 页面预览" width="100%" /></td>
   </tr>
   <tr>
     <td align="center">源码编辑</td>
@@ -49,59 +80,63 @@ hitty 完整保留这些，把重心放在日常使用真正需要的地方：Wi
   </tr>
 </table>
 
-**远程工作不用折腾。** WSL 解析账户的登录 shell，Windows 安装包内置启动 WSL 所需的 Linux server。原生 SSH 支持保存的主机配置、系统密钥链、跳板机、SFTP 和端口转发。托管的 SSH tab 显示远端分支与增删统计，点击数字即可通过该面板已有的连接查看远端 diff。重启后会重新附着或连接保存的 SSH 会话，并在远端 shell 就绪后恢复已知的 Claude Code/Codex 对话。手动在面板内启动的 `ssh` 会显示 Remote 标识，但不提供托管的远端 Git 查询。SSH 标签保留连接名称、项目目录和连接信息。[远程工作区](docs/remote/workspaces.mdx) · [SSH](docs/remote/ssh.mdx)
+### 本地、SSH 与 WSL 工作区
 
-<table>
-  <tr>
-    <td><img src="assets/screenshots/remote-top.webp" alt="hitty 顶部标签中的 Remote 标识" width="100%" /></td>
-    <td><img src="assets/screenshots/remote-sidebar.webp" alt="hitty 侧栏行中的 Remote 标识" width="100%" /></td>
-  </tr>
-  <tr>
-    <td align="center">顶部标签</td>
-    <td align="center">侧栏</td>
-  </tr>
-</table>
+通过保存的 SSH 配置连接主机，支持密钥认证、跳板机、SFTP 和端口转发。远程工作区的终端、文件和 Git 操作留在对应机器上；重新连接仍在运行的远程服务时，可以接回原会话。
 
-*Windows 原生截图，通过受控 SSH 演示数据展示 Remote 标识、连接名称和目录信息，不建立网络连接。*
+Windows 包内置 Linux server，可用于连接 WSL 发行版。SSH 和 WSL 连接从桌面界面建立；CLI 可以操作已建立的远程连接。[SSH](docs/remote/ssh.mdx) · [远程工作区](docs/remote/workspaces.mdx)
 
-**自己的发布线。** hitty 维护自己的版本发布，应用内检查更新不依赖 GitHub REST API；终端响铃默认关闭。[更新机制](docs/reference/updates.mdx)
+### 用 CLI 驱动工作台
 
-## 安装
+内置的 `hitty` 命令让脚本和 Agent 查询工作区、运行命令、发送输入、读取终端输出。先启动一次 Hitty，再尝试：
 
-从 [GitHub Releases](https://github.com/cloudy-liu/hitty/releases/latest) 选择对应的安装包。
+```sh
+hitty doctor                 # 检查安装和后台服务
+hitty ls                     # 列出工作区
+hitty agents                 # 查看 Agent 状态
+hitty run -- cargo test      # 输出测试结果，并返回命令退出码
+hitty pane ls --json          # 获取脚本可用的面板地址
+```
 
-| 平台 | 文件 | 启动方式 |
-| --- | --- | --- |
-| Windows x64 | `hitty-*-windows-x86_64-setup.exe` | 运行安装程序，从开始菜单启动 hitty。 |
-| Windows x64 便携版 | `hitty-*-windows-x86_64.zip` | 解压后运行 `hitty-app.exe`。 |
-| macOS Apple Silicon | `hitty-*-macos-arm64.dmg` | 将 hitty 拖入 Applications。 |
-| macOS Intel | `hitty-*-macos-x86_64.dmg` | 将 hitty 拖入 Applications。 |
-| Linux x64 | `hitty-*-linux-x86_64.AppImage` | 添加执行权限后运行。 |
-| Linux x64 压缩包 | `hitty-*-linux-x86_64.tar.gz` | 解压后运行 `hitty-app`。 |
+将 `hitty pane ls` 返回的面板 ID 交给 `hitty send`、`hitty capture` 或 `hitty wait`。添加 `--json` 可获得机器可读结果。[CLI 指南](docs/cli/overview.mdx) · [命令参考](docs/cli/reference.mdx)
 
-每次发布都附带 `checksums.txt`。Windows 安装包未签名；macOS 使用 ad hoc 签名，尚未公证。旧 26.x 版本需要[手动迁移一次](docs/maintenance/migration.md)，之后即可沿 0.x 版本线更新。检查更新入口是 **设置 → 关于 → 立即检查**。
+## 配置成你习惯的样子
 
-CLI 命令仍叫 `hitty`，可执行文件和配置目录也保留原有名称。
+大多数选项可以在设置中修改。终端默认使用 **Hack 字体、15 px 字号、1.4 倍行高和浅色主题**。Windows 优先使用 PowerShell 7，未安装时使用 Windows PowerShell。使用 Cmder 时，将 shell 配置为 `cmd.exe`，再填入自己的 `/k` 初始化脚本。
 
-## 配置与构建
+| 平台 | 配置位置 |
+| --- | --- |
+| Windows | `%APPDATA%\hitty\config.json` |
+| macOS / Linux | `~/.config/hitty/config.json` |
 
-大多数选项可以在设置中修改。Windows 配置位于 `%APPDATA%\hitty\config.json`，macOS/Linux 位于 `~/.config/hitty/config.json`；使用 `HITTY_CONFIG_DIR` 环境变量或 `--config-dir` 参数可以指定独立目录。[配置参考](docs/reference/configuration.mdx) · [界面主题](docs/customization/themes.mdx)
+使用 `HITTY_CONFIG_DIR` 或 `--config-dir` 指定独立配置目录。[设置](docs/customization/settings.mdx) · [字体](docs/customization/fonts.mdx) · [主题](docs/customization/themes.mdx)
 
-使用 stable Rust。Windows 需要 MSVC C++ 构建工具和 Windows SDK；macOS 需要 Xcode command line tools；Linux 需要[对应的系统依赖](docs/getting-started/installation.mdx#building-from-source)。
+## 构建与贡献
+
+Hitty 使用 Rust 编写，以 GPU 渲染原生界面。需要 stable Rust；Windows 还需要 MSVC C++ 构建工具和 Windows SDK，macOS 需要 Xcode command line tools，Linux 需要[对应的开发库](docs/getting-started/installation.mdx#building-from-source)。
 
 ```sh
 git clone https://github.com/cloudy-liu/hitty.git
 cd hitty
-cargo build --locked
+cargo build --locked --workspace --bins --features updater
 cargo dev
 ```
 
-`cargo dev` 使用隔离的 `.hitty-dev` 配置目录。提交前运行 `cargo fmt --all -- --check` 和 `cargo test --locked --workspace`。Windows 完整测试还需要把 Git for Windows 的 `usr/bin` 工具目录加入测试进程的 PATH。
+`cargo dev` 使用隔离的 `.hitty-dev` 配置目录。提交代码前运行 `cargo fmt --all -- --check` 和 `cargo test --locked --workspace --features updater`。Windows 完整测试还需要把 Git for Windows 的 `usr/bin` 工具目录加入测试进程 PATH。
 
-Issue 和 PR 提交到 [cloudy-liu/hitty](https://github.com/cloudy-liu/hitty)，PR 目标分支为该仓库的 `main`。维护信息见[项目状态](docs/maintenance/status.md)、[发布流程](docs/maintenance/release.md)和[定制历史](docs/maintenance/fork-history.md)。
+通过 [GitHub Issues](https://github.com/cloudy-liu/hitty/issues) 报告问题或提出建议。PR 提交到本仓库的 `main` 分支，详见[贡献指南](AGENTS.md)。
 
-## 来源与许可
+## 致谢与许可证
 
-hitty 基于 [cloudy-liu/hitty](https://github.com/cloudy-liu/hitty) 维护，保留原始版权与署名，采用 [Apache-2.0](LICENSE) 许可。
+Hitty 采用 [Apache License 2.0](LICENSE)。项目最初以 [ctty7](https://github.com/cloudy-liu/ctty7) 的源码为基础，后者源自 [tty7](https://github.com/l0ng-ai/tty7)。原始版权和署名均予以保留，具体源码版本及导入说明见[来源记录](docs/provenance/source-baseline.md)。
 
-文件和文件夹图标来自 Miguel Solorio 的 [Symbols](https://github.com/miguelsolorio/vscode-symbols)，采用 MIT 许可。其他内置主题与素材的许可说明保留在 `assets/` 中。
+感谢以下项目及其贡献者提供的基础能力与资源：
+
+- [GPUI / Zed](https://github.com/zed-industries/zed)、[gpui-component](https://github.com/longbridge/gpui-component) 与 [Alacritty](https://github.com/alacritty/alacritty)：界面和终端基础组件。
+- [Herdr](https://github.com/herdrdev/herdr)：Apache-2.0 许可的 Agent 屏幕识别规则，[来源说明](assets/agent-detection/README.md)。
+- Miguel Solorio 的 [Symbols](https://github.com/miguelsolorio/vscode-symbols)：文件图标，[MIT 许可证](assets/file-icons/symbols/LICENSE)。
+- [Hack](https://sourcefoundry.org/hack/)：内置字体，[字体许可证](assets/fonts/hack/LICENSE.md)。
+- GitHub、Primer 和 Atom One Dark 的贡献者：阅读及源码配色，[Markdown 归属声明](assets/markdown-themes/GITHUB-NOTICE)与[编辑器主题许可证](assets/editor-themes/README.md)。
+- Microsoft：Windows ConPTY 组件，[MIT 许可证](assets/windows/conpty/LICENSE.txt)。
+
+第三方组件和素材分别保留各自的许可证与归属声明。
