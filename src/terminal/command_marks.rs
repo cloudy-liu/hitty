@@ -1,6 +1,6 @@
 //! Recorded shell-integration command boundaries; navigation never writes PTY input.
 use super::agent_marks::{AgentTurnScanner, AgentTurns, TurnCut};
-use crate::core::osc::OscTokenizer;
+use crate::core::osc::{OscTokenizer, percent_decode};
 use alacritty_terminal::{
     event::EventListener,
     grid::Dimensions,
@@ -25,19 +25,33 @@ struct Inner {
     prompt: Option<i64>,
     geometry: Option<(usize, usize)>,
     history: usize,
+    limit: usize,
 }
 
 #[derive(Clone)]
 pub(crate) struct CommandMarks {
     inner: Arc<Mutex<Inner>>,
-    limit: usize,
 }
 
 impl CommandMarks {
     pub fn new(limit: usize) -> Self {
         Self {
-            inner: Default::default(),
-            limit,
+            inner: Arc::new(Mutex::new(Inner {
+                limit,
+                ..Default::default()
+            })),
+        }
+    }
+    // Called while holding the terminal lock, alongside set_options.
+    pub fn set_limit(&self, limit: usize) {
+        if let Ok(mut inner) = self.inner.lock()
+            && inner.limit != limit
+        {
+            inner.limit = limit;
+            inner.prompt = None;
+            for entry in &mut inner.entries {
+                entry.row = None;
+            }
         }
     }
     pub fn clear(&self) {
@@ -54,7 +68,7 @@ impl CommandMarks {
         let history = term.grid().history_size();
         // The emulator does not expose a discarded-row counter. Once history
         // fills, conservatively retire anchors rather than guess at shifted rows.
-        if history >= self.limit
+        if history >= inner.limit
             || history < inner.history
             || inner.geometry.is_some_and(|old| old != geometry)
         {
@@ -81,23 +95,35 @@ impl CommandMarks {
     }
     fn apply<T: EventListener>(&self, term: &Term<T>, cut: CommandCut) {
         self.validate(term);
-        let row = (!term.mode().contains(TermMode::ALT_SCREEN)
-            && term.grid().history_size() < self.limit)
-            .then(|| {
-                term.grid().history_size() as i64 + i64::from(term.grid().cursor.point.line.0)
-            });
         let Ok(mut inner) = self.inner.lock() else {
             return;
         };
+        let row = (!term.mode().contains(TermMode::ALT_SCREEN)
+            && term.grid().history_size() < inner.limit)
+            .then(|| {
+                term.grid().history_size() as i64 + i64::from(term.grid().cursor.point.line.0)
+            });
         match cut {
             CommandCut::Prompt => {
+                if let Some(last) = inner.entries.last_mut() {
+                    last.done = true;
+                }
                 inner.prompt = row;
             }
             CommandCut::Begin(raw) => {
                 if let Some(last) = inner.entries.last_mut() {
                     last.done = true;
                 }
-                let text = super::view::unescape_mark_text(&raw);
+                let decoded = percent_decode(raw.as_bytes());
+                let text: String = String::from_utf8_lossy(&decoded)
+                    .chars()
+                    .filter_map(|c| match c {
+                        '\n' | '\r' | '\t' => Some(' '),
+                        c if c.is_control() => None,
+                        c => Some(c),
+                    })
+                    .take(512)
+                    .collect();
                 if text.trim().is_empty() {
                     return;
                 }
@@ -106,7 +132,7 @@ impl CommandMarks {
                 let row = inner.prompt.take().or(row);
                 inner.entries.push(CommandEntry {
                     id,
-                    text: text.chars().take(512).collect(),
+                    text,
                     row,
                     exit: None,
                     done: false,

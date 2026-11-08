@@ -3281,7 +3281,7 @@ mod tests {
                 hitty_core::host::local::LocalHost::new(),
                 "/work/guide.md".into(),
                 format!(
-                    "# Guide\n\n{}\n## Details\n\nTarget section.\n\n{}",
+                    "<h1>A</h1>\n\n# Guide\n\n{}\n## <em>A</em>\n\nTarget section.\n\n{}\n## emaem\n\n## **标题** `code`\n\n## 标题 code\n\n[^note]:\n    # Footnote\n\n# Footnote\n\n<h2><em>B </em>C</h2>\n",
                     "Paragraph.\n\n".repeat(60),
                     "After.\n\n".repeat(60)
                 ),
@@ -3295,7 +3295,7 @@ mod tests {
         let deadline = std::time::Instant::now() + std::time::Duration::from_secs(10);
         let target = loop {
             vcx.run_until_parked();
-            if let Some(bounds) = vcx.debug_bounds("outline-heading-details") {
+            if let Some(bounds) = vcx.debug_bounds("outline-heading-a-1") {
                 break bounds;
             }
             assert!(
@@ -3304,6 +3304,20 @@ mod tests {
             );
             std::thread::sleep(std::time::Duration::from_millis(10));
         };
+        for selector in [
+            "outline-heading-a",
+            "outline-heading-a-1",
+            "outline-heading-emaem",
+            "outline-heading-标题-code",
+            "outline-heading-标题-code-1",
+            "outline-heading-footnote",
+            "outline-heading-bc",
+        ] {
+            assert!(
+                vcx.debug_bounds(selector).is_some(),
+                "rendered heading {selector} must have an Outline entry"
+            );
+        }
         vcx.simulate_click(target.center(), gpui::Modifiers::none());
         for _ in 0..4 {
             vcx.update(|window, cx| {
@@ -3317,7 +3331,10 @@ mod tests {
             assert_eq!(file.path, Path::new("/work/guide.md"));
             assert!(file.preview);
             let preview = file.reading.as_ref().unwrap().read(cx);
-            let heading = preview.text.read(cx).anchor_bounds("details").unwrap();
+            for anchor in ["a", "a-1", "emaem", "标题-code", "标题-code-1", "footnote"] {
+                assert!(preview.text.read(cx).anchor_index(anchor).is_some());
+            }
+            let heading = preview.text.read(cx).anchor_bounds("a-1").unwrap();
             assert!(
                 (heading.top() - preview.scroll.bounds().top()).abs() < gpui::px(100.),
                 "heading should be visible near the top after navigation"

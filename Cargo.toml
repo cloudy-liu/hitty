@@ -48,6 +48,9 @@ percent-encoding = "2"
 url = "2"
 # Reuse the exact markdown-rs parser already locked by gpui-component.
 markdown = "=1.0.0"
+# Reuse the renderer's already-locked HTML parser for headings embedded in MD.
+html5ever = "=0.27.0"
+markup5ever_rcdom = "=0.3.0"
 
 # Mermaid diagram rendering
 merman = { version = "0.7", features = ["render"] }

@@ -1011,6 +1011,7 @@ impl RemoteTerminal {
     pub fn apply_user_config(&self, user_config: &crate::core::config::Config) {
         let mut term = self.term.lock();
         term.set_options(terminal_config_from_user(user_config));
+        self.commands.set_limit(user_config.scrollback_limit);
     }
 
     fn spawn_reader(
@@ -1744,6 +1745,30 @@ impl RemoteTerminal {
 
     pub(crate) fn command_entries(&self) -> Vec<crate::terminal::command_marks::CommandEntry> {
         self.commands.list(&self.term.lock())
+    }
+
+    pub(crate) fn scroll_to_command(&self, id: u64) -> bool {
+        use alacritty_terminal::grid::Dimensions as _;
+        // Keep the reader from discarding rows between validation and use.
+        let mut term = self.term.lock();
+        let Some(row) = self
+            .commands
+            .list(&term)
+            .iter()
+            .find(|entry| entry.id == id)
+            .and_then(|entry| entry.row)
+        else {
+            return false;
+        };
+        let history = term.grid().history_size() as i64;
+        if row < 0 || row >= history + term.screen_lines() as i64 {
+            return false;
+        }
+        let target = (history - row).clamp(0, history);
+        let delta = (target - term.grid().display_offset() as i64)
+            .clamp(i32::MIN as i64, i32::MAX as i64) as i32;
+        term.scroll_display(alacritty_terminal::grid::Scroll::Delta(delta));
+        true
     }
 
     pub(crate) fn clear_command_entries(&self) {
@@ -5606,6 +5631,50 @@ mod osc_tests {
         assert_eq!(entries[0].row, Some(1));
         assert_eq!(entries[0].exit, Some(1));
         assert!(entries[0].done);
+
+        // PowerShell URI-encodes its entire command; Clink reports completion
+        // with the next prompt, without an exit-status marker.
+        DaemonMsg::Output(
+            b"\x1b]133;C;echo%20%22%E4%B8%AD%E6%96%87%22%0A%1B\x07ok\r\n\x1b]133;A\x07".to_vec(),
+        )
+        .encode(&mut daemon_side)
+        .unwrap();
+        for _ in 0..200 {
+            entries = term.command_entries();
+            if entries.len() == 2 && entries[1].done {
+                break;
+            }
+            std::thread::sleep(std::time::Duration::from_millis(5));
+        }
+        assert_eq!(entries.len(), 2);
+        assert_eq!(entries[1].text.trim(), "echo \"中文\"");
+        assert!(entries[1].done, "a returned prompt completes a command");
+        assert_eq!(entries[1].exit, None, "do not invent an exit code");
+
+        let mut user_config = crate::core::config::Config::default();
+        user_config.scrollback_limit = 100;
+        term.apply_user_config(&user_config);
+        DaemonMsg::Output(
+            format!(
+                "{}\x1b]133;C;last\x07\x1b]133;D;0\x07",
+                "line\r\n".repeat(150)
+            )
+            .into_bytes(),
+        )
+        .encode(&mut daemon_side)
+        .unwrap();
+        for _ in 0..200 {
+            entries = term.command_entries();
+            if entries.len() == 3 && entries[2].done {
+                break;
+            }
+            std::thread::sleep(std::time::Duration::from_millis(5));
+        }
+        assert_eq!(entries.len(), 3);
+        assert!(
+            entries.iter().all(|entry| entry.row.is_none()),
+            "changed scrollback capacity must retire discarded command anchors"
+        );
     }
 
     #[test]

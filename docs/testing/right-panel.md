@@ -21,6 +21,37 @@ Application-level regression checks cover panel toggles, file controls,
 Markdown navigation and command navigation. Lower-level checks cover chunked
 shell integration and repeated, formatted, nested and Unicode Markdown headings.
 
+Review regressions additionally cover inline HTML formatting, mixed HTML and
+Markdown heading numbering, footnote definitions, PowerShell URI-encoded labels,
+Clink prompt completion, live scrollback-limit changes, and Agent-to-shell
+context changes while retaining Info history. Command anchor validation and
+scrolling hold the same terminal lock.
+
+## Reproduction
+
+```sh
+cargo test --locked --workspace --features updater
+cargo build --locked --features markdown-visual-tests --bin hitty-app
+python scripts/prepare-readme-captures.py <new-temporary-scene-directory>
+```
+
+Run the generated workspace options through `--document-visual` with an
+isolated `--config-dir`. Use `panel_mode: "outline"` for Outline, `active: 2`
+for the sample HTML file, and the generated dark option for dark appearance.
+Use `panel_width: 216` to exercise the minimum supported panel width.
+Set `hover_at: [1, 1]` in both fixtures to clear diagram hover state.
+Capture the process with `scripts/capture-native-window.ps1 -ProcId <pid>
+-Out <image.png> -MoveTo "1,1"`. The pointer message is synthetic; it does not
+move the user's pointer. The Before executable uses baseline `6ec847b`.
+
+The saved session labels are fixture data already present in both versions;
+opening a document does not create those sessions.
+
+All 1,268 externally sourced locked package records match the baseline,
+including versions, source revisions, checksums and dependency edges. The app
+adds direct access to three packages already used by the pinned renderer:
+`markdown 1.0.0`, `html5ever 0.27.0` and `markup5ever_rcdom 0.3.0`.
+
 ## Native captures
 
 Use the existing document fixture and `scripts/capture-native-window.ps1`.
@@ -34,6 +65,19 @@ fixture data. Separate config directories bypass ordinary startup and hook refre
 
 ![Document Outline](images/right-panel/outline-light.png)
 
+<details>
+<summary>Dark appearance, HTML and minimum-width checks</summary>
+
+![Before dark](images/right-panel/before-dark.png)
+
+![After dark](images/right-panel/after-dark.png)
+
+![HTML Outline](images/right-panel/html-outline-light.png)
+
+![Outline at the 216 px minimum width](images/right-panel/minimum-outline-light.png)
+
+</details>
+
 These are actual native application captures, not browser mockups. The original
 prototype remains under `docs/prototypes/right-panel/` for design reference.
 
@@ -46,4 +90,37 @@ third-party notices, source provenance and Hitty release verification remain.
 The per-file review inventory and raw command logs are working artifacts rather
 than additions to the durable documentation tree.
 
-Final workspace test and native HTML results are recorded after validation.
+The inventory reviewed 662 files and removed 549 obsolete files/assets.
+The documentation was 30,727,318 bytes before this cleanup. It now contains
+119 files totaling approximately 4.1 MB, including the final native images.
+
+## Validation results — 2026-11-09
+
+Windows x86_64, isolated fixture data:
+
+| Check | Result |
+| --- | --- |
+| Locked workspace tests with updater | 3,288 passed; 0 failed; 13 existing ignored |
+| Custom CLI end-to-end harness | 13 passed |
+| Locked native application build | Passed with `markdown-visual-tests` |
+| Native HTML acceptance fixture | Two consecutive standalone runs passed |
+| Agent manifests / sync-script tests | 15 manifests verified; 4 tests passed |
+| Host boundary | 116 UI/terminal files checked; no direct filesystem/git violations |
+| Local documentation links and site navigation | 243 links checked; none broken |
+| Formatting and diff whitespace | Passed |
+
+The Standards review's four original findings and the Spec review's four
+original findings were resolved and rechecked. Follow-up Markdown traversal
+cases were also fixed; neither review reported an outstanding defect.
+
+The native HTML fixture verifies reading positions across file tabs, Markdown,
+source view and sessions, rapid switching, duplicate heading targets, removed
+nodes, reload generations and recovery from a failed navigation. An earlier
+run during concurrent compilation failed its reading-position assertion. The
+baseline fixture passed, and both final standalone runs passed without changing
+the production scroll-restoration code or weakening its assertions. The initial
+failure's cause was not established; diagnostic state is now reported on failure.
+
+macOS/Linux native appearance has not been inspected locally. The normal
+cross-platform PR checks provide their build/test coverage; this change does
+not alter the published v0.1.0 tag or assets.

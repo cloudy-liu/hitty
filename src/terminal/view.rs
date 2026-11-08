@@ -586,7 +586,7 @@ const BUSY_COMMAND_MAX: usize = 60;
 /// Undo the escaping the shell integration applies to an OSC 133;C payload so
 /// it cannot break OSC framing: `%` and the four control bytes. Anything else
 /// is left exactly as the user typed it.
-pub(crate) fn unescape_mark_text(raw: &str) -> String {
+fn unescape_mark_text(raw: &str) -> String {
     let mut out = String::with_capacity(raw.len());
     let mut rest = raw;
     while let Some(i) = rest.find('%') {
@@ -1700,42 +1700,18 @@ impl TerminalView {
         }
     }
 
-    /// One entry per turn of the agent's conversation, oldest first — see
-    /// [`crate::terminal::agent_marks`].
     pub(crate) fn scroll_to_command(&mut self, id: u64, cx: &mut Context<Self>) -> bool {
-        let Some(row) = self
-            .terminal
-            .command_entries()
-            .iter()
-            .find(|entry| entry.id == id)
-            .and_then(|entry| entry.row)
-        else {
-            return false;
-        };
         self.cancel_scroll_anim();
-        {
-            use alacritty_terminal::grid::Dimensions as _;
-            let mut term = self.terminal.term.lock();
-            if term
-                .mode()
-                .contains(alacritty_terminal::term::TermMode::ALT_SCREEN)
-            {
-                return false;
-            }
-            let history = term.grid().history_size() as i64;
-            if row < 0 || row > history + term.screen_lines() as i64 {
-                return false;
-            }
-            let target = (history - row).clamp(0, history);
-            let delta = (target - term.grid().display_offset() as i64)
-                .clamp(i32::MIN as i64, i32::MAX as i64) as i32;
-            term.scroll_display(alacritty_terminal::grid::Scroll::Delta(delta));
+        if !self.terminal.scroll_to_command(id) {
+            return false;
         }
         self.scroll_frac = 0.;
         cx.notify();
         true
     }
 
+    /// One entry per turn of the agent's conversation, oldest first — see
+    /// [`crate::terminal::agent_marks`].
     pub fn agent_turns(&self) -> Vec<crate::terminal::agent_marks::AgentTurn> {
         self.terminal.agent_turns().list()
     }

@@ -97,6 +97,25 @@ impl TreeSelection {
 }
 
 impl TreeRow {
+    fn root(path: &Path, expanded: bool) -> Self {
+        Self {
+            root: Some(path.to_path_buf()),
+            entry: TreeEntry {
+                name: path
+                    .file_name()
+                    .map(|name| name.to_string_lossy().into_owned())
+                    .unwrap_or_else(|| path.display().to_string()),
+                path: path.to_path_buf(),
+                is_dir: true,
+                ignored: false,
+            },
+            depth: 0,
+            is_root: true,
+            expanded,
+            note: None,
+        }
+    }
+
     fn selection(&self) -> TreeSelection {
         TreeSelection {
             path: self.entry.path.clone(),
@@ -597,23 +616,7 @@ impl FileTreeState {
         let mut rows = Vec::new();
         for root in roots {
             let start = rows.len();
-            let name = root
-                .file_name()
-                .map(|n| n.to_string_lossy().to_string())
-                .unwrap_or_else(|| root.display().to_string());
-            rows.push(TreeRow {
-                root: None,
-                entry: TreeEntry {
-                    name,
-                    path: root.clone(),
-                    is_dir: true,
-                    ignored: false,
-                },
-                depth: 0,
-                is_root: true,
-                expanded: !collapsed_roots.contains(root),
-                note: None,
-            });
+            rows.push(TreeRow::root(root, !collapsed_roots.contains(root)));
             if !collapsed_roots.contains(root) {
                 self.flatten_dir(host, root, 1, expanded, &mut rows);
             }
@@ -1800,13 +1803,7 @@ impl HittyApp {
         // Keep the existing root row (including folding and its context menu)
         // above search. Multiple roots retain their separate rows in the tree.
         let root_row = (roots.len() == 1)
-            .then(|| {
-                self.file_tree
-                    .visible_rows(host_id, &roots, &expanded, &collapsed_roots)
-                    .into_iter()
-                    .next()
-            })
-            .flatten();
+            .then(|| TreeRow::root(&roots[0], !collapsed_roots.contains(&roots[0])));
         let root_heading = root_row.as_ref().map(|row| {
             let decor = row_decoration(&decor, &row.entry);
             div()

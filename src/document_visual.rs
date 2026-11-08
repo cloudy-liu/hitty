@@ -54,6 +54,8 @@ struct Options {
     #[serde(default)]
     panel_mode: Option<RightPanelTab>,
     #[serde(default)]
+    panel_width: Option<f32>,
+    #[serde(default)]
     readme: bool,
     #[serde(default)]
     history: bool,
@@ -175,6 +177,9 @@ pub(crate) fn run(path: &std::ffi::OsStr) {
                     .insert(archive.clone(), "Playground".into());
                 config.sidebar_pinned_groups.push(root);
                 config.sidebar_collapsed_groups.insert(archive);
+            }
+            if let Some(width) = options.panel_width {
+                config.right_panel_width = width;
             }
             if let Some(arrows) = options.sidebar_group_arrows {
                 config.sidebar_group_arrows = arrows;

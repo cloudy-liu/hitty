@@ -32,42 +32,275 @@ pub(crate) struct OutlineState {
 // The pinned renderer does not expose its heading AST. Use its exact parser
 // and anchor convention, then confirm each anchor against the rendered AST.
 fn markdown_headings(source: &str) -> Vec<Heading> {
+    use html5ever::tendril::TendrilSink as _;
+    use markup5ever_rcdom::{Handle, NodeData, RcDom};
+
+    fn html_block(node: &Handle) -> Option<bool> {
+        let NodeData::Element { name, .. } = &node.data else {
+            return None;
+        };
+        Some(matches!(
+            name.local.as_ref(),
+            "address"
+                | "article"
+                | "aside"
+                | "blockquote"
+                | "body"
+                | "br"
+                | "details"
+                | "dialog"
+                | "dd"
+                | "div"
+                | "dl"
+                | "dt"
+                | "fieldset"
+                | "figcaption"
+                | "figure"
+                | "footer"
+                | "form"
+                | "h1"
+                | "h2"
+                | "h3"
+                | "h4"
+                | "h5"
+                | "h6"
+                | "head"
+                | "header"
+                | "hgroup"
+                | "hr"
+                | "html"
+                | "li"
+                | "link"
+                | "main"
+                | "meta"
+                | "nav"
+                | "ol"
+                | "option"
+                | "p"
+                | "pre"
+                | "script"
+                | "section"
+                | "source"
+                | "table"
+                | "td"
+                | "th"
+                | "title"
+                | "tr"
+                | "ul"
+        ))
+    }
+    // The renderer minifies HTML before parsing it. In particular, trailing
+    // spaces inside an inline element are trimmed even before following text.
+    fn html_text(
+        node: &Handle,
+        trim_left: bool,
+        trim_right: bool,
+        preserve: bool,
+        text: &mut String,
+    ) {
+        match &node.data {
+            NodeData::Text { contents } => {
+                let contents = contents.borrow();
+                if preserve {
+                    text.push_str(&contents);
+                    return;
+                }
+                let mut contents: &str = &contents;
+                if trim_left || text.ends_with(' ') {
+                    contents = contents.trim_start_matches(|c: char| c.is_ascii_whitespace());
+                }
+                if trim_right {
+                    contents = contents.trim_end_matches(|c: char| c.is_ascii_whitespace());
+                }
+                let mut space = false;
+                for c in contents.chars() {
+                    if c.is_ascii_whitespace() {
+                        if !space {
+                            text.push(' ');
+                        }
+                        space = true;
+                    } else {
+                        text.push(c);
+                        space = false;
+                    }
+                }
+            }
+            NodeData::Element { name, .. }
+                if matches!(name.local.as_ref(), "img" | "script" | "style") => {}
+            NodeData::Element { name, .. } if name.local.as_ref() == "br" => {
+                while text.ends_with(' ') {
+                    text.pop();
+                }
+                text.push('\n');
+            }
+            _ => {
+                let children = node.children.borrow();
+                let preserve = matches!(&node.data, NodeData::Element { name, .. }
+                    if matches!(name.local.as_ref(), "pre" | "textarea"));
+                for (index, child) in children.iter().enumerate() {
+                    let left = if index == 0 {
+                        html_block(node).unwrap_or(false) || trim_left
+                    } else {
+                        children[..index]
+                            .iter()
+                            .rev()
+                            .find_map(html_block)
+                            .unwrap_or(trim_left)
+                    };
+                    let right = children[index + 1..]
+                        .iter()
+                        .find_map(html_block)
+                        .unwrap_or(true);
+                    html_text(child, left, right, preserve, text);
+                }
+            }
+        }
+    }
+
+    fn visit_html(node: &Handle, used: &mut HashSet<String>, headings: &mut Vec<Heading>) {
+        if let NodeData::Element { name, .. } = &node.data {
+            let tag = name.local.as_ref();
+            if let Some(depth) = ["h1", "h2", "h3", "h4", "h5", "h6"]
+                .iter()
+                .position(|name| *name == tag)
+            {
+                let mut text = String::new();
+                html_text(node, true, true, false, &mut text);
+                push_heading(depth as u8 + 1, text.trim().to_owned(), used, headings);
+                return;
+            }
+            // Match the renderer's block containers. Table cells and inline
+            // containers do not emit independently navigable heading blocks.
+            if !matches!(
+                tag,
+                "html"
+                    | "body"
+                    | "head"
+                    | "address"
+                    | "article"
+                    | "aside"
+                    | "blockquote"
+                    | "details"
+                    | "summary"
+                    | "dialog"
+                    | "div"
+                    | "dl"
+                    | "fieldset"
+                    | "figcaption"
+                    | "figure"
+                    | "footer"
+                    | "form"
+                    | "header"
+                    | "main"
+                    | "nav"
+                    | "ol"
+                    | "ul"
+                    | "li"
+                    | "p"
+                    | "pre"
+                    | "section"
+            ) {
+                return;
+            }
+        }
+        for child in node.children.borrow().iter() {
+            visit_html(child, used, headings);
+        }
+    }
+
+    // Match Paragraph::text in the pinned renderer: formatting contributes
+    // its children, images contribute no text, and inline HTML tags are not
+    // literal heading text. mdast's Display instead retains those tags.
+    fn heading_text(node: &markdown::mdast::Node, text: &mut String) {
+        use markdown::mdast::Node;
+        match node {
+            Node::Text(node) => text.push_str(&node.value.replace('\n', " ")),
+            Node::InlineCode(node) => text.push_str(&node.value),
+            Node::InlineMath(node) => text.push_str(&node.value),
+            Node::Break(_) => text.push('\n'),
+            Node::FootnoteReference(node) => {
+                text.push_str(&format!("[{}]", node.identifier));
+            }
+            Node::Html(node) => {
+                let name = node
+                    .value
+                    .trim()
+                    .trim_start_matches('<')
+                    .split(|c: char| c.is_ascii_whitespace() || c == '/' || c == '>')
+                    .next()
+                    .unwrap_or_default();
+                if name.eq_ignore_ascii_case("br") {
+                    text.push('\n');
+                }
+            }
+            Node::Heading(_)
+            | Node::Emphasis(_)
+            | Node::Strong(_)
+            | Node::Delete(_)
+            | Node::Link(_)
+            | Node::LinkReference(_) => {
+                for child in node.children().into_iter().flatten() {
+                    heading_text(child, text);
+                }
+            }
+            _ => {}
+        }
+    }
+    fn push_heading(
+        depth: u8,
+        text: String,
+        used: &mut HashSet<String>,
+        headings: &mut Vec<Heading>,
+    ) {
+        let base: String = text
+            .trim()
+            .to_lowercase()
+            .chars()
+            .filter_map(|c| {
+                if c.is_whitespace() {
+                    Some('-')
+                } else if c.is_alphanumeric() || c == '-' || c == '_' {
+                    Some(c)
+                } else {
+                    None
+                }
+            })
+            .collect();
+        let mut anchor = base.clone();
+        let mut suffix = 1;
+        while !used.insert(anchor.clone()) {
+            anchor = format!("{base}-{suffix}");
+            suffix += 1;
+        }
+        headings.push(Heading {
+            depth,
+            text: text.replace('\n', " "),
+            anchor,
+        });
+    }
     fn visit(
         node: &markdown::mdast::Node,
         used: &mut HashSet<String>,
         headings: &mut Vec<Heading>,
     ) {
-        if let markdown::mdast::Node::Heading(heading) = node {
-            let text = node.to_string().replace('\n', " ");
-            let base: String = text
-                .trim()
-                .to_lowercase()
-                .chars()
-                .filter_map(|c| {
-                    if c.is_whitespace() {
-                        Some('-')
-                    } else if c.is_alphanumeric() || c == '-' || c == '_' {
-                        Some(c)
-                    } else {
-                        None
-                    }
-                })
-                .collect();
-            let mut anchor = base.clone();
-            let mut suffix = 1;
-            while !used.insert(anchor.clone()) {
-                anchor = format!("{base}-{suffix}");
-                suffix += 1;
+        use markdown::mdast::Node;
+        match node {
+            Node::Heading(heading) => {
+                let mut text = String::new();
+                heading_text(node, &mut text);
+                push_heading(heading.depth, text, used, headings);
             }
-            headings.push(Heading {
-                depth: heading.depth,
-                text,
-                anchor,
-            });
-        } else if let Some(children) = node.children() {
-            for child in children {
-                visit(child, used, headings);
+            Node::Html(html) => {
+                let dom = html5ever::parse_document(RcDom::default(), Default::default())
+                    .one(html.value.as_str());
+                visit_html(&dom.document, used, headings);
             }
+            Node::Root(_) | Node::Blockquote(_) | Node::List(_) | Node::ListItem(_) => {
+                for child in node.children().into_iter().flatten() {
+                    visit(child, used, headings);
+                }
+            }
+            _ => {}
         }
     }
     let mut headings = Vec::new();
@@ -267,70 +500,72 @@ impl HittyApp {
             .tabs
             .get(self.active)
             .and_then(|tab| tab.detail_pane(window, cx));
+        if leaf
+            .as_ref()
+            .is_some_and(|leaf| leaf.read(cx).agent().is_some())
+        {
+            let body = self
+                .turns_section(leaf.as_ref(), cx)
+                .unwrap_or_else(|| self.panel_empty(t(L10nKey::PanelOutlineEmpty), None, cx));
+            return self.panel_scroll(body, title);
+        }
         if let Some(leaf) = leaf.as_ref() {
-            if leaf.read(cx).agent_turns().is_empty() {
-                let commands = leaf.read(cx).terminal.command_entries();
-                if !commands.is_empty() {
-                    let mut body = v_flex().px_2().py_1().gap_1();
-                    for entry in commands {
-                        let target = leaf.clone();
-                        let valid = entry.row.is_some();
-                        let id = entry.id;
-                        body = body.child(
-                            div()
-                                .id(("outline-command", id as usize))
-                                .debug_selector(move || format!("outline-command-{id}"))
-                                .px_2()
-                                .py_1()
-                                .rounded(px(5.))
-                                .text_size(rems(13. / 16.))
-                                .text_color(if valid {
-                                    cx.theme().foreground
-                                } else {
-                                    cx.theme().muted_foreground
-                                })
-                                .when(valid, |el| {
-                                    el.cursor_pointer().hover(|s| s.bg(cx.theme().secondary))
-                                })
-                                .child(div().truncate().child(entry.text))
-                                .child(
-                                    div()
-                                        .text_size(rems(11. / 16.))
-                                        .text_color(cx.theme().muted_foreground)
-                                        .child(match (entry.done, entry.exit) {
-                                            (true, Some(code)) => format!("exit {code}"),
-                                            (true, None) => t(L10nKey::PanelAgentDone).into(),
-                                            (false, _) => t(L10nKey::PanelAgentWorking).into(),
-                                        }),
-                                )
-                                .on_click(cx.listener(move |app, _, window, cx| {
-                                    let current = app
-                                        .tabs
-                                        .get(app.active)
-                                        .and_then(|tab| tab.detail_pane(window, cx));
-                                    if current.as_ref().map(|pane| pane.entity_id())
-                                        != Some(target.entity_id())
-                                    {
-                                        return;
-                                    }
-                                    if !target.update(cx, |view, cx| view.scroll_to_command(id, cx))
-                                    {
-                                        use gpui_component::WindowExt as _;
-                                        window.push_notification(
-                                            t(L10nKey::PanelOutlineUnavailable),
-                                            cx,
-                                        );
-                                    }
-                                })),
-                        );
-                    }
-                    return self.panel_scroll(body.into_any_element(), title);
+            let commands = leaf.read(cx).terminal.command_entries();
+            if !commands.is_empty() {
+                let mut body = v_flex().px_2().py_1().gap_1();
+                for entry in commands {
+                    let target = leaf.clone();
+                    let valid = entry.row.is_some();
+                    let id = entry.id;
+                    body = body.child(
+                        div()
+                            .id(("outline-command", id as usize))
+                            .debug_selector(move || format!("outline-command-{id}"))
+                            .px_2()
+                            .py_1()
+                            .rounded(px(5.))
+                            .text_size(rems(13. / 16.))
+                            .text_color(if valid {
+                                cx.theme().foreground
+                            } else {
+                                cx.theme().muted_foreground
+                            })
+                            .when(valid, |el| {
+                                el.cursor_pointer().hover(|s| s.bg(cx.theme().secondary))
+                            })
+                            .child(div().truncate().child(entry.text))
+                            .child(
+                                div()
+                                    .text_size(rems(11. / 16.))
+                                    .text_color(cx.theme().muted_foreground)
+                                    .child(match (entry.done, entry.exit) {
+                                        (true, Some(code)) => format!("exit {code}"),
+                                        (true, None) => t(L10nKey::PanelAgentDone).into(),
+                                        (false, _) => t(L10nKey::PanelAgentWorking).into(),
+                                    }),
+                            )
+                            .on_click(cx.listener(move |app, _, window, cx| {
+                                let current = app
+                                    .tabs
+                                    .get(app.active)
+                                    .and_then(|tab| tab.detail_pane(window, cx));
+                                if current.as_ref().map(|pane| pane.entity_id())
+                                    != Some(target.entity_id())
+                                {
+                                    return;
+                                }
+                                if !target.update(cx, |view, cx| view.scroll_to_command(id, cx)) {
+                                    use gpui_component::WindowExt as _;
+                                    window
+                                        .push_notification(t(L10nKey::PanelOutlineUnavailable), cx);
+                                }
+                            })),
+                    );
                 }
+                return self.panel_scroll(body.into_any_element(), title);
             }
         }
-        let body = self
-            .turns_section(leaf.as_ref(), cx)
-            .unwrap_or_else(|| self.panel_empty(t(L10nKey::PanelOutlineEmpty), None, cx));
+        let body = self.panel_empty(t(L10nKey::PanelOutlineEmpty), None, cx);
         self.panel_scroll(body, title)
     }
 
@@ -471,6 +706,35 @@ mod tests {
             cx.notify();
             (view, stream)
         });
+        DaemonMsg::Agent(Some(crate::core::cli_agent::CLIAgent::Claude))
+            .encode(&mut stream)
+            .unwrap();
+        let prompt = format!(
+            "\x1b]777;notify;{};{{\"v\":1,\"agent\":\"claude\",\"event\":\"prompt-submit\",\"prompt\":\"Earlier Agent turn\"}}\x07",
+            crate::core::cli_agent::AGENT_EVENT_SENTINEL
+        );
+        DaemonMsg::Output(prompt.into_bytes())
+            .encode(&mut stream)
+            .unwrap();
+        let deadline = std::time::Instant::now() + std::time::Duration::from_secs(10);
+        loop {
+            vcx.run_until_parked();
+            if view.read_with(&vcx, |view, _| {
+                view.agent().is_some() && !view.agent_turns().is_empty()
+            }) {
+                break;
+            }
+            assert!(std::time::Instant::now() < deadline);
+            std::thread::sleep(std::time::Duration::from_millis(10));
+        }
+        DaemonMsg::Agent(None).encode(&mut stream).unwrap();
+        let deadline = std::time::Instant::now() + std::time::Duration::from_secs(10);
+        while view.read_with(&vcx, |view, _| view.agent().is_some()) {
+            assert!(std::time::Instant::now() < deadline);
+            std::thread::sleep(std::time::Duration::from_millis(10));
+        }
+        app.update_in(&mut vcx, |_, _, cx| cx.notify());
+        vcx.run_until_parked();
         let mut output = b"\x1b]133;A\x07$ example\r\n\x1b]133;C;example\x07".to_vec();
         output.extend_from_slice("line\r\n".repeat(100).as_bytes());
         output.extend_from_slice(b"\x1b]133;D;0\x07");
@@ -492,7 +756,18 @@ mod tests {
             assert_eq!((app.tabs.len(), app.active), before)
         });
         view.read_with(&vcx, |view, _| {
-            assert!(view.terminal.term.lock().grid().display_offset() > 0)
+            let offset = view.terminal.term.lock().grid().display_offset();
+            assert!(
+                offset > 0,
+                "command should remain navigable: {:?}",
+                view.terminal.command_entries()
+            );
+            assert!(view.agent().is_none());
+            assert_eq!(
+                view.agent_turns().len(),
+                1,
+                "Info keeps historical Agent turns"
+            );
         });
     }
 }
