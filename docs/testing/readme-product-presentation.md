@@ -3,7 +3,7 @@
 The README introduces Hitty through its capabilities, installation, and first
 workflow. English is the default; the Chinese page uses the same information
 hierarchy and reciprocal language navigation. The approved icon-plus-wordmark
-SVGs are unchanged, with a 360 px desktop width and responsive shrinking.
+SVGs are unchanged, with a 240 px display width and responsive shrinking.
 
 ## Native images
 
@@ -23,22 +23,25 @@ Capture metadata and PNG digests are in `assets/screenshots/hitty/captures.json`
 
 ## GitHub rendering
 
-Before and After screenshots show GitHub's actual rendered README at the same
-1440 by 1000 CSS-pixel viewport, scale factor 1, light appearance, and article
-offset of 80 px below the viewport top. Both images were inspected. The new
-logo is centered exactly in the article, measures 360 px wide, and all badges
-and embedded product images load successfully.
+The logo was reduced on November 8, 2026 after reviewing its visual weight in
+the README. Before (`d3f8350`) and After (`9b182c5`) show GitHub's actual rendered
+README at the same 1440 by 1000 CSS-pixel viewport, scale factor 1, light
+appearance, and article offset of approximately 80 px below the viewport top.
+The logo changes from 360 by 144 px to 240 by 96 px, remains centered, and
+brings the introduction and quick start 48 px higher. Both saved images were
+inspected; badges and embedded product images still load successfully.
 
-![Before](images/readme/before-github-readme.png)
+![Before: 360 px logo](images/readme/logo-size-before.png)
 
-![After](images/readme/after-github-readme.png)
+![After: 240 px logo](images/readme/logo-size-after.png)
 
-At 390 by 844 CSS pixels, the logo shrinks to the article width (about 325 px),
-the three badges fit, and the page has no horizontal overflow. English and
-Chinese links resolve to the corresponding rendered repository files. The
-Chinese page's logo, badges, and product images also load successfully.
+At 390 by 844 CSS pixels, the 240 by 96 px logo remains centered within the
+approximately 325 px article, the three badges fit, and the page has no
+horizontal overflow. English and Chinese use the same logo width; their
+reciprocal language links resolve to the corresponding rendered files.
+The Chinese logo also renders at 240 by 96 px without horizontal overflow.
 
-![Mobile](images/readme/after-mobile.png)
+![Mobile](images/readme/logo-size-mobile.png)
 
 ## Content and attribution checks
 
