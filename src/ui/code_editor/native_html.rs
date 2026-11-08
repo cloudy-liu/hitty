@@ -89,6 +89,23 @@ pub(crate) fn run(path: &std::ffi::OsStr) {
                 }
                 let cold_load_ms = started.elapsed().as_secs_f64() * 1000.;
                 let view = app.read_with(cx, |app, _| app.editor.html.clone().unwrap());
+                // Exercise the production HTML outline bridge with duplicate
+                // labels, so a changed DOM cannot redirect a stale entry.
+                let rx = view.read_with(cx, |view, cx| view.inspect(
+                    "document.body.insertAdjacentHTML('beforeend', '<h2 id=\"outline-first\">Outline sample</h2><div style=\"height:600px\"></div><h2 id=\"outline-second\">Outline sample</h2>'); true", cx)).unwrap();
+                rx.recv().await.unwrap();
+                let rx = view.read_with(cx, |view, cx| view.outline_headings(cx)).unwrap();
+                let headings: Vec<crate::ui::outline::Heading> = serde_json::from_str(&rx.recv().await.unwrap()).unwrap();
+                let duplicates: Vec<_> = headings.iter().filter(|h| h.text == "Outline sample").collect();
+                assert_eq!(duplicates.len(), 2);
+                assert_ne!(duplicates[0].anchor, duplicates[1].anchor);
+                let generation = view.read_with(cx, |view, _| view.outline_generation());
+                let rx = view.read_with(cx, |view, cx| view.navigate_heading(duplicates[1], generation, cx)).unwrap();
+                assert_eq!(rx.recv().await.unwrap(), "true");
+                let rx = view.read_with(cx, |view, cx| view.inspect("document.querySelector('#outline-second').remove(); true", cx)).unwrap();
+                rx.recv().await.unwrap();
+                let rx = view.read_with(cx, |view, cx| view.navigate_heading(duplicates[1], generation, cx)).unwrap();
+                assert_eq!(rx.recv().await.unwrap(), "false", "removed headings must not jump to a different node");
                 let rx = view.read_with(cx, |view, cx| view.inspect(
                     "document.querySelector('#counter').click(); document.querySelector('#count').textContent", cx)).unwrap();
                 assert_eq!(rx.recv().await.unwrap(), "\"1\"", "relative JavaScript must handle the click");
@@ -96,6 +113,7 @@ pub(crate) fn run(path: &std::ffi::OsStr) {
                 cx.update_window(handle.into(), |_, window, cx| app.update(cx, |app, cx| {
                     app.editor_refresh_html(window, cx);
                 })).unwrap();
+                assert!(view.read_with(cx, |view, cx| view.navigate_heading(duplicates[0], generation, cx)).is_err(), "reload invalidates old heading targets");
                 let deadline = Instant::now() + Duration::from_secs(15);
                 let refresh_started = Instant::now();
                 loop {

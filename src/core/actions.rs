@@ -72,6 +72,7 @@ actions!(
         // orphan every custom binding already on disk.
         ShowRightPanelChanges,
         ShowRightPanelFiles,
+        ShowRightPanelOutline,
         ScmCommit,
         ScmCommitAmend,
         ScmStageAll,

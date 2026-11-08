@@ -46,6 +46,8 @@ regex = "1"
 # Document-relative Markdown links and URL fragments (already transitive).
 percent-encoding = "2"
 url = "2"
+# Reuse the exact markdown-rs parser already locked by gpui-component.
+markdown = "=1.0.0"
 
 # Mermaid diagram rendering
 merman = { version = "0.7", features = ["render"] }

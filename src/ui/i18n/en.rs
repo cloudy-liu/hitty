@@ -1124,6 +1124,12 @@ pub fn translate_en(key: L10nKey) -> &'static str {
             "Show a hint when opening archives or other non-text files. Read errors are always shown."
         }
         L10nKey::PanelInfoTitle => "Info",
+        L10nKey::PanelOutlineTitle => "Outline",
+        L10nKey::PanelGitTitle => "Git",
+        L10nKey::PanelOutlineEmpty => "No outline entries for this content.",
+        L10nKey::PanelOutlineUnavailable => {
+            "This location is no longer available in the current view."
+        }
         L10nKey::PanelChangesTitle => "Source Control",
         L10nKey::PanelScmTitle => "Source Control",
         L10nKey::PanelFilesTitle => "Files",

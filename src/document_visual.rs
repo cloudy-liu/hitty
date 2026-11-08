@@ -52,6 +52,8 @@ struct Options {
     #[serde(default)]
     right_panel: bool,
     #[serde(default)]
+    panel_mode: Option<RightPanelTab>,
+    #[serde(default)]
     readme: bool,
     #[serde(default)]
     history: bool,
@@ -325,6 +327,11 @@ pub(crate) fn run(path: &std::ffi::OsStr) {
                         preview,
                         "requested mode is unavailable"
                     );
+                }
+                if let Some(mode) = options.panel_mode {
+                    cx.update_window(handle.into(), |_, _window, cx| app.update(cx, |app, cx| {
+                        app.set_right_panel_tab(mode, cx);
+                    })).unwrap();
                 }
                 let deadline = Instant::now() + Duration::from_secs(30);
                 loop {

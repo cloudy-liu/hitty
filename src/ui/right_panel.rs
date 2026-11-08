@@ -8,10 +8,7 @@ use std::path::PathBuf;
 
 use crate::core::config::{Config, RightPanelTab};
 use crate::daemon::protocol::PaneProcs;
-use crate::ui::app::{
-    CONTENT_INSET, HittyApp, TILE_GLYPH_XS, TILE_SIZE, TILE_SIZE_SM, TILE_SIZE_XS,
-    tile_trailing_inset, tile_trailing_inset_sm,
-};
+use crate::ui::app::{CONTENT_INSET, HittyApp, TILE_GLYPH_XS, TILE_SIZE_XS, tile_trailing_inset};
 use crate::ui::i18n::{L10nKey, t};
 use crate::ui::scrollbar::with_vertical_scrollbar;
 
@@ -115,6 +112,7 @@ pub(crate) const SEARCH_H: f32 = 30.;
 
 #[derive(Default)]
 pub(crate) struct RightPanelState {
+    pub(crate) outline: crate::ui::outline::OutlineState,
     pub(crate) procs_pane: Option<u64>,
     pub(crate) procs: Option<PaneProcs>,
     pub(crate) procs_loading: bool,
@@ -317,6 +315,7 @@ impl HittyApp {
 
         let body = match tab {
             RightPanelTab::Info => self.render_panel_info(window, cx),
+            RightPanelTab::Outline => self.render_panel_outline(window, cx),
             RightPanelTab::Scm => self.render_panel_scm(window, cx),
             RightPanelTab::Files => self.render_panel_files(window, cx),
         };
@@ -351,7 +350,6 @@ impl HittyApp {
                     .items_center()
                     .gap(px(2.))
                     .pl(px(tile_trailing_inset()))
-                    .children(self.right_panel_tabs(TILE_SIZE, cx))
                     .child(div().flex_1())
                     .child(self.window_chrome(window, cx))
                 }))
@@ -463,73 +461,29 @@ impl HittyApp {
 
     pub(crate) fn panel_title(
         &self,
-        text: &str,
-        count: Option<String>,
+        _text: &str,
+        _count: Option<String>,
         trailing: Option<AnyElement>,
         window: &mut Window,
         cx: &mut Context<Self>,
     ) -> AnyElement {
-        let tabs = (!cfg!(target_os = "macos")).then(|| self.right_panel_tabs(TILE_SIZE_SM, cx));
-        let has_trailing = trailing.is_some();
-        if tabs.is_none() && !has_trailing {
-            return div().flex_none().into_any_element();
-        }
-        let row = crate::ui::app::window_move_gesture(
+        let modes = crate::ui::app::window_move_gesture(
             h_flex().id("panel-title"),
             "panel-title-drag",
             window,
             cx,
-        );
-        row.flex_none()
-            .h(px(crate::ui::app::SECONDARY_BAR_HEIGHT))
-            .items_center()
-            .pl(px(CONTENT_INSET))
-            .pr(px(match (&tabs, has_trailing) {
-                (Some(_), _) => tile_trailing_inset(),
-                (None, true) => tile_trailing_inset_sm(),
-                (None, false) => CONTENT_INSET,
-            }))
-            .when(tabs.is_some(), |this| {
-                this.border_b_1().border_color(cx.theme().sidebar_border)
-            })
-            .child(
-                h_flex()
-                    .flex_shrink_0()
-                    .items_baseline()
-                    .gap(px(7.))
-                    .child(
-                        // The title step of the panel ramp, SEMIBOLD and
-                        // uppercased. It reads as a label rather than as
-                        // content because of the weight and the caps.
-                        div()
-                            .text_size(rems(META))
-                            .font_weight(gpui::FontWeight::SEMIBOLD)
-                            .text_color(cx.theme().secondary_foreground)
-                            .child(text.to_uppercase()),
-                    )
-                    .when_some(count, |this, c| {
-                        this.child(
-                            // A count is a token hanging off the heading, not
-                            // part of it: one step down, mono, regular weight.
-                            div()
-                                .text_size(rems(META_MONO))
-                                .font_family(cx.theme().mono_font_family.clone())
-                                .text_color(cx.theme().muted_foreground.opacity(0.75))
-                                .child(c),
-                        )
-                    }),
-            )
-            .child(div().flex_1().min_w_0())
-            .when_some(trailing, |this, t| this.child(t))
-            .when_some(tabs, |this, tiles| {
-                this.child(
-                    h_flex()
-                        .flex_shrink_0()
-                        .items_center()
-                        .gap(px(2.))
-                        .when(has_trailing, |this| this.ml(px(6.)))
-                        .children(tiles),
-                )
+        )
+        .flex_none()
+        .h(px(46.))
+        .items_center()
+        .justify_center()
+        .gap(px(6.))
+        .children(self.right_panel_tabs(30., cx));
+        v_flex()
+            .flex_none()
+            .child(modes)
+            .when_some(trailing, |row, actions| {
+                row.child(h_flex().justify_end().px(px(CONTENT_INSET)).child(actions))
             })
             .into_any_element()
     }
@@ -993,10 +947,8 @@ impl HittyApp {
     /// The agent's conversation, one row per turn, each a way back to where
     /// that turn started in the scrollback — when there is one to go back to.
     ///
-    /// It sits under the session facts rather than in a tab of its own: this is
-    /// something *this pane* is, like its shell and its cwd, and the tab strip
-    /// has no room for a fourth tile at 260px.
-    fn turns_section(
+    /// Shared by Info and Outline; opening either leaves the session intact.
+    pub(crate) fn turns_section(
         &self,
         leaf: Option<&gpui::Entity<crate::terminal::view::TerminalView>>,
         cx: &mut Context<Self>,
@@ -1347,13 +1299,11 @@ impl HittyApp {
         }
 
         let title = self.panel_title(t(L10nKey::PanelFilesTitle), None, None, window, cx);
-        let search = self.panel_search(&self.file_search.clone(), cx);
         let rows = self.render_file_tree_rows(window, cx);
         v_flex()
             .flex_1()
             .min_h_0()
             .child(title)
-            .child(search)
             .child(rows)
             .into_any_element()
     }

@@ -476,6 +476,7 @@ pub(crate) fn default_bindings() -> Vec<(&'static str, &'static str)> {
         ("ShowRightPanelInfo", ""),
         ("ShowRightPanelChanges", ""),
         ("ShowRightPanelFiles", ""),
+        ("ShowRightPanelOutline", ""),
         ("EditorSave", "secondary-s"),
         ("OpenSshProfiles", ""),
         ("RestartSshSession", "secondary-shift-r"),
@@ -677,6 +678,10 @@ fn authored_entry(action: &str) -> Option<(CommandGroup, String)> {
         "ShowRightPanelChanges" => (
             CommandGroup::View,
             t(L10nKey::CmdRightPanelChanges).to_string(),
+        ),
+        "ShowRightPanelOutline" => (
+            CommandGroup::View,
+            t(L10nKey::PanelOutlineTitle).to_string(),
         ),
         "ShowRightPanelFiles" => (
             CommandGroup::View,
@@ -1098,6 +1103,7 @@ fn make_binding(action: &str, keystroke: &str) -> Option<KeyBinding> {
         "ToggleRightPanel" => KeyBinding::new(keystroke, ToggleRightPanel, None),
         "ShowRightPanelInfo" => KeyBinding::new(keystroke, ShowRightPanelInfo, None),
         "ShowRightPanelChanges" => KeyBinding::new(keystroke, ShowRightPanelChanges, None),
+        "ShowRightPanelOutline" => KeyBinding::new(keystroke, ShowRightPanelOutline, None),
         "ShowRightPanelFiles" => KeyBinding::new(keystroke, ShowRightPanelFiles, None),
         "ScmCommit" => KeyBinding::new(keystroke, ScmCommit, action_context(action)),
         "ScmCommitAmend" => KeyBinding::new(keystroke, ScmCommitAmend, action_context(action)),
@@ -1188,6 +1194,7 @@ mod tests {
             "ShowRightPanelInfo",
             "ShowRightPanelChanges",
             "ShowRightPanelFiles",
+            "ShowRightPanelOutline",
         ] {
             assert!(bindable.contains(action), "{action} has nowhere to bind to");
             assert!(

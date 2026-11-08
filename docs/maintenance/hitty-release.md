@@ -1,7 +1,6 @@
 # Hitty release procedure
 
-Use `cloudy-liu/hitty` and Hitty tags. The older `release.md` and other inherited
-release records describe the source project, not Hitty's release state.
+Use `cloudy-liu/hitty` and Hitty tags.
 Hitty's first release, `v0.1.0`, was published on November 8, 2026. Use it as
 the baseline for subsequent Hitty release comparisons.
 
@@ -17,7 +16,7 @@ the baseline for subsequent Hitty release comparisons.
    remote-server binaries. Inspect the packaged runtime and installation
    evidence, not only source-build results.
 4. Download the `verified-release-assets` artifact to a fresh directory and run
-   `python .github/scripts/verify-release-assets.py <directory> 0.1.0 --checksums`.
+   `python .github/scripts/verify-release-assets.py <directory> <version> --checksums`.
    Confirm the embedded versions, architectures, updater helpers, Windows
    ConPTY pair, and bundled WSL server. State signing/notarization precisely.
 5. Create the matching version tag from the accepted commit after review. Tag

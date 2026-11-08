@@ -1,14 +1,30 @@
-# Hitty
+# Hitty terminology
 
-Hitty is a terminal workspace for coding agents. These terms describe its product identity and development starting point.
+**Hitty**: the independent terminal workspace product built on tty7. Its product
+name is Hitty; `hitty` is its repository and command name.
 
-## Language
+**Source baseline**: the reviewed source snapshot recorded in
+[provenance](docs/provenance/source-baseline.md). Imported implementation is not
+a rewrite from scratch.
 
-**Hitty**:
-The independent terminal workspace product developed from ctty7. Its product name is Hitty; `hitty` is its repository and command name.
-_Avoid_: HYTI, high tty, using ctty7 or tty7 as the new product's name.
+**Session**: a terminal task represented in the left sidebar. A session may own
+multiple panes and document tabs.
 
-**Source baseline**:
-The selected ctty7 source state from which Hitty's independent development begins.
-_Avoid_: Describing the inherited implementation as a rewrite from scratch.
+**Document tab**: an opened file or diff within its owning session. Opening one
+does not create or select a different session in the left sidebar.
 
+**Right panel**: the contextual Info, Outline, Git and Files views beside the
+terminal/document area. Mode selection is independent of the session list.
+
+**Outline**: navigation entries for the content being viewed: document headings,
+Agent turns or recorded shell commands. Selecting an entry changes reading
+position; it does not execute a command.
+
+**Tab avatar**: the icon identifying a session in navigation. In a split tab it
+represents the focused pane, including when that tab moves into the background.
+
+**Host application**: a terminal application, such as Herdr, that manages its own
+sessions inside a Hitty pane and can launch coding agents.
+
+**Nested agent**: an agent running inside a host application's session; its
+status and notification behavior remains separate from the host avatar.

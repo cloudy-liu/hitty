@@ -19,6 +19,8 @@ use gpui::{
     AnyElement, App, Context, Entity, ExternalPaths, FocusHandle, KeyDownEvent, MouseButton,
     PromptLevel, SharedString, Subscription, Window, div, px, relative, rems,
 };
+use gpui_component::Disableable as _;
+use gpui_component::button::Button;
 use gpui_component::input::{Input, InputEvent, InputState};
 use gpui_component::menu::{ContextMenuExt as _, PopupMenu, PopupMenuItem};
 use gpui_component::{ActiveTheme as _, Icon, Sizable as _, WindowExt as _, h_flex, v_flex};
@@ -1757,7 +1759,7 @@ impl HittyApp {
         }
         let decor = self.file_tree_decorations(host.as_ref(), host_id, &roots, cx);
         self.file_tree.sync_search(&query, &roots, cx);
-        let rows = if self.file_tree_searching(cx) {
+        let mut rows = if self.file_tree_searching(cx) {
             self.file_tree.search_rows()
         } else {
             if let Some(host) = &host {
@@ -1795,21 +1797,98 @@ impl HittyApp {
                 code.selection_anchor = code.selected.clone();
             }
         }
+        // Keep the existing root row (including folding and its context menu)
+        // above search. Multiple roots retain their separate rows in the tree.
+        let root_row = (roots.len() == 1)
+            .then(|| {
+                self.file_tree
+                    .visible_rows(host_id, &roots, &expanded, &collapsed_roots)
+                    .into_iter()
+                    .next()
+            })
+            .flatten();
+        let root_heading = root_row.as_ref().map(|row| {
+            let decor = row_decoration(&decor, &row.entry);
+            div()
+                .flex_1()
+                .min_w_0()
+                .children(self.render_tree_row(row, decor, window, cx))
+                .into_any_element()
+        });
+        if root_heading.is_some() {
+            rows.retain(|row| !row.is_root);
+        }
+        let hidden = self.file_tree.show_hidden;
+        let busy = self.file_tree.loads.pending_keys().next().is_some();
+        let actions = h_flex()
+            .gap_1()
+            .child(
+                div()
+                    .debug_selector(|| "file-tree-hidden-toggle".into())
+                    .child(
+                        crate::ui::tab_strip::chrome_tile_sized(
+                            Button::new("file-tree-hidden-toggle")
+                                .icon(Icon::empty().path("icons/eye.svg")),
+                            26.,
+                            16.,
+                            hidden,
+                            cx,
+                        )
+                        .rounded(px(6.))
+                        .tooltip(t(if hidden {
+                            L10nKey::FileTreeContextHideDotfiles
+                        } else {
+                            L10nKey::FileTreeContextShowDotfiles
+                        }))
+                        .on_click(cx.listener(|this, _, _, cx| {
+                            this.file_tree.show_hidden = !this.file_tree.show_hidden;
+                            cx.notify();
+                        })),
+                    ),
+            )
+            .child(
+                div().debug_selector(|| "file-tree-refresh".into()).child(
+                    crate::ui::tab_strip::chrome_tile_sized(
+                        Button::new("file-tree-refresh")
+                            .icon(Icon::empty().path("icons/refresh.svg")),
+                        26.,
+                        16.,
+                        false,
+                        cx,
+                    )
+                    .rounded(px(6.))
+                    .disabled(busy)
+                    .tooltip(t(L10nKey::ScmRefresh))
+                    .on_click(cx.listener(|this, _, _, cx| {
+                        this.file_tree.invalidate_all();
+                        cx.notify();
+                    })),
+                ),
+            );
+        let header = h_flex()
+            .flex_none()
+            .h(px(32.))
+            .px_2()
+            .items_center()
+            .child(root_heading.unwrap_or_else(|| div().flex_1().into_any_element()))
+            .child(actions);
+        let search = self.panel_search(&self.file_search.clone(), cx);
         // A search that found nothing, and a tab with no directory behind it,
         // both used to render as an empty column that looks identical to a
         // tree still loading.
-        let blank = rows.is_empty().then(|| {
-            let text = match self.file_tree_searching(cx) {
-                true => t_fmt(L10nKey::SettingsNothingMatches, &[("query", &query)]),
-                false => t(L10nKey::OpenFileFromTree).to_string(),
-            };
-            div()
-                .px_3()
-                .py_4()
-                .text_xs()
-                .text_color(cx.theme().muted_foreground)
-                .child(text)
-        });
+        let blank =
+            (rows.is_empty() && (root_row.is_none() || self.file_tree_searching(cx))).then(|| {
+                let text = match self.file_tree_searching(cx) {
+                    true => t_fmt(L10nKey::SettingsNothingMatches, &[("query", &query)]),
+                    false => t(L10nKey::OpenFileFromTree).to_string(),
+                };
+                div()
+                    .px_3()
+                    .py_4()
+                    .text_xs()
+                    .text_color(cx.theme().muted_foreground)
+                    .child(text)
+            });
         let column = v_flex()
             .id("right-panel-tree-rows")
             .flex_1()
@@ -1838,11 +1917,18 @@ impl HittyApp {
                     },
                 ))
             });
-        crate::ui::scrollbar::with_vertical_scrollbar(
+        let body = crate::ui::scrollbar::with_vertical_scrollbar(
             "right-panel-tree-scrollbar",
             column,
             &self.right_panel.tree_scroll,
-        )
+        );
+        v_flex()
+            .flex_1()
+            .min_h_0()
+            .child(header)
+            .child(search)
+            .child(body)
+            .into_any_element()
     }
 
     /// Ask each root for a fresh status and take the index it already holds.
@@ -2071,14 +2157,9 @@ impl HittyApp {
                 .when(deco.strike, |d| d.line_through())
                 .when(deco.bold, |d| d.font_weight(gpui::FontWeight::SEMIBOLD))
                 .when(row.is_root, |d| {
-                    d.text_size(rems(HEADING))
-                        .font_weight(gpui::FontWeight::SEMIBOLD)
+                    d.text_size(rems(HEADING)).text_color(muted)
                 })
-                .child(SharedString::from(if row.is_root {
-                    row.entry.name.to_uppercase()
-                } else {
-                    row.entry.name.clone()
-                }))
+                .child(SharedString::from(row.entry.name.clone()))
                 .into_any_element()
         };
 
@@ -2800,6 +2881,34 @@ mod tests {
             std::thread::sleep(std::time::Duration::from_millis(20));
         }
         (app, vcx, pane)
+    }
+
+    #[gpui::test]
+    fn right_panel_file_actions_preserve_owning_session(cx: &mut gpui::TestAppContext) {
+        let root = tempfile::tempdir().unwrap();
+        std::fs::write(root.path().join(".hidden"), "hidden").unwrap();
+        std::fs::write(root.path().join("visible.md"), "# Visible").unwrap();
+        let (app, mut vcx, _pane) = files_panel(cx, root.path());
+        vcx.run_until_parked();
+        let before = app.read_with(&vcx, |app, _| (app.tabs.len(), app.active));
+        let toggle = vcx
+            .debug_bounds("file-tree-hidden-toggle")
+            .expect("hidden files are directly discoverable");
+        vcx.simulate_click(toggle.center(), gpui::Modifiers::none());
+        vcx.run_until_parked();
+        app.read_with(&vcx, |app, _| {
+            assert!(!app.file_tree.show_hidden);
+            assert_eq!((app.tabs.len(), app.active), before);
+        });
+        let refresh = vcx
+            .debug_bounds("file-tree-refresh")
+            .expect("refresh is directly discoverable");
+        vcx.simulate_click(refresh.center(), gpui::Modifiers::none());
+        vcx.run_until_parked();
+        app.read_with(&vcx, |app, _| {
+            assert_eq!((app.tabs.len(), app.active), before);
+            assert!(!app.file_tree.show_hidden);
+        });
     }
 
     #[gpui::test]
