@@ -8,7 +8,7 @@
   "capture": null,
   "cli_version": "hitty 0.1.0",
   "terminal_input_output": "passed",
-  "configuration": "/tmp/hitty-bootstrap-smoke-w95ipow5",
+  "configuration": "/tmp/hitty-bootstrap-smoke-ar8tdlsc",
   "session_after_gui_restart": "passed",
   "test_preferences": {
     "check_for_updates": false,

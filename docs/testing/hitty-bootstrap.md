@@ -99,9 +99,11 @@ empty-selection assertion in four consecutive runs: selection was `Selection`
 before the image completed and empty after reflow. The component clears a
 geometry-based selection when its bounds change. The fill/dock test now uses
 stable text so its existing double-click and layout-toggle assertions measure
-that action, independently of asynchronous image sizing. Cross-platform
-verification of the correction is pending; the earlier green run is not a
-claim that the intermittent failure was fixed.
+that action, independently of asynchronous image sizing. Final CI run
+`42443650511` passed all 10 jobs at
+`30a4413cef465f91430381532dea8dfa3dd738ae`, including 20 scheduler seeds for
+each inherited Intel UI regression. Windows CI also passed the two tests that
+had hit local wall-clock limits, using its unchanged default-concurrency command.
 
 Representative CI images were downloaded and inspected. The saved files retain
 the original artifact bytes; `images/hitty-bootstrap/ci-cec12e0.json` records
@@ -134,13 +136,24 @@ the Windows debug build. Linux x86_64 and both macOS architectures passed this
 runtime check in run
 `42438988023`. Windows portable and installed copies both passed startup,
 command output, and GUI reconnect; installation metadata also matched. The
-subsequent uninstaller exited with code 1, so Windows package acceptance is
-not complete. Its stop helper includes the invoking uninstaller in the
+subsequent uninstaller exited with code 1, so that run did not meet Windows
+package acceptance. Its stop helper included the invoking uninstaller in the
 installation-directory process sweep. A subprocess regression reproduced the
 same exit code with an `unins000.exe` parent and a live `OpenConsole.exe` child.
 The correction preserves the helper's caller chain in both termination and
 image-unlock checks. The regression then passed and confirmed the orphan was
-still terminated. Complete Windows installer verification is being rerun.
+still terminated. Rebuilt Windows package job `128618527627` in run
+`42443650571` then passed the complete portable, installation, session-reconnect,
+and uninstall checks. The uninstall log reports successful removal with no
+restart. Linux and macOS ARM64 package checks also passed on this final source
+head. macOS Intel then passed as well; package run `42443650571` completed
+successfully at `30a4413cef465f91430381532dea8dfa3dd738ae`. All 12 program
+assets were downloaded and independently verified against the workflow's
+SHA-256 output. The complete set is retained locally at
+`D:/tmp/hitty-0.1.0-verified-assets`, and the checksum manifest is retained in
+`images/hitty-bootstrap/release-checksums.txt`. Windows markers, bundled WSL
+server bytes, both macOS bundle identities, versions, and updater paths were
+also inspected. The tag-only draft-release job was skipped, as intended.
 
 ## Actual SSH and WSL deployment
 
@@ -182,7 +195,7 @@ under `D:/tmp/hitty-remote-acceptance` for later cleanup.
 
 An unpublished test-only `0.0.0` build was produced from a separate checkout
 with only the workspace version changed. Its actual GUI, CLI, and updater were
-packaged into a portable ZIP. The current candidate ZIP from run `42438988023`
+packaged into a portable ZIP. The final candidate ZIP from run `42443650571`
 was installed over it using that older Hitty updater, with isolated user data.
 
 The verifier rejected an incorrect SHA-256, accepted the real archive, waited
@@ -199,9 +212,10 @@ The before/after images were inspected at the same viewport and scale.
 
 ## Pending acceptance
 
-- Run the new package workflow and inspect its runtime evidence, installer
-  results, complete artifact set, and checksums. The macOS PR packages are
-  ad-hoc signed and do not establish notarized distribution acceptance.
+- Build, package, terminal/session, Windows installation/removal, and complete
+  asset/checksum checks are complete on the implementation head above. The
+  macOS packages are ad-hoc signed; notarized distribution and a full ARM64
+  desktop screenshot remain unverified.
 - Windows portable updates between distinct Hitty versions are verified above.
   Actual Inno, macOS bundle, and Linux AppImage version-to-version updates are
   not yet verified; their existing automated updater tests remain required.
@@ -214,7 +228,8 @@ A later default-concurrency local run passed 1,850 GUI tests but hit two existin
 wall-clock fixture limits: `agent_ctrl_v_pastes_text_and_alt_v_reaches_the_agent`
 (socket read at one second) and
 `markdown_edits_release_image_budget_and_ignore_old_completions` (image gate at
-ten seconds). Both passed individually with the same binary. The full workspace/updater suite then passed at four test threads: 3,281
+ten seconds). Both passed individually with the same binary. The full
+workspace/updater suite then passed at four test threads: 3,281
 standard Rust tests, 13 existing ignores, plus the custom CLI end-to-end harness.
 `images/hitty-bootstrap/local-final-tests.json` records the command and log hash. No
 assertions or production behavior were changed for these two tests, and CI
