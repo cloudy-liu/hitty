@@ -1284,15 +1284,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "cedarwood"
-version = "0.5.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c0524a528a6a0288df1863c3c20fe92c301875b4941e7b6c4b394ab08c5a4c55"
-dependencies = [
- "smallvec",
-]
-
-[[package]]
 name = "cesu8"
 version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4214,6 +4205,132 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "dfa686283ad6dd069f105e5ab091b04c62850d3e4cf5d67debad1933f55023df"
 
 [[package]]
+name = "hitty"
+version = "0.1.0"
+dependencies = [
+ "alacritty_terminal",
+ "anyhow",
+ "async_zip",
+ "base64 0.22.1",
+ "block2 0.6.2",
+ "core-foundation 0.10.0",
+ "cssparser 0.36.0",
+ "gpui",
+ "gpui-component",
+ "gpui-component-assets",
+ "gpui-wry",
+ "gpui_platform",
+ "hitty-core",
+ "hound",
+ "http_client_tls",
+ "image",
+ "jieba-rs",
+ "keyring",
+ "ksni",
+ "lb-wry",
+ "libc",
+ "libpulse-binding",
+ "libpulse-simple-binding",
+ "log",
+ "mac-notification-sys",
+ "merman",
+ "merman-render",
+ "notify 8.2.0",
+ "notify-rust",
+ "objc2 0.6.4",
+ "objc2-app-kit 0.3.2",
+ "objc2-foundation 0.3.2",
+ "objc2-web-kit",
+ "percent-encoding",
+ "plist",
+ "raw-window-handle",
+ "regex",
+ "reqwest_client",
+ "resvg",
+ "serde",
+ "serde_json",
+ "serde_path_to_error",
+ "serde_yaml",
+ "smallvec",
+ "smol",
+ "svgtypes 0.16.1",
+ "tempfile",
+ "toml 0.8.23",
+ "tray-icon",
+ "tree-sitter",
+ "unicode-segmentation",
+ "unicode-width",
+ "url",
+ "uuid",
+ "webview2-com",
+ "windows 0.58.0",
+ "windows-sys 0.61.2",
+ "winresource",
+ "zed-reqwest",
+]
+
+[[package]]
+name = "hitty-cli"
+version = "0.1.0"
+dependencies = [
+ "alacritty_terminal",
+ "anyhow",
+ "clap",
+ "hitty-core",
+ "libc",
+ "serde_json",
+ "tempfile",
+ "unicode-width",
+ "windows-sys 0.59.0",
+]
+
+[[package]]
+name = "hitty-core"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "base64 0.22.1",
+ "core-foundation 0.10.0",
+ "getrandom 0.3.4",
+ "ignore",
+ "libc",
+ "libgssapi",
+ "log",
+ "memchr",
+ "miniz_oxide",
+ "notify 8.2.0",
+ "objc2 0.6.4",
+ "objc2-foundation 0.3.2",
+ "portable-pty",
+ "russh",
+ "russh-sftp",
+ "serde",
+ "serde_json",
+ "sha2 0.11.0",
+ "smallvec",
+ "smol",
+ "system-configuration",
+ "system-configuration-sys",
+ "tempfile",
+ "tokio",
+ "toml_edit 0.25.13+spec-1.1.0",
+ "ureq",
+ "uuid",
+ "windows 0.58.0",
+ "windows-sys 0.59.0",
+ "winreg 0.52.0",
+]
+
+[[package]]
+name = "hitty-server"
+version = "0.1.0"
+dependencies = [
+ "hitty-core",
+ "libc",
+ "tempfile",
+]
+
+[[package]]
 name = "hkdf"
 version = "0.12.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4884,25 +5001,19 @@ dependencies = [
 
 [[package]]
 name = "jieba-macros"
-version = "0.10.3"
+version = "0.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "34904340bc65749a9e9a02fcc7f3368e675427c18447b9bbe02df52c15c9a36a"
-dependencies = [
- "phf_codegen 0.13.1",
-]
+checksum = "2987cf45b1bfdb4ff1f6a814b1aa2ad6361f4ff43bf353a9bd29f391a9568f70"
 
 [[package]]
 name = "jieba-rs"
-version = "0.10.3"
+version = "0.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bb5bdea4dc241d589e179f39d2a778f31490f3370aa2f626223dbd930ebc5c9d"
+checksum = "0a3a7d02ea31e6fc6f2fe10495dc7c5efcf381e1f21d7172f58ba792efa1c2fd"
 dependencies = [
  "bytecount",
- "cedarwood",
  "include-flate",
  "jieba-macros",
- "phf 0.13.1",
- "regex",
  "rustc-hash 2.1.3",
 ]
 
@@ -11138,132 +11249,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d2df906b07856748fa3f6e0ad0cbaa047052d4a7dd609e231c4f72cee8c36f31"
 dependencies = [
  "core_maths",
-]
-
-[[package]]
-name = "hitty"
-version = "0.1.0"
-dependencies = [
- "alacritty_terminal",
- "anyhow",
- "async_zip",
- "base64 0.22.1",
- "block2 0.6.2",
- "core-foundation 0.10.0",
- "cssparser 0.36.0",
- "gpui",
- "gpui-component",
- "gpui-component-assets",
- "gpui-wry",
- "gpui_platform",
- "hound",
- "http_client_tls",
- "image",
- "jieba-rs",
- "keyring",
- "ksni",
- "lb-wry",
- "libc",
- "libpulse-binding",
- "libpulse-simple-binding",
- "log",
- "mac-notification-sys",
- "merman",
- "merman-render",
- "notify 8.2.0",
- "notify-rust",
- "objc2 0.6.4",
- "objc2-app-kit 0.3.2",
- "objc2-foundation 0.3.2",
- "objc2-web-kit",
- "percent-encoding",
- "plist",
- "raw-window-handle",
- "regex",
- "reqwest_client",
- "resvg",
- "serde",
- "serde_json",
- "serde_path_to_error",
- "serde_yaml",
- "smallvec",
- "smol",
- "svgtypes 0.16.1",
- "tempfile",
- "toml 0.8.23",
- "tray-icon",
- "tree-sitter",
- "hitty-core",
- "unicode-segmentation",
- "unicode-width",
- "url",
- "uuid",
- "webview2-com",
- "windows 0.58.0",
- "windows-sys 0.61.2",
- "winresource",
- "zed-reqwest",
-]
-
-[[package]]
-name = "hitty-cli"
-version = "0.1.0"
-dependencies = [
- "alacritty_terminal",
- "anyhow",
- "clap",
- "libc",
- "serde_json",
- "tempfile",
- "hitty-core",
- "unicode-width",
- "windows-sys 0.59.0",
-]
-
-[[package]]
-name = "hitty-core"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "base64 0.22.1",
- "core-foundation 0.10.0",
- "getrandom 0.3.4",
- "ignore",
- "libc",
- "libgssapi",
- "log",
- "memchr",
- "miniz_oxide",
- "notify 8.2.0",
- "objc2 0.6.4",
- "objc2-foundation 0.3.2",
- "portable-pty",
- "russh",
- "russh-sftp",
- "serde",
- "serde_json",
- "sha2 0.11.0",
- "smallvec",
- "smol",
- "system-configuration",
- "system-configuration-sys",
- "tempfile",
- "tokio",
- "toml_edit 0.25.13+spec-1.1.0",
- "ureq",
- "uuid",
- "windows 0.58.0",
- "windows-sys 0.59.0",
- "winreg 0.52.0",
-]
-
-[[package]]
-name = "hitty-server"
-version = "0.1.0"
-dependencies = [
- "libc",
- "tempfile",
- "hitty-core",
 ]
 
 [[package]]
