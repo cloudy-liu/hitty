@@ -2531,7 +2531,14 @@ mod tests {
     fn fill_and_restore_preserve_a_partial_markdown_selection(cx: &mut TestAppContext) {
         let (app, mut vcx) = crate::ui::app::test_window::harness(cx);
         vcx.simulate_resize(gpui::size(px(1600.), px(900.)));
-        let host = DocumentsHost::new(904, "Selection test", None);
+        let mut host = DocumentsHost::new(904, "Selection test", None);
+        // This test isolates selection across the fill/dock action. An image
+        // completing after the double-click changes the TextView bounds and
+        // clears its geometry-based selection independently of that action.
+        Arc::get_mut(&mut host).unwrap().files.insert(
+            "/repo/docs/readme.md".into(),
+            b"# Selection test\n\nStable document text.".to_vec(),
+        );
         app.update_in(&mut vcx, |app, window, cx| {
             init(Default::default(), cx);
             app.tabs

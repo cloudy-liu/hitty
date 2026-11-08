@@ -39,7 +39,8 @@ try {
 } finally {
     $Uninstaller = Join-Path $Install 'unins000.exe'
     if (Test-Path -LiteralPath $Uninstaller) {
-        $Process = Start-Process -FilePath $Uninstaller -ArgumentList '/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART' -Wait -PassThru -WindowStyle Hidden
+        $UninstallLog = Join-Path $Evidence 'uninstall.log'
+        $Process = Start-Process -FilePath $Uninstaller -ArgumentList '/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART',"/LOG=`"$UninstallLog`"" -Wait -PassThru -WindowStyle Hidden
         if ($Process.ExitCode -ne 0) { throw "Uninstaller exited with $($Process.ExitCode)." }
     }
 }

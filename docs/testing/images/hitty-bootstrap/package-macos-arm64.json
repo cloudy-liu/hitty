@@ -1,0 +1,26 @@
+{
+  "phase": "after",
+  "binary": "/Users/runner/work/_temp/hitty-package-smoke/Hitty.app/Contents/MacOS/hitty-app",
+  "window_logical_size": [
+    1100,
+    700
+  ],
+  "capture": null,
+  "cli_version": "hitty 0.1.0",
+  "terminal_input_output": "passed",
+  "configuration": "/var/folders/2s/vty41l455yv698g4xkgfv7z00000gn/T/hitty-bootstrap-smoke-qhj33blz",
+  "session_after_gui_restart": "passed",
+  "test_preferences": {
+    "check_for_updates": false,
+    "auto_download_updates": false,
+    "install_cli_on_path": false,
+    "show_tray_icon": false,
+    "shell": {
+      "program": "/bin/bash",
+      "args": [
+        "--noprofile",
+        "--norc"
+      ]
+    }
+  }
+}

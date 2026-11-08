@@ -11,17 +11,17 @@ Hitty is starting as an independent project based on a source snapshot of [ctty7
 
 ## Project status
 
-The selected application source has been imported as a separate baseline. Hitty rebranding and validation are in progress, and no Hitty release is available yet.
+The selected application source has been imported as a separate baseline. Application-owned code, runtime paths, installers, and branding now use Hitty. First-release validation is in progress, and no Hitty release is available yet.
 
-The next milestone is to complete product naming and release tooling for Hitty, retaining the existing application icon with the selected Hitty wordmark. See the [bootstrap specification](docs/specs/0001-hitty-bootstrap.md) and [source provenance](docs/provenance/source-baseline.md).
+The first release will ship Windows, macOS, and Linux together after acceptance. See the [verification record](docs/testing/hitty-bootstrap.md), [release procedure](docs/maintenance/hitty-release.md), and [source provenance](docs/provenance/source-baseline.md).
 
 ## A fresh start
 
 - Hitty has its own Git history, issues, pull requests, and releases.
-- The source import will not include ctty7's existing Git commits, branches, or tags.
+- The source import does not include ctty7's existing Git commits, branches, or tags.
 - Earlier implementation history, discussions, and releases remain available in the ctty7 repository.
-- The import will record its exact source revision and retain applicable licenses, copyright notices, and attribution.
-- The initial source baseline will be recorded separately from subsequent rebranding and larger refactors.
+- The import records its exact source revision and retains applicable licenses, copyright notices, and attribution.
+- The initial source baseline is recorded separately from subsequent rebranding and larger refactors.
 
 Implementation planning is tracked in [GitHub Issues](https://github.com/cloudy-liu/hitty/issues).
 

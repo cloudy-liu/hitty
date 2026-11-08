@@ -123,7 +123,7 @@ Filename: "{app}\hitty-app.exe"; Description: "{cm:LaunchProgram,Hitty}"; Flags:
 ; widens the stop the same way PrepareToInstall's does: ConPTY hosts orphaned by
 ; a daemon that never got to shut down keep the installed images open, and their
 ; DeleteFile fails an uninstall exactly as it fails an upgrade. (The stop excludes
-; the calling process itself, so the binary running this step is safe.) This runs
+; the calling helper and its installer ancestors.) This runs
 ; at the start of uninstallation, before any files are removed. The installed
 ; binary is this version, which understands the flags; runhidden suppresses any
 ; flash and the call returns without opening a window. RunOnceId keys the entry

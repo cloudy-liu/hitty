@@ -675,12 +675,35 @@ pub(crate) fn reap_descendants_of(root: u32, timeout: std::time::Duration) {
     );
 }
 
-/// Pids (other than the caller's own) whose executable image lives under
+// The stop helper is a child of Setup or the uninstaller. Keep that process
+// chain alive even when an ancestor runs from the directory being cleared.
+fn caller_chain(procs: &[Proc]) -> HashSet<u32> {
+    let mut chain = HashSet::new();
+    let mut pid = std::process::id();
+    while pid > 4 && chain.insert(pid) {
+        let Some(process) = procs.iter().find(|process| process.pid == pid) else {
+            break;
+        };
+        pid = process.parent;
+    }
+    chain
+}
+
+pub(crate) fn caller_image_paths() -> Vec<std::path::PathBuf> {
+    caller_chain(&snapshot())
+        .into_iter()
+        .filter_map(image_path)
+        .filter_map(|path| std::fs::canonicalize(path).ok())
+        .collect()
+}
+
+/// Pids (other than the caller and its ancestors) whose image lives under
 /// `dir`. These are the processes that keep Windows from replacing the files
 /// there: a stale daemon, or ConPTY hosts orphaned by a daemon that never got
 /// to shut down.
 pub(crate) fn processes_running_from(dir: &std::path::Path) -> Vec<u32> {
-    let own = std::process::id();
+    let procs = snapshot();
+    let protected = caller_chain(&procs);
     // Image paths come back in long, resolved form, so a `dir` spelled
     // through a junction, a subst drive, or an 8.3 short name would never
     // prefix-match them. Trying the canonical spelling as well closes that —
@@ -693,9 +716,9 @@ pub(crate) fn processes_running_from(dir: &std::path::Path) -> Vec<u32> {
             text.strip_prefix(r"\\?\").unwrap_or(text),
         ))
     });
-    snapshot()
+    procs
         .iter()
-        .filter(|p| p.pid != own && p.pid > 4)
+        .filter(|p| p.pid > 4 && !protected.contains(&p.pid))
         .filter(|p| {
             image_path(p.pid).is_some_and(|image| {
                 path_is_under(&image, dir)

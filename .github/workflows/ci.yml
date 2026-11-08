@@ -147,6 +147,15 @@ jobs:
         timeout-minutes: 10
         run: cargo test --locked --features updater --bin hitty-updater --target ${{ matrix.target }}
 
+      - name: Stress the inherited Intel UI regressions
+        if: matrix.target == 'x86_64-apple-darwin'
+        timeout-minutes: 5
+        env:
+          ITERATIONS: '20'
+        run: |
+          cargo test --locked --bin hitty-app --target ${{ matrix.target }} fill_and_restore_preserve_a_partial_markdown_selection
+          cargo test --locked --bin hitty-app --target ${{ matrix.target }} selected_commit_shows_message_details_above_the_existing_diff
+
       - name: Build native Markdown visual fixture
         if: runner.os != 'Windows'
         timeout-minutes: 15

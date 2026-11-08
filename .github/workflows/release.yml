@@ -112,6 +112,7 @@ jobs:
 
       - uses: Swatinem/rust-cache@v2
         with:
+          cache-on-failure: true
           workspaces: hitty
 
       # `--locked` because a release must ship the dependency set the tag
@@ -317,6 +318,7 @@ jobs:
 
       - uses: Swatinem/rust-cache@v2
         with:
+          cache-on-failure: true
           workspaces: hitty
           key: ${{ matrix.target }}
 
@@ -408,6 +410,7 @@ jobs:
 
       - uses: Swatinem/rust-cache@v2
         with:
+          cache-on-failure: true
           workspaces: hitty
           key: ${{ matrix.target }}
 

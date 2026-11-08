@@ -92,8 +92,16 @@ ui::markdown_preview::tests::fill_and_restore_preserve_a_partial_markdown_select
 ui::scm::graph::tests::selected_commit_shows_message_details_above_the_existing_diff ... ok
 ```
 
-This verifies their current result on Intel; it does not establish the cause
-of the earlier failures or claim a production behavior fix for them.
+Both passed in that run, but the Markdown test failed again in run
+`42438988026` at `085adc0`. Twenty-four isolated Windows runs and 200 scheduler
+seeds passed. A controlled image-load completion then reproduced the exact
+empty-selection assertion in four consecutive runs: selection was `Selection`
+before the image completed and empty after reflow. The component clears a
+geometry-based selection when its bounds change. The fill/dock test now uses
+stable text so its existing double-click and layout-toggle assertions measure
+that action, independently of asynchronous image sizing. Cross-platform
+verification of the correction is pending; the earlier green run is not a
+claim that the intermittent failure was fixed.
 
 Representative CI images were downloaded and inspected. The saved files retain
 the original artifact bytes; `images/hitty-bootstrap/ci-cec12e0.json` records
@@ -122,18 +130,95 @@ isolated user data, then restart the GUI and verify the existing pane still
 accepts commands. The Windows check additionally installs into a temporary
 location, checks its product registration, runs the installed app, and uninstalls
 it on the disposable CI runner. The smoke harness extension passed locally with
-the Windows debug build; final package results remain pending.
+the Windows debug build. Linux x86_64 and both macOS architectures passed this
+runtime check in run
+`42438988023`. Windows portable and installed copies both passed startup,
+command output, and GUI reconnect; installation metadata also matched. The
+subsequent uninstaller exited with code 1, so Windows package acceptance is
+not complete. Its stop helper includes the invoking uninstaller in the
+installation-directory process sweep. A subprocess regression reproduced the
+same exit code with an `unins000.exe` parent and a live `OpenConsole.exe` child.
+The correction preserves the helper's caller chain in both termination and
+image-unlock checks. The regression then passed and confirmed the orphan was
+still terminated. Complete Windows installer verification is being rerun.
+
+## Actual SSH and WSL deployment
+
+A disposable `Hitty-Acceptance-20261108` WSL2 distribution ran Alpine x86_64.
+The production WSL installer copied the Linux musl server from package run
+`42438988023`, verified its digest, and started it. Its first report recorded
+`installed`, `confirmed`, and `launched`; a second connection recorded all three
+as false and reused the running service. The installed SHA-256 was
+`330f69e50b257905521d1516032015b7e76356854add68c7818c4bba0b3f82dd`.
+
+The same distribution hosted an actual OpenSSH server bound to loopback, with
+an ephemeral account and key. Hitty's SSH router authenticated, transferred the
+server through SFTP, launched it in that account, and completed the control
+handshake at build `0.1.0`, control v8, pane protocol v7. The bundled CI binary
+supplied the asset; a public GitHub release download was not exercised.
+
+Separate Windows debug application instances loaded isolated remote workspaces.
+The production client APIs sent shell commands and read their output before
+closing the GUI, while it was closed, and after restarting it. Both routes kept
+the same pane ID and server instance throughout. The native captures show all
+three markers and Linux output, and were inspected at the same 1100 by 700
+logical-pixel window size and 175% display scale.
+
+The small `hitty-core` acceptance examples exercise these production seams;
+they restrict deployment to the disposable fixture names/account. The SSH
+installation additionally requires the expected CI asset digest.
+`images/hitty-bootstrap/remote-acceptance.json` records the exact results and
+source-log hashes. Personal Ubuntu data and real SSH profiles were not used.
+Test clients and
+the temporary distribution were stopped after capture. Automatic approval
+review blocked unregistering that distribution, so its stopped files remain
+under `D:/tmp/hitty-remote-acceptance` for later cleanup.
+
+![WSL after GUI restart](images/hitty-bootstrap/wsl-reconnected.png)
+
+![SSH after GUI restart](images/hitty-bootstrap/ssh-reconnected.png)
+
+## Portable update between Hitty packages
+
+An unpublished test-only `0.0.0` build was produced from a separate checkout
+with only the workspace version changed. Its actual GUI, CLI, and updater were
+packaged into a portable ZIP. The current candidate ZIP from run `42438988023`
+was installed over it using that older Hitty updater, with isolated user data.
+
+The verifier rejected an incorrect SHA-256, accepted the real archive, waited
+for the old GUI to exit, replaced the files, and relaunched `hitty 0.1.0`.
+The workspace was restored and accepted another command; the custom font-size
+setting and an unmanaged user file were preserved. This verifies portable
+package replacement, not GitHub release discovery or an Inno all-users update.
+The before/after images were inspected at the same viewport and scale.
+`images/hitty-bootstrap/portable-update-result.json` records the exact artifact.
+
+![Before portable update](images/hitty-bootstrap/before-portable-update.png)
+
+![After portable update](images/hitty-bootstrap/after-portable-update.png)
 
 ## Pending acceptance
 
 - Run the new package workflow and inspect its runtime evidence, installer
   results, complete artifact set, and checksums. The macOS PR packages are
   ad-hoc signed and do not establish notarized distribution acceptance.
-- Actual remote SSH/WSL deployment and updates between distinct packaged Hitty
-  versions remain unverified. Existing automated updater tests are passing.
+- Windows portable updates between distinct Hitty versions are verified above.
+  Actual Inno, macOS bundle, and Linux AppImage version-to-version updates are
+  not yet verified; their existing automated updater tests remain required.
+  Public release discovery/downloads require the finalized draft asset set.
 - No tag, public release, signing claim, or completed first-release gate is made.
 
 ## Follow-up regression checks
+
+A later default-concurrency local run passed 1,850 GUI tests but hit two existing
+wall-clock fixture limits: `agent_ctrl_v_pastes_text_and_alt_v_reaches_the_agent`
+(socket read at one second) and
+`markdown_edits_release_image_budget_and_ignore_old_completions` (image gate at
+ten seconds). Both passed individually with the same binary. The full workspace/updater suite then passed at four test threads: 3,281
+standard Rust tests, 13 existing ignores, plus the custom CLI end-to-end harness.
+`images/hitty-bootstrap/local-final-tests.json` records the command and log hash. No
+assertions or production behavior were changed for these two tests, and CI
+retains its standard invocation.
 
 The rename initially exposed capitalization expectations and a color fixture
 whose crate name changed byte length. Expectations now use the displayed Hitty

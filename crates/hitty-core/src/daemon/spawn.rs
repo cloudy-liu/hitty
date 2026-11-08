@@ -972,8 +972,8 @@ const REAP_WAIT_TIMEOUT: Duration = Duration::from_secs(2);
 /// and fatal to any installer's `DeleteFile`.
 ///
 /// Terminates every process whose executable lives under `install_dir`
-/// (except the caller), then waits until the replaceable images there can be
-/// opened for writing. An error names what is still locked, so the update log
+/// (except the caller and its installer ancestors), then waits until the
+/// replaceable application images there can be opened for writing. An error names what is still locked, so the update log
 /// finally says *why* an upgrade could not replace its files.
 #[cfg(windows)]
 pub fn stop_for_update(install_dir: &Path) -> Result<(), String> {
@@ -1003,11 +1003,10 @@ const UPDATE_CLEAR_TIMEOUT: Duration = Duration::from_secs(10);
 /// conpty.dll) live, and a recursive sweep would stall on unrelated content.
 #[cfg(windows)]
 fn wait_until_images_unlocked(dir: &Path, deadline: Instant) -> Result<(), String> {
-    // Never probe our own image: the legitimate callers run from a staged
-    // copy outside `dir`, but if someone invokes the *installed* binary with
-    // this flag, its own image can never open for writing and the wait would
-    // only ever time out.
-    let own = std::env::current_exe().and_then(std::fs::canonicalize).ok();
+    // Setup and the uninstaller must stay alive while waiting for this helper.
+    // Their own images (and ours, when invoked in place) are not application
+    // payload files to unlock; waiting for those would always time out.
+    let protected = crate::daemon::winproc::caller_image_paths();
     let images: Vec<PathBuf> = std::fs::read_dir(dir)
         .map_err(|error| format!("reading {}: {error}", dir.display()))?
         .flatten()
@@ -1023,8 +1022,7 @@ fn wait_until_images_unlocked(dir: &Path, deadline: Instant) -> Result<(), Strin
             // Excluding takes a positive identification: a candidate that
             // cannot be canonicalized (delete-pending, held by a scanner) is
             // a lock to wait out, not ours to skip.
-            !own.as_deref()
-                .is_some_and(|own| std::fs::canonicalize(path).is_ok_and(|path| path == own))
+            !std::fs::canonicalize(path).is_ok_and(|path| protected.contains(&path))
         })
         .collect();
 
@@ -1873,5 +1871,75 @@ mod tests {
             ErrorKind::NotFound | ErrorKind::ConnectionRefused
         ));
         let _ = std::fs::remove_dir_all(&dir);
+    }
+}
+
+#[cfg(all(test, windows))]
+mod windows_update_tests {
+    use super::*;
+
+    const TEST_NAME: &str =
+        "daemon::spawn::windows_update_tests::update_cleanup_preserves_its_installer_chain";
+    const ROLE: &str = "HITTY_UPDATE_CLEANUP_TEST_ROLE";
+    const HELPER: &str = "HITTY_UPDATE_CLEANUP_TEST_HELPER";
+    const ROOT: &str = "HITTY_UPDATE_CLEANUP_TEST_ROOT";
+
+    fn child(exe: &Path, role: &str, root: &Path) -> Command {
+        let mut cmd = Command::new(exe);
+        cmd.args(["--exact", TEST_NAME, "--nocapture"])
+            .env(ROLE, role)
+            .env(ROOT, root)
+            .env("HITTY_CONFIG_DIR", root.join("config"));
+        crate::core::proc::hide_console(&mut cmd);
+        cmd
+    }
+
+    #[test]
+    fn update_cleanup_preserves_its_installer_chain() {
+        if let Ok(role) = std::env::var(ROLE) {
+            let root = PathBuf::from(std::env::var_os(ROOT).unwrap());
+            match role.as_str() {
+                "worker" => std::thread::sleep(Duration::from_secs(30)),
+                "helper" => stop_for_update(&root.join("install")).unwrap(),
+                "installer" => {
+                    let helper = PathBuf::from(std::env::var_os(HELPER).unwrap());
+                    let mut worker = child(&root.join("install/OpenConsole.exe"), "worker", &root)
+                        .spawn()
+                        .unwrap();
+                    let result = child(&helper, "helper", &root).output().unwrap();
+                    assert!(
+                        result.status.success(),
+                        "helper failed: {}",
+                        String::from_utf8_lossy(&result.stderr)
+                    );
+                    assert!(
+                        worker.try_wait().unwrap().is_some(),
+                        "orphan was not stopped"
+                    );
+                    println!("INSTALLER_CHAIN_OK");
+                }
+                _ => panic!("unexpected fixture role"),
+            }
+            return;
+        }
+        let temporary = tempfile::tempdir().unwrap();
+        let root = temporary.path();
+        std::fs::create_dir_all(root.join("install")).unwrap();
+        let helper = std::env::current_exe().unwrap();
+        for name in ["unins000.exe", "OpenConsole.exe"] {
+            std::fs::copy(&helper, root.join("install").join(name)).unwrap();
+        }
+        let result = child(&root.join("install/unins000.exe"), "installer", root)
+            .env(HELPER, helper)
+            .output()
+            .unwrap();
+        let stdout = String::from_utf8_lossy(&result.stdout);
+        assert!(
+            result.status.success(),
+            "installer was terminated: {}\n{stdout}\n{}",
+            result.status,
+            String::from_utf8_lossy(&result.stderr)
+        );
+        assert!(stdout.contains("INSTALLER_CHAIN_OK"));
     }
 }
