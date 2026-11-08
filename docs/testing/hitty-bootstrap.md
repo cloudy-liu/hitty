@@ -210,17 +210,30 @@ The before/after images were inspected at the same viewport and scale.
 
 ![After portable update](images/hitty-bootstrap/after-portable-update.png)
 
-## Pending acceptance
+## First-release scope and acceptance
 
-- Build, package, terminal/session, Windows installation/removal, and complete
-  asset/checksum checks are complete on the implementation head above. The
-  macOS packages are ad-hoc signed; notarized distribution and a full ARM64
-  desktop screenshot remain unverified.
-- Windows portable updates between distinct Hitty versions are verified above.
-  Actual Inno, macOS bundle, and Linux AppImage version-to-version updates are
-  not yet verified; their existing automated updater tests remain required.
-  Public release discovery/downloads require the finalized draft asset set.
-- No tag, public release, signing claim, or completed first-release gate is made.
+On November 8, the maintainer clarified the task as copying the accepted source
+snapshot, renaming it in Hitty, and checking the affected behavior before the
+three-platform `v0.1.0` release. The existing functionality is the baseline;
+exhaustive retesting of unchanged features and new signing work are separate.
+
+A fresh local pass used the final Windows portable package with
+`scripts/bootstrap-native-smoke.py --reconnect` and the original
+`scripts/capture-native-window.ps1`. The PrintWindow script is byte-identical to
+the source checkout. Command output and GUI reconnect passed, and the saved
+image was inspected. The source import was independently compared again:
+1,534 of 1,535 source files have identical Git blobs and modes in the import
+commit; the only replacement is README.md. Hitty-specific metadata is additive.
+
+![Final local package regression](images/hitty-bootstrap/final-local-package.png)
+
+The focused functional and packaging checks are complete: four desktop targets,
+remote servers, local input/output and persistence, real SSH/WSL connections,
+Windows installation/removal, portable updates, and all 12 assets/checksums.
+The release will retain the inherited distribution posture: Windows is unsigned,
+and macOS is ad-hoc signed without notarization. Inno/macOS/Linux
+version-to-version updates and a full ARM64 desktop capture remain explicitly
+unverified follow-up coverage, rather than newly added rename acceptance gates.
 
 ## Follow-up regression checks
 

@@ -6,7 +6,8 @@ Hitty's first version is `v0.1.0`; there is no published Hitty baseline yet.
 
 1. Complete the checks in `docs/testing/hitty-bootstrap.md` and the agreed
    Windows x86_64, Linux x86_64, macOS ARM64, and macOS Intel acceptance gate.
-   Keep unresolved test failures and unavailable visual checks explicit.
+   Follow the maintainer-approved scope in that record; retain known
+   distribution limitations without adding unrelated feature or signing work.
 2. Packaging-related PRs run the Release workflow with read-only permissions
    and ad-hoc macOS signing. Once the workflow exists on the default branch,
    a manual branch run can also build packages. Neither creates a release.
