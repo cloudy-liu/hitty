@@ -1,3 +1,5 @@
+# Keep the verified source-baseline versions. Dependency upgrades require
+# a separate maintainer request and validation before they are merged.
 version: 2
 updates:
   # Rust crates.io dependencies (git deps like gpui / alacritty_terminal are
@@ -6,7 +8,7 @@ updates:
     directory: "/"
     schedule:
       interval: weekly
-    open-pull-requests-limit: 5
+    open-pull-requests-limit: 0
     commit-message:
       prefix: "deps"
     groups:
@@ -15,6 +17,7 @@ updates:
 
   # GitHub Actions used by the CI and release workflows.
   - package-ecosystem: github-actions
+    open-pull-requests-limit: 0
     directory: "/"
     schedule:
       interval: weekly
