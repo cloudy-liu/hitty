@@ -23,10 +23,20 @@
   "preview": true,
   "open_files": 3,
   "capture": "No GPU image requested",
-  "binary_sha256": "ae7511a9108e58afb226a119bf8dcfdb35085306aa30f3ab65e657e73aa1da03",
   "phase": "final-after",
   "panel_mode": "files",
-  "ui_font_size": 16,
   "panel_width": 240,
-  "image_sha256": "574c026ef38ba6c015da93751f54da8f551802df7c594fb4906452b694383a9d"
+  "ui_font_size": 16,
+  "hidden_files_visible": true,
+  "capture_method": "PrintWindow",
+  "pointer": [
+    1,
+    1
+  ],
+  "toggle_click": [
+    2327,
+    133
+  ],
+  "binary_sha256": "f4ef113d95e6ee2b3d2b6f82a2c5aaabd8b6f160bef20f866bfbb42506b427d9",
+  "image_sha256": "e3fb4cc1cccc9ba16f9e2ed26d5eed2cd149b36510d979bde61573b1c2a6d810"
 }

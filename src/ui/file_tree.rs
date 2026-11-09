@@ -23,7 +23,9 @@ use gpui_component::Disableable as _;
 use gpui_component::button::Button;
 use gpui_component::input::{Input, InputEvent, InputState};
 use gpui_component::menu::{ContextMenuExt as _, PopupMenu, PopupMenuItem};
-use gpui_component::{ActiveTheme as _, Icon, Sizable as _, WindowExt as _, h_flex, v_flex};
+use gpui_component::{
+    ActiveTheme as _, Icon, IconName, Sizable as _, WindowExt as _, h_flex, v_flex,
+};
 
 const INDENT: f32 = 14.0;
 
@@ -1824,11 +1826,14 @@ impl HittyApp {
                     .debug_selector(|| "file-tree-hidden-toggle".into())
                     .child(
                         crate::ui::tab_strip::chrome_tile_sized(
-                            Button::new("file-tree-hidden-toggle")
-                                .icon(Icon::empty().path("icons/eye.svg")),
+                            Button::new("file-tree-hidden-toggle").icon(if hidden {
+                                IconName::Eye
+                            } else {
+                                IconName::EyeOff
+                            }),
                             TILE_SIZE_SM,
                             TILE_GLYPH,
-                            hidden,
+                            false,
                             cx,
                         )
                         .rounded(px(6.))
