@@ -1,0 +1,97 @@
+{
+  "date": "2026-11-09",
+  "engine": "herdr-core",
+  "gui_unicode_roundtrip": "passed: echo CUA中文 produced CUA中文 via native app typing and Enter",
+  "hc_terminal": "t2h",
+  "claude_version": "2.1.310",
+  "claude_editor": "passed: LCU typed LCU_FIRST_LINE, Shift+Enter, LCU_SECOND_LINE; both lines remained in an unsubmitted Claude Code 2.1.310 draft",
+  "cmder_startup_history": "passed: copied installed Cmder vendor files into temporary profile; computed 73421 twice via command and Up+Enter",
+  "physical_ime_composition": "passed via native LCU key events: Ctrl+Shift selected installed Chinese IME; individual z h o n g w e n keys produced underlined composition and a candidate popup beside the caret; Space committed Chinese text; original input-method selection restored",
+  "final_automated_validation": {
+    "workspace": "passed: app 1861; CLI 138; core 1252; server integration suites",
+    "updater": "passed: 32 tests",
+    "herdr_engine": "passed: 8 tests including Cmder; 1 latency measurement ignored",
+    "windows_process_cleanup": "passed: hc subtrees, reused parent PID, native children beneath an hc ancestor",
+    "broken_transport_cleanup": "passed: fake hc transport loss returns an error without a second panic",
+    "locked_build_format_whitespace": "passed",
+    "gui_cli_reconnect": "passed with the rebuilt application: send, capture, wait, and GUI restart reused hc terminal t3h",
+    "shared_core": "unchanged: PIDs 34464 and 24004 retained their original 2026-11-09 15:51:46 Asia/Shanghai start time",
+    "test_cleanup": "passed: no Hitty test terminal records or test daemons remained",
+    "local_evidence": "target/herdr-verification/final-*.log and gui-reaping-final/"
+  },
+  "lcu_acceptance": {
+    "date": "2026-11-09",
+    "window_logical_size": [
+      1280,
+      820
+    ],
+    "display_scale": 1.75,
+    "real_agents": {
+      "result": "passed",
+      "claude_version": "2.1.310",
+      "codex_version": "0.167.0",
+      "terminals": [
+        "t3j",
+        "t3k"
+      ],
+      "panes": [
+        "%1",
+        "%2"
+      ],
+      "owner": "7b8bb26d5a50e3fa",
+      "flow": "Claude sent arithmetic task; Codex returned RESULT=422; Claude sent ACK; both printed COMPLETE",
+      "sender_tags_observed": true,
+      "codex_named_pipe_access": "workspace-write sandbox denied access; one hc send command approved outside the sandbox; no persistent permission rule",
+      "harness_warnings": "inherited Codex hooks failed, including a disabled lcu MCP server; roundtrip completed"
+    },
+    "core_cold_start": {
+      "result": "passed",
+      "scope": "unique test-only session via HITTY_HC_BIN shim; production default-core behavior unchanged",
+      "session": "hitty-accept-164a6a7ed389",
+      "before": "hc server status returned unavailable, exit 5",
+      "core_pid": 33732,
+      "holder_pid": 31816,
+      "terminal": "t1",
+      "shell_pid": 22164
+    },
+    "core_restart": {
+      "result": "passed",
+      "old_core_pid": 33732,
+      "new_core_pid": 22076,
+      "holder_pid": 31816,
+      "shell_pid": 22164,
+      "terminal": "t1",
+      "pane": "%1",
+      "shell_environment_preserved": true,
+      "lcu_input_after_restart": "RESTART_OK;SHELL_PID=22164;HC=t1;STATE=survived",
+      "version_replacement_tested": false
+    },
+    "screenshots": [
+      "images/herdr-pane-engine/claude-shift-enter.png",
+      "images/herdr-pane-engine/claude-ime-committed.png",
+      "images/herdr-pane-engine/claude-codex-roundtrip.png",
+      "images/herdr-pane-engine/isolated-core-before-restart.png",
+      "images/herdr-pane-engine/isolated-core-after-restart.png"
+    ],
+    "cleanup": {
+      "windows_closed": true,
+      "test_daemons_stopped": true,
+      "owned_terminals_removed": true,
+      "agent_descendants_exited": true,
+      "isolated_core_stopped": true,
+      "shared_core_unchanged": true,
+      "default_core_pid": 34464,
+      "default_holder_pid": 24004,
+      "remaining_default_terminals": 4,
+      "temporary_profiles_removed": false,
+      "reason": "Automatic approval rejected both recursive cleanup and explicit credential-file deletion: blocked by policy",
+      "remaining_profiles": [
+        "C:/Users/cloudy/AppData/Local/Temp/hitty-hc-lcu-uvhpqs8y",
+        "C:/Users/cloudy/AppData/Local/Temp/hitty-hc-isolated-pj169thm"
+      ],
+      "credential_copy_remains_in_first_profile": true
+    },
+    "platform_limits": "Windows only; macOS/Linux not exercised",
+    "local_evidence": "target/herdr-verification/lcu-real-agent-*.txt, lcu-real-agent-facts.json, lcu-cleanup.json, isolated-core.json, isolated-before.txt, isolated-after.txt"
+  }
+}

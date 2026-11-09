@@ -170,6 +170,12 @@ pub struct Config {
     #[serde(default = "default_prefix")]
     pub prefix: String,
     pub shell: Option<ShellConfig>,
+    /// Which engine hosts a new local pane's PTY: `None`/`"native"` opens it
+    /// in the daemon (default), `"herdr-core"` hosts it in a Herdr core over
+    /// `hc` (spike, cloudy-liu/hitty#23). `HITTY_PANE_ENGINE` overrides this
+    /// for development and tests.
+    #[serde(default, deserialize_with = "de_lenient")]
+    pub pane_engine: Option<String>,
     /// Lenient on purpose: this is a hand-edited key with a nested shape, and a
     /// typo in one entry must not fail the whole `Config` and hand the user
     /// back defaults that the next settings write would then persist over what
@@ -655,6 +661,7 @@ impl Default for Config {
             keybinding_preset: default_preset(),
             prefix: default_prefix(),
             shell: None,
+            pane_engine: None,
             custom_shells: Vec::new(),
             link_url: true,
             link_file_open: Some(LinkFileOpen::Internal),

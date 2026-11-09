@@ -74,7 +74,7 @@ impl Registry {
             guard.drain().map(|(_, p)| p).collect()
         };
         for pane in panes {
-            pane.kill();
+            pane.shutdown();
         }
     }
 
@@ -476,6 +476,7 @@ fn hand_over(registry: &Registry, exe: &std::path::Path) -> anyhow::Error {
     for pane in registry.all() {
         match pane.carry() {
             Some(c) => carried.push(c),
+            None if pane.is_hc() => {}
             None => {
                 // A native-SSH pane's session is cipher state in this process's
                 // memory; the socket would cross and nothing able to speak on
@@ -558,6 +559,74 @@ fn report_conpty_host() {
     }
 }
 
+fn recover_hc_panes(registry: &Arc<Registry>) {
+    if !crate::daemon::pane::herdr_selected() {
+        return;
+    }
+    let core = match crate::daemon::hc::core() {
+        Ok(core) => core,
+        Err(e) => {
+            log::warn!("hc recovery unavailable: {e:#}");
+            return;
+        }
+    };
+    let machine = crate::core::machine::observed_store()
+        .map(|s| s.machine())
+        .unwrap_or_default();
+    for terminal in core
+        .owned_terminals()
+        .into_iter()
+        .filter(|t| t.state == "live")
+    {
+        let Some(id) = terminal
+            .labels
+            .get(crate::daemon::hc::LABEL_PANE)
+            .and_then(|s| s.strip_prefix('%'))
+            .and_then(|s| s.parse::<u64>().ok())
+            .filter(|id| *id > 0 && *id < u64::MAX)
+        else {
+            continue;
+        };
+        registry.claim_ids_past(id + 1);
+        if registry.get(id).is_some() {
+            continue;
+        }
+        let record = machine.panes.iter().find(|p| p.id == id);
+        let shell = record.and_then(|r| r.shell.clone()).or_else(|| {
+            terminal
+                .argv
+                .first()
+                .map(|program| crate::daemon::protocol::ShellSpec {
+                    program: program.clone(),
+                    args: terminal.argv[1..].to_vec(),
+                    args_are_hitty_defaults: false,
+                })
+        });
+        let size = crate::daemon::protocol::WinSize {
+            cols: terminal.cols.unwrap_or(80),
+            rows: terminal.rows.unwrap_or(24),
+            cell_w: 0,
+            cell_h: 0,
+        };
+        match DaemonPane::spawn(
+            id,
+            Some(terminal.cwd.clone().into()),
+            size,
+            shell,
+            None,
+            terminal.labels.get("hitty.ws").cloned(),
+            None,
+            reaper(registry.clone(), id),
+        ) {
+            Ok(pane) => {
+                registry.insert(pane);
+                log::info!("restored hc terminal {} as pane {id}", terminal.address);
+            }
+            Err(e) => log::warn!("hc pane {id} could not reattach: {e:#}"),
+        }
+    }
+}
+
 fn run_with(registry: Arc<Registry>) -> anyhow::Result<()> {
     crate::daemon::control::server_started();
 
@@ -599,6 +668,7 @@ fn run_with(registry: Arc<Registry>) -> anyhow::Result<()> {
         }));
     }
 
+    recover_hc_panes(&registry);
     spawn_orphan_sweep(registry.clone());
     // No sweeping here, deliberately — of either kind. Startup is the one
     // moment this process knows least: it owns no panes yet, and the windows

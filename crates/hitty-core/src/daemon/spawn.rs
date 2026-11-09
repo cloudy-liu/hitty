@@ -955,7 +955,7 @@ fn reap_recorded_daemon(recorded: Option<u32>) {
         // One deadline across the whole tree: this runs synchronously before
         // the first window exists, and a crash that left many hosts behind
         // must not multiply the wait by their count.
-        let mut targets = winproc::descendants(&procs, pid);
+        let mut targets = winproc::owned_descendants(&procs, pid);
         targets.push(pid);
         winproc::terminate_and_wait_all(&targets, Instant::now() + REAP_WAIT_TIMEOUT);
     }

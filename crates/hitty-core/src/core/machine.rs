@@ -1320,6 +1320,8 @@ pub fn appearance_path() -> io::Result<PathBuf> {
 pub struct Appearance {
     #[serde(default)]
     pub dark: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub terminal_colors: Option<[u32; 3]>,
 }
 
 /// Read the cached appearance, or the default when there is none to read.
@@ -1341,12 +1343,28 @@ pub fn appearance() -> Appearance {
 /// so repainting the same theme does not touch the disk.
 pub fn note_appearance(dark: bool) {
     let Ok(path) = appearance_path() else { return };
-    let next = Appearance { dark };
+    let next = Appearance {
+        dark,
+        terminal_colors: read_appearance(&path).terminal_colors,
+    };
     if read_appearance(&path) == next && path.exists() {
         return;
     }
     if let Err(e) = write_appearance(&path, next) {
         log::warn!("could not write {}: {e}", path.display());
+    }
+}
+
+/// Resolved terminal foreground, background and cursor colors from the GUI.
+pub fn note_terminal_colors(colors: [u32; 3]) {
+    let Ok(path) = appearance_path() else { return };
+    let mut next = read_appearance(&path);
+    if next.terminal_colors == Some(colors) {
+        return;
+    }
+    next.terminal_colors = Some(colors);
+    if let Err(e) = write_appearance(&path, next) {
+        log::warn!("could not cache terminal colors: {e}");
     }
 }
 
@@ -1423,20 +1441,52 @@ mod tests {
 
         assert_eq!(
             read_appearance(&path),
-            Appearance { dark: false },
+            Appearance {
+                dark: false,
+                terminal_colors: None
+            },
             "a hint nobody has written yet reads as the default preset"
         );
 
-        write_appearance(&path, Appearance { dark: true }).unwrap();
-        assert_eq!(read_appearance(&path), Appearance { dark: true });
+        write_appearance(
+            &path,
+            Appearance {
+                dark: true,
+                terminal_colors: None,
+            },
+        )
+        .unwrap();
+        assert_eq!(
+            read_appearance(&path),
+            Appearance {
+                dark: true,
+                terminal_colors: None
+            }
+        );
 
-        write_appearance(&path, Appearance { dark: false }).unwrap();
-        assert_eq!(read_appearance(&path), Appearance { dark: false });
+        write_appearance(
+            &path,
+            Appearance {
+                dark: false,
+                terminal_colors: None,
+            },
+        )
+        .unwrap();
+        assert_eq!(
+            read_appearance(&path),
+            Appearance {
+                dark: false,
+                terminal_colors: None
+            }
+        );
 
         std::fs::write(&path, "not json").unwrap();
         assert_eq!(
             read_appearance(&path),
-            Appearance { dark: false },
+            Appearance {
+                dark: false,
+                terminal_colors: None
+            },
             "a corrupt hint must not decide the background either"
         );
     }

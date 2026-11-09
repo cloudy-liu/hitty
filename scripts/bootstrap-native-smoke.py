@@ -28,7 +28,11 @@ def main():
     parser.add_argument("--phase", choices=("before", "after"), required=True)
     parser.add_argument("--no-capture", action="store_true")
     parser.add_argument("--reconnect", action="store_true", help="also restart the GUI and reuse its pane")
+    parser.add_argument("--pane-engine", choices=("native", "herdr-core"))
+    parser.add_argument("--hc-bin", type=Path, help="hc executable for the optional herdr-core smoke")
     args = parser.parse_args()
+    if args.pane_engine == "herdr-core" and args.hc_bin is None:
+        parser.error("--pane-engine herdr-core requires --hc-bin for verification and cleanup")
     if os.name != "nt" and not args.no_capture:
         parser.error("use --no-capture outside Windows; native visual CI has separate captures")
     root = Path(__file__).resolve().parents[1]
@@ -46,6 +50,8 @@ def main():
             {"program": "/bin/bash", "args": ["--noprofile", "--norc"]}
         ),
     }
+    if args.pane_engine:
+        preferences["pane_engine"] = args.pane_engine
     (config / "config.json").write_text(json.dumps(preferences), encoding="utf-8", newline="\n")
     (config / "window.json").write_text(
         json.dumps({"x": 40, "y": 40, "width": 1100, "height": 700}), encoding="utf-8", newline="\n"
@@ -57,6 +63,31 @@ def main():
             del environment[key]
     environment[prefix + "_CONFIG_DIR"] = str(config)
     environment[prefix + "_DATA_DIR"] = str(config)
+    environment.pop("HC_SESSION", None)
+    environment.pop("HC_TERMINAL_ID", None)
+    if args.hc_bin:
+        environment[prefix + "_HC_BIN"] = str(args.hc_bin.resolve())
+
+    # Same stable profile owner as daemon::hc; no user's terminals are selected.
+    owner = 0xCBF29CE484222325
+    for byte in str(config).encode("utf-8"):
+        owner = ((owner ^ byte) * 0x100000001B3) & 0xFFFFFFFFFFFFFFFF
+
+    def hc(*command):
+        result = subprocess.run(
+            [str(args.hc_bin.resolve()), *command], env=environment,
+            capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=30,
+            creationflags=subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0,
+        )
+        if result.returncode:
+            raise RuntimeError(result.stderr or result.stdout)
+        return json.loads(result.stdout)
+
+    def owned_terminals():
+        rows = hc("ls", "--all", "--label", f"hitty.owner={owner:016x}", "--json")["terminals"]
+        # `hc ls` is a compact view; labels are in the full `hc get` record.
+        terminals = [hc("get", row["address"], "--json") for row in rows]
+        return [t for t in terminals if t.get("labels", {}).get("hitty.owner") == f"{owner:016x}"]
 
     def cli(*command, check=True):
         result = subprocess.run(
@@ -98,6 +129,24 @@ def main():
                 "shell output through the public CLI",
             )
             (output / f"{args.phase}-terminal.txt").write_text(text, encoding="utf-8", newline="\n")
+            cli("wait", target, "--until", "free", "--timeout", "10", "--json")
+            hc_address = None
+            if args.pane_engine == "herdr-core":
+                terminals = owned_terminals()
+                terminal = next((t for t in terminals if t["labels"].get("hitty.pane") == target), None)
+                if terminal is None:
+                    raise AssertionError(f"No hc terminal for {target}; owner={owner:016x}; records={terminals}")
+                hc_address = terminal["address"]
+                identity_command = (
+                    "Write-Output ('ENGINE_ID=' + $env:HC_TERMINAL_ID + ';PANE_ID=' + $env:HITTY_PANE)"
+                    if os.name == "nt" else
+                    "printf 'ENGINE_ID=%s;PANE_ID=%s\\n' \"$HC_TERMINAL_ID\" \"$HITTY_PANE\""
+                )
+                cli("send", target, identity_command, "--enter")
+                expected = f"ENGINE_ID={hc_address};PANE_ID={pane['pane']}"
+                text = wait_for(lambda: (value if expected in value else None)
+                    if (value := cli("capture", target, "--plain").stdout) else None, "engine identity")
+                (output / f"{args.phase}-engine-identity.txt").write_text(text, encoding="utf-8", newline="\n")
             if args.reconnect:
                 process.terminate()
                 process.wait(timeout=15)
@@ -114,6 +163,8 @@ def main():
                 (output / f"{args.phase}-reconnected-terminal.txt").write_text(
                     text, encoding="utf-8", newline="\n"
                 )
+                if hc_address and not any(t["address"] == hc_address for t in owned_terminals()):
+                    raise AssertionError("GUI reconnect replaced the hc terminal")
             capture_result = None
             if not args.no_capture:
                 capture = subprocess.run(
@@ -130,6 +181,8 @@ def main():
                 "terminal_input_output": "passed", "configuration": str(config),
                 "session_after_gui_restart": "passed" if args.reconnect else "not exercised",
                 "test_preferences": preferences,
+                "pane_engine": args.pane_engine or "native", "hc_terminal": hc_address,
+                "cli_wait_free": "passed",
             }
             (output / f"{args.phase}-metadata.json").write_text(
                 json.dumps(metadata, indent=2), encoding="utf-8", newline="\n"
@@ -140,6 +193,12 @@ def main():
                 process.terminate()
                 process.wait(timeout=15)
             cli("server", "stop", check=False)
+            if args.pane_engine == "herdr-core":
+                for terminal in owned_terminals():
+                    hc("kill", terminal["address"], "--json")
+                    hc("rm", terminal["address"], "--json")
+                if owned_terminals():
+                    raise AssertionError("smoke left a test-owned hc terminal")
 
 
 if __name__ == "__main__":

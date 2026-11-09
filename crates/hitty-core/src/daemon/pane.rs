@@ -896,6 +896,7 @@ struct PtyBackend {
     #[cfg_attr(windows, allow(dead_code))]
     shell_pid: Option<u32>,
     integration_dir: Option<PathBuf>,
+    hc: Option<Arc<crate::daemon::hc::Session>>,
 }
 
 /// The pty half of a pane, before it is wired up: opened and spawned into by
@@ -905,6 +906,7 @@ struct PtyParts {
     child: Arc<Mutex<Box<dyn Child + Send + Sync>>>,
     shell_pid: Option<u32>,
     integration_dir: Option<PathBuf>,
+    hc: Option<Arc<crate::daemon::hc::Session>>,
     reader_handle: Box<dyn Read + Send>,
     writer: Arc<Mutex<Box<dyn Write + Send>>>,
 }
@@ -1408,6 +1410,194 @@ pub fn restore_preamble(banner: Option<&str>) -> Vec<u8> {
 /// restored screen can simply stay where the user can see it.
 pub const SCROLL_RESTORED_AWAY: &[u8] = b"\x1b[2J\x1b[H";
 
+/// Which engine hosts a new pane's PTY.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+enum PaneEngine {
+    Native,
+    Herdr,
+}
+
+/// `HITTY_PANE_ENGINE` overrides the configured engine for development and
+/// tests; anything but an explicit `herdr-core`/`herdr` means native.
+pub(crate) fn herdr_selected() -> bool {
+    pane_engine() == PaneEngine::Herdr
+}
+
+fn pane_engine() -> PaneEngine {
+    if let Some(value) = std::env::var_os("HITTY_PANE_ENGINE") {
+        return match value.to_str() {
+            Some("herdr-core" | "herdr") => PaneEngine::Herdr,
+            _ => PaneEngine::Native,
+        };
+    }
+    match crate::core::config::Config::load().pane_engine.as_deref() {
+        Some("herdr-core" | "herdr") => PaneEngine::Herdr,
+        _ => PaneEngine::Native,
+    }
+}
+
+/// Open a pty here and start the configured shell in it — the native engine.
+fn native_pty_parts(spawn: &SpawnConfig, pty_size: PtySize) -> anyhow::Result<PtyParts> {
+    let pair = native_pty_system().openpty(pty_size)?;
+    let child = pair.slave.spawn_command(spawn.cmd.clone())?;
+    let shell_pid = child.process_id();
+    let child = Arc::new(Mutex::new(child));
+    drop(pair.slave);
+    let reader_handle = pair.master.try_clone_reader()?;
+    let writer = Arc::new(Mutex::new(pair.master.take_writer()?));
+    Ok(PtyParts {
+        master: pair.master,
+        child,
+        shell_pid,
+        integration_dir: spawn.integration_dir.clone(),
+        hc: None,
+        reader_handle,
+        writer,
+    })
+}
+
+/// Host the pane's PTY in a herdr-core terminal instead of opening one here
+/// (cloudy-liu/hitty#23).
+///
+/// The terminal is labeled with `hitty.pane` and `hitty.owner`, so a pane whose
+/// daemon restarted adopts the terminal it was already running instead of
+/// starting a second one. Everything the native path puts into the
+/// `CommandBuilder` travels through `terminal.run` instead: argv, cwd and the
+/// prepared command environment.
+fn herdr_pty_parts(
+    id: u64,
+    spawn: &SpawnConfig,
+    size: WinSize,
+    workspace: Option<&str>,
+) -> anyhow::Result<PtyParts> {
+    use crate::daemon::hc;
+
+    let core = hc::core()?;
+    let argv = pane_argv(&spawn.cmd);
+    let owner = hc::owner_key();
+    let mut labels = hc::pane_labels(id, &owner, workspace);
+    if let Some(dir) = &spawn.integration_dir {
+        labels["hitty.integration"] = dir.to_string_lossy().into_owned().into();
+    }
+    let mut adopted = false;
+
+    let terminal = match core.find_by_pane_labels(id, &owner)? {
+        Some(existing) if existing.state == "live" => {
+            adopted = true;
+            existing
+        }
+        Some(finished) => {
+            let _ = core.remove(&finished.address);
+            start_herdr_terminal(&core, &argv, spawn, labels)?
+        }
+        None => start_herdr_terminal(&core, &argv, spawn, labels)?,
+    };
+
+    let attached = hc::Session::attach(core.clone(), &terminal, size, 2000);
+    let (session, reader) = match attached {
+        Ok(pair) => pair,
+        Err(e) => {
+            // A created terminal must not become an orphan if attachment fails.
+            // Only the record tagged for this pane/profile is ever cleaned up.
+            if !adopted {
+                let _ = core.kill(&terminal.address);
+                let _ = core.remove(&terminal.address);
+            }
+            return Err(e);
+        }
+    };
+    let integration_dir = if adopted {
+        // Recovery keeps the old shell's redirectors. Discard only the freshly
+        // prepared directory that the adopted shell will never use.
+        if let Some(dir) = &spawn.integration_dir {
+            let _ = std::fs::remove_dir_all(dir);
+        }
+        terminal
+            .labels
+            .get("hitty.integration")
+            .map(PathBuf::from)
+            .filter(|dir| {
+                dir.parent() == Some(std::env::temp_dir().as_path())
+                    && dir
+                        .file_name()
+                        .is_some_and(|name| name.to_string_lossy().starts_with("hitty-"))
+            })
+    } else {
+        spawn.integration_dir.clone()
+    };
+    Ok(PtyParts {
+        master: Box::new(hc::HcMaster(session.clone())),
+        child: Arc::new(Mutex::new(Box::new(hc::HcChild {
+            session: session.clone(),
+            pid: terminal.pid,
+        }))),
+        shell_pid: terminal.pid,
+        integration_dir,
+        hc: Some(session.clone()),
+        reader_handle: Box::new(reader),
+        writer: Arc::new(Mutex::new(Box::new(hc::HcWriter(session)))),
+    })
+}
+
+fn start_herdr_terminal(
+    core: &Arc<crate::daemon::hc::Core>,
+    argv: &[String],
+    spawn: &SpawnConfig,
+    labels: serde_json::Value,
+) -> anyhow::Result<crate::daemon::hc::Terminal> {
+    let cwd = spawn
+        .cmd
+        .get_cwd()
+        .map(|dir| dir.to_string_lossy().into_owned())
+        .or_else(|| {
+            spawn
+                .initial_cwd
+                .as_ref()
+                .map(|dir| dir.to_string_lossy().into_owned())
+        });
+    // Use the very same prepared command as the native engine. This includes
+    // registry refresh, locale fallback and shell-integration list merges.
+    let env: std::collections::BTreeMap<_, _> = spawn
+        .cmd
+        .iter_full_env_as_str()
+        .filter(|(key, _)| {
+            !["HC_SESSION", "HC_TERMINAL_ID"].iter().any(|reserved| {
+                if cfg!(windows) {
+                    key.eq_ignore_ascii_case(reserved)
+                } else {
+                    key == reserved
+                }
+            })
+        })
+        .collect();
+    let params = serde_json::json!({
+        "argv": argv,
+        "cwd": cwd,
+        "env": env,
+        "labels": labels,
+        "no_parent": true,
+        "no_notify": true,
+        "keep": false,
+        "wait": false,
+    });
+    core.run(params)
+}
+
+fn pane_argv(cmd: &CommandBuilder) -> Vec<String> {
+    let argv: Vec<String> = cmd
+        .get_argv()
+        .iter()
+        .map(|arg| arg.to_string_lossy().into_owned())
+        .collect();
+    if argv.is_empty() {
+        // A default-prog builder names no argv; its login-shell argv0 trick is
+        // a portable-pty idea. Run the shell it resolves to.
+        vec![cmd.get_shell()]
+    } else {
+        argv
+    }
+}
+
 impl DaemonPane {
     pub fn spawn(
         id: u64,
@@ -1428,17 +1618,22 @@ impl DaemonPane {
         #[cfg(windows)]
         crate::daemon::winproc::allow_ctrl_c_in_children();
 
-        let pair = native_pty_system().openpty(pty_size)?;
         let spawn = build_spawn_config(id, cwd, shell, workspace.as_deref())?;
 
-        let child = pair.slave.spawn_command(spawn.cmd)?;
-        let shell_pid = child.process_id();
-        let child = Arc::new(Mutex::new(child));
-
-        drop(pair.slave);
-
-        let reader_handle = pair.master.try_clone_reader()?;
-        let writer = Arc::new(Mutex::new(pair.master.take_writer()?));
+        // The engine decides where the PTY lives: opened here, or hosted by a
+        // herdr-core terminal (`hc`). Everything downstream of `parts` is
+        // engine-blind, which is the point of the spike (#23).
+        let parts = if spawn.remote.is_none() && herdr_selected() {
+            match crate::daemon::hc::core() {
+                Ok(_) => herdr_pty_parts(id, &spawn, size, workspace.as_deref())?,
+                Err(err) => {
+                    log::warn!("herdr-core unavailable ({err:#}); using the native pane engine");
+                    native_pty_parts(&spawn, pty_size)?
+                }
+            }
+        } else {
+            native_pty_parts(&spawn, pty_size)?
+        };
 
         let (ring, restored_title) = match restore {
             Some(restore) => {
@@ -1453,14 +1648,7 @@ impl DaemonPane {
         };
 
         Ok(Self::over_pty(
-            PtyParts {
-                master: pair.master,
-                child,
-                shell_pid,
-                integration_dir: spawn.integration_dir,
-                reader_handle,
-                writer,
-            },
+            parts,
             PaneState {
                 id,
                 ring,
@@ -1510,6 +1698,7 @@ impl DaemonPane {
             integration_dir,
             reader_handle,
             writer,
+            hc,
         } = parts;
 
         let id = state.id;
@@ -1526,6 +1715,7 @@ impl DaemonPane {
                 child: child.clone(),
                 shell_pid,
                 integration_dir,
+                hc: hc.clone(),
             }),
             writer: writer.clone(),
             shutting_down: shutting_down.clone(),
@@ -1564,7 +1754,7 @@ impl DaemonPane {
 
         #[cfg(windows)]
         Self::spawn_exit_monitor(
-            shell_pid,
+            if hc.is_none() { shell_pid } else { None },
             master.clone(),
             state.clone(),
             pane.shutting_down.clone(),
@@ -1578,6 +1768,7 @@ impl DaemonPane {
         let process_agent_seen = Mutex::new(None);
         let agent_state = state.clone();
         let cwd_master = master.clone();
+        let hc_cwd = hc.clone();
         let reader = Self::spawn_reader(
             state,
             shutting_down,
@@ -1593,7 +1784,12 @@ impl DaemonPane {
                     foreground_agent(&agent_master, shell_pid, &process_agent_seen, &agent_state)
                 }),
                 app: Box::new(move || foreground_app(&app_master, shell_pid)),
-                cwd: Box::new(move || foreground_cwd(&cwd_master, shell_pid)),
+                cwd: Box::new(move || {
+                    hc_cwd
+                        .as_ref()
+                        .and_then(|hc| hc.foreground_cwd())
+                        .or_else(|| foreground_cwd(&cwd_master, shell_pid))
+                }),
             },
             death,
         );
@@ -1687,6 +1883,7 @@ impl DaemonPane {
                 master: Box::new(master),
                 child: Arc::new(Mutex::new(Box::new(AdoptedChild::new(shell_pid)))),
                 shell_pid: Some(shell_pid),
+                hc: None,
                 integration_dir: carried.integration_dir,
                 reader_handle,
                 writer,
@@ -2371,6 +2568,21 @@ impl DaemonPane {
         (segments, st.osc_title.clone(), st.ring.appended)
     }
 
+    /// A daemon restart detaches externally hosted terminals without ending them.
+    pub(crate) fn shutdown(&self) {
+        if let Some(hc) = self.pty().and_then(|p| p.hc.as_ref()) {
+            self.shutting_down.store(true, Ordering::SeqCst);
+            hc.preserve();
+        } else {
+            self.kill();
+        }
+    }
+
+    #[cfg(unix)]
+    pub(crate) fn is_hc(&self) -> bool {
+        self.pty().is_some_and(|p| p.hc.is_some())
+    }
+
     pub fn kill(&self) {
         self.hangup();
     }
@@ -2379,6 +2591,12 @@ impl DaemonPane {
         self.shutting_down.store(true, Ordering::SeqCst);
         match &self.backend {
             PaneBackend::Pty(p) => {
+                if let Some(hc) = &p.hc {
+                    if let Err(e) = hc.close() {
+                        log::warn!("could not close hc pane {}: {e}", self.id);
+                    }
+                    return;
+                }
                 #[cfg(unix)]
                 Self::signal_group(p, libc::SIGHUP);
                 #[cfg(windows)]
@@ -2397,7 +2615,7 @@ impl DaemonPane {
     fn kill_descendants(pty: &PtyBackend) {
         if let Some(pid) = pty.shell_pid {
             let procs = crate::daemon::winproc::snapshot();
-            for target in crate::daemon::winproc::descendants(&procs, pid) {
+            for target in crate::daemon::winproc::owned_descendants(&procs, pid) {
                 crate::daemon::winproc::terminate(target);
             }
         }
@@ -2530,8 +2748,14 @@ impl Drop for DaemonPane {
         if matches!(self.backend, PaneBackend::NativeSsh(_)) {
             crate::daemon::ssh::SshManager::global().teardown_pane_forwards(self.id);
         }
-        self.hangup();
-        if let PaneBackend::Pty(p) = &self.backend {
+        let preserved = self
+            .pty()
+            .and_then(|p| p.hc.as_ref())
+            .is_some_and(|s| s.is_preserved());
+        if !preserved {
+            self.hangup();
+        }
+        if !preserved && let PaneBackend::Pty(p) = &self.backend {
             if let Ok(mut child) = p.child.lock() {
                 let _ = child.wait();
             }
@@ -2539,7 +2763,7 @@ impl Drop for DaemonPane {
         if let Some(handle) = self.reader.lock().unwrap().take() {
             join_bounded(handle, Duration::from_secs(2));
         }
-        if let PaneBackend::Pty(p) = &mut self.backend {
+        if !preserved && let PaneBackend::Pty(p) = &mut self.backend {
             if let Some(dir) = p.integration_dir.take() {
                 let _ = std::fs::remove_dir_all(&dir);
             }
@@ -3973,6 +4197,181 @@ mod tests {
     use super::*;
     use crate::core::kitty_graphics::ImageDelete;
     use std::path::Path;
+
+    /// The herdr-core pane engine end to end, against a scripted fake core
+    /// (cloudy-liu/hitty#23): spawn through `DaemonPane::spawn` with the
+    /// engine switched, watch the terminal's identity reach `terminal.run`,
+    /// typed input arrive as `DATA`, bytes come back, and `CLOSE` map to an
+    /// `Exited` with the right code. Runs in a child process of this test
+    /// binary so the engine environment and the test-core override cannot
+    /// race other tests — same pattern as the redirection probe in
+    /// `daemon::spawn`.
+    #[test]
+    fn herdr_pane_engine_hosts_the_pty_in_a_fake_core() {
+        use crate::daemon::hc::tests::{
+            full_methods, hello_reply, read_frame, read_json_line, terminal_doc, transport,
+            write_frame_to, write_json_reply, write_line_reply,
+        };
+        use crate::daemon::hc::{self, CLOSE, CREDIT, DATA};
+
+        const INNER_ENV: &str = "HITTY_TEST_HERDR_ENGINE_INNER";
+        const TEST_NAME: &str =
+            "daemon::pane::tests::herdr_pane_engine_hosts_the_pty_in_a_fake_core";
+
+        if std::env::var_os(INNER_ENV).is_none() {
+            let output = std::process::Command::new(
+                std::env::current_exe().expect("locate test executable"),
+            )
+            .args(["--exact", TEST_NAME, "--nocapture"])
+            .env(INNER_ENV, "1")
+            .env("HITTY_PANE_ENGINE", "herdr-core")
+            .output()
+            .expect("spawn isolated herdr-engine test process");
+            let stdout = String::from_utf8_lossy(&output.stdout);
+            assert!(
+                output.status.success(),
+                "isolated herdr-engine test failed:\nstdout:\n{stdout}\nstderr:\n{}",
+                String::from_utf8_lossy(&output.stderr)
+            );
+            // libtest exits 0 when `--exact` matches nothing, so a stale
+            // TEST_NAME would turn this whole test into a silent pass.
+            assert!(
+                stdout.contains("1 passed"),
+                "the isolated test must actually run; TEST_NAME is probably stale:\n{stdout}"
+            );
+            return;
+        }
+
+        let (read, write, mut fake_read, mut fake_write) = transport();
+        let fake = std::thread::spawn(move || {
+            let hello = read_json_line(&mut fake_read);
+            assert_eq!(hello["params"]["framed"], serde_json::Value::Bool(true));
+            write_line_reply(
+                &mut fake_write,
+                0,
+                hello_reply(hc::GENERATION, "0.1.15", &full_methods())["result"].clone(),
+            );
+
+            // A document without a pid: the pane must not arm the Windows
+            // process-exit monitor against a process that never existed.
+            let mut doc = terminal_doc("t7", "live");
+            doc["pid"] = serde_json::Value::Null;
+
+            // terminal.list (adoption probe) answers empty; terminal.run then
+            // carries the pane's identity.
+            let mut run = None;
+            while run.is_none() {
+                let (channel, ty, payload) = read_frame(&mut fake_read);
+                if (channel, ty) == (20, CREDIT) {
+                    continue;
+                }
+                assert_eq!((channel, ty), (0, DATA));
+                let message: serde_json::Value = serde_json::from_slice(&payload).unwrap();
+                match message["method"].as_str() {
+                    Some("terminal.list" | "events.subscribe") => write_json_reply(
+                        &mut fake_write,
+                        message["id"].as_u64().unwrap(),
+                        serde_json::json!({"terminals": [], "hidden_finished": 0, "machines": [], "channel": 20, "seq": 0}),
+                    ),
+                    Some("terminal.run") => run = Some(message),
+                    other => panic!("unexpected call {other:?}"),
+                }
+            }
+            let run = run.unwrap();
+            let params = &run["params"];
+            assert_eq!(params["labels"]["hitty.pane"], "%7");
+            assert_eq!(params["env"]["HITTY_PANE"], "7");
+            assert_eq!(params["env"]["TERM_PROGRAM"], "hitty");
+            assert!(
+                params["argv"]
+                    .as_array()
+                    .is_some_and(|argv| !argv.is_empty()),
+                "argv: {}",
+                params["argv"]
+            );
+            write_json_reply(&mut fake_write, run["id"].as_u64().unwrap(), doc.clone());
+
+            // terminal.attach, then bytes both ways.
+            let (channel, ty, payload) = read_frame(&mut fake_read);
+            assert_eq!((channel, ty), (0, DATA));
+            let attach: serde_json::Value = serde_json::from_slice(&payload).unwrap();
+            assert_eq!(attach["method"], "terminal.attach");
+            write_json_reply(
+                &mut fake_write,
+                attach["id"].as_u64().unwrap(),
+                serde_json::json!({"channel": 6, "terminal": doc}),
+            );
+            let (channel, ty, _payload) = read_frame(&mut fake_read);
+            assert_eq!((channel, ty), (6, CREDIT));
+            write_frame_to(&mut fake_write, 6, DATA, b"hello-from-core\r\n");
+            // The reader replenishes credit as it consumes bytes; skip those
+            // frames until the typed input arrives.
+            let payload = loop {
+                let (channel, ty, payload) = read_frame(&mut fake_read);
+                assert_eq!(channel, 6);
+                match ty {
+                    CREDIT => continue,
+                    DATA => break payload,
+                    other => panic!("unexpected frame type {other}"),
+                }
+            };
+            assert_eq!(payload, b"typed\r".to_vec());
+            write_frame_to(&mut fake_write, 6, CLOSE, br#"{"exit_code": 7}"#);
+        });
+
+        let core = hc::Core::from_transport(read, write, None).expect("fake core handshake");
+        hc::set_test_core(Some(core));
+
+        let (tx, rx) = mpsc::channel();
+        let pane = DaemonPane::spawn(
+            7,
+            Some(std::env::temp_dir()),
+            ws(80, 24),
+            Some(ShellSpec {
+                program: "hitty-test-shell".into(),
+                args: Vec::new(),
+                args_are_hitty_defaults: false,
+            }),
+            None,
+            None,
+            None,
+            || {},
+        )
+        .expect("spawn pane on the fake core");
+        pane.attach(tx);
+
+        // Give the attach/credit exchange a beat, then type.
+        std::thread::sleep(Duration::from_millis(200));
+        pane.write_input(b"typed\r");
+
+        let mut output = Vec::new();
+        let mut exited = None;
+        let deadline = std::time::Instant::now() + Duration::from_secs(10);
+        while std::time::Instant::now() < deadline && exited.is_none() {
+            let Ok(message) = rx.recv_timeout(Duration::from_millis(200)) else {
+                continue;
+            };
+            match message {
+                DaemonMsg::Output(bytes) => output.extend_from_slice(&bytes),
+                DaemonMsg::Exited { code } => exited = Some(code),
+                _ => {}
+            }
+        }
+        fake.join().expect("fake core thread");
+        assert!(
+            output
+                .windows(b"hello-from-core\r\n".len())
+                .any(|window| window == b"hello-from-core\r\n"),
+            "pane output: {:?}",
+            String::from_utf8_lossy(&output)
+        );
+        assert_eq!(
+            exited,
+            Some(Some(7)),
+            "the CLOSE exit code must reach the client"
+        );
+        hc::set_test_core(None);
+    }
 
     #[cfg(windows)]
     fn append_cmd_output(pane: &DaemonPane, transcript: &mut Vec<u8>, bytes: &[u8]) {

@@ -1,0 +1,7 @@
+Hitty
+
+The optional herdr-core pane client draws on herdr-app's framed client and
+binary-discovery implementation (herdrdev/herdr-app, Apache License 2.0).
+The reference revision, source hashes, and scope of the adaptation are recorded
+in docs/provenance/herdr-pane-engine.md. Hitty's modifications are described
+there. The Apache License 2.0 text is included in LICENSE.

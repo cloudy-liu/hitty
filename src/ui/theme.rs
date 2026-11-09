@@ -574,6 +574,7 @@ pub(crate) fn apply_theme(mut window: Option<&mut Window>, cx: &mut App) {
         sync_native_appearance(Some(theme.dark));
     }
     let m = theme.neutrals();
+    crate::core::machine::note_terminal_colors([m.foreground, m.background, m.caret]);
     let surfaces = theme.surfaces();
     let sem = theme.semantics();
     let active = theme.active_palette(config.theme_legible_palette);
