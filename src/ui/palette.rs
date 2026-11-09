@@ -1327,6 +1327,13 @@ impl Render for PaletteView {
             .border_color(border)
             .rounded(px(10.))
             .shadow_xl()
+            .when_some(crate::ui::theme_style::active(cx), |el, style| {
+                let el = el.rounded(px(style.number("token.radius").unwrap_or(10.)));
+                match style.shadow("token.shadow") {
+                    Some(shadows) => el.shadow(shadows),
+                    None => el,
+                }
+            })
             .overflow_hidden()
             .pb_1()
             .child(

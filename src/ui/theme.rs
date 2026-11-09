@@ -21,6 +21,25 @@ pub(crate) fn traffic_light_position() -> Point<Pixels> {
     point(px(9.), px(13.))
 }
 
+pub(crate) fn title_bar_height(cx: &App) -> f32 {
+    let style = super::theme_style::active(cx);
+    let title = style
+        .and_then(|s| s.number("titlebar.height"))
+        .unwrap_or(crate::ui::app::TITLE_BAR_HEIGHT);
+    if matches!(
+        cx.global::<Config>().tab_bar_position,
+        crate::core::config::TabBarPosition::Top
+    ) {
+        title.max(
+            style
+                .and_then(|s| s.number("tab-bar.height"))
+                .unwrap_or(title),
+        )
+    } else {
+        title
+    }
+}
+
 pub(crate) fn set_menus(cx: &mut App) {
     cx.set_menus([
         Menu::new(crate::ui::app::DISPLAY_NAME).items([
@@ -198,6 +217,24 @@ pub(crate) fn window_background_opaque(bg: &presets::ActiveBackground) -> Backgr
 /// The workspace's own fill: the preset at whatever alpha the window opacity
 /// and backdrop material asked for.
 pub(crate) fn workspace_background(cx: &App) -> Background {
+    if let Some(style) = super::theme_style::active(cx) {
+        let opacity = cx
+            .global::<Config>()
+            .window_opacity
+            .or_else(|| {
+                if cfg!(windows) {
+                    style.number("windows.opacity")
+                } else {
+                    style.number("window.opacity")
+                }
+            })
+            .unwrap_or(1.);
+        return if style.sidebar_material() {
+            gpui::transparent_black().into()
+        } else {
+            style.window_color().opacity(opacity).into()
+        };
+    }
     match cx.try_global::<presets::ActiveBackground>() {
         Some(bg) => window_background(bg),
         None => cx.theme().background.into(),
@@ -469,6 +506,9 @@ pub(crate) fn default_window_opacity(backdrop: WindowBackdrop, blur: bool) -> f3
 /// `theme.sidebar` itself stays opaque — the settings theme picker paints
 /// with it on top of the opaque settings overlay and must stay legible.
 pub(crate) fn workspace_surface_color(cx: &App) -> Hsla {
+    if let Some(style) = super::theme_style::active(cx) {
+        return style.details_color();
+    }
     let base: Hsla = cx.theme().sidebar;
     let translucent = cx
         .try_global::<presets::ActiveBackground>()
@@ -504,8 +544,23 @@ pub(crate) fn backdrop_options(current: WindowBackdrop) -> Vec<WindowBackdrop> {
 pub(crate) fn background_appearance(cx: &App) -> WindowBackgroundAppearance {
     let config = cx.global::<Config>();
     let theme = presets::by_id(cx, &effective_preset_id(cx));
-    let blur = config.window_blur.unwrap_or(theme.blur);
-    resolved_background_appearance(config.window_backdrop, blur)
+    let (backdrop, blur) = theme_backdrop(config, &theme);
+    resolved_background_appearance(backdrop, blur)
+}
+
+fn theme_backdrop(config: &Config, theme: &presets::Theme) -> (WindowBackdrop, bool) {
+    let backdrop = if config.window_backdrop == WindowBackdrop::Auto {
+        theme
+            .style
+            .as_ref()
+            .map_or(config.window_backdrop, |s| s.backdrop())
+    } else {
+        config.window_backdrop
+    };
+    let blur = config
+        .window_blur
+        .unwrap_or(theme.blur || theme.style.is_some() && backdrop != WindowBackdrop::Off);
+    (backdrop, blur)
 }
 
 /// The appearance last handed to each live window, so `apply_theme` can skip
@@ -519,7 +574,9 @@ pub(crate) fn background_appearance(cx: &App) -> WindowBackgroundAppearance {
 /// which never changes the appearance — would otherwise recalc the frame
 /// once per mouse-move sample and visibly stutter the drag.
 #[derive(Default)]
-struct AppliedAppearance(std::collections::HashMap<gpui::WindowId, WindowBackgroundAppearance>);
+struct AppliedAppearance(
+    std::collections::HashMap<gpui::WindowId, (WindowBackgroundAppearance, bool)>,
+);
 
 impl gpui::Global for AppliedAppearance {}
 
@@ -530,6 +587,7 @@ impl gpui::Global for AppliedAppearance {}
 fn take_appearance_change(
     window: &Window,
     appearance: WindowBackgroundAppearance,
+    dark: bool,
     cx: &mut App,
 ) -> bool {
     let id = window.window_handle().window_id();
@@ -537,7 +595,7 @@ fn take_appearance_change(
         cx.windows().iter().map(|w| w.window_id()).collect();
     let applied = cx.default_global::<AppliedAppearance>();
     applied.0.retain(|known, _| live.contains(known));
-    applied.0.insert(id, appearance) != Some(appearance)
+    applied.0.insert(id, (appearance, dark)) != Some((appearance, dark))
 }
 
 pub(crate) fn apply_theme(mut window: Option<&mut Window>, cx: &mut App) {
@@ -559,12 +617,16 @@ pub(crate) fn apply_theme(mut window: Option<&mut Window>, cx: &mut App) {
     } else {
         ThemeMode::Light
     };
-    let blur = config.window_blur.unwrap_or(theme.blur);
+    let (backdrop, blur) = theme_backdrop(config, &theme);
     // A material needs some translucency to be visible; without an explicit
     // opacity override it defaults to SYSTEM_MATERIAL_OPACITY instead of
     // 1.0. Derived from the *resolved* appearance so old builds where
     // Blur/Acrylic fall back to plain transparency stay opaque by default.
-    let default_opacity = default_window_opacity(config.window_backdrop, blur);
+    let default_opacity = if theme.style.is_some() {
+        1.
+    } else {
+        default_window_opacity(backdrop, blur)
+    };
     let opacity = config
         .window_opacity
         .or(theme.opacity)
@@ -576,17 +638,40 @@ pub(crate) fn apply_theme(mut window: Option<&mut Window>, cx: &mut App) {
     let m = theme.neutrals();
     let surfaces = theme.surfaces();
     let sem = theme.semantics();
-    let active = theme.active_palette(config.theme_legible_palette);
-    let backdrop = config.window_backdrop;
+    let active = theme.active_palette(super::theme_style::legible_palette(
+        config,
+        theme.style.is_some(),
+    ));
+    let profile = theme.style.clone();
+    let available = if profile.is_some() {
+        cx.text_system().all_font_names()
+    } else {
+        Vec::new()
+    };
+    let ui_font = profile
+        .as_ref()
+        .and_then(|s| s.font("token.font-ui", &available));
+    let mono_font = profile
+        .as_ref()
+        .and_then(|s| s.font("token.font-mono", &available));
 
     if let Some(window) = window.as_deref_mut() {
         let appearance = resolved_background_appearance(backdrop, blur);
-        if take_appearance_change(window, appearance, cx) {
+        if take_appearance_change(window, appearance, theme.dark, cx) {
+            // GPUI test windows have no native HWND. The isolated native
+            // capture harness verifies DWM's actual light/dark attribute.
+            #[cfg(all(windows, not(test)))]
+            sync_windows_material_mode(window, theme.dark);
             window.set_background_appearance(appearance);
         }
     }
 
     Theme::change(mode, window.as_deref_mut(), cx);
+    cx.set_global(super::theme_style::ActiveStyle {
+        profile,
+        ui_font: ui_font.clone(),
+        mono_font,
+    });
     cx.set_global(active);
     cx.set_global(presets::ActiveBackground {
         fill: theme.background.clone(),
@@ -594,7 +679,13 @@ pub(crate) fn apply_theme(mut window: Option<&mut Window>, cx: &mut App) {
         image: theme.image.clone(),
     });
     cx.set_global(surfaces.clone());
-    cx.set_global(presets::ActiveAccent(m.accent));
+    cx.set_global(presets::ActiveAccent(
+        theme
+            .style
+            .as_ref()
+            .and_then(|s| s.packed("token.accent"))
+            .unwrap_or(m.accent),
+    ));
     // Same treatment as `Surfaces`: derived once here rather than recomputed
     // in `render`, because the graph reads it once per visible row per frame
     // and each entry costs a contrast bisection on three surfaces.
@@ -602,6 +693,9 @@ pub(crate) fn apply_theme(mut window: Option<&mut Window>, cx: &mut App) {
     cx.set_global(theme.agent_icons());
 
     let t = Theme::global_mut(cx);
+    if let Some(family) = ui_font {
+        t.font_family = family.into();
+    }
     let mut base: Hsla = rgb(m.background).into();
     if let Some(o) = opacity {
         base.a = o;
@@ -818,6 +912,58 @@ pub(crate) fn apply_theme(mut window: Option<&mut Window>, cx: &mut App) {
     // ring and the on-switch.
     t.drag_border = rgb(m.accent).into();
 
+    if let Some(style) = &theme.style {
+        // Chrome and terminal ink are independent in Otty's schema.
+        t.foreground = style
+            .color("token.foreground")
+            .or_else(|| style.color("token.primary"))
+            .unwrap_or(rgb(theme.foreground).into());
+        t.border = style.color("panel.border").unwrap_or(t.border);
+        t.muted_foreground = style.color("token.secondary").unwrap_or(t.muted_foreground);
+        t.popover = style.color("panel.background").unwrap_or(t.popover);
+        t.popover_foreground = t.foreground;
+        t.tokens.popover = t.popover.into();
+        t.tokens.popover_foreground = t.foreground.into();
+        t.secondary_foreground = t.foreground;
+        t.button_foreground = t.foreground;
+        if let Some(tertiary) = style.color("token.tertiary") {
+            t.description_list_label_foreground = tertiary;
+        }
+        if let Some(surface) = style.color("panel.surface") {
+            t.secondary = surface;
+            t.input = surface;
+            t.tokens.input = surface.into();
+        }
+        t.caret = style.cursor_color("block").unwrap_or(t.caret);
+        t.selection = style
+            .color("terminal.selection-background")
+            .unwrap_or(t.selection);
+        t.radius = px(style.number("token.radius").unwrap_or(8.));
+        t.sidebar_border = style.color("panel.border").unwrap_or(t.sidebar_border);
+        t.sidebar_foreground = style
+            .color("tab.foreground")
+            .or_else(|| style.color("token.secondary"))
+            .unwrap_or(t.foreground);
+        t.sidebar_accent = style
+            .color("tab.active.background")
+            .or_else(|| style.color("token.active-bg"))
+            .unwrap_or(t.sidebar_accent);
+        t.sidebar_accent_foreground = style.color("tab.active.foreground").unwrap_or(t.foreground);
+        t.tokens.sidebar_accent = t.sidebar_accent.into();
+        t.tokens.sidebar_accent_foreground = t.sidebar_accent_foreground.into();
+        if let Some(hover) = style.color("token.hover-bg") {
+            t.tokens.button_hover = hover.into();
+            t.list_hover = hover;
+        }
+        if let Some(active) = style.color("token.active-bg") {
+            t.tokens.button_active = active.into();
+            t.list_active = active;
+        }
+        t.danger = style.color("token.danger").unwrap_or(t.danger);
+        t.warning = style.color("token.warning").unwrap_or(t.warning);
+        t.success = style.color("token.success").unwrap_or(t.success);
+    }
+
     // The code editor's gutter fill and current-line band do not come from
     // `Theme` at all — gpui-component reads them off the *syntax* theme, which
     // is still its stock one. So the editor painted a #0a0a0a strip down the
@@ -865,6 +1011,41 @@ pub(crate) fn apply_cursor_hide_mode(cx: &mut App) {
     cx.set_cursor_hide_mode(mode);
 }
 
+#[cfg(all(windows, not(test)))]
+fn sync_windows_material_mode(window: &Window, dark: bool) {
+    use raw_window_handle::{HasWindowHandle, RawWindowHandle};
+    use std::ffi::c_void;
+
+    #[link(name = "dwmapi")]
+    unsafe extern "system" {
+        fn DwmSetWindowAttribute(
+            hwnd: *mut c_void,
+            attribute: u32,
+            value: *const c_void,
+            size: u32,
+        ) -> i32;
+    }
+
+    let Ok(handle) = HasWindowHandle::window_handle(window) else {
+        return;
+    };
+    let RawWindowHandle::Win32(handle) = handle.as_raw() else {
+        return;
+    };
+    let enabled = i32::from(dark);
+    // DWM's material tint follows this per-window mode. Leaving it tied to
+    // the system appearance puts dark acrylic behind a light theme's ink.
+    // Unsupported Windows builds keep the renderer's existing fallback.
+    unsafe {
+        DwmSetWindowAttribute(
+            handle.hwnd.get() as *mut c_void,
+            20,
+            &enabled as *const _ as *const c_void,
+            std::mem::size_of_val(&enabled) as u32,
+        );
+    }
+}
+
 #[cfg(target_os = "macos")]
 fn sync_native_appearance(dark: Option<bool>) {
     use objc2::MainThreadMarker;
@@ -895,6 +1076,35 @@ fn sync_native_appearance(_dark: Option<bool>) {}
 mod tests {
     use super::*;
     use gpui::TestAppContext;
+
+    #[test]
+    fn imported_material_respects_explicit_user_overrides() {
+        let themes = presets::builtins();
+        let glass = themes.iter().find(|t| t.id == "otty-glass-light").unwrap();
+        let nord = themes.iter().find(|t| t.id == "otty-nord").unwrap();
+        let mut config = Config::default();
+        assert_eq!(
+            theme_backdrop(&config, glass),
+            (WindowBackdrop::Acrylic, true)
+        );
+        assert_eq!(theme_backdrop(&config, nord), (WindowBackdrop::Off, false));
+        config.window_backdrop = WindowBackdrop::Off;
+        assert_eq!(theme_backdrop(&config, glass), (WindowBackdrop::Off, false));
+        config.window_backdrop = WindowBackdrop::MicaAlt;
+        assert_eq!(
+            theme_backdrop(&config, glass),
+            (WindowBackdrop::MicaAlt, true)
+        );
+        #[cfg(windows)]
+        {
+            let acrylic = themes.iter().find(|t| t.id == "otty-acrylic-dark").unwrap();
+            let style = acrylic.style.as_ref().unwrap();
+            assert!(style.sidebar_material());
+            assert_eq!(style.backdrop(), WindowBackdrop::Acrylic);
+            assert!((style.sidebar_color().a - 0.8).abs() < 0.001);
+            assert_eq!(style.window_color().a, 1.);
+        }
+    }
 
     #[gpui::test]
     fn effective_preset_follows_the_cached_system_appearance(cx: &mut TestAppContext) {

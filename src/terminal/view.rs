@@ -1168,10 +1168,10 @@ impl TerminalView {
         cx: &mut Context<Self>,
     ) -> Self {
         let config = cx.global::<Config>();
-        let font_family = config.font_family.clone();
+        let (font_family, font_size, line_height_mul) =
+            crate::ui::theme_style::typography(config, cx);
         let fallbacks = fallback_chain(&font_family, &config.font_fallbacks);
-        let font_size = px(config.font_size);
-        let line_height_mul = config.line_height;
+        let font_size = px(font_size);
         let font_features = config
             .font_features
             .as_ref()
@@ -6570,6 +6570,10 @@ impl Render for TerminalView {
             .overflow_hidden()
             .px(px(GRID_PAD_X))
             .py(px(GRID_PAD_Y))
+            .when_some(crate::ui::theme_style::active(cx), |el, style| {
+                let [t, r, b, l] = style.spacing("container.padding").unwrap_or([8.; 4]);
+                el.pt(px(t)).pr(px(r)).pb(px(b)).pl(px(l))
+            })
             .text_color(cx.theme().foreground)
             .on_key_down(cx.listener(Self::on_key_down))
             .on_scroll_wheel(cx.listener(Self::on_scroll))

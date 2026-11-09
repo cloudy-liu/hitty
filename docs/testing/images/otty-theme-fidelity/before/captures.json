@@ -1,0 +1,373 @@
+{
+  "stage": "before",
+  "app": "C:\\Users\\cloudy\\.codex\\worktrees\\976b\\hitty\\.hitty-dev-otty-review\\before-bin\\hitty-app.exe",
+  "binary_sha256": "b2fa4afea55f0202adb035425205020d1dc5a1037d77e828e84c621bbeffe9e3",
+  "profile": "C:\\Users\\cloudy\\AppData\\Local\\Temp\\hitty-otty-before-5diy858s",
+  "configuration": {
+    "theme_preset": "otty-glass-light",
+    "theme_follow_system": false,
+    "theme_legible_palette": false,
+    "window_blur": null,
+    "window_backdrop": "auto",
+    "window_opacity": null,
+    "gui_language": "en",
+    "font_size": 15,
+    "ui_font_size": 14,
+    "check_for_updates": false,
+    "auto_download_updates": false,
+    "install_cli_on_path": false,
+    "show_tray_icon": false,
+    "shell": {
+      "program": "powershell.exe",
+      "args": [
+        "-NoLogo",
+        "-NoProfile",
+        "-NoExit",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-Command",
+        "Set-Location $env:SystemRoot; function global:prompt { 'PS theme-review> ' }; & 'C:\\Users\\cloudy\\.codex\\worktrees\\976b\\hitty\\scripts\\otty-theme-review-sample.ps1'"
+      ]
+    },
+    "tab_bar_position": "left",
+    "right_panel_visible": true
+  },
+  "logical_window": [
+    1200,
+    800
+  ],
+  "captures": [
+    {
+      "theme": "one_light",
+      "scene": "one_light",
+      "layout": "left",
+      "details": false,
+      "capture": "hwnd=2623132 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=127920",
+      "image_sha256": "cf81f721390b62739849974b1c8ef298df78e18df6c23a9f322bec9a04cb15e4",
+      "text_sha256": "8b0966b7b0512c1d95cd7cacf0f23ae1a613a0e8bc055138ee486a7694c36eb0",
+      "pane": 1
+    },
+    {
+      "theme": "otty-acrylic-dark",
+      "scene": "otty-acrylic-dark",
+      "layout": "left",
+      "details": false,
+      "capture": "hwnd=2623132 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=128026",
+      "image_sha256": "047c53f0a0bb25095cb218e92e960734d17c26ef1ba357d10809a43d40583db9",
+      "text_sha256": "8b0966b7b0512c1d95cd7cacf0f23ae1a613a0e8bc055138ee486a7694c36eb0",
+      "pane": 1
+    },
+    {
+      "theme": "otty-april",
+      "scene": "otty-april",
+      "layout": "left",
+      "details": false,
+      "capture": "hwnd=2623132 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=130679",
+      "image_sha256": "ef301aca77f6f0fbf93608090c79c1f1a4e17368d5e6b654fa5826c8c50956f2",
+      "text_sha256": "8b0966b7b0512c1d95cd7cacf0f23ae1a613a0e8bc055138ee486a7694c36eb0",
+      "pane": 1
+    },
+    {
+      "theme": "otty-april-dark",
+      "scene": "otty-april-dark",
+      "layout": "left",
+      "details": false,
+      "capture": "hwnd=2623132 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=128318",
+      "image_sha256": "0c1d5bcbcb06e2a39401f58a2f09b0160031aea69ad1343886630e9437368ce4",
+      "text_sha256": "8b0966b7b0512c1d95cd7cacf0f23ae1a613a0e8bc055138ee486a7694c36eb0",
+      "pane": 1
+    },
+    {
+      "theme": "otty-ayu-dark",
+      "scene": "otty-ayu-dark",
+      "layout": "left",
+      "details": false,
+      "capture": "hwnd=2623132 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=128969",
+      "image_sha256": "9ef5c17a29c69b783a2da0d13c18bfd2814471f67132f288fc2b35312b3bc4bf",
+      "text_sha256": "8b0966b7b0512c1d95cd7cacf0f23ae1a613a0e8bc055138ee486a7694c36eb0",
+      "pane": 1
+    },
+    {
+      "theme": "otty-ayu-light",
+      "scene": "otty-ayu-light",
+      "layout": "left",
+      "details": false,
+      "capture": "hwnd=2623132 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=128911",
+      "image_sha256": "45a2a6fecaee7bfefec6a49adee8e1cabf3f06e8497c3a985b50aa81396aa58d",
+      "text_sha256": "8b0966b7b0512c1d95cd7cacf0f23ae1a613a0e8bc055138ee486a7694c36eb0",
+      "pane": 1
+    },
+    {
+      "theme": "otty-catppuccin-mocha",
+      "scene": "otty-catppuccin-mocha",
+      "layout": "left",
+      "details": false,
+      "capture": "hwnd=2623132 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=129160",
+      "image_sha256": "d7ca70ba8a97ee409b96a1ccaa60cc2ff8e2812117a81f5775eb6e2e601291c9",
+      "text_sha256": "8b0966b7b0512c1d95cd7cacf0f23ae1a613a0e8bc055138ee486a7694c36eb0",
+      "pane": 1
+    },
+    {
+      "theme": "otty-dracula",
+      "scene": "otty-dracula",
+      "layout": "left",
+      "details": false,
+      "capture": "hwnd=2623132 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=127442",
+      "image_sha256": "063b5420b9beb7ceaf7dd40e67f6fb12301c2d13451070b0bc179bbcaa1934f9",
+      "text_sha256": "8b0966b7b0512c1d95cd7cacf0f23ae1a613a0e8bc055138ee486a7694c36eb0",
+      "pane": 1
+    },
+    {
+      "theme": "otty-floating-card",
+      "scene": "otty-floating-card",
+      "layout": "left",
+      "details": false,
+      "capture": "hwnd=2623132 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=130090",
+      "image_sha256": "016252ab3e238f1576af14ff8c4ca18ce72cfa6482de9a4ee5e5229fe44c4f43",
+      "text_sha256": "8b0966b7b0512c1d95cd7cacf0f23ae1a613a0e8bc055138ee486a7694c36eb0",
+      "pane": 1
+    },
+    {
+      "theme": "otty-glass-dark",
+      "scene": "otty-glass-dark",
+      "layout": "left",
+      "details": false,
+      "capture": "hwnd=2623132 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=129109",
+      "image_sha256": "d6dd340644dbf3ae0970c0dcccf63dd709e6d8646cde54fc15e07f27736b9f8f",
+      "text_sha256": "8b0966b7b0512c1d95cd7cacf0f23ae1a613a0e8bc055138ee486a7694c36eb0",
+      "pane": 1
+    },
+    {
+      "theme": "otty-glass-light",
+      "scene": "otty-glass-light",
+      "layout": "left",
+      "details": false,
+      "capture": "hwnd=2623132 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=123826",
+      "image_sha256": "f0606b124b8b643d4e703f3188f51126bccdaf2ca43990c42af33e1c4b693638",
+      "text_sha256": "8b0966b7b0512c1d95cd7cacf0f23ae1a613a0e8bc055138ee486a7694c36eb0",
+      "pane": 1
+    },
+    {
+      "theme": "otty-gruvbox-dark",
+      "scene": "otty-gruvbox-dark",
+      "layout": "left",
+      "details": false,
+      "capture": "hwnd=2623132 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=128363",
+      "image_sha256": "8003ebb219babd1daa0f367e682e5609cbebb33d2b08e559d60e030d3555bc67",
+      "text_sha256": "8b0966b7b0512c1d95cd7cacf0f23ae1a613a0e8bc055138ee486a7694c36eb0",
+      "pane": 1
+    },
+    {
+      "theme": "otty-monokai-classic",
+      "scene": "otty-monokai-classic",
+      "layout": "left",
+      "details": false,
+      "capture": "hwnd=2623132 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=127646",
+      "image_sha256": "3a3b1fd1ee4e57cacb7d02bddbeeda54ef305bc7100d8e22b7c4a46e4310ae77",
+      "text_sha256": "8b0966b7b0512c1d95cd7cacf0f23ae1a613a0e8bc055138ee486a7694c36eb0",
+      "pane": 1
+    },
+    {
+      "theme": "otty-newsprint",
+      "scene": "otty-newsprint",
+      "layout": "left",
+      "details": false,
+      "capture": "hwnd=2623132 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=129305",
+      "image_sha256": "75848698d4c047d058963e0156e142bb8536d3ca8756766b4f0648beb200a2ff",
+      "text_sha256": "8b0966b7b0512c1d95cd7cacf0f23ae1a613a0e8bc055138ee486a7694c36eb0",
+      "pane": 1
+    },
+    {
+      "theme": "otty-night",
+      "scene": "otty-night",
+      "layout": "left",
+      "details": false,
+      "capture": "hwnd=2623132 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=128361",
+      "image_sha256": "1e441534b4a0457c4a3c28a7377ad66716d33d2d6eed439acab813ac8f7f01db",
+      "text_sha256": "8b0966b7b0512c1d95cd7cacf0f23ae1a613a0e8bc055138ee486a7694c36eb0",
+      "pane": 1
+    },
+    {
+      "theme": "otty-nord",
+      "scene": "otty-nord",
+      "layout": "left",
+      "details": false,
+      "capture": "hwnd=2623132 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=129214",
+      "image_sha256": "140eaaa15077799ec19d4f102cca311bfb02b1a036b3b0e66ba7b87ca469c833",
+      "text_sha256": "8b0966b7b0512c1d95cd7cacf0f23ae1a613a0e8bc055138ee486a7694c36eb0",
+      "pane": 1
+    },
+    {
+      "theme": "otty-one-dark",
+      "scene": "otty-one-dark",
+      "layout": "left",
+      "details": false,
+      "capture": "hwnd=2623132 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=129063",
+      "image_sha256": "ef5084c326c2ee81ea0864628f8d556e0aa104e139fc066b8bf2e58fe56ab00a",
+      "text_sha256": "8b0966b7b0512c1d95cd7cacf0f23ae1a613a0e8bc055138ee486a7694c36eb0",
+      "pane": 1
+    },
+    {
+      "theme": "otty-one-light",
+      "scene": "otty-one-light",
+      "layout": "left",
+      "details": false,
+      "capture": "hwnd=2623132 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=127835",
+      "image_sha256": "192241fd6ed7ca834b43efc8047658ae606ed679be05cf14ac4526b40f5919df",
+      "text_sha256": "8b0966b7b0512c1d95cd7cacf0f23ae1a613a0e8bc055138ee486a7694c36eb0",
+      "pane": 1
+    },
+    {
+      "theme": "otty-owl",
+      "scene": "otty-owl",
+      "layout": "left",
+      "details": false,
+      "capture": "hwnd=2623132 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=127906",
+      "image_sha256": "1db6142fe676ea4661a3ef6e8e5e9b53ddc532d8eaf92575b4e38c80bd240870",
+      "text_sha256": "8b0966b7b0512c1d95cd7cacf0f23ae1a613a0e8bc055138ee486a7694c36eb0",
+      "pane": 1
+    },
+    {
+      "theme": "otty-paper",
+      "scene": "otty-paper",
+      "layout": "left",
+      "details": false,
+      "capture": "hwnd=2623132 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=128775",
+      "image_sha256": "38a77fb8461dc68969d17f857427c7d298fa6c2d2aff139148cb9a5af5c7f4fb",
+      "text_sha256": "8b0966b7b0512c1d95cd7cacf0f23ae1a613a0e8bc055138ee486a7694c36eb0",
+      "pane": 1
+    },
+    {
+      "theme": "otty-pink",
+      "scene": "otty-pink",
+      "layout": "left",
+      "details": false,
+      "capture": "hwnd=2623132 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=129383",
+      "image_sha256": "0490da2adfe28930718aebdd4db301d9101ec9a46a69134a69241c7d89ee2beb",
+      "text_sha256": "8b0966b7b0512c1d95cd7cacf0f23ae1a613a0e8bc055138ee486a7694c36eb0",
+      "pane": 1
+    },
+    {
+      "theme": "otty-rose-pine",
+      "scene": "otty-rose-pine",
+      "layout": "left",
+      "details": false,
+      "capture": "hwnd=2623132 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=129138",
+      "image_sha256": "51eb659969616a106dd8e9894ee581c24f9d5629d7c3330e5efc38fa2121f21b",
+      "text_sha256": "8b0966b7b0512c1d95cd7cacf0f23ae1a613a0e8bc055138ee486a7694c36eb0",
+      "pane": 1
+    },
+    {
+      "theme": "otty-seafoam-pastel",
+      "scene": "otty-seafoam-pastel",
+      "layout": "left",
+      "details": false,
+      "capture": "hwnd=2623132 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=128780",
+      "image_sha256": "656ed1af2fc2663d7831a65ce12bfc8a0c46ee1d989b60ccdf1425d54954b376",
+      "text_sha256": "8b0966b7b0512c1d95cd7cacf0f23ae1a613a0e8bc055138ee486a7694c36eb0",
+      "pane": 1
+    },
+    {
+      "theme": "otty-solarized-dark",
+      "scene": "otty-solarized-dark",
+      "layout": "left",
+      "details": false,
+      "capture": "hwnd=2623132 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=127815",
+      "image_sha256": "81ee06997a5d25bfc284640f5ab72c91bc1e89536c29998d51167ca5ddca2202",
+      "text_sha256": "8b0966b7b0512c1d95cd7cacf0f23ae1a613a0e8bc055138ee486a7694c36eb0",
+      "pane": 1
+    },
+    {
+      "theme": "otty-solarized-light",
+      "scene": "otty-solarized-light",
+      "layout": "left",
+      "details": false,
+      "capture": "hwnd=2623132 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=127966",
+      "image_sha256": "cd408da890386a204adc2ed0ea6fab2cc7df2accd508bd6605533bfe1e939f41",
+      "text_sha256": "8b0966b7b0512c1d95cd7cacf0f23ae1a613a0e8bc055138ee486a7694c36eb0",
+      "pane": 1
+    },
+    {
+      "theme": "otty-tokyo-night",
+      "scene": "otty-tokyo-night",
+      "layout": "left",
+      "details": false,
+      "capture": "hwnd=2623132 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=128916",
+      "image_sha256": "dedfe7c795085597c48f6071b17cdeec2ea82924c76db143e96aa2f371514dff",
+      "text_sha256": "8b0966b7b0512c1d95cd7cacf0f23ae1a613a0e8bc055138ee486a7694c36eb0",
+      "pane": 1
+    },
+    {
+      "theme": "one_light",
+      "scene": "one_light",
+      "layout": "left",
+      "details": false,
+      "capture": "hwnd=2623132 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=127920",
+      "image_sha256": "cf81f721390b62739849974b1c8ef298df78e18df6c23a9f322bec9a04cb15e4",
+      "text_sha256": "8b0966b7b0512c1d95cd7cacf0f23ae1a613a0e8bc055138ee486a7694c36eb0",
+      "pane": 1
+    },
+    {
+      "theme": "otty-april",
+      "scene": "otty-april-top",
+      "layout": "top",
+      "details": false,
+      "capture": "hwnd=2623132 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=121137",
+      "image_sha256": "90490a0f3bb15bf95f44beb92aabcd7d4611398d2a3f65a271d5d9c89662b7c5",
+      "text_sha256": "8b0966b7b0512c1d95cd7cacf0f23ae1a613a0e8bc055138ee486a7694c36eb0",
+      "pane": 1
+    },
+    {
+      "theme": "otty-floating-card",
+      "scene": "otty-floating-card-top",
+      "layout": "top",
+      "details": false,
+      "capture": "hwnd=2623132 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=120890",
+      "image_sha256": "89f957d1146d3546a3de6d17eafdc6fe16eb30acf6a93ddbe5c2d67160e9c22f",
+      "text_sha256": "8b0966b7b0512c1d95cd7cacf0f23ae1a613a0e8bc055138ee486a7694c36eb0",
+      "pane": 1
+    },
+    {
+      "theme": "otty-nord",
+      "scene": "otty-nord-top",
+      "layout": "top",
+      "details": false,
+      "capture": "hwnd=2623132 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=122261",
+      "image_sha256": "2bb416251f92ac65d95f0f4f6c50a981a898320bb5beb8ef0b8de00d2eba547c",
+      "text_sha256": "8b0966b7b0512c1d95cd7cacf0f23ae1a613a0e8bc055138ee486a7694c36eb0",
+      "pane": 1
+    },
+    {
+      "theme": "otty-glass-light",
+      "scene": "otty-glass-light-top",
+      "layout": "top",
+      "details": false,
+      "capture": "hwnd=2623132 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=116316",
+      "image_sha256": "055dce38354a43b261d08ea4400eafeffc737ff3d7e6021fcda8ddbd7076f78e",
+      "text_sha256": "8b0966b7b0512c1d95cd7cacf0f23ae1a613a0e8bc055138ee486a7694c36eb0",
+      "pane": 1
+    },
+    {
+      "theme": "otty-acrylic-dark",
+      "scene": "otty-acrylic-dark-details",
+      "layout": "left",
+      "details": true,
+      "capture": "hwnd=2623132 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=128056",
+      "image_sha256": "d8ac51e9c0b169306c5a19a5f0bc949f2d79be66c899291ad2f893db3098d711",
+      "text_sha256": "8b0966b7b0512c1d95cd7cacf0f23ae1a613a0e8bc055138ee486a7694c36eb0",
+      "pane": 1
+    },
+    {
+      "theme": "otty-glass-light",
+      "scene": "otty-glass-light-details",
+      "layout": "left",
+      "details": true,
+      "capture": "hwnd=2623132 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=123854",
+      "image_sha256": "683df9565927a89589223febbf7c0698b17d82874cb37b538abc2dced5f824ca",
+      "text_sha256": "8b0966b7b0512c1d95cd7cacf0f23ae1a613a0e8bc055138ee486a7694c36eb0",
+      "pane": 1
+    }
+  ],
+  "same_pane_across_all_themes": true,
+  "original_terminal_output_restored": true
+}

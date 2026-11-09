@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Add all 25 Otty theme profiles with authored terminal colors, transparent
+  surfaces, native material requests, styled tabs and terminal cards.
+
 - Match right-panel mode icons and labels to the surrounding toolbar size.
 - Present a single file-tree root as a title and remove its redundant child
   indentation while preserving folding and file actions.
