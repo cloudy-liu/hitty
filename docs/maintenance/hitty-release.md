@@ -1,8 +1,9 @@
 # Hitty release procedure
 
 Use `cloudy-liu/hitty` and Hitty tags.
-Hitty's first release, `v0.1.0`, was published on November 8, 2026. Use it as
-the baseline for subsequent Hitty release comparisons.
+Hitty's latest release, `v0.2.0`, was published on November 9, 2026.
+Compare the next release against that Hitty tag; the first release, `v0.1.0`,
+remains the baseline for the v0.2.0 comparison.
 
 1. Complete the checks in `docs/testing/hitty-bootstrap.md` and the agreed
    Windows x86_64, Linux x86_64, macOS ARM64, and macOS Intel acceptance gate.
@@ -22,9 +23,9 @@ the baseline for subsequent Hitty release comparisons.
 5. Create the matching version tag from the accepted commit after review. Tag
    runs may assemble an unpublished draft; they cannot overwrite an already published release.
 6. Verify the draft's complete asset set again. Use English user-facing notes
-   from `docs/releases/hitty-v0.1.0.md` for the first release. Keep logs and CI
-   IDs in verification records. Record the source snapshot for this first
-   release; later releases compare against the previous Hitty tag.
+   from `docs/releases/hitty-v<version>.md`. Keep logs and CI IDs in verification
+   records. The first release records its source snapshot; later releases compare
+   against the previous Hitty tag.
 7. Publish explicitly only after the platform acceptance gate is complete.
    Then verify the latest-release endpoint and application/server downloads.
    After publication, fix defects in a subsequent version; do not move the

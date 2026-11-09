@@ -34,6 +34,7 @@ prototype is design guidance, not proof of native application behavior.
 
 ## Current records
 
+- [v0.2.0 release verification](hitty-v0.2.0-release.md) and [published asset metadata](hitty-v0.2.0-release.json).
 - [First release verification](hitty-bootstrap.md) and [release metadata](hitty-v0.1.0-release.json).
 - [README presentation](readme-product-presentation.md).
 - [Right-panel implementation](right-panel.md).
