@@ -6,7 +6,7 @@ use std::sync::Arc;
 use crate::core::config::RightPanelTab;
 use crate::core::git::status::{DecoStatus, DirRollup, StatusIndex};
 use crate::terminal::git_data::index_of;
-use crate::ui::app::HittyApp;
+use crate::ui::app::{HittyApp, TILE_GLYPH, TILE_SIZE_SM};
 use crate::ui::file_copy;
 use crate::ui::file_icons::{FileIcon, ROW_ICON};
 use crate::ui::host_ops::{ByHost, HostId, HostOps, InFlight, SharedHost, WatchSub};
@@ -23,7 +23,9 @@ use gpui_component::Disableable as _;
 use gpui_component::button::Button;
 use gpui_component::input::{Input, InputEvent, InputState};
 use gpui_component::menu::{ContextMenuExt as _, PopupMenu, PopupMenuItem};
-use gpui_component::{ActiveTheme as _, Icon, Sizable as _, WindowExt as _, h_flex, v_flex};
+use gpui_component::{
+    ActiveTheme as _, Icon, IconName, Sizable as _, WindowExt as _, h_flex, v_flex,
+};
 
 const INDENT: f32 = 14.0;
 
@@ -1824,11 +1826,14 @@ impl HittyApp {
                     .debug_selector(|| "file-tree-hidden-toggle".into())
                     .child(
                         crate::ui::tab_strip::chrome_tile_sized(
-                            Button::new("file-tree-hidden-toggle")
-                                .icon(Icon::empty().path("icons/eye.svg")),
-                            26.,
-                            16.,
-                            hidden,
+                            Button::new("file-tree-hidden-toggle").icon(if hidden {
+                                IconName::Eye
+                            } else {
+                                IconName::EyeOff
+                            }),
+                            TILE_SIZE_SM,
+                            TILE_GLYPH,
+                            false,
                             cx,
                         )
                         .rounded(px(6.))
@@ -1848,8 +1853,8 @@ impl HittyApp {
                     crate::ui::tab_strip::chrome_tile_sized(
                         Button::new("file-tree-refresh")
                             .icon(Icon::empty().path("icons/refresh.svg")),
-                        26.,
-                        16.,
+                        TILE_SIZE_SM,
+                        TILE_GLYPH,
                         false,
                         cx,
                     )
@@ -2021,6 +2026,14 @@ impl HittyApp {
     ) -> Vec<AnyElement> {
         let path = row.entry.path.clone();
         let is_dir = row.entry.is_dir;
+        let root_in_header = self.tab_code().is_some_and(|code| code.roots.len() == 1);
+        // The root is already named above the tree, so its children start at
+        // the first visual level. Search results and multi-root trees keep
+        // their existing depths.
+        let depth = row
+            .depth
+            .saturating_sub(usize::from(root_in_header && row.root.is_some()));
+        let row_inset = 6.0 + depth as f32 * INDENT;
         let selected = self
             .tab_code()
             .is_some_and(|c| c.selection.iter().any(|selected| selected.matches(row)));
@@ -2047,7 +2060,7 @@ impl HittyApp {
                     // Aligned with the label column of a real row at this
                     // depth: 6 for the row's own inset, INDENT for the depth,
                     // then the chevron and icon cells and their gaps.
-                    .pl(px(6.0 + row.depth as f32 * INDENT + LABEL_LEAD))
+                    .pl(px(row_inset + LABEL_LEAD))
                     .h(px(FILE_ROW_H))
                     .flex_shrink_0()
                     .line_height(relative(1.))
@@ -2100,8 +2113,10 @@ impl HittyApp {
                 Some(TreeEdit::Rename { path: p, .. }) if *p == path
             );
 
+        // A single root is the panel heading, without a disclosure glyph or
+        // its indentation. Tree roots in multi-root views retain their arrows.
+        let root_heading = row.is_root && root_in_header;
         // Files keep an empty chevron cell to align with sibling folders.
-        // Root headings use the same disclosure control, without a folder icon.
         let chevron = {
             div()
                 .flex_none()
@@ -2169,7 +2184,7 @@ impl HittyApp {
             })
             .items_center()
             .gap_1()
-            .pl(px(6.0 + row.depth as f32 * INDENT))
+            .pl(px(row_inset))
             .pr_1()
             .h(px(FILE_ROW_H))
             .flex_shrink_0()
@@ -2178,7 +2193,7 @@ impl HittyApp {
             .cursor_pointer()
             .when(selected, |d| d.bg(gpui::rgb(sf.selected)))
             .when(!selected, |d| d.hover(|s| s.bg(gpui::rgb(sf.hover))))
-            .child(chevron)
+            .when(!root_heading, |d| d.child(chevron))
             .when(!row.is_root, |d| {
                 d.child(
                     div()
@@ -2297,7 +2312,7 @@ impl HittyApp {
                     h_flex()
                         .items_center()
                         .gap_1()
-                        .pl(px(6.0 + row.depth as f32 * INDENT))
+                        .pl(px(row_inset))
                         .pr_1()
                         .h(px(FILE_ROW_H))
                         .flex_shrink_0()

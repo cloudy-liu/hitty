@@ -8,7 +8,10 @@ use std::path::PathBuf;
 
 use crate::core::config::{Config, RightPanelTab};
 use crate::daemon::protocol::PaneProcs;
-use crate::ui::app::{CONTENT_INSET, HittyApp, TILE_GLYPH_XS, TILE_SIZE_XS, tile_trailing_inset};
+use crate::ui::app::{
+    CONTENT_INSET, HittyApp, SECONDARY_BAR_HEIGHT, TILE_GLYPH_XS, TILE_SIZE_SM, TILE_SIZE_XS,
+    tile_trailing_inset,
+};
 use crate::ui::i18n::{L10nKey, t};
 use crate::ui::scrollbar::with_vertical_scrollbar;
 
@@ -474,11 +477,11 @@ impl HittyApp {
             cx,
         )
         .flex_none()
-        .h(px(46.))
+        .h(px(SECONDARY_BAR_HEIGHT))
         .items_center()
         .justify_center()
         .gap(px(6.))
-        .children(self.right_panel_tabs(30., cx));
+        .children(self.right_panel_tabs(TILE_SIZE_SM, cx));
         v_flex()
             .flex_none()
             .child(modes)

@@ -1,0 +1,32 @@
+{
+  "ready": true,
+  "title": "hitty document acceptance",
+  "os": "windows",
+  "scale_factor": 1.75,
+  "width": 1380.0,
+  "height": 760.0,
+  "dark": false,
+  "dock": false,
+  "right_panel": false,
+  "readme": true,
+  "history": false,
+  "history_width": null,
+  "history_height": null,
+  "history_profile": null,
+  "history_commits": null,
+  "files": [
+    "\\\\?\\D:\\tmp\\hitty-readme-refresh\\scenes\\hitty\\README.md",
+    "\\\\?\\D:\\tmp\\hitty-readme-refresh\\scenes\\hitty\\src\\settings.rs",
+    "\\\\?\\D:\\tmp\\hitty-readme-refresh\\scenes\\hitty\\overview.html"
+  ],
+  "active": "\\\\?\\D:\\tmp\\hitty-readme-refresh\\scenes\\hitty\\src\\settings.rs",
+  "preview": false,
+  "open_files": 3,
+  "capture": "No GPU image requested",
+  "binary_sha256": "f4ef113d95e6ee2b3d2b6f82a2c5aaabd8b6f160bef20f866bfbb42506b427d9",
+  "phase": "final-after",
+  "panel_mode": "files",
+  "ui_font_size": 16,
+  "panel_width": 240,
+  "image_sha256": "0a06c7d089b7ff874301625d2ec773595c36f8f9c6825904fc1c8558441f0533"
+}

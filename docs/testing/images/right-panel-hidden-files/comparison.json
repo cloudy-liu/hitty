@@ -1,0 +1,18 @@
+{
+  "source_captures": [
+    "before-light-shown.png",
+    "after-light-shown.png",
+    "after-light-hidden.png",
+    "before-dark-shown.png",
+    "after-dark-shown.png",
+    "after-dark-hidden.png"
+  ],
+  "source_crop_pixels": [
+    1995,
+    45,
+    424,
+    480
+  ],
+  "transformation": "Unscaled native crops arranged in three columns and two rows; labels outside the captures.",
+  "image_sha256": "4cef40029c6f6e851e66b8b2d77404ad09a92aa1c38c8d071435e2e730974b3d"
+}
