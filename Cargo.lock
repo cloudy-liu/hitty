@@ -11142,7 +11142,7 @@ dependencies = [
 
 [[package]]
 name = "hitty"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "alacritty_terminal",
  "anyhow",
@@ -11210,7 +11210,7 @@ dependencies = [
 
 [[package]]
 name = "hitty-cli"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "alacritty_terminal",
  "anyhow",
@@ -11225,7 +11225,7 @@ dependencies = [
 
 [[package]]
 name = "hitty-core"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "anyhow",
  "base64 0.22.1",
@@ -11262,7 +11262,7 @@ dependencies = [
 
 [[package]]
 name = "hitty-server"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "libc",
  "tempfile",

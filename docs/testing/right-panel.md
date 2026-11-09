@@ -121,6 +121,13 @@ baseline fixture passed, and both final standalone runs passed without changing
 the production scroll-restoration code or weakening its assertions. The initial
 failure's cause was not established; diagnostic state is now reported on failure.
 
-macOS/Linux native appearance has not been inspected locally. The normal
-cross-platform PR checks provide their build/test coverage; this change does
-not alter the published v0.1.0 tag or assets.
+PR #21 passed all cross-platform checks before its squash merge as `2df4c05`.
+CI run [42530978237](https://github.com/cloudy-liu/hitty/actions/runs/42530978237)
+passed on Windows x86_64, Linux x86_64, macOS ARM64 and macOS Intel, including
+their applicable native fixtures and remote-server checks. Packaging run
+[42530978171](https://github.com/cloudy-liu/hitty/actions/runs/42530978171) passed
+the four desktop builds, packaged runtime/session-reconnect checks, Windows
+installation/removal and complete asset verification.
+
+macOS/Linux native appearance has not been inspected locally. The published
+v0.1.0 tag and assets remain unchanged.

@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v0.2.0 - 2026-11-09
 
 - Refine the right panel into Info, Outline, Git and Files with compact mode
   labels and visible file-view actions.
