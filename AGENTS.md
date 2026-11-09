@@ -34,8 +34,12 @@ baseline. Validate the rename and affected public flows using the inherited
 harnesses; keep broader feature work separate. Preserve the separate source
 baseline commit when integrating the bootstrap; later PRs default to squash.
 
-Before creating or updating a PR, use the `mattpocock-skills:pr` skill and its
-Summary, Evidence, and Merge Danger structure.
+## Commits and pull requests
+
+Before creating or amending a commit, use the `git-commit` skill and its
+title-and-body format. Before creating or updating a GitHub PR, use the
+`mattpocock-skills:pr` skill and its Summary, Evidence, and Merge Danger
+structure. These are the default formats for repository delivery.
 
 ## Releases
 

@@ -81,6 +81,12 @@ photo or local initials beside the graph. **Load Author Avatars** in the History
 menu controls remote photos (`scm_remote_avatars`, enabled by default). Cached
 photos remain available offline; unavailable photos use initials.
 
+GitHub noreply addresses load the account's avatar directly. Other addresses
+try Gravatar first; if unavailable, Hitty sends the author email to GitHub's
+public commit search and loads the linked author's avatar when the email
+matches. Authors with no matching public record, or failed/rate-limited
+lookups, keep their initials when no cached photo is available.
+
 Click a commit to open an independent **Commit changes** document tab beside
 your open files. It shows the author, date, copyable full SHA, refs, expandable
 complete message and file changes. Its breadcrumb carries the same split/unified

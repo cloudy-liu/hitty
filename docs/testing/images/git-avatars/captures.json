@@ -1,0 +1,29 @@
+{
+  "before_revision": "2df4c0537193f6c9516ed708c06d62c06cc340d1",
+  "after_avatars_rs_sha256": "6beaa202d8670e95d3e623181fc133dfc40e9972d7005809ac80994c1a21d97f",
+  "viewport": [
+    1200,
+    800
+  ],
+  "scale_factor": 1.75,
+  "frame": [
+    2104,
+    1402
+  ],
+  "history_width": 390,
+  "history_height": 530,
+  "history_commits": 11,
+  "capture": "scripts/capture-native-window.ps1 (PrintWindow)",
+  "crop": [
+    1422,
+    480,
+    2104,
+    1402
+  ],
+  "images": {
+    "after-history.png": "17b9ed8a057ef90e7c16adbce8338a4bf676863867acdc601f84ab1cd8e4ff37",
+    "after.png": "fecf0b76938077e059c990c38e8c3ded1eaa8dc667bc191a341d4fd3e32a4e1e",
+    "before-history.png": "4f8639d63e59dfda7de54e6cda2d2fdbdedf3bc57e3ad00f1cbfedb423190832",
+    "before.png": "4ac9c3345137acf2cbacc917669d4f2a9faafc6e93465739115a38fad1f668c4"
+  }
+}
