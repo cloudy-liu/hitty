@@ -1590,9 +1590,16 @@ fn pane_argv(cmd: &CommandBuilder) -> Vec<String> {
         .map(|arg| arg.to_string_lossy().into_owned())
         .collect();
     if argv.is_empty() {
-        // A default-prog builder names no argv; its login-shell argv0 trick is
-        // a portable-pty idea. Run the shell it resolves to.
-        vec![cmd.get_shell()]
+        // portable-pty gives default Unix shells a login argv0. terminal.run
+        // has no separate argv0, so preserve login initialization with -l.
+        #[cfg(unix)]
+        {
+            vec![cmd.get_shell(), "-l".into()]
+        }
+        #[cfg(not(unix))]
+        {
+            vec![cmd.get_shell()]
+        }
     } else {
         argv
     }
@@ -1753,8 +1760,9 @@ impl DaemonPane {
         });
 
         #[cfg(windows)]
-        Self::spawn_exit_monitor(
-            if hc.is_none() { shell_pid } else { None },
+        Self::spawn_process_monitor(
+            shell_pid,
+            hc.is_none(),
             master.clone(),
             state.clone(),
             pane.shutting_down.clone(),
@@ -2622,8 +2630,9 @@ impl DaemonPane {
     }
 
     #[cfg(windows)]
-    fn spawn_exit_monitor(
+    fn spawn_process_monitor(
         shell_pid: Option<u32>,
+        report_exit: bool,
         master: Arc<Mutex<Option<Box<dyn MasterPty + Send>>>>,
         state: Arc<Mutex<PaneState>>,
         shutting_down: Arc<AtomicBool>,
@@ -2638,6 +2647,9 @@ impl DaemonPane {
         let Some(pid) = shell_pid else { return };
         let handle = unsafe { OpenProcess(PROCESS_SYNCHRONIZE, 0, pid) };
         if handle.is_null() {
+            if !report_exit {
+                return; // hc reports exit through its stream and lifecycle events.
+            }
             // The process may have exited before OpenProcess ran, so go
             // straight to the close-and-report path — off this thread, since
             // pane construction is what calls us.
@@ -2658,6 +2670,9 @@ impl DaemonPane {
                     WaitForSingleObject(handle, REMOTE_CONTEXT_POLL_INTERVAL.as_millis() as u32)
                 } == WAIT_TIMEOUT
                 {
+                    if !report_exit && shutting_down.load(Ordering::SeqCst) {
+                        break; // A preserved hc shell can outlive this pane.
+                    }
                     if shutting_down.load(Ordering::SeqCst) || state.lock().unwrap().agent.is_none()
                     {
                         continue;
@@ -2674,7 +2689,9 @@ impl DaemonPane {
                 unsafe {
                     CloseHandle(handle);
                 }
-                drain_then_report(master, state, shutting_down, death, EXIT_DRAIN_WINDOW);
+                if report_exit {
+                    drain_then_report(master, state, shutting_down, death, EXIT_DRAIN_WINDOW);
+                }
             })
             .expect("spawn daemon pane exit monitor thread");
     }
@@ -5135,6 +5152,27 @@ mod tests {
             cmd.get_env("ZDOTDIR").and_then(|value| value.to_str()),
             Some("/tmp/hitty-zdotdir-test")
         );
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn herdr_default_shell_keeps_login_mode_and_explicit_argv() {
+        for default in [true, false] {
+            let mut cmd = if default {
+                CommandBuilder::new_default_prog()
+            } else {
+                CommandBuilder::new("/bin/bash")
+            };
+            cmd.env("SHELL", "/bin/bash");
+            let argv = pane_argv(&cmd);
+            let status = std::process::Command::new(&argv[0])
+                .args(["--noprofile", "--norc"])
+                .args(&argv[1..])
+                .args(["-c", "shopt -q login_shell"])
+                .status()
+                .unwrap();
+            assert_eq!(status.success(), default, "login mode for {argv:?}");
+        }
     }
 
     #[cfg(windows)]

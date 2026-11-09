@@ -1444,7 +1444,7 @@ impl HcReader {
                 };
                 match terminal {
                     Ok(t) if t.state == "finished" => {
-                        session.exit.set(t.exit_code.unwrap_or(1).max(0) as u32);
+                        session.exit.set(t.exit_code.unwrap_or(1) as u32);
                         return false;
                     }
                     Ok(t) if t.state == "live" && t.pid.is_some() => {
@@ -1530,7 +1530,9 @@ impl Read for HcReader {
                                 .and_then(|t| t.exit_code)
                         })
                         .unwrap_or(1);
-                    self.session.exit.set(code.max(0) as u32);
+                    // Preserve signed Windows status bits, as the native PTY
+                    // does. The public pane protocol converts them back to i32.
+                    self.session.exit.set(code as u32);
                     return Ok(0);
                 }
                 Ok(StreamEvent::Lost) | Err(RecvTimeoutError::Disconnected) => {

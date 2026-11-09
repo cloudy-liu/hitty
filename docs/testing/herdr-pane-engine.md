@@ -2,10 +2,14 @@
 
 Issue: cloudy-liu/hitty#23. Verified on **2026-11-09**, Windows, with installed
 `hc 0.1.15` and Hitty debug builds. Native remains the default. The spike is
-implemented locally. The Windows spike acceptance checklist passed, including
+implemented behind the opt-in selector. The Windows spike acceptance checklist
+passed, including
 actual Claude Code editing, native Chinese IME composition, a Claude/Codex
 message roundtrip, and an isolated real-core cold start/restart. The Codex
 sandbox approval and temporary-file cleanup limits are recorded below.
+
+The [pre-PR review and follow-up](herdr-pane-engine-review.md) records the
+2026-11-10 compatibility corrections and additional regression coverage.
 
 ## Selection and scope
 

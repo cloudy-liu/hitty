@@ -1,0 +1,30 @@
+{
+  "phase": "after",
+  "binary": "C:\\Users\\cloudy\\.codex\\worktrees\\7212\\hitty\\target\\debug\\hitty-app.exe",
+  "window_logical_size": [
+    1100,
+    700
+  ],
+  "capture": "hwnd=5507012 client=1925x1225 frame=1929x1227 printwindow=True pointer=none size=87409",
+  "cli_version": "hitty 0.2.0",
+  "terminal_input_output": "passed",
+  "configuration": "C:\\Users\\cloudy\\AppData\\Local\\Temp\\hitty-bootstrap-smoke-kdkjsija",
+  "session_after_gui_restart": "passed",
+  "test_preferences": {
+    "check_for_updates": false,
+    "auto_download_updates": false,
+    "install_cli_on_path": false,
+    "show_tray_icon": false,
+    "shell": {
+      "program": "powershell.exe",
+      "args": [
+        "-NoLogo",
+        "-NoProfile"
+      ]
+    },
+    "pane_engine": "herdr-core"
+  },
+  "pane_engine": "herdr-core",
+  "hc_terminal": "t57",
+  "cli_wait_free": "passed"
+}

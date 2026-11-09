@@ -292,23 +292,39 @@ fn fake_core() -> PathBuf {
         .get_or_init(|| {
             let dir = tempfile::TempDir::new().unwrap();
             let binary = dir.path().join(if cfg!(windows) { "hc.exe" } else { "hc" });
-            let mut command = Command::new("rustc");
-            command
-                .args(["--edition=2024", "--crate-name", "fake_hc"])
-                .arg(Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/fake_hc.rs"))
-                .arg("-o")
-                .arg(&binary);
-            hide_console(&mut command);
-            let output = command.output().expect("compile the standalone fake hc");
-            assert!(
-                output.status.success(),
-                "{}",
-                String::from_utf8_lossy(&output.stderr)
-            );
+            compile_fixture("fake_hc.rs", &binary);
             (dir, binary)
         })
         .1
         .clone()
+}
+
+fn compile_fixture(source: &str, binary: &Path) {
+    let mut command = Command::new("rustc");
+    command
+        .arg("--edition=2024")
+        .arg(
+            Path::new(env!("CARGO_MANIFEST_DIR"))
+                .join("tests/fixtures")
+                .join(source),
+        )
+        .arg("-o")
+        .arg(binary);
+    hide_console(&mut command);
+    let output = command.output().expect("compile the standalone fixture");
+    assert!(
+        output.status.success(),
+        "{}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+}
+
+#[cfg(windows)]
+fn console_agent(dir: &Path) -> PathBuf {
+    let binary = dir.join("claude.exe");
+    compile_fixture("console_agent.rs", &binary);
+    std::fs::copy(&binary, dir.join("test-editor.exe")).unwrap();
+    binary
 }
 
 fn output_until(pane: &mut PaneSession, marker: &str) -> String {
@@ -542,6 +558,91 @@ fn real_hc_panes_survive_daemon_restart_and_close_only_their_own_terminals() {
         std::thread::sleep(Duration::from_millis(20));
     }
     instance.stop();
+}
+
+#[cfg(windows)]
+#[test]
+fn real_hc_preserves_negative_windows_exit_codes() {
+    let Some(hc) = installed_core() else {
+        eprintln!("hc not installed; skipping signed Windows exit-code probe");
+        return;
+    };
+    let mut instance = Instance::new(hc, true);
+    instance.start();
+    let mut pane = instance.spawn();
+    pane.input(b"exit /b -1\r").unwrap();
+    loop {
+        if let DaemonMsg::Exited { code } = pane.recv().unwrap() {
+            assert_eq!(
+                code,
+                Some(-1),
+                "a failing Windows status must not become success"
+            );
+            break;
+        }
+    }
+}
+
+#[cfg(windows)]
+#[test]
+fn real_hc_reports_external_editor_input_ownership() {
+    let Some(hc) = installed_core() else {
+        eprintln!("hc not installed; skipping agent input ownership probe");
+        return;
+    };
+    let mut instance = Instance::new(hc, true);
+    let agent = console_agent(instance.dir.path());
+    instance.start();
+    let mut pane = instance.spawn();
+    pane.input(format!("\"{}\"\r", agent.display()).as_bytes())
+        .unwrap();
+    // Agent detection is throttled and runs on output. Keep the fixture
+    // producing readiness output until the public protocol confirms detection.
+    pane.set_recv_timeout(Some(Duration::from_millis(500)))
+        .unwrap();
+    let deadline = Instant::now() + Duration::from_secs(10);
+    loop {
+        assert!(Instant::now() < deadline, "fixture agent was not detected");
+        match pane.recv() {
+            Ok(DaemonMsg::Agent(Some(hitty_core::core::cli_agent::CLIAgent::Claude))) => break,
+            Ok(DaemonMsg::Exited { code }) => panic!("fixture exited before detection: {code:?}"),
+            Ok(_) => {}
+            Err(error)
+                if matches!(
+                    error.kind(),
+                    std::io::ErrorKind::TimedOut | std::io::ErrorKind::WouldBlock
+                ) =>
+            {
+                pane.input(b"ready\r").unwrap();
+            }
+            Err(error) => panic!("agent readiness: {error}"),
+        }
+    }
+    pane.set_recv_timeout(Some(Duration::from_secs(10)))
+        .unwrap();
+    pane.input(b"edit\r").unwrap();
+    for expected in [true, false] {
+        let deadline = Instant::now() + Duration::from_secs(10);
+        loop {
+            assert!(
+                Instant::now() < deadline,
+                "missing input ownership: {expected}"
+            );
+            if let DaemonMsg::AgentInputSuspended(suspended) = pane
+                .recv()
+                .unwrap_or_else(|error| panic!("input ownership {expected}: {error}"))
+            {
+                if suspended == expected {
+                    break;
+                }
+            }
+        }
+        if expected {
+            pane.input(b"return\r").unwrap();
+        }
+    }
+    pane.input(b"exit\r").unwrap();
+    pane.kill().unwrap();
 }
 
 #[cfg(windows)]
