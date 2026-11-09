@@ -111,6 +111,7 @@ impl AvatarCache {
         });
         let directory = self.directory.clone();
         let source_key = key.clone();
+        let email = email.trim().to_lowercase();
         let client = cx.http_client();
         let task = cx.spawn(async move |this, cx| {
             let disk_dir = directory.clone();
@@ -148,7 +149,7 @@ impl AvatarCache {
             let loaded = cx
                 .background_executor()
                 .spawn(async move {
-                    let decoded = fetch(client, &url).await?;
+                    let decoded = fetch(client, &url, &email).await?;
                     if let Some(directory) = directory {
                         // Cache write failure must not hide an otherwise valid photo.
                         let _ = persist(&directory, &write_key, &decoded.png);
@@ -250,22 +251,39 @@ fn decode(bytes: &[u8]) -> anyhow::Result<Decoded> {
 async fn fetch(
     client: Arc<dyn gpui::http_client::HttpClient>,
     url: &str,
+    email: &str,
 ) -> anyhow::Result<Decoded> {
     smol::future::or(
         async {
-            let mut response = client.get(url, ().into(), true).await?;
-            anyhow::ensure!(response.status().is_success(), "avatar HTTP error");
-            let mut bytes = Vec::new();
-            response
-                .body_mut()
-                .take(MAX_RESPONSE + 1)
-                .read_to_end(&mut bytes)
-                .await?;
+            let primary = fetch_bytes(client.as_ref(), url)
+                .await
+                .and_then(|bytes| decode(&bytes));
+            if primary.is_ok() || email.ends_with("@users.noreply.github.com") {
+                return primary;
+            }
+            // Ordinary commit emails can belong to GitHub users without a
+            // Gravatar. Require a matching, linked author: the email-image CDN
+            // endpoint also returns a generic picture for unknown addresses.
+            let mut lookup = url::Url::parse("https://api.github.com/search/commits")?;
+            lookup
+                .query_pairs_mut()
+                .append_pair("q", &format!("author-email:{email}"))
+                .append_pair("per_page", "1");
+            let result: serde_json::Value =
+                serde_json::from_slice(&fetch_bytes(client.as_ref(), lookup.as_str()).await?)?;
+            let commit = &result["items"][0];
             anyhow::ensure!(
-                bytes.len() as u64 <= MAX_RESPONSE,
-                "avatar response exceeds 256 KiB"
+                commit["commit"]["author"]["email"]
+                    .as_str()
+                    .is_some_and(|found| found.trim().eq_ignore_ascii_case(email)),
+                "no matching GitHub commit author"
             );
-            decode(&bytes)
+            let id = commit["author"]["id"]
+                .as_u64()
+                .filter(|id| *id > 0)
+                .ok_or_else(|| anyhow::anyhow!("commit author has no GitHub account"))?;
+            let url = format!("https://avatars.githubusercontent.com/u/{id}?s={PIXELS}&v=4");
+            decode(&fetch_bytes(client.as_ref(), &url).await?)
         },
         async {
             smol::Timer::after(Duration::from_secs(8)).await;
@@ -273,6 +291,25 @@ async fn fetch(
         },
     )
     .await
+}
+
+async fn fetch_bytes(
+    client: &dyn gpui::http_client::HttpClient,
+    url: &str,
+) -> anyhow::Result<Vec<u8>> {
+    let mut response = client.get(url, ().into(), true).await?;
+    anyhow::ensure!(response.status().is_success(), "avatar HTTP error");
+    let mut bytes = Vec::new();
+    response
+        .body_mut()
+        .take(MAX_RESPONSE + 1)
+        .read_to_end(&mut bytes)
+        .await?;
+    anyhow::ensure!(
+        bytes.len() as u64 <= MAX_RESPONSE,
+        "avatar response exceeds 256 KiB"
+    );
+    Ok(bytes)
 }
 
 fn read_cached(directory: Option<&Path>, key: &str) -> Option<(Arc<RenderImage>, Duration)> {
@@ -356,6 +393,148 @@ mod tests {
             .write_to(&mut output, image::ImageFormat::Png)
             .unwrap();
         output.into_inner()
+    }
+
+    #[gpui::test]
+    fn ordinary_email_loads_the_matching_github_author_photo(cx: &mut TestAppContext) {
+        cx.executor().allow_parking();
+        let calls = Arc::new(AtomicUsize::new(0));
+        let observed = calls.clone();
+        let bytes = photo();
+        cx.update(|cx| {
+            cx.set_http_client(FakeHttpClient::create(move |request| {
+                observed.fetch_add(1, Ordering::SeqCst);
+                let url = url::Url::parse(&request.uri().to_string()).unwrap();
+                let (status, body) = match url.host_str().unwrap() {
+                    "gravatar.com" => (404, Vec::new()),
+                    "api.github.com" => {
+                        assert_eq!(url.path(), "/search/commits");
+                        assert!(url.query_pairs().any(|(key, value)| {
+                            key == "q" && value == "author-email:ada+git@example.com"
+                        }));
+                        (
+                            200,
+                            serde_json::to_vec(&serde_json::json!({
+                                "items": [{
+                                    "author": { "id": 42 },
+                                    "commit": { "author": { "email": "Ada+git@Example.com" } }
+                                }]
+                            }))
+                            .unwrap(),
+                        )
+                    }
+                    "avatars.githubusercontent.com" => {
+                        assert_eq!(url.path(), "/u/42");
+                        (200, bytes.clone())
+                    }
+                    host => panic!("unexpected avatar host: {host}"),
+                };
+                async move {
+                    Ok(Response::builder()
+                        .status(status)
+                        .body(body.into())
+                        .unwrap())
+                }
+            }));
+        });
+        let cache = cx.update(|cx| AvatarCache::new(None, cx));
+        cache.update(cx, |cache, cx| {
+            cache.image(" Ada+git@Example.com ", cx);
+        });
+        cx.background_executor.run_until_parked();
+        for _ in 0..20 {
+            assert!(
+                cache
+                    .update(cx, |cache, cx| cache.image("ada+git@example.com", cx))
+                    .is_some(),
+                "an ordinary email with a matching GitHub author must show its photo"
+            );
+        }
+        assert_eq!(
+            calls.load(Ordering::SeqCst),
+            3,
+            "repeated authors reuse the photo"
+        );
+    }
+
+    #[gpui::test]
+    fn unconfirmed_github_authors_keep_initials_and_back_off(cx: &mut TestAppContext) {
+        cx.executor().allow_parking();
+        let calls = Arc::new(AtomicUsize::new(0));
+        let observed = calls.clone();
+        cx.update(|cx| {
+            cx.set_http_client(FakeHttpClient::create(move |request| {
+                observed.fetch_add(1, Ordering::SeqCst);
+                let url = url::Url::parse(&request.uri().to_string()).unwrap();
+                let (status, body) = if url.host_str() == Some("gravatar.com") {
+                    (404, Vec::new())
+                } else {
+                    assert_eq!(
+                        url.host_str(),
+                        Some("api.github.com"),
+                        "no unconfirmed photo request"
+                    );
+                    let query = url.query_pairs().find(|(key, _)| key == "q").unwrap().1;
+                    let email = query.strip_prefix("author-email:").unwrap();
+                    let mut commit = serde_json::json!({
+                        "author": { "id": 42 },
+                        "commit": { "author": { "email": email } }
+                    });
+                    let mut status = 200;
+                    match email {
+                        "missing@example.com" => commit = serde_json::Value::Null,
+                        "unlinked@example.com" => commit["author"] = serde_json::Value::Null,
+                        "mismatched@example.com" => {
+                            commit["commit"]["author"]["email"] = "other@example.com".into()
+                        }
+                        "invalid@example.com" => commit["author"]["id"] = 0.into(),
+                        "limited@example.com" => status = 403,
+                        "broken@example.com" => {}
+                        _ => panic!("unexpected email"),
+                    }
+                    let body = match email {
+                        "missing@example.com" => br#"{"items":[]}"#.to_vec(),
+                        "broken@example.com" => b"not JSON".to_vec(),
+                        _ => serde_json::to_vec(&serde_json::json!({ "items": [commit] })).unwrap(),
+                    };
+                    (status, body)
+                };
+                async move {
+                    Ok(Response::builder()
+                        .status(status)
+                        .body(body.into())
+                        .unwrap())
+                }
+            }));
+        });
+        let cache = cx.update(|cx| AvatarCache::new(None, cx));
+        for name in [
+            "missing",
+            "unlinked",
+            "mismatched",
+            "invalid",
+            "limited",
+            "broken",
+        ] {
+            let email = format!("{name}@example.com");
+            cache.update(cx, |cache, cx| {
+                cache.image(&email, cx);
+            });
+            cx.background_executor.run_until_parked();
+            for _ in 0..20 {
+                assert!(
+                    cache
+                        .update(cx, |cache, cx| cache.image(&email, cx))
+                        .is_none()
+                );
+            }
+        }
+        cx.background_executor.run_until_parked();
+        assert_eq!(
+            calls.load(Ordering::SeqCst),
+            12,
+            "failed lookups do not loop"
+        );
     }
 
     #[gpui::test]
@@ -559,7 +738,11 @@ mod tests {
                 "offline refresh retains the old photo"
             );
         }
-        assert_eq!(calls.load(Ordering::SeqCst), 2);
+        assert_eq!(
+            calls.load(Ordering::SeqCst),
+            3,
+            "offline refresh tries both providers once"
+        );
     }
 
     #[gpui::test]
