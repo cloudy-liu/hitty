@@ -1141,15 +1141,21 @@ impl HittyApp {
                         .icon(icon)
                         .custom(chrome_tile_variant_for(active, cx))
                         .selected(active)
-                        .with_size(px(16. / BUTTON_ICON_SCALE))
+                        .with_size(px(TILE_GLYPH / BUTTON_ICON_SCALE))
                         .h(px(size))
                         .min_w(px(size))
-                        .px(px(7.))
+                        .px(px(5.))
                         .when(active, |button| {
                             button
-                                .child(div().max_w(px(60.)).truncate().child(t(label_key)))
-                                .px(px(10.))
-                                .text_size(gpui::rems(14. / 16.))
+                                .child(
+                                    div()
+                                        .max_w(px(60.))
+                                        .truncate()
+                                        // Button sets its own inner label size.
+                                        .text_size(gpui::rems(crate::ui::right_panel::META))
+                                        .child(t(label_key)),
+                                )
+                                .px(px(8.))
                         })
                         .rounded(px(8.))
                         .tooltip(match (tab, changed) {

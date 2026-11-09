@@ -38,6 +38,7 @@ prototype is design guidance, not proof of native application behavior.
 - [First release verification](hitty-bootstrap.md) and [release metadata](hitty-v0.1.0-release.json).
 - [README presentation](readme-product-presentation.md).
 - [Right-panel implementation](right-panel.md).
+- [Compact right panel and file-tree alignment](right-panel-compact.md).
 
 Keep new verification records concise and tied to reproducible commands. Avoid
 copying per-run logs or completed design proposals into this directory. The

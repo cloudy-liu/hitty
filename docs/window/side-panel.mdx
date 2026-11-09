@@ -6,8 +6,9 @@ description: "Info, Outline, Git, and Files beside your existing terminal and do
 <kbd>⌘ J</kbd> opens a panel on the right of the window with four modes. It is
 hidden by default; whichever tab you leave it on is where it opens next time.
 
-The centered mode controls show a label for the selected mode and tooltips for
-the others. Clicking the active mode puts the panel away again. Switching modes
+The centered mode controls use the same compact scale as the surrounding
+toolbar, with a label for the selected mode and tooltips for the others.
+Clicking the active mode puts the panel away again. Switching modes
 does not create, reorder or select sessions in the left sidebar.
 
 ## Info
@@ -65,9 +66,12 @@ commit, and push without leaving the window.
 
 A file tree rooted at the pane's repository, or its working directory outside
 a repository, with the existing file-type icons and Git status decorations.
-For a single root, its collapsible name sits above search beside the dotfile
-visibility toggle and manual refresh. Multiple roots retain individual folding
-in the tree. The visibility toggle and context menu share the same state.
+For a single root, its name appears as a title above search beside the dotfile
+visibility toggle and manual refresh. Click the name to fold or reopen the tree;
+the title has no disclosure arrow. Its immediate children start at the first
+visual level, with indentation added for deeper folders. Multiple roots retain
+their own disclosure arrows and folding in the tree. The visibility toggle and
+context menu share the same state.
 Automatic file watching remains active; refresh requests fresh directory data
 while preserving valid tree state. Search keeps its clear button while nonempty.
 

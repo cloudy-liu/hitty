@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- Match right-panel mode icons and labels to the surrounding toolbar size.
+- Present a single file-tree root as a title and remove its redundant child
+  indentation while preserving folding and file actions.
+
 ## v0.2.0 - 2026-11-09
 
 - Refine the right panel into Info, Outline, Git and Files with compact mode
