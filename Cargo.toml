@@ -314,7 +314,7 @@ edition = "2024"
 # they must never drift apart. This is the line a release bump edits (and the
 # first explicit version line in the file; package entries above all use
 # `version.workspace = true`).
-version = "0.3.0"
+version = "0.3.1"
 
 [workspace.dependencies]
 # The maintenance fork retains the inherited menu, button and input changes
