@@ -87,10 +87,10 @@ def main():
                 captures.append({"layout": layout, "capture": capture.stdout.strip()})
 
             if args.stage == "after":
-                assert original["label"] == "CMD", original
+                assert original["label"] == "cmd", original
                 for title, expected in (
-                    ("cmd.exe", "CMD"),
-                    ("C:/Windows/System32/CMD.EXE", "CMD"),
+                    ("cmd.exe", "cmd"),
+                    ("C:/Windows/System32/CMD.EXE", "cmd"),
                     ("PowerShell", "PowerShell"),
                     ("pwsh.exe", "pwsh.exe"),
                     (r"C:\Windows\System32\cmd.exe - build", r"C:\Windows\System32\cmd.exe - build"),
@@ -99,7 +99,7 @@ def main():
                     cli("send", address, "title " + title, "--enter")
                     wait_for(lambda: tab()["label"] == expected, "title: " + title)
             else:
-                assert original["label"] != "CMD" and "cmd.exe" in original["label"].lower(), original
+                assert original["label"] != "cmd" and "cmd.exe" in original["label"].lower(), original
 
             cli("send", address, "title Build API", "--enter")
             wait_for(lambda: tab()["label"] == "Build API", "custom CMD title")

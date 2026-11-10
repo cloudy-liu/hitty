@@ -79,7 +79,7 @@ pub fn display_shell_title(raw: &str) -> &str {
         || raw.eq_ignore_ascii_case("cmd.exe")
         || (drive_path && program.eq_ignore_ascii_case("cmd.exe"))
     {
-        "CMD"
+        "cmd"
     } else {
         raw
     }

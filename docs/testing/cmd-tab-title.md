@@ -3,7 +3,7 @@
 November 10, 2026. Baseline: `7802993` (Hitty v0.3.0).
 
 CMD's default terminal title is its executable path. The sidebar, top tab bar,
-switcher and CLI now display `CMD` for `cmd`, `cmd.exe`, or an absolute Windows
+switcher and CLI now display `cmd` for `cmd`, `cmd.exe`, or an absolute Windows
 path ending in `cmd.exe`, ignoring case. The original terminal title remains
 available in the tab tooltip. User-assigned tab names, task titles, working
 directories and other shell names retain their existing behavior.
