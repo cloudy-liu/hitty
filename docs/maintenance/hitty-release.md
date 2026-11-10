@@ -1,9 +1,9 @@
 # Hitty release procedure
 
 Use `cloudy-liu/hitty` and Hitty tags.
-Hitty's latest release, `v0.2.0`, was published on November 9, 2026.
-Compare the next release against that Hitty tag; the first release, `v0.1.0`,
-remains the baseline for the v0.2.0 comparison.
+For `v0.3.1`, compare against `v0.3.0`, published on November 10, 2026.
+Always compare a later release against the immediately preceding published
+Hitty tag.
 
 1. Complete the checks in `docs/testing/hitty-bootstrap.md` and the agreed
    Windows x86_64, Linux x86_64, macOS ARM64, and macOS Intel acceptance gate.
@@ -22,10 +22,15 @@ remains the baseline for the v0.2.0 comparison.
    ConPTY pair, and bundled WSL server. State signing/notarization precisely.
 5. Create the matching version tag from the accepted commit after review. Tag
    runs may assemble an unpublished draft; they cannot overwrite an already published release.
-6. Verify the draft's complete asset set again. Use English user-facing notes
-   from `docs/releases/hitty-v<version>.md`. Keep logs and CI IDs in verification
-   records. The first release records its source snapshot; later releases compare
-   against the previous Hitty tag.
+6. Verify the draft's complete asset set again. Write the GitHub release notes
+   in `docs/releases/hitty-v<version>.md` in English: a one-line summary (plus
+   an upgrade note when users must act), then `Highlights`, `Changes`
+   (`Added` / `Changed` / `Fixed` / `Internal`), `Known limitations`, and a
+   `Full changelog` compare link to the previous Hitty tag. End each change with
+   a qualified reference such as `cloudy-liu/hitty#34`; omit per-commit
+   explanations, commit counts, and checksum detail. Keep logs and CI IDs in
+   verification records. The first release records its source snapshot; later
+   releases compare against the previous Hitty tag.
 7. Publish explicitly only after the platform acceptance gate is complete.
    Then verify the latest-release endpoint and application/server downloads.
    After publication, fix defects in a subsequent version; do not move the
