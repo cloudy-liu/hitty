@@ -158,6 +158,9 @@ pub struct Config {
     pub theme_preset_dark: String,
     #[serde(default = "default_true")]
     pub theme_legible_palette: bool,
+    /// Complete imported themes preserve authored terminal colors by default.
+    #[serde(default)]
+    pub theme_style_legible_palette: bool,
     pub window_opacity: Option<f32>,
     pub window_blur: Option<bool>,
     #[serde(default, deserialize_with = "de_lenient")]
@@ -653,6 +656,7 @@ impl Default for Config {
             theme_preset_light: "light".to_string(),
             theme_preset_dark: "dark".to_string(),
             theme_legible_palette: true,
+            theme_style_legible_palette: false,
             window_opacity: None,
             window_blur: None,
             window_backdrop: WindowBackdrop::default(),

@@ -1,6 +1,6 @@
 ---
 title: "Themes"
-description: "Thirteen built-ins, your own YAML themes, iTerm2 imports, and a colour editor."
+description: "Thirty-eight built-ins, complete Otty style profiles, YAML themes and iTerm2 imports."
 ---
 
 **Settings → Appearance → Theme** — or **Change Theme…** in the command
@@ -16,6 +16,40 @@ YAML packages and editing them with live reload.
 | Light | Dark |
 |---|---|
 | Light *(default)* · One Light · Catppuccin Latte · Rosé Pine Dawn | Dark · Dracula · Harbor · One Dark Pro · Rosé Pine · Catppuccin Mocha · Gruvbox Dark · Nord · Tokyo Night |
+
+## Otty profiles
+
+The picker also includes all 25 designs from Otty 1.6.0-beta, named
+**Theme name - otty**, alongside the original thirteen Hitty themes.
+These profiles carry terminal colors, selection text and cursor colors,
+transparent surfaces, native backdrop requests, sidebar and tab states,
+card margins, padding, borders, radii, shadows and font stacks.
+
+The imported designs keep their authored terminal colors by default.
+**Readable terminal colors** has a separate saved preference for style
+profiles (`theme_style_legible_palette`, default `false`); original Hitty
+presets retain `theme_legible_palette`, default `true`. The same control
+changes the preference for the active family.
+
+With **Background material: Auto**, Hitty uses the profile's native backdrop
+request. Explicit backdrop and opacity settings take precedence. A declared
+font stack uses an installed face; an explicit terminal font remains in use.
+Font-size preferences retain their zoom offset from the platform default.
+
+Duplicate a profile to edit its YAML. The nested `style` mapping preserves
+its original declaration hierarchy, including platform and state overrides.
+Edit terminal colors under `style.terminal`, chrome under `style.sidebar`,
+`style.tab`, `style.container`, and typography under `style.token`. Flat
+ANSI and theme-picker fields remain available for the existing YAML format.
+
+Native material fidelity depends on the platform renderer. macOS glass and
+vibrancy variants currently share Hitty's blur backend; Windows acrylic tint
+is composited over DWM acrylic rather than controlled by WinUI luminosity.
+`terminal.font-blending` is retained but does not change GPUI's text shader.
+Bottom-tab margins are retained for compatibility; Hitty offers Left and Top
+session layouts. See the repository's
+[verification record](https://github.com/cloudy-liu/hitty/blob/main/docs/testing/otty-theme-fidelity.md)
+for actual application captures and remaining acceptance work.
 
 ## Code editor colors
 

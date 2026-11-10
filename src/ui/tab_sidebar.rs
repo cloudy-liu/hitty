@@ -18,7 +18,7 @@ use std::path::{Path, PathBuf};
 use crate::core::config::{Config, SidebarGrouping};
 use crate::daemon::protocol::RemoteKind;
 use crate::terminal::git_status::GitStatusCache;
-use crate::ui::app::{HittyApp, TITLE_BAR_HEIGHT};
+use crate::ui::app::HittyApp;
 use crate::ui::hints::tab_badge_label;
 use crate::ui::i18n::{L10nKey, t, t_fmt};
 use crate::ui::reorder::{self, Reorder, Surface};
@@ -141,9 +141,13 @@ impl HittyApp {
     /// the document column's budget and the sidebar itself can never disagree
     /// about how much width is already spoken for.
     pub(crate) fn sidebar_px(&self, window: &Window, cx: &gpui::App) -> f32 {
-        self.sidebar_width
-            .get()
-            .clamp(MIN_SIDEBAR_WIDTH, self.sidebar_max_px(window, cx))
+        let mut width = self.sidebar_width.get();
+        if width == crate::ui::theme_style::default_sidebar_width() {
+            width = crate::ui::theme_style::active(cx)
+                .and_then(|style| style.number("sidebar.width"))
+                .unwrap_or(width);
+        }
+        width.clamp(MIN_SIDEBAR_WIDTH, self.sidebar_max_px(window, cx))
     }
 
     pub(crate) fn tab_sidebar(
@@ -251,7 +255,9 @@ impl HittyApp {
             family: cx.theme().font_family.clone(),
             features: Default::default(),
             fallbacks: None,
-            weight: Default::default(),
+            weight: crate::ui::theme_style::active(cx)
+                .and_then(|s| s.tab_weight(false, false))
+                .unwrap_or_default(),
             style: Default::default(),
         };
         // The active row renders its title at `FontWeight::MEDIUM`, which is
@@ -259,7 +265,9 @@ impl HittyApp {
         // it as regular would let the one row the user is looking at overflow
         // into the truncation this is here to avoid.
         let title_font_active = gpui::Font {
-            weight: FontWeight::MEDIUM,
+            weight: crate::ui::theme_style::active(cx)
+                .and_then(|s| s.tab_weight(false, true))
+                .unwrap_or(FontWeight::MEDIUM),
             ..font.clone()
         };
         let status_font = gpui::Font {
@@ -449,7 +457,12 @@ impl HittyApp {
                 // branch never wrap or overflow into CSS truncation.
                 let label_avail =
                     (row_metrics::text_budget(width) - content_indent - badge_extra).max(48.);
-                let title_size = row_metrics::TITLE_REM * rem;
+                let title_size = crate::ui::theme_style::active(cx)
+                    .and_then(|s| {
+                        s.number("tab.font-size")
+                            .or_else(|| s.number("token.font-size"))
+                    })
+                    .unwrap_or(row_metrics::TITLE_REM * rem);
                 let meta_size = 0.75 * rem;
                 let title_font = if is_active { &title_font_active } else { &font };
                 // An agent row opens its second line with a status tag, in the
@@ -866,6 +879,11 @@ impl HittyApp {
                                 .truncate()
                                 .text_size(px(title_size))
                                 .when(is_active, |d| d.font_weight(FontWeight::MEDIUM))
+                                .when_some(
+                                    crate::ui::theme_style::active(cx)
+                                        .and_then(|s| s.tab_weight(false, is_active)),
+                                    |d, weight| d.font_weight(weight),
+                                )
                                 .child(shown_title),
                         )
                         .children(git_line)
@@ -914,6 +932,37 @@ impl HittyApp {
                     .when(!is_active, |s| {
                         s.text_color(cx.theme().sidebar_foreground)
                             .hover(|s| s.bg(gpui::rgb(sf.hover)))
+                    })
+                    .when_some(crate::ui::theme_style::active(cx), |el, style| {
+                        style
+                            .tab(
+                                el,
+                                false,
+                                is_active,
+                                window.is_window_active(),
+                                cx.theme().border,
+                            )
+                            .when(!is_active, |el| {
+                                el.hover(|s| style.surface(s, "tab.hover", cx.theme().border))
+                            })
+                            .when(
+                                is_active && style.text("tab.indicator") == Some("bar"),
+                                |el| {
+                                    el.relative().child(
+                                        div()
+                                            .absolute()
+                                            .left(px(1.))
+                                            .top(px(8.))
+                                            .bottom(px(8.))
+                                            .w(px(3.))
+                                            .rounded(px(2.))
+                                            .bg(style
+                                                .color("tab.active.indicator-color")
+                                                .or_else(|| style.color("tab.indicator-color"))
+                                                .unwrap_or(cx.theme().primary)),
+                                    )
+                                },
+                            )
                     })
                     .when(row_preview.as_ref().is_some_and(|p| p.from == slot), |s| {
                         s.opacity(0.75)
@@ -1625,7 +1674,7 @@ impl HittyApp {
 
         let controls = h_flex()
             .flex_shrink_0()
-            .h(px(TITLE_BAR_HEIGHT))
+            .h(px(crate::ui::theme::title_bar_height(cx)))
             .border_b_1()
             .border_color(cx.theme().transparent)
             .items_center()
@@ -1831,6 +1880,15 @@ impl HittyApp {
             .bg(crate::ui::theme::workspace_surface_color(cx))
             .border_r_1()
             .border_color(cx.theme().sidebar_border)
+            .when_some(crate::ui::theme_style::active(cx), |el, style| {
+                let el = style
+                    .surface(el, "sidebar", cx.theme().sidebar_border)
+                    .bg(style.sidebar_color());
+                match style.border("sidebar.border-right", cx.theme().sidebar_border) {
+                    Some((width, color)) => el.border_r(px(width)).border_color(color),
+                    None => el,
+                }
+            })
             .child(backing)
             .child(
                 // Real pixels, not `size_full`: the rail's own width is a

@@ -336,11 +336,20 @@ impl HittyApp {
                 .bg(crate::ui::theme::workspace_surface_color(cx))
                 .border_l_1()
                 .border_color(cx.theme().sidebar_border)
+                .when_some(crate::ui::theme_style::active(cx), |el, style| {
+                    let el = style
+                        .surface(el, "details-panel", cx.theme().sidebar_border)
+                        .bg(style.details_color());
+                    match style.border("details-panel.border-right", cx.theme().sidebar_border) {
+                        Some((width, color)) => el.border_l(px(width)).border_color(color),
+                        None => el,
+                    }
+                })
                 .children(cfg!(target_os = "macos").then(|| {
                     let row = h_flex()
                         .id("right-panel-titlebar-drag")
                         .flex_none()
-                        .h(px(crate::ui::app::TITLE_BAR_HEIGHT))
+                        .h(px(crate::ui::theme::title_bar_height(cx)))
                         .border_b_1()
                         .border_color(cx.theme().transparent);
                     crate::ui::app::window_move_gesture(
