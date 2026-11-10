@@ -1453,7 +1453,10 @@ impl HittyApp {
             details.label
         } else {
             let (raw, home) = tab.leaf_title_and_home(window, cx);
-            short_title(&raw, home.as_deref())
+            short_title(
+                hitty_core::core::tab_view::display_shell_title(raw.trim()),
+                home.as_deref(),
+            )
         };
         if label.trim().is_empty() {
             t_fmt(
