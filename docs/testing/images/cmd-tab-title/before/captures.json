@@ -1,0 +1,51 @@
+{
+  "stage": "before",
+  "app": "D:\\tmp\\hitty-build\\debug\\hitty-app.exe",
+  "binary_sha256": "14f4728c7e5f302621081005a43b5ce43045170fd5eb8565d854132ba644459e",
+  "profile": "C:\\Users\\cloudy\\AppData\\Local\\Temp\\hitty-cmd-title-_iov2qrr",
+  "configuration": {
+    "theme_preset": "one_light",
+    "theme_follow_system": false,
+    "gui_language": "en",
+    "font_size": 15,
+    "ui_font_size": 14,
+    "cursor_blink": false,
+    "sidebar_grouping": "none",
+    "check_for_updates": false,
+    "auto_download_updates": false,
+    "install_cli_on_path": false,
+    "show_tray_icon": false,
+    "shell": {
+      "program": "C:\\WINDOWS\\system32\\cmd.exe",
+      "args": []
+    },
+    "tab_bar_position": "top"
+  },
+  "logical_window": [
+    1100,
+    700
+  ],
+  "startup_tab": {
+    "ordinal": 1,
+    "id": "b3ff7f32-e8e6-4e60-b995-d9e1ebf82d3e",
+    "name": null,
+    "label": "C:\\WINDOWS\\system32\\cmd.exe",
+    "agent": null,
+    "group": null,
+    "panes": [
+      1
+    ]
+  },
+  "captures": [
+    {
+      "layout": "left",
+      "capture": "hwnd=8915028 client=1925x1225 frame=1929x1227 printwindow=True pointer=none size=26150"
+    },
+    {
+      "layout": "top",
+      "capture": "hwnd=8915028 client=1925x1225 frame=1929x1227 printwindow=True pointer=none size=19458"
+    }
+  ],
+  "custom_title": "passed",
+  "manual_name": "passed"
+}

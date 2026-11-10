@@ -66,6 +66,25 @@ pub enum TabLabel<'a> {
     Unknown,
 }
 
+/// CMD reports its executable path as the default terminal title. Give that
+/// title a short shell name while preserving task titles and other shells.
+pub fn display_shell_title(raw: &str) -> &str {
+    let drive_path = raw.as_bytes().get(1) == Some(&b':')
+        && raw
+            .as_bytes()
+            .get(2)
+            .is_some_and(|c| matches!(c, b'/' | b'\\'));
+    let program = raw.rsplit(['/', '\\']).next().unwrap_or(raw);
+    if raw.eq_ignore_ascii_case("cmd")
+        || raw.eq_ignore_ascii_case("cmd.exe")
+        || (drive_path && program.eq_ignore_ascii_case("cmd.exe"))
+    {
+        "CMD"
+    } else {
+        raw
+    }
+}
+
 /// Cuts the `user@host:` head that a shell integration writes into its title,
 /// leaving the path (or command) it actually names. A title with no such head —
 /// an agent's, which is prose — comes back untouched, and so does a bare
@@ -171,7 +190,7 @@ impl TabView {
             .map(str::trim)
             .filter(|t| !t.is_empty())
         {
-            return TabLabel::Osc(title);
+            return TabLabel::Osc(display_shell_title(title));
         }
         if let Some(agent) = self.agent {
             return TabLabel::Agent(agent);
@@ -181,7 +200,7 @@ impl TabView {
         }
         match self.title.trim() {
             "" => TabLabel::Unknown,
-            title => TabLabel::Process(title),
+            title => TabLabel::Process(display_shell_title(title)),
         }
     }
 }

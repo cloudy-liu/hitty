@@ -638,7 +638,7 @@ impl Tab {
     /// cwd belongs to a different machine.
     pub(crate) fn title_details(&self, window: Option<&Window>, cx: &App) -> TabTitle {
         use crate::ui::tab_strip::{abbreviate_home, strip_host_prefix};
-        use hitty_core::core::tab_view::{shell_title_path, ssh_tab_title};
+        use hitty_core::core::tab_view::{display_shell_title, shell_title_path, ssh_tab_title};
 
         let name = self
             .name
@@ -674,7 +674,8 @@ impl Tab {
         let Some(target) = target else {
             return TabTitle {
                 label: name.map(str::to_owned).unwrap_or_else(|| {
-                    abbreviate_home(strip_host_prefix(raw), home.as_deref()).into_owned()
+                    abbreviate_home(strip_host_prefix(display_shell_title(raw)), home.as_deref())
+                        .into_owned()
                 }),
                 context: None,
                 ssh_target: None,
