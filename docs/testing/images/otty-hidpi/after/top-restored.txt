@@ -1,0 +1,11 @@
+HITTY THEME RESTORE
+
+Configured terminal: Hack | 15 px | line height: 1.4
+Configured interface: 14 px | both sidebars visible
+
+ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz
+0123456789  Il1 O0  => -> != == [ ] { } ( )
+中文字体检查：主题切换后保持原有字号和清晰度。
+
+THEME_RESTORE_READY
+PS typography-review>

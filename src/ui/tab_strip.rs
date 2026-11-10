@@ -1831,19 +1831,7 @@ impl HittyApp {
                     .min_w_0()
                     .truncate()
                     .text_sm()
-                    .when_some(crate::ui::theme_style::active(cx), |el, style| {
-                        el.text_size(px(style
-                            .number("tab-bar.tab.font-size")
-                            .or_else(|| style.number("tab.font-size"))
-                            .or_else(|| style.number("token.font-size"))
-                            .unwrap_or(13.)))
-                    })
                     .when(is_active, |d| d.font_weight(FontWeight::MEDIUM))
-                    .when_some(
-                        crate::ui::theme_style::active(cx)
-                            .and_then(|s| s.tab_weight(true, is_active)),
-                        |d, weight| d.font_weight(weight),
-                    )
                     .when_some(full_title, |d, title| {
                         d.tooltip(move |window, cx| {
                             gpui_component::tooltip::Tooltip::new(title.clone()).build(window, cx)

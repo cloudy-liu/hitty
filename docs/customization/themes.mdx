@@ -23,7 +23,7 @@ The picker also includes all 25 designs from Otty 1.6.0-beta, named
 **Theme name - otty**, alongside the original thirteen Hitty themes.
 These profiles carry terminal colors, selection text and cursor colors,
 transparent surfaces, native backdrop requests, sidebar and tab states,
-card margins, padding, borders, radii, shadows and font stacks.
+card margins, padding, borders, radii and shadows.
 
 The imported designs keep their authored terminal colors by default.
 **Readable terminal colors** has a separate saved preference for style
@@ -32,14 +32,20 @@ presets retain `theme_legible_palette`, default `true`. The same control
 changes the preference for the active family.
 
 With **Background material: Auto**, Hitty uses the profile's native backdrop
-request. Explicit backdrop and opacity settings take precedence. A declared
-font stack uses an installed face; an explicit terminal font remains in use.
-Font-size preferences retain their zoom offset from the platform default.
+request. Explicit backdrop and opacity settings take precedence.
+
+Every theme uses Hitty's interface font and scalable text hierarchy. Terminal
+font, font size and line height use your settings directly. Imported font
+stacks, sizes, weights and cell-height adjustments are preserved in YAML as
+source metadata and do not override those settings. Theme selection and
+preview cancellation restore the destination theme's colors, surfaces,
+opacity and native backdrop without carrying over the previous profile.
 
 Duplicate a profile to edit its YAML. The nested `style` mapping preserves
 its original declaration hierarchy, including platform and state overrides.
 Edit terminal colors under `style.terminal`, chrome under `style.sidebar`,
-`style.tab`, `style.container`, and typography under `style.token`. Flat
+`style.tab` and `style.container`. Typography declarations under `style.token`
+remain source metadata; change text through Hitty's Appearance settings. Flat
 ANSI and theme-picker fields remain available for the existing YAML format.
 
 Native material fidelity depends on the platform renderer. macOS glass and

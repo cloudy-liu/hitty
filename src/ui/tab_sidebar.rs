@@ -255,9 +255,7 @@ impl HittyApp {
             family: cx.theme().font_family.clone(),
             features: Default::default(),
             fallbacks: None,
-            weight: crate::ui::theme_style::active(cx)
-                .and_then(|s| s.tab_weight(false, false))
-                .unwrap_or_default(),
+            weight: Default::default(),
             style: Default::default(),
         };
         // The active row renders its title at `FontWeight::MEDIUM`, which is
@@ -265,9 +263,7 @@ impl HittyApp {
         // it as regular would let the one row the user is looking at overflow
         // into the truncation this is here to avoid.
         let title_font_active = gpui::Font {
-            weight: crate::ui::theme_style::active(cx)
-                .and_then(|s| s.tab_weight(false, true))
-                .unwrap_or(FontWeight::MEDIUM),
+            weight: FontWeight::MEDIUM,
             ..font.clone()
         };
         let status_font = gpui::Font {
@@ -457,12 +453,7 @@ impl HittyApp {
                 // branch never wrap or overflow into CSS truncation.
                 let label_avail =
                     (row_metrics::text_budget(width) - content_indent - badge_extra).max(48.);
-                let title_size = crate::ui::theme_style::active(cx)
-                    .and_then(|s| {
-                        s.number("tab.font-size")
-                            .or_else(|| s.number("token.font-size"))
-                    })
-                    .unwrap_or(row_metrics::TITLE_REM * rem);
+                let title_size = row_metrics::TITLE_REM * rem;
                 let meta_size = 0.75 * rem;
                 let title_font = if is_active { &title_font_active } else { &font };
                 // An agent row opens its second line with a status tag, in the
@@ -879,11 +870,6 @@ impl HittyApp {
                                 .truncate()
                                 .text_size(px(title_size))
                                 .when(is_active, |d| d.font_weight(FontWeight::MEDIUM))
-                                .when_some(
-                                    crate::ui::theme_style::active(cx)
-                                        .and_then(|s| s.tab_weight(false, is_active)),
-                                    |d, weight| d.font_weight(weight),
-                                )
                                 .child(shown_title),
                         )
                         .children(git_line)
