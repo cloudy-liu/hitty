@@ -669,10 +669,41 @@ pub(crate) fn terminate_and_wait_all(pids: &[u32], deadline: std::time::Instant)
 /// images, bounded by `timeout` overall. Deepest-first, like the per-pane
 /// kill, so a parent never respawns a child we already visited.
 pub(crate) fn reap_descendants_of(root: u32, timeout: std::time::Duration) {
+    let procs = snapshot();
     terminate_and_wait_all(
-        &descendants(&snapshot(), root),
+        &owned_descendants(&procs, root),
         std::time::Instant::now() + timeout,
     );
+}
+
+/// hc may start the shared core from `hc connect`, making it a descendant.
+/// A long-lived core can also inherit an unrelated ancestor through PID reuse.
+/// Neither case grants the daemon ownership of it or of its terminal holders.
+pub(crate) fn owned_descendants(procs: &[Proc], root: u32) -> Vec<u32> {
+    let override_name = std::env::var_os("HITTY_HC_BIN").and_then(|path| {
+        std::path::Path::new(&path)
+            .file_name()
+            .map(|s| s.to_string_lossy().into_owned())
+    });
+    reap_targets_except_hc(procs, root, override_name.as_deref())
+}
+
+fn reap_targets_except_hc(procs: &[Proc], root: u32, hc_override: Option<&str>) -> Vec<u32> {
+    let mut targets = descendants(procs, root);
+    let mut protected = HashSet::new();
+    // Only protect hc below the root. Hitty itself may have been launched
+    // from an hc terminal; that ancestor does not own Hitty's native panes.
+    for process in procs.iter().filter(|p| targets.contains(&p.pid)) {
+        if process.name.eq_ignore_ascii_case("hc.exe")
+            || process.name.eq_ignore_ascii_case("herdr-core.exe")
+            || hc_override.is_some_and(|name| process.name.eq_ignore_ascii_case(name))
+        {
+            protected.insert(process.pid);
+            protected.extend(descendants(procs, process.pid));
+        }
+    }
+    targets.retain(|pid| !protected.contains(pid));
+    targets
 }
 
 // The stop helper is a child of Setup or the uninstaller. Keep that process
@@ -1003,6 +1034,55 @@ mod tests {
     fn descendants_empty_without_children() {
         let procs = vec![p(100, 1, "sh"), p(999, 1, "other")];
         assert!(descendants(&procs, 100).is_empty());
+    }
+
+    #[test]
+    fn daemon_reaping_excludes_shared_core_and_all_its_holders() {
+        for name in ["hc.exe", "HC.EXE", "herdr-core.exe", "custom-core.exe"] {
+            let procs = vec![
+                p(100, 1, "hitty-server.exe"),
+                p(101, 100, "OpenConsole.exe"),
+                p(102, 100, "cmd.exe"),
+                p(200, 100, name),
+                p(201, 200, name),
+                p(202, 201, "holder.exe"),
+                p(203, 202, "powershell.exe"),
+            ];
+            let mut targets = reap_targets_except_hc(&procs, 100, Some("custom-core.exe"));
+            targets.sort();
+            assert_eq!(targets, [101, 102], "shared core subtree: {name}");
+        }
+    }
+
+    #[test]
+    fn reused_daemon_ancestor_does_not_grant_ownership_of_an_existing_core() {
+        // The original parent of hc exited long ago; its PID now names one
+        // of this daemon's native shells. ToolHelp still reports the old PID.
+        let procs = vec![
+            p(100, 1, "hitty-server.exe"),
+            p(200, 100, "cmd.exe"),
+            p(300, 200, "hc.exe"),
+            p(400, 300, "OpenConsole.exe"),
+            p(500, 400, "cmd.exe"),
+        ];
+        assert_eq!(reap_targets_except_hc(&procs, 100, None), [200]);
+        assert!(reap_targets_except_hc(&procs, 200, None).is_empty());
+    }
+
+    #[test]
+    fn daemon_started_inside_hc_still_reaps_its_own_native_children() {
+        let procs = vec![
+            p(9, 1, "hc.exe"),
+            p(10, 9, "cmd.exe"),
+            p(100, 10, "hitty-server.exe"),
+            p(101, 100, "OpenConsole.exe"),
+            p(102, 100, "cmd.exe"),
+            p(103, 102, "powershell.exe"),
+            p(200, 100, "hc.exe"),
+            p(201, 200, "holder.exe"),
+        ];
+        assert_eq!(reap_targets_except_hc(&procs, 100, None), [103, 101, 102]);
+        assert_eq!(reap_targets_except_hc(&procs, 102, None), [103]);
     }
 
     #[test]
