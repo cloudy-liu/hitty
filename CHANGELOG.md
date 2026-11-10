@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Keep all Otty themes on Hitty's interface and terminal typography settings,
+  and prevent imported fonts from remaining after switching themes.
+
 ## v0.3.0 - 2026-11-10
 
 - Add an optional herdr-core engine for local panes, with agent messaging,

@@ -32,7 +32,7 @@ def main():
             (themes / source.name).write_text(
                 source.read_text(encoding="utf-8").split("\nstyle:\n")[0] + "\n",
                 encoding="utf-8")
-        assert len(list(themes.glob("*.yaml"))) == 25
+        assert len(list(themes.glob("*.yaml"))) == 1
     sample = str(ROOT / "scripts/otty-theme-review-sample.ps1").replace("'", "''")
     config = {
         "theme_preset": "one_light", "theme_follow_system": False,
@@ -91,10 +91,8 @@ def main():
             records = []
             scenes = [(theme, "left", False, theme)
                       for theme in ["one_light", *ids, "one_light"]]
-            scenes += [(theme, "top", False, theme + "-top") for theme in
-                       ["otty-april", "otty-floating-card", "otty-nord", "otty-glass-light"]]
-            scenes += [(theme, "left", True, theme + "-details") for theme in
-                       ["otty-acrylic-dark", "otty-glass-light"]]
+            scenes += [(theme, "top", False, theme + "-top") for theme in ids]
+            scenes += [(theme, "left", True, theme + "-details") for theme in ids]
             for theme_id, layout, details, scene in scenes:
                 config["theme_preset"] = theme_id
                 config["tab_bar_position"] = layout

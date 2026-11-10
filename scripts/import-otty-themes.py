@@ -11,6 +11,7 @@ import tomllib
 
 ROOT = Path(__file__).resolve().parents[1]
 DESTINATION = ROOT / "assets/themes/otty"
+RETAINED_SOURCES = ("solarized-light.ottytheme",)
 
 
 def yaml(data, indent=0):
@@ -41,7 +42,7 @@ def convert(path):
         background = source.get("panel", {}).get(
             "surface", "#1E1E1E" if source["meta"]["mode"] == "dark" else "#FFFFFF")
     theme = {
-        "name": source["meta"]["name"] + " - otty",
+        "name": source["meta"]["name"],
         "background": background,
         "foreground": terminal["foreground"],
         "accent": source.get("token", {}).get("accent", palette[4]),
@@ -76,6 +77,8 @@ def main():
     manifest_path = args.output / "manifest.json"
     if args.check and args.source_dir is None:
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        assert [theme["id"] for theme in manifest["themes"]] == ["otty-solarized-light"]
+        assert manifest["themes"][0]["name"] == "Solarized Light"
         expected = set()
         for theme in manifest["themes"]:
             path = args.output / (theme["id"] + ".yaml")
@@ -85,8 +88,8 @@ def main():
         print(f"Verified {len(expected)} complete packaged theme profiles.")
         return
     source_dir = args.source_dir or Path.home() / ".config/otty/themes"
-    files = sorted(source_dir.glob("*.ottytheme"))
-    assert files, f"No .ottytheme files in {source_dir}"
+    files = [source_dir / name for name in RETAINED_SOURCES]
+    assert all(path.is_file() for path in files), f"Missing retained source in {source_dir}"
     args.output.mkdir(parents=True, exist_ok=True)
     entries = []
     for path in files:
@@ -107,6 +110,9 @@ def main():
         assert manifest_path.read_text(encoding="utf-8") == content
     else:
         manifest_path.write_text(content, encoding="utf-8", newline="\n")
+    assert {entry["id"] + ".yaml" for entry in entries} == {
+        path.name for path in args.output.glob("*.yaml")
+    }, "Output contains unretained theme profiles"
     print(f"{'Verified' if args.check else 'Imported'} {len(entries)} complete Otty profiles.")
 
 

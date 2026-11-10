@@ -4,7 +4,7 @@
 //! different overrides, and Windows material overrides are not macOS defaults.
 use std::sync::{Arc, LazyLock};
 
-use gpui::{App, BoxShadow, FontWeight, Global, Hsla, Styled, point, px, rgb};
+use gpui::{App, BoxShadow, Global, Hsla, Styled, point, px, rgb};
 use serde::{Deserialize, Serialize};
 
 use crate::core::config::WindowBackdrop;
@@ -23,8 +23,6 @@ pub struct ThemeStyle(pub toml::Value);
 #[derive(Default)]
 pub struct ActiveStyle {
     pub profile: Option<Arc<ThemeStyle>>,
-    pub ui_font: Option<String>,
-    pub mono_font: Option<String>,
 }
 
 impl Global for ActiveStyle {}
@@ -187,26 +185,6 @@ impl ThemeStyle {
         }
     }
 
-    pub fn weight(&self, path: &str) -> Option<FontWeight> {
-        self.number(path).map(FontWeight)
-    }
-
-    /// Pick a face from the authored stack that actually exists on this OS.
-    pub fn font(&self, path: &str, available: &[String]) -> Option<String> {
-        let value = self.get(path)?;
-        let names: Vec<&str> = match value {
-            toml::Value::String(s) => vec![s],
-            toml::Value::Array(a) => a.iter().filter_map(|v| v.as_str()).collect(),
-            _ => return None,
-        };
-        names.into_iter().find_map(|name| {
-            available
-                .iter()
-                .find(|candidate| candidate.eq_ignore_ascii_case(name))
-                .cloned()
-        })
-    }
-
     pub fn terminal_color(&self, key: &str, fallback: Hsla) -> Hsla {
         if key == "background"
             && matches!(
@@ -310,8 +288,9 @@ impl ThemeStyle {
     }
 
     /// Apply explicit geometry and paint only; absent fields inherit Hitty's
-    /// layout. This also serves user YAML, so duplicate/edit round trips retain
-    /// the complete profile instead of flattening it to four colors.
+    /// layout and typography. Font declarations remain source metadata; Hitty
+    /// owns text metrics so theme switches cannot resize or replace fonts.
+    /// This also serves user YAML, preserving the complete source profile.
     pub fn surface<E: Styled>(&self, mut el: E, path: &str, border: Hsla) -> E {
         if let Some(color) = self.color(&format!("{path}.background")) {
             el = el.bg(color);
@@ -344,12 +323,6 @@ impl ThemeStyle {
         }
         if let Some(color) = self.color(&format!("{path}.foreground")) {
             el = el.text_color(color);
-        }
-        if let Some(weight) = self.weight(&format!("{path}.font-weight")) {
-            el = el.font_weight(weight);
-        }
-        if let Some(size) = self.number(&format!("{path}.font-size")) {
-            el = el.text_size(px(size));
         }
         if let Some(height) = self.number(&format!("{path}.height")) {
             el = el.h(px(height));
@@ -428,61 +401,6 @@ impl ThemeStyle {
         }
         el
     }
-
-    pub fn tab_weight(&self, horizontal: bool, selected: bool) -> Option<FontWeight> {
-        let active = selected
-            .then(|| self.weight("tab.active.font-weight"))
-            .flatten();
-        let base = active.or_else(|| self.weight("tab.font-weight"));
-        if horizontal {
-            selected
-                .then(|| self.weight("tab-bar.tab.active.font-weight"))
-                .flatten()
-                .or_else(|| self.weight("tab-bar.tab.font-weight"))
-                .or(base)
-        } else {
-            base
-        }
-    }
-}
-
-pub fn typography(config: &crate::core::config::Config, cx: &App) -> (String, f32, f32) {
-    let defaults = &*DEFAULT_CONFIG;
-    let Some(style) = active(cx) else {
-        return (
-            config.font_family.clone(),
-            config.font_size,
-            config.line_height,
-        );
-    };
-    let family = if config.font_family == defaults.font_family {
-        cx.global::<ActiveStyle>()
-            .mono_font
-            .clone()
-            .unwrap_or_else(|| config.font_family.clone())
-    } else {
-        config.font_family.clone()
-    };
-    let size = (style
-        .number("token.font-size")
-        .unwrap_or(defaults.font_size)
-        + config.font_size
-        - defaults.font_size)
-        .clamp(6., 128.);
-    let extra_height = style
-        .text("token.adjust-cell-height")
-        .and_then(|s| s.strip_suffix('%'))
-        .and_then(|s| s.parse::<f32>().ok())
-        .unwrap_or(0.)
-        / 100.;
-    (family, size, config.line_height * (1. + extra_height))
-}
-
-pub fn ui_font_size(config: &crate::core::config::Config, cx: &App) -> f32 {
-    active(cx)
-        .and_then(|s| s.number("token.font-size"))
-        .map(|size| (size + config.ui_font_size - DEFAULT_CONFIG.ui_font_size).clamp(8., 64.))
-        .unwrap_or(config.ui_font_size)
 }
 
 pub fn parse_color(text: &str) -> Result<Hsla, String> {
@@ -530,6 +448,59 @@ pub fn parse_color(text: &str) -> Result<Hsla, String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use gpui::FontWeight;
+
+    #[test]
+    fn otty_surfaces_keep_hitty_text_sizes_and_weights() {
+        let mut themes = crate::ui::presets::builtins();
+        let mut custom = themes.last().unwrap().clone();
+        custom.id = "custom-surface-typography".into();
+        custom.style = Some(std::sync::Arc::new(
+            toml::from_str(
+                r#"
+            [tab]
+            font-size = 11
+            font-weight = 400
+            [tab.active]
+            font-size = 13
+            font-weight = 700
+            [tab-bar.tab]
+            font-size = 12
+            font-weight = 400
+            [titlebar]
+            font-size = 13
+            font-weight = 400
+        "#,
+            )
+            .unwrap(),
+        ));
+        themes.push(custom);
+        for theme in themes {
+            let Some(style) = theme.style else { continue };
+            for path in ["tab", "tab.active", "tab-bar.tab", "titlebar"] {
+                let mut el = style.surface(
+                    gpui::div()
+                        .text_size(gpui::rems(0.8125))
+                        .font_weight(FontWeight::MEDIUM),
+                    path,
+                    rgb(0).into(),
+                );
+                let text = &el.style().text;
+                assert_eq!(
+                    text.font_size,
+                    Some(gpui::rems(0.8125).into()),
+                    "{}: {path} must retain Hitty's scalable text size",
+                    theme.id
+                );
+                assert_eq!(
+                    text.font_weight,
+                    Some(FontWeight::MEDIUM),
+                    "{}: {path}",
+                    theme.id
+                );
+            }
+        }
+    }
 
     #[test]
     fn imported_alpha_geometry_and_shape_colors_survive_parsing() {

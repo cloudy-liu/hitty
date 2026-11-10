@@ -644,17 +644,6 @@ pub(crate) fn apply_theme(mut window: Option<&mut Window>, cx: &mut App) {
         theme.style.is_some(),
     ));
     let profile = theme.style.clone();
-    let available = if profile.is_some() {
-        cx.text_system().all_font_names()
-    } else {
-        Vec::new()
-    };
-    let ui_font = profile
-        .as_ref()
-        .and_then(|s| s.font("token.font-ui", &available));
-    let mono_font = profile
-        .as_ref()
-        .and_then(|s| s.font("token.font-mono", &available));
 
     if let Some(window) = window.as_deref_mut() {
         let appearance = resolved_background_appearance(backdrop, blur);
@@ -668,11 +657,7 @@ pub(crate) fn apply_theme(mut window: Option<&mut Window>, cx: &mut App) {
     }
 
     Theme::change(mode, window.as_deref_mut(), cx);
-    cx.set_global(super::theme_style::ActiveStyle {
-        profile,
-        ui_font: ui_font.clone(),
-        mono_font,
-    });
+    cx.set_global(super::theme_style::ActiveStyle { profile });
     cx.set_global(active);
     cx.set_global(presets::ActiveBackground {
         fill: theme.background.clone(),
@@ -694,9 +679,6 @@ pub(crate) fn apply_theme(mut window: Option<&mut Window>, cx: &mut App) {
     cx.set_global(theme.agent_icons());
 
     let t = Theme::global_mut(cx);
-    if let Some(family) = ui_font {
-        t.font_family = family.into();
-    }
     let mut base: Hsla = rgb(m.background).into();
     if let Some(o) = opacity {
         base.a = o;
@@ -1078,33 +1060,236 @@ mod tests {
     use super::*;
     use gpui::TestAppContext;
 
+    #[gpui::test]
+    fn otty_theme_switches_preserve_hitty_font_metrics(cx: &mut TestAppContext) {
+        let (app, mut vcx) = crate::ui::app::test_window::harness(cx);
+        let (terminal, _daemon) = app.update_in(&mut vcx, |app, window, cx| {
+            use crate::ui::pane::{Pane, PaneSlot};
+            let (terminal, daemon) = crate::terminal::view::quiet_test_pane(1, window, cx);
+            app.tabs
+                .push(crate::ui::app::Tab::new(Pane::leaf(PaneSlot::Ready(
+                    terminal.clone(),
+                ))));
+            cx.global_mut::<Config>().cursor_blink = false;
+            (terminal, daemon)
+        });
+        let mut themes = presets::builtins();
+        let mut custom = themes.last().unwrap().clone();
+        custom.id = "custom-typography".into();
+        custom.style = Some(std::sync::Arc::new(
+            toml::from_str(
+                r#"
+            [token]
+            font-ui = ["Times New Roman", "serif"]
+            font-mono = ["Consolas", "monospace"]
+            font-size = 13
+            adjust-cell-height = "20%"
+            [tab]
+            font-size = 11
+            font-weight = 400
+        "#,
+            )
+            .unwrap(),
+        ));
+        themes.push(custom);
+        let ids: Vec<_> = themes
+            .iter()
+            .filter(|theme| theme.style.is_some())
+            .map(|theme| theme.id.clone())
+            .collect();
+        assert_eq!(ids.len(), 2);
+        vcx.update(|_, cx| cx.set_global(presets::Themes(themes)));
+        let ui_family = vcx.update(|_, cx| Theme::global(cx).font_family.clone());
+        for (family, terminal_size, ui_size, height) in [
+            (Config::default().font_family.clone(), 15., 14., 1.4),
+            ("JetBrains Mono".into(), 19., 18., 1.8),
+        ] {
+            app.update_in(&mut vcx, |app, window, cx| {
+                let config = cx.global_mut::<Config>();
+                config.font_family = family.clone();
+                config.font_size = terminal_size;
+                config.ui_font_size = ui_size;
+                config.line_height = height;
+                config.theme_follow_system = false;
+                app.set_preset("one_light", window, cx);
+            });
+            vcx.run_until_parked();
+            for id in &ids {
+                app.update_in(&mut vcx, |app, window, cx| {
+                    app.preview_preset(id, window, cx);
+                });
+                vcx.run_until_parked();
+                vcx.update(|window, cx| {
+                    let config = cx.global::<Config>();
+                    assert_eq!(
+                        (
+                            config.font_family.as_str(),
+                            config.font_size,
+                            config.line_height
+                        ),
+                        (family.as_str(), terminal_size, height),
+                        "{id}: terminal font metrics must match Hitty"
+                    );
+                    let view = terminal.read(cx);
+                    assert_eq!(
+                        view.font.family.as_ref(),
+                        family.as_str(),
+                        "{id}: pane font"
+                    );
+                    assert_eq!(view.font_size, px(terminal_size), "{id}: pane font size");
+                    assert_eq!(view.line_height_mul, height, "{id}: pane line height");
+                    assert_eq!(Theme::global(cx).font_family, ui_family, "{id}: UI font");
+                    assert_eq!(window.rem_size(), px(ui_size), "{id}: interface scale");
+                });
+                app.update_in(&mut vcx, |app, window, cx| {
+                    app.cancel_preset_preview(window, cx);
+                });
+                vcx.run_until_parked();
+                vcx.update(|window, _| assert_eq!(window.rem_size(), px(ui_size)));
+            }
+        }
+    }
+
+    #[gpui::test]
+    fn otty_switch_and_preview_cancel_restore_every_original_hitty_theme(cx: &mut TestAppContext) {
+        let (app, mut vcx) = crate::ui::app::test_window::harness(cx);
+        vcx.update(|_, cx| cx.global_mut::<Config>().theme_follow_system = false);
+        let themes = presets::builtins();
+        let originals: Vec<_> = themes
+            .iter()
+            .filter(|theme| theme.style.is_none())
+            .collect();
+        let imports: Vec<_> = themes
+            .iter()
+            .filter(|theme| theme.style.is_some())
+            .collect();
+        assert_eq!((originals.len(), imports.len()), (13, 1));
+        let rendering_state = |window: &Window, cx: &App| {
+            let bg = cx.global::<presets::ActiveBackground>();
+            (
+                serde_json::to_value(Theme::global(cx)).unwrap(),
+                bg.fill.clone(),
+                bg.opacity,
+                bg.image.clone(),
+                format!(
+                    "{:?}",
+                    cx.global::<crate::terminal::palette::ActivePalette>()
+                ),
+                format!("{:?}", cx.global::<presets::Surfaces>()),
+                cx.global::<AppliedAppearance>()
+                    .0
+                    .get(&window.window_handle().window_id())
+                    .copied(),
+            )
+        };
+        app.update_in(&mut vcx, |app, window, cx| {
+            for original in originals {
+                app.set_preset(&original.id, window, cx);
+                let expected = rendering_state(window, cx);
+                for imported in &imports {
+                    app.preview_preset(&imported.id, window, cx);
+                    assert!(super::super::theme_style::active(cx).is_some());
+                    app.cancel_preset_preview(window, cx);
+                    assert!(super::super::theme_style::active(cx).is_none());
+                    assert_eq!(
+                        rendering_state(window, cx),
+                        expected,
+                        "{} preview must restore {}",
+                        imported.id,
+                        original.id
+                    );
+
+                    app.set_preset(&imported.id, window, cx);
+                    app.set_preset(&original.id, window, cx);
+                    assert!(super::super::theme_style::active(cx).is_none());
+                    assert_eq!(
+                        rendering_state(window, cx),
+                        expected,
+                        "{} selection must restore {}",
+                        imported.id,
+                        original.id
+                    );
+                }
+            }
+        });
+    }
+
     #[test]
     fn imported_material_respects_explicit_user_overrides() {
         let themes = presets::builtins();
-        let glass = themes.iter().find(|t| t.id == "otty-glass-light").unwrap();
-        let nord = themes.iter().find(|t| t.id == "otty-nord").unwrap();
+        let solid = themes
+            .iter()
+            .find(|t| t.id == "otty-solarized-light")
+            .unwrap();
+        let mut glass = solid.clone();
+        glass.style = Some(std::sync::Arc::new(
+            toml::from_str(
+                r#"
+            [window]
+            material = "glass"
+        "#,
+            )
+            .unwrap(),
+        ));
         let mut config = Config::default();
         assert_eq!(
-            theme_backdrop(&config, glass),
+            theme_backdrop(&config, &glass),
             (WindowBackdrop::Acrylic, true)
         );
-        assert_eq!(theme_backdrop(&config, nord), (WindowBackdrop::Off, false));
+        assert_eq!(theme_backdrop(&config, solid), (WindowBackdrop::Off, false));
         config.window_backdrop = WindowBackdrop::Off;
-        assert_eq!(theme_backdrop(&config, glass), (WindowBackdrop::Off, false));
+        assert_eq!(
+            theme_backdrop(&config, &glass),
+            (WindowBackdrop::Off, false)
+        );
         config.window_backdrop = WindowBackdrop::MicaAlt;
         assert_eq!(
-            theme_backdrop(&config, glass),
+            theme_backdrop(&config, &glass),
             (WindowBackdrop::MicaAlt, true)
         );
         #[cfg(windows)]
         {
-            let acrylic = themes.iter().find(|t| t.id == "otty-acrylic-dark").unwrap();
-            let style = acrylic.style.as_ref().unwrap();
+            let style: crate::ui::theme_style::ThemeStyle = toml::from_str(
+                r##"
+                [windows]
+                material = "none"
+                color = "#202020"
+                [windows.sidebar]
+                material = "acrylic"
+                color = "#2c2c2c"
+                opacity = 0.8
+            "##,
+            )
+            .unwrap();
             assert!(style.sidebar_material());
             assert_eq!(style.backdrop(), WindowBackdrop::Acrylic);
             assert!((style.sidebar_color().a - 0.8).abs() < 0.001);
             assert_eq!(style.window_color().a, 1.);
         }
+    }
+
+    #[gpui::test]
+    fn removed_theme_preferences_fall_back_to_hitty(cx: &mut TestAppContext) {
+        let (app, mut vcx) = crate::ui::app::test_window::harness(cx);
+        let selection: serde_json::Value =
+            serde_json::from_str(include_str!("../../docs/testing/otty-theme-selection.json"))
+                .unwrap();
+        let removed = selection["decision"]["remove"].as_array().unwrap();
+        assert_eq!(removed.len(), 24);
+        app.update_in(&mut vcx, |app, window, cx| {
+            cx.global_mut::<Config>().theme_follow_system = false;
+            app.set_preset(presets::DEFAULT_ID, window, cx);
+            let expected = serde_json::to_value(Theme::global(cx)).unwrap();
+            for id in removed {
+                let id = id.as_str().unwrap();
+                app.set_preset("otty-solarized-light", window, cx);
+                cx.global_mut::<Config>().theme_preset = id.into();
+                apply_theme(Some(window), cx);
+                assert_eq!(presets::by_id(cx, id).id, presets::DEFAULT_ID);
+                assert!(super::super::theme_style::active(cx).is_none());
+                assert_eq!(serde_json::to_value(Theme::global(cx)).unwrap(), expected);
+            }
+        });
     }
 
     #[gpui::test]

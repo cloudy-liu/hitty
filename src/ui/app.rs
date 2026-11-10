@@ -1375,11 +1375,10 @@ impl HittyApp {
             terminal_scrollback_limit,
         ) = {
             let cfg = cx.global::<Config>();
-            let (family, size, height) = crate::ui::theme_style::typography(cfg, cx);
             (
-                size,
-                height,
-                family,
+                cfg.font_size,
+                cfg.line_height,
+                cfg.font_family.clone(),
                 cfg.font_family_bold.clone(),
                 cfg.font_family_italic.clone(),
                 cfg.font_features
@@ -2407,14 +2406,13 @@ impl HittyApp {
         self.after_theme_change(window, cx);
     }
 
-    fn sync_theme_fonts(&mut self, cx: &mut Context<Self>) {
+    fn sync_config_fonts(&mut self, cx: &mut Context<Self>) {
         let (font_size, line_height, font_family, font_features) = {
             let cfg = cx.global::<Config>();
-            let (family, size, height) = crate::ui::theme_style::typography(cfg, cx);
             (
-                size,
-                height,
-                family,
+                cfg.font_size,
+                cfg.line_height,
+                cfg.font_family.clone(),
                 cfg.font_features
                     .as_ref()
                     .map(crate::core::config::gpui_font_features),
@@ -2494,7 +2492,7 @@ impl HittyApp {
     /// each of those keystrokes into a `config.json` write.
     fn apply_theme_change(&mut self, persist: bool, window: &mut Window, cx: &mut Context<Self>) {
         apply_theme(Some(window), cx);
-        self.sync_theme_fonts(cx);
+        self.sync_config_fonts(cx);
         set_menus(cx);
         if persist {
             cx.global::<Config>().save();
@@ -6615,7 +6613,7 @@ impl HittyApp {
             .set(cx.global::<Config>().right_panel_width);
         self.document_ratio
             .set(cx.global::<Config>().document_ratio);
-        self.sync_theme_fonts(cx);
+        self.sync_config_fonts(cx);
         let report_mouse = cx.global::<Config>().mouse_reporting;
         let prompt_editor = cx.global::<Config>().prompt_editor;
         for tab in &self.tabs {
@@ -7645,10 +7643,7 @@ impl Render for HittyApp {
         // makes `ui_font_size` reach the whole interface — the rem ladder
         // (`text_sm`, `text_xs`, `rems(..)`) resolves against it, and the
         // terminal grid, sized in absolute px from `font_size`, does not move.
-        window.set_rem_size(px(crate::ui::theme_style::ui_font_size(
-            cx.global::<Config>(),
-            cx,
-        )));
+        window.set_rem_size(px(cx.global::<Config>().ui_font_size));
         self.claim_pending_tab(window, cx);
         self.touch_active_tab();
         self.declare_displayed_panes(cx);
@@ -8077,12 +8072,6 @@ impl Render for HittyApp {
                         .when_some(style.number("window.radius"), |el, radius| {
                             el.rounded(px(radius))
                         })
-                        .when_some(
-                            cx.global::<crate::ui::theme_style::ActiveStyle>()
-                                .ui_font
-                                .clone(),
-                            |el, family| el.font_family(family),
-                        )
                 })
                 .flex()
                 .flex_col()

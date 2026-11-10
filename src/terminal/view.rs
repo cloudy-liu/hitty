@@ -1168,8 +1168,11 @@ impl TerminalView {
         cx: &mut Context<Self>,
     ) -> Self {
         let config = cx.global::<Config>();
-        let (font_family, font_size, line_height_mul) =
-            crate::ui::theme_style::typography(config, cx);
+        let (font_family, font_size, line_height_mul) = (
+            config.font_family.clone(),
+            config.font_size,
+            config.line_height,
+        );
         let fallbacks = fallback_chain(&font_family, &config.font_fallbacks);
         let font_size = px(font_size);
         let font_features = config

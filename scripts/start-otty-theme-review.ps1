@@ -55,7 +55,7 @@ if (-not (Test-Path -LiteralPath $configPath)) {
     [System.IO.File]::WriteAllText($configPath, ($config | ConvertTo-Json -Depth 5), $utf8)
     [System.IO.File]::WriteAllText((Join-Path $configDir 'window.json'), '{"x":80,"y":80,"width":1200,"height":800}', $utf8)
 }
-Write-Output "Theme review: 13 original + 25 Otty themes."
+Write-Output "Theme review: 13 original themes + Solarized Light."
 Write-Output "Configuration: $configDir"
 Write-Output "Experience guide: $(Join-Path $repoRoot 'docs\testing\otty-theme-fidelity.md')"
 if ($PrepareOnly) { exit 0 }

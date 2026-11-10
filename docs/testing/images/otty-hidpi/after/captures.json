@@ -1,0 +1,1616 @@
+{
+  "stage": "after",
+  "app": "D:\\tmp\\hitty-build\\debug\\hitty-app.exe",
+  "binary_sha256": "458bfbc7a3b5152bbea5cf449b2725f6ae7af166af09a736ff6b89e3bca22dcd",
+  "profile": "C:\\Users\\cloudy\\AppData\\Local\\Temp\\hitty-otty-hidpi-after-h8fksym8",
+  "configuration": {
+    "theme_preset": "one_light",
+    "theme_follow_system": false,
+    "theme_style_legible_palette": true,
+    "theme_legible_palette": true,
+    "window_blur": null,
+    "window_backdrop": "auto",
+    "window_opacity": null,
+    "gui_language": "en",
+    "font_family": "Hack",
+    "font_size": 15,
+    "line_height": 1.4,
+    "ui_font_size": 14,
+    "cursor_blink": false,
+    "tab_bar_position": "top",
+    "right_panel_visible": true,
+    "right_panel_tab": "info",
+    "check_for_updates": false,
+    "auto_download_updates": false,
+    "install_cli_on_path": false,
+    "show_tray_icon": false,
+    "shell": {
+      "program": "powershell.exe",
+      "args": [
+        "-NoLogo",
+        "-NoProfile",
+        "-NoExit",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-Command",
+        "Set-Location $env:SystemRoot; function global:prompt { 'PS typography-review> ' }; & 'D:\\gh-prj\\hitty-otty-hidpi-adaptation\\.hitty-dev-otty-hidpi\\sample.ps1'"
+      ]
+    }
+  },
+  "logical_window": [
+    1200,
+    800
+  ],
+  "captures": [
+    {
+      "scene": "left-baseline",
+      "selection": "one_light",
+      "layout": "left",
+      "image": "left-baseline.png",
+      "native": {
+        "dpi": 168,
+        "dark": 0,
+        "system_backdrop_type": null,
+        "system_backdrop_type_hresult": -2147024809
+      },
+      "capture": "hwnd=4130808 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=74972",
+      "image_sha256": "11251d238a14f956d57459d79a23eabe9f0373399ab603fb0de5ceaf35660bf1",
+      "text_sha256": "99719c44eb58827bf389df2bd5ba7e9109fc6d0d24f98a3abad6a56d46e30fc9"
+    },
+    {
+      "scene": "left-otty-acrylic-dark",
+      "selection": "otty-acrylic-dark",
+      "layout": "left",
+      "image": "left-otty-acrylic-dark.png",
+      "native": {
+        "dpi": 168,
+        "dark": 1,
+        "system_backdrop_type": null,
+        "system_backdrop_type_hresult": -2147024809
+      },
+      "capture": "hwnd=4130808 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=469798",
+      "image_sha256": "e8e4b9dbfedc708b5219523fbb2e7135809f836b29578a9ae03283d47265e6df",
+      "text_sha256": "99719c44eb58827bf389df2bd5ba7e9109fc6d0d24f98a3abad6a56d46e30fc9"
+    },
+    {
+      "scene": "left-return-from-otty-acrylic-dark",
+      "selection": "one_light",
+      "layout": "left",
+      "image": "left-restored.png",
+      "native": {
+        "dpi": 168,
+        "dark": 0,
+        "system_backdrop_type": null,
+        "system_backdrop_type_hresult": -2147024809
+      },
+      "capture": "hwnd=4130808 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=74972",
+      "image_sha256": "11251d238a14f956d57459d79a23eabe9f0373399ab603fb0de5ceaf35660bf1",
+      "text_sha256": "99719c44eb58827bf389df2bd5ba7e9109fc6d0d24f98a3abad6a56d46e30fc9"
+    },
+    {
+      "scene": "left-otty-april",
+      "selection": "otty-april",
+      "layout": "left",
+      "image": "left-otty-april.png",
+      "native": {
+        "dpi": 168,
+        "dark": 0,
+        "system_backdrop_type": null,
+        "system_backdrop_type_hresult": -2147024809
+      },
+      "capture": "hwnd=4130808 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=78348",
+      "image_sha256": "cdb435e629057da5aac2790ccb92793e95f53de050c3be0550786b2951cc7f31",
+      "text_sha256": "99719c44eb58827bf389df2bd5ba7e9109fc6d0d24f98a3abad6a56d46e30fc9"
+    },
+    {
+      "scene": "left-return-from-otty-april",
+      "selection": "one_light",
+      "layout": "left",
+      "image": "left-restored.png",
+      "native": {
+        "dpi": 168,
+        "dark": 0,
+        "system_backdrop_type": null,
+        "system_backdrop_type_hresult": -2147024809
+      },
+      "capture": "hwnd=4130808 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=74972",
+      "image_sha256": "11251d238a14f956d57459d79a23eabe9f0373399ab603fb0de5ceaf35660bf1",
+      "text_sha256": "99719c44eb58827bf389df2bd5ba7e9109fc6d0d24f98a3abad6a56d46e30fc9"
+    },
+    {
+      "scene": "left-otty-april-dark",
+      "selection": "otty-april-dark",
+      "layout": "left",
+      "image": "left-otty-april-dark.png",
+      "native": {
+        "dpi": 168,
+        "dark": 1,
+        "system_backdrop_type": null,
+        "system_backdrop_type_hresult": -2147024809
+      },
+      "capture": "hwnd=4130808 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=74173",
+      "image_sha256": "0ddc006b61f54578196fc344cef0f5fe11f20fedf4f039fb28f489f0a3ec1c85",
+      "text_sha256": "99719c44eb58827bf389df2bd5ba7e9109fc6d0d24f98a3abad6a56d46e30fc9"
+    },
+    {
+      "scene": "left-return-from-otty-april-dark",
+      "selection": "one_light",
+      "layout": "left",
+      "image": "left-restored.png",
+      "native": {
+        "dpi": 168,
+        "dark": 0,
+        "system_backdrop_type": null,
+        "system_backdrop_type_hresult": -2147024809
+      },
+      "capture": "hwnd=4130808 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=74972",
+      "image_sha256": "11251d238a14f956d57459d79a23eabe9f0373399ab603fb0de5ceaf35660bf1",
+      "text_sha256": "99719c44eb58827bf389df2bd5ba7e9109fc6d0d24f98a3abad6a56d46e30fc9"
+    },
+    {
+      "scene": "left-otty-ayu-dark",
+      "selection": "otty-ayu-dark",
+      "layout": "left",
+      "image": "left-otty-ayu-dark.png",
+      "native": {
+        "dpi": 168,
+        "dark": 1,
+        "system_backdrop_type": null,
+        "system_backdrop_type_hresult": -2147024809
+      },
+      "capture": "hwnd=4130808 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=75185",
+      "image_sha256": "d5043c46b5852280c749e542d9c99c15445f2d518099e2b263acf8aecebb8b85",
+      "text_sha256": "99719c44eb58827bf389df2bd5ba7e9109fc6d0d24f98a3abad6a56d46e30fc9"
+    },
+    {
+      "scene": "left-return-from-otty-ayu-dark",
+      "selection": "one_light",
+      "layout": "left",
+      "image": "left-restored.png",
+      "native": {
+        "dpi": 168,
+        "dark": 0,
+        "system_backdrop_type": null,
+        "system_backdrop_type_hresult": -2147024809
+      },
+      "capture": "hwnd=4130808 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=74972",
+      "image_sha256": "11251d238a14f956d57459d79a23eabe9f0373399ab603fb0de5ceaf35660bf1",
+      "text_sha256": "99719c44eb58827bf389df2bd5ba7e9109fc6d0d24f98a3abad6a56d46e30fc9"
+    },
+    {
+      "scene": "left-otty-ayu-light",
+      "selection": "otty-ayu-light",
+      "layout": "left",
+      "image": "left-otty-ayu-light.png",
+      "native": {
+        "dpi": 168,
+        "dark": 0,
+        "system_backdrop_type": null,
+        "system_backdrop_type_hresult": -2147024809
+      },
+      "capture": "hwnd=4130808 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=75221",
+      "image_sha256": "d6dd561c689be1da96c08b4eeafdcda979150d62e7ba1a22d832b29398726328",
+      "text_sha256": "99719c44eb58827bf389df2bd5ba7e9109fc6d0d24f98a3abad6a56d46e30fc9"
+    },
+    {
+      "scene": "left-return-from-otty-ayu-light",
+      "selection": "one_light",
+      "layout": "left",
+      "image": "left-restored.png",
+      "native": {
+        "dpi": 168,
+        "dark": 0,
+        "system_backdrop_type": null,
+        "system_backdrop_type_hresult": -2147024809
+      },
+      "capture": "hwnd=4130808 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=74972",
+      "image_sha256": "11251d238a14f956d57459d79a23eabe9f0373399ab603fb0de5ceaf35660bf1",
+      "text_sha256": "99719c44eb58827bf389df2bd5ba7e9109fc6d0d24f98a3abad6a56d46e30fc9"
+    },
+    {
+      "scene": "left-otty-catppuccin-mocha",
+      "selection": "otty-catppuccin-mocha",
+      "layout": "left",
+      "image": "left-otty-catppuccin-mocha.png",
+      "native": {
+        "dpi": 168,
+        "dark": 1,
+        "system_backdrop_type": null,
+        "system_backdrop_type_hresult": -2147024809
+      },
+      "capture": "hwnd=4130808 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=75252",
+      "image_sha256": "46ecfcd5e0df89128bfdde2dc50b35be010eb02e05779c30c3ca42bb87193f88",
+      "text_sha256": "99719c44eb58827bf389df2bd5ba7e9109fc6d0d24f98a3abad6a56d46e30fc9"
+    },
+    {
+      "scene": "left-return-from-otty-catppuccin-mocha",
+      "selection": "one_light",
+      "layout": "left",
+      "image": "left-restored.png",
+      "native": {
+        "dpi": 168,
+        "dark": 0,
+        "system_backdrop_type": null,
+        "system_backdrop_type_hresult": -2147024809
+      },
+      "capture": "hwnd=4130808 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=74972",
+      "image_sha256": "11251d238a14f956d57459d79a23eabe9f0373399ab603fb0de5ceaf35660bf1",
+      "text_sha256": "99719c44eb58827bf389df2bd5ba7e9109fc6d0d24f98a3abad6a56d46e30fc9"
+    },
+    {
+      "scene": "left-otty-dracula",
+      "selection": "otty-dracula",
+      "layout": "left",
+      "image": "left-otty-dracula.png",
+      "native": {
+        "dpi": 168,
+        "dark": 1,
+        "system_backdrop_type": null,
+        "system_backdrop_type_hresult": -2147024809
+      },
+      "capture": "hwnd=4130808 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=75234",
+      "image_sha256": "c97e6d76a59b8744e89f771cb1461e04113f79f85d9367ff4e8892a961c10a57",
+      "text_sha256": "99719c44eb58827bf389df2bd5ba7e9109fc6d0d24f98a3abad6a56d46e30fc9"
+    },
+    {
+      "scene": "left-return-from-otty-dracula",
+      "selection": "one_light",
+      "layout": "left",
+      "image": "left-restored.png",
+      "native": {
+        "dpi": 168,
+        "dark": 0,
+        "system_backdrop_type": null,
+        "system_backdrop_type_hresult": -2147024809
+      },
+      "capture": "hwnd=4130808 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=74972",
+      "image_sha256": "11251d238a14f956d57459d79a23eabe9f0373399ab603fb0de5ceaf35660bf1",
+      "text_sha256": "99719c44eb58827bf389df2bd5ba7e9109fc6d0d24f98a3abad6a56d46e30fc9"
+    },
+    {
+      "scene": "left-otty-floating-card",
+      "selection": "otty-floating-card",
+      "layout": "left",
+      "image": "left-otty-floating-card.png",
+      "native": {
+        "dpi": 168,
+        "dark": 0,
+        "system_backdrop_type": null,
+        "system_backdrop_type_hresult": -2147024809
+      },
+      "capture": "hwnd=4130808 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=652598",
+      "image_sha256": "262e35b050f6c00977ad6e025f93cc2f3f86054a5b2c8a24ce9c9a70c744d802",
+      "text_sha256": "99719c44eb58827bf389df2bd5ba7e9109fc6d0d24f98a3abad6a56d46e30fc9"
+    },
+    {
+      "scene": "left-return-from-otty-floating-card",
+      "selection": "one_light",
+      "layout": "left",
+      "image": "left-restored.png",
+      "native": {
+        "dpi": 168,
+        "dark": 0,
+        "system_backdrop_type": null,
+        "system_backdrop_type_hresult": -2147024809
+      },
+      "capture": "hwnd=4130808 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=74972",
+      "image_sha256": "11251d238a14f956d57459d79a23eabe9f0373399ab603fb0de5ceaf35660bf1",
+      "text_sha256": "99719c44eb58827bf389df2bd5ba7e9109fc6d0d24f98a3abad6a56d46e30fc9"
+    },
+    {
+      "scene": "left-otty-glass-dark",
+      "selection": "otty-glass-dark",
+      "layout": "left",
+      "image": "left-otty-glass-dark.png",
+      "native": {
+        "dpi": 168,
+        "dark": 1,
+        "system_backdrop_type": null,
+        "system_backdrop_type_hresult": -2147024809
+      },
+      "capture": "hwnd=4130808 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=1166232",
+      "image_sha256": "e90ff9a7e253522ad23f44ae531cdeaf955966fcdd502cd7ccd002c2a415e153",
+      "text_sha256": "99719c44eb58827bf389df2bd5ba7e9109fc6d0d24f98a3abad6a56d46e30fc9"
+    },
+    {
+      "scene": "left-return-from-otty-glass-dark",
+      "selection": "one_light",
+      "layout": "left",
+      "image": "left-restored.png",
+      "native": {
+        "dpi": 168,
+        "dark": 0,
+        "system_backdrop_type": null,
+        "system_backdrop_type_hresult": -2147024809
+      },
+      "capture": "hwnd=4130808 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=74972",
+      "image_sha256": "11251d238a14f956d57459d79a23eabe9f0373399ab603fb0de5ceaf35660bf1",
+      "text_sha256": "99719c44eb58827bf389df2bd5ba7e9109fc6d0d24f98a3abad6a56d46e30fc9"
+    },
+    {
+      "scene": "left-otty-glass-light",
+      "selection": "otty-glass-light",
+      "layout": "left",
+      "image": "left-otty-glass-light.png",
+      "native": {
+        "dpi": 168,
+        "dark": 0,
+        "system_backdrop_type": null,
+        "system_backdrop_type_hresult": -2147024809
+      },
+      "capture": "hwnd=4130808 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=1107082",
+      "image_sha256": "317b0aba427cf719c619eaea6464d32a2f971d21fd3739742271513ef1815b17",
+      "text_sha256": "99719c44eb58827bf389df2bd5ba7e9109fc6d0d24f98a3abad6a56d46e30fc9"
+    },
+    {
+      "scene": "left-return-from-otty-glass-light",
+      "selection": "one_light",
+      "layout": "left",
+      "image": "left-restored.png",
+      "native": {
+        "dpi": 168,
+        "dark": 0,
+        "system_backdrop_type": null,
+        "system_backdrop_type_hresult": -2147024809
+      },
+      "capture": "hwnd=4130808 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=74972",
+      "image_sha256": "11251d238a14f956d57459d79a23eabe9f0373399ab603fb0de5ceaf35660bf1",
+      "text_sha256": "99719c44eb58827bf389df2bd5ba7e9109fc6d0d24f98a3abad6a56d46e30fc9"
+    },
+    {
+      "scene": "left-otty-gruvbox-dark",
+      "selection": "otty-gruvbox-dark",
+      "layout": "left",
+      "image": "left-otty-gruvbox-dark.png",
+      "native": {
+        "dpi": 168,
+        "dark": 1,
+        "system_backdrop_type": null,
+        "system_backdrop_type_hresult": -2147024809
+      },
+      "capture": "hwnd=4130808 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=75071",
+      "image_sha256": "ab64eb6ed81ef2b09486d7c329fd5d040d263ee18c8723b03e26a5cb7553c87f",
+      "text_sha256": "99719c44eb58827bf389df2bd5ba7e9109fc6d0d24f98a3abad6a56d46e30fc9"
+    },
+    {
+      "scene": "left-return-from-otty-gruvbox-dark",
+      "selection": "one_light",
+      "layout": "left",
+      "image": "left-restored.png",
+      "native": {
+        "dpi": 168,
+        "dark": 0,
+        "system_backdrop_type": null,
+        "system_backdrop_type_hresult": -2147024809
+      },
+      "capture": "hwnd=4130808 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=74972",
+      "image_sha256": "11251d238a14f956d57459d79a23eabe9f0373399ab603fb0de5ceaf35660bf1",
+      "text_sha256": "99719c44eb58827bf389df2bd5ba7e9109fc6d0d24f98a3abad6a56d46e30fc9"
+    },
+    {
+      "scene": "left-otty-monokai-classic",
+      "selection": "otty-monokai-classic",
+      "layout": "left",
+      "image": "left-otty-monokai-classic.png",
+      "native": {
+        "dpi": 168,
+        "dark": 1,
+        "system_backdrop_type": null,
+        "system_backdrop_type_hresult": -2147024809
+      },
+      "capture": "hwnd=4130808 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=75075",
+      "image_sha256": "cd419462e6e00d90dd6cec08013284c5a604ae9c6d50f3196918806c90739f35",
+      "text_sha256": "99719c44eb58827bf389df2bd5ba7e9109fc6d0d24f98a3abad6a56d46e30fc9"
+    },
+    {
+      "scene": "left-return-from-otty-monokai-classic",
+      "selection": "one_light",
+      "layout": "left",
+      "image": "left-restored.png",
+      "native": {
+        "dpi": 168,
+        "dark": 0,
+        "system_backdrop_type": null,
+        "system_backdrop_type_hresult": -2147024809
+      },
+      "capture": "hwnd=4130808 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=74972",
+      "image_sha256": "11251d238a14f956d57459d79a23eabe9f0373399ab603fb0de5ceaf35660bf1",
+      "text_sha256": "99719c44eb58827bf389df2bd5ba7e9109fc6d0d24f98a3abad6a56d46e30fc9"
+    },
+    {
+      "scene": "left-otty-newsprint",
+      "selection": "otty-newsprint",
+      "layout": "left",
+      "image": "left-otty-newsprint.png",
+      "native": {
+        "dpi": 168,
+        "dark": 0,
+        "system_backdrop_type": null,
+        "system_backdrop_type_hresult": -2147024809
+      },
+      "capture": "hwnd=4130808 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=75741",
+      "image_sha256": "821e4d2c750381c3c449a797032857dd09dbf75b269ca26ec4abb67bc6f38c99",
+      "text_sha256": "99719c44eb58827bf389df2bd5ba7e9109fc6d0d24f98a3abad6a56d46e30fc9"
+    },
+    {
+      "scene": "left-return-from-otty-newsprint",
+      "selection": "one_light",
+      "layout": "left",
+      "image": "left-restored.png",
+      "native": {
+        "dpi": 168,
+        "dark": 0,
+        "system_backdrop_type": null,
+        "system_backdrop_type_hresult": -2147024809
+      },
+      "capture": "hwnd=4130808 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=74972",
+      "image_sha256": "11251d238a14f956d57459d79a23eabe9f0373399ab603fb0de5ceaf35660bf1",
+      "text_sha256": "99719c44eb58827bf389df2bd5ba7e9109fc6d0d24f98a3abad6a56d46e30fc9"
+    },
+    {
+      "scene": "left-otty-night",
+      "selection": "otty-night",
+      "layout": "left",
+      "image": "left-otty-night.png",
+      "native": {
+        "dpi": 168,
+        "dark": 1,
+        "system_backdrop_type": null,
+        "system_backdrop_type_hresult": -2147024809
+      },
+      "capture": "hwnd=4130808 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=74371",
+      "image_sha256": "09ddff96e83585fdca45c6fe2ce61e81b9ffcbdb0be15c4e412974551be5e892",
+      "text_sha256": "99719c44eb58827bf389df2bd5ba7e9109fc6d0d24f98a3abad6a56d46e30fc9"
+    },
+    {
+      "scene": "left-return-from-otty-night",
+      "selection": "one_light",
+      "layout": "left",
+      "image": "left-restored.png",
+      "native": {
+        "dpi": 168,
+        "dark": 0,
+        "system_backdrop_type": null,
+        "system_backdrop_type_hresult": -2147024809
+      },
+      "capture": "hwnd=4130808 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=74972",
+      "image_sha256": "11251d238a14f956d57459d79a23eabe9f0373399ab603fb0de5ceaf35660bf1",
+      "text_sha256": "99719c44eb58827bf389df2bd5ba7e9109fc6d0d24f98a3abad6a56d46e30fc9"
+    },
+    {
+      "scene": "left-otty-nord",
+      "selection": "otty-nord",
+      "layout": "left",
+      "image": "left-otty-nord.png",
+      "native": {
+        "dpi": 168,
+        "dark": 1,
+        "system_backdrop_type": null,
+        "system_backdrop_type_hresult": -2147024809
+      },
+      "capture": "hwnd=4130808 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=75784",
+      "image_sha256": "8bd03833674f29ec6f7c2de7e727d5d2bef54c196beb14ca84159a99d3d79d1c",
+      "text_sha256": "99719c44eb58827bf389df2bd5ba7e9109fc6d0d24f98a3abad6a56d46e30fc9"
+    },
+    {
+      "scene": "left-return-from-otty-nord",
+      "selection": "one_light",
+      "layout": "left",
+      "image": "left-restored.png",
+      "native": {
+        "dpi": 168,
+        "dark": 0,
+        "system_backdrop_type": null,
+        "system_backdrop_type_hresult": -2147024809
+      },
+      "capture": "hwnd=4130808 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=74972",
+      "image_sha256": "11251d238a14f956d57459d79a23eabe9f0373399ab603fb0de5ceaf35660bf1",
+      "text_sha256": "99719c44eb58827bf389df2bd5ba7e9109fc6d0d24f98a3abad6a56d46e30fc9"
+    },
+    {
+      "scene": "left-otty-one-dark",
+      "selection": "otty-one-dark",
+      "layout": "left",
+      "image": "left-otty-one-dark.png",
+      "native": {
+        "dpi": 168,
+        "dark": 1,
+        "system_backdrop_type": null,
+        "system_backdrop_type_hresult": -2147024809
+      },
+      "capture": "hwnd=4130808 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=74962",
+      "image_sha256": "cd9cf30abd84a706751c949d0c12a2aeea38035decc7dad2664ffa4f121b9aa2",
+      "text_sha256": "99719c44eb58827bf389df2bd5ba7e9109fc6d0d24f98a3abad6a56d46e30fc9"
+    },
+    {
+      "scene": "left-return-from-otty-one-dark",
+      "selection": "one_light",
+      "layout": "left",
+      "image": "left-restored.png",
+      "native": {
+        "dpi": 168,
+        "dark": 0,
+        "system_backdrop_type": null,
+        "system_backdrop_type_hresult": -2147024809
+      },
+      "capture": "hwnd=4130808 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=74972",
+      "image_sha256": "11251d238a14f956d57459d79a23eabe9f0373399ab603fb0de5ceaf35660bf1",
+      "text_sha256": "99719c44eb58827bf389df2bd5ba7e9109fc6d0d24f98a3abad6a56d46e30fc9"
+    },
+    {
+      "scene": "left-otty-one-light",
+      "selection": "otty-one-light",
+      "layout": "left",
+      "image": "left-otty-one-light.png",
+      "native": {
+        "dpi": 168,
+        "dark": 0,
+        "system_backdrop_type": null,
+        "system_backdrop_type_hresult": -2147024809
+      },
+      "capture": "hwnd=4130808 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=557607",
+      "image_sha256": "08e375e60db4a3e3805786073c181e264b73ab98e5018593c4fc5b1bcbd0b6eb",
+      "text_sha256": "99719c44eb58827bf389df2bd5ba7e9109fc6d0d24f98a3abad6a56d46e30fc9"
+    },
+    {
+      "scene": "left-return-from-otty-one-light",
+      "selection": "one_light",
+      "layout": "left",
+      "image": "left-restored.png",
+      "native": {
+        "dpi": 168,
+        "dark": 0,
+        "system_backdrop_type": null,
+        "system_backdrop_type_hresult": -2147024809
+      },
+      "capture": "hwnd=4130808 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=74972",
+      "image_sha256": "11251d238a14f956d57459d79a23eabe9f0373399ab603fb0de5ceaf35660bf1",
+      "text_sha256": "99719c44eb58827bf389df2bd5ba7e9109fc6d0d24f98a3abad6a56d46e30fc9"
+    },
+    {
+      "scene": "left-otty-owl",
+      "selection": "otty-owl",
+      "layout": "left",
+      "image": "left-otty-owl.png",
+      "native": {
+        "dpi": 168,
+        "dark": 1,
+        "system_backdrop_type": null,
+        "system_backdrop_type_hresult": -2147024809
+      },
+      "capture": "hwnd=4130808 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=75184",
+      "image_sha256": "73047f7f712c4225fbe60490efc91c92d0fe97dd59fd735a8c63196ee987eb1e",
+      "text_sha256": "99719c44eb58827bf389df2bd5ba7e9109fc6d0d24f98a3abad6a56d46e30fc9"
+    },
+    {
+      "scene": "left-return-from-otty-owl",
+      "selection": "one_light",
+      "layout": "left",
+      "image": "left-restored.png",
+      "native": {
+        "dpi": 168,
+        "dark": 0,
+        "system_backdrop_type": null,
+        "system_backdrop_type_hresult": -2147024809
+      },
+      "capture": "hwnd=4130808 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=74972",
+      "image_sha256": "11251d238a14f956d57459d79a23eabe9f0373399ab603fb0de5ceaf35660bf1",
+      "text_sha256": "99719c44eb58827bf389df2bd5ba7e9109fc6d0d24f98a3abad6a56d46e30fc9"
+    },
+    {
+      "scene": "left-otty-paper",
+      "selection": "otty-paper",
+      "layout": "left",
+      "image": "left-otty-paper.png",
+      "native": {
+        "dpi": 168,
+        "dark": 0,
+        "system_backdrop_type": null,
+        "system_backdrop_type_hresult": -2147024809
+      },
+      "capture": "hwnd=4130808 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=75813",
+      "image_sha256": "e54e4111d0a99bfc8179020cc5faaac229c9f98d2271e90f8e5ef91bdb8225c7",
+      "text_sha256": "99719c44eb58827bf389df2bd5ba7e9109fc6d0d24f98a3abad6a56d46e30fc9"
+    },
+    {
+      "scene": "left-return-from-otty-paper",
+      "selection": "one_light",
+      "layout": "left",
+      "image": "left-restored.png",
+      "native": {
+        "dpi": 168,
+        "dark": 0,
+        "system_backdrop_type": null,
+        "system_backdrop_type_hresult": -2147024809
+      },
+      "capture": "hwnd=4130808 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=74972",
+      "image_sha256": "11251d238a14f956d57459d79a23eabe9f0373399ab603fb0de5ceaf35660bf1",
+      "text_sha256": "99719c44eb58827bf389df2bd5ba7e9109fc6d0d24f98a3abad6a56d46e30fc9"
+    },
+    {
+      "scene": "left-otty-pink",
+      "selection": "otty-pink",
+      "layout": "left",
+      "image": "left-otty-pink.png",
+      "native": {
+        "dpi": 168,
+        "dark": 0,
+        "system_backdrop_type": null,
+        "system_backdrop_type_hresult": -2147024809
+      },
+      "capture": "hwnd=4130808 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=74952",
+      "image_sha256": "8171411ba8df84b5ca30ebbe5992a5f7a6ed7f11d7e65e47bb58a6bf5a968ce0",
+      "text_sha256": "99719c44eb58827bf389df2bd5ba7e9109fc6d0d24f98a3abad6a56d46e30fc9"
+    },
+    {
+      "scene": "left-return-from-otty-pink",
+      "selection": "one_light",
+      "layout": "left",
+      "image": "left-restored.png",
+      "native": {
+        "dpi": 168,
+        "dark": 0,
+        "system_backdrop_type": null,
+        "system_backdrop_type_hresult": -2147024809
+      },
+      "capture": "hwnd=4130808 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=74972",
+      "image_sha256": "11251d238a14f956d57459d79a23eabe9f0373399ab603fb0de5ceaf35660bf1",
+      "text_sha256": "99719c44eb58827bf389df2bd5ba7e9109fc6d0d24f98a3abad6a56d46e30fc9"
+    },
+    {
+      "scene": "left-otty-rose-pine",
+      "selection": "otty-rose-pine",
+      "layout": "left",
+      "image": "left-otty-rose-pine.png",
+      "native": {
+        "dpi": 168,
+        "dark": 1,
+        "system_backdrop_type": null,
+        "system_backdrop_type_hresult": -2147024809
+      },
+      "capture": "hwnd=4130808 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=75264",
+      "image_sha256": "b7df406d0d9a2a5ae43ea738aee15d5ba6222e54c5baa3a069e87863603f45e4",
+      "text_sha256": "99719c44eb58827bf389df2bd5ba7e9109fc6d0d24f98a3abad6a56d46e30fc9"
+    },
+    {
+      "scene": "left-return-from-otty-rose-pine",
+      "selection": "one_light",
+      "layout": "left",
+      "image": "left-restored.png",
+      "native": {
+        "dpi": 168,
+        "dark": 0,
+        "system_backdrop_type": null,
+        "system_backdrop_type_hresult": -2147024809
+      },
+      "capture": "hwnd=4130808 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=74972",
+      "image_sha256": "11251d238a14f956d57459d79a23eabe9f0373399ab603fb0de5ceaf35660bf1",
+      "text_sha256": "99719c44eb58827bf389df2bd5ba7e9109fc6d0d24f98a3abad6a56d46e30fc9"
+    },
+    {
+      "scene": "left-otty-seafoam-pastel",
+      "selection": "otty-seafoam-pastel",
+      "layout": "left",
+      "image": "left-otty-seafoam-pastel.png",
+      "native": {
+        "dpi": 168,
+        "dark": 1,
+        "system_backdrop_type": null,
+        "system_backdrop_type_hresult": -2147024809
+      },
+      "capture": "hwnd=4130808 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=75141",
+      "image_sha256": "db64e7e2e8b0dce917f8e4f456cace8b7eb1b0738fc5bbf67815acf5c1d47817",
+      "text_sha256": "99719c44eb58827bf389df2bd5ba7e9109fc6d0d24f98a3abad6a56d46e30fc9"
+    },
+    {
+      "scene": "left-return-from-otty-seafoam-pastel",
+      "selection": "one_light",
+      "layout": "left",
+      "image": "left-restored.png",
+      "native": {
+        "dpi": 168,
+        "dark": 0,
+        "system_backdrop_type": null,
+        "system_backdrop_type_hresult": -2147024809
+      },
+      "capture": "hwnd=4130808 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=74972",
+      "image_sha256": "11251d238a14f956d57459d79a23eabe9f0373399ab603fb0de5ceaf35660bf1",
+      "text_sha256": "99719c44eb58827bf389df2bd5ba7e9109fc6d0d24f98a3abad6a56d46e30fc9"
+    },
+    {
+      "scene": "left-otty-solarized-dark",
+      "selection": "otty-solarized-dark",
+      "layout": "left",
+      "image": "left-otty-solarized-dark.png",
+      "native": {
+        "dpi": 168,
+        "dark": 1,
+        "system_backdrop_type": null,
+        "system_backdrop_type_hresult": -2147024809
+      },
+      "capture": "hwnd=4130808 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=74760",
+      "image_sha256": "ebabcc80b683633b1370f25d65acc0caca41a4adc42f7df95480c8879e453faf",
+      "text_sha256": "99719c44eb58827bf389df2bd5ba7e9109fc6d0d24f98a3abad6a56d46e30fc9"
+    },
+    {
+      "scene": "left-return-from-otty-solarized-dark",
+      "selection": "one_light",
+      "layout": "left",
+      "image": "left-restored.png",
+      "native": {
+        "dpi": 168,
+        "dark": 0,
+        "system_backdrop_type": null,
+        "system_backdrop_type_hresult": -2147024809
+      },
+      "capture": "hwnd=4130808 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=74972",
+      "image_sha256": "11251d238a14f956d57459d79a23eabe9f0373399ab603fb0de5ceaf35660bf1",
+      "text_sha256": "99719c44eb58827bf389df2bd5ba7e9109fc6d0d24f98a3abad6a56d46e30fc9"
+    },
+    {
+      "scene": "left-otty-solarized-light",
+      "selection": "otty-solarized-light",
+      "layout": "left",
+      "image": "left-otty-solarized-light.png",
+      "native": {
+        "dpi": 168,
+        "dark": 0,
+        "system_backdrop_type": null,
+        "system_backdrop_type_hresult": -2147024809
+      },
+      "capture": "hwnd=4130808 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=74991",
+      "image_sha256": "48acd045c550e2528f36010416cb8be465d9c8b6919d849d637074d095501a3c",
+      "text_sha256": "99719c44eb58827bf389df2bd5ba7e9109fc6d0d24f98a3abad6a56d46e30fc9"
+    },
+    {
+      "scene": "left-return-from-otty-solarized-light",
+      "selection": "one_light",
+      "layout": "left",
+      "image": "left-restored.png",
+      "native": {
+        "dpi": 168,
+        "dark": 0,
+        "system_backdrop_type": null,
+        "system_backdrop_type_hresult": -2147024809
+      },
+      "capture": "hwnd=4130808 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=74972",
+      "image_sha256": "11251d238a14f956d57459d79a23eabe9f0373399ab603fb0de5ceaf35660bf1",
+      "text_sha256": "99719c44eb58827bf389df2bd5ba7e9109fc6d0d24f98a3abad6a56d46e30fc9"
+    },
+    {
+      "scene": "left-otty-tokyo-night",
+      "selection": "otty-tokyo-night",
+      "layout": "left",
+      "image": "left-otty-tokyo-night.png",
+      "native": {
+        "dpi": 168,
+        "dark": 1,
+        "system_backdrop_type": null,
+        "system_backdrop_type_hresult": -2147024809
+      },
+      "capture": "hwnd=4130808 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=75239",
+      "image_sha256": "52d04a021cbc4a2a738e02710fa329f1881800da28887a92e2a9891f9df53bed",
+      "text_sha256": "99719c44eb58827bf389df2bd5ba7e9109fc6d0d24f98a3abad6a56d46e30fc9"
+    },
+    {
+      "scene": "left-return-from-otty-tokyo-night",
+      "selection": "one_light",
+      "layout": "left",
+      "image": "left-restored.png",
+      "native": {
+        "dpi": 168,
+        "dark": 0,
+        "system_backdrop_type": null,
+        "system_backdrop_type_hresult": -2147024809
+      },
+      "capture": "hwnd=4130808 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=74972",
+      "image_sha256": "11251d238a14f956d57459d79a23eabe9f0373399ab603fb0de5ceaf35660bf1",
+      "text_sha256": "99719c44eb58827bf389df2bd5ba7e9109fc6d0d24f98a3abad6a56d46e30fc9"
+    },
+    {
+      "scene": "left-restored",
+      "selection": "one_light",
+      "layout": "left",
+      "image": "left-restored.png",
+      "native": {
+        "dpi": 168,
+        "dark": 0,
+        "system_backdrop_type": null,
+        "system_backdrop_type_hresult": -2147024809
+      },
+      "capture": "hwnd=4130808 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=74972",
+      "image_sha256": "11251d238a14f956d57459d79a23eabe9f0373399ab603fb0de5ceaf35660bf1",
+      "text_sha256": "99719c44eb58827bf389df2bd5ba7e9109fc6d0d24f98a3abad6a56d46e30fc9"
+    },
+    {
+      "scene": "top-baseline",
+      "selection": "one_light",
+      "layout": "top",
+      "image": "top-baseline.png",
+      "native": {
+        "dpi": 168,
+        "dark": 0,
+        "system_backdrop_type": null,
+        "system_backdrop_type_hresult": -2147024809
+      },
+      "capture": "hwnd=4130808 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=65815",
+      "image_sha256": "853e64b7c9bb2e5536cb9732c361f5af35f750fe9442ccbc4ed110386fbb82a4",
+      "text_sha256": "99719c44eb58827bf389df2bd5ba7e9109fc6d0d24f98a3abad6a56d46e30fc9"
+    },
+    {
+      "scene": "top-otty-acrylic-dark",
+      "selection": "otty-acrylic-dark",
+      "layout": "top",
+      "image": "top-otty-acrylic-dark.png",
+      "native": {
+        "dpi": 168,
+        "dark": 1,
+        "system_backdrop_type": null,
+        "system_backdrop_type_hresult": -2147024809
+      },
+      "capture": "hwnd=4130808 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=311905",
+      "image_sha256": "f06551c75d14d7cbf7ee3d0ae1094aedfe2b602123e533a0b3cc684e5eae320b",
+      "text_sha256": "99719c44eb58827bf389df2bd5ba7e9109fc6d0d24f98a3abad6a56d46e30fc9"
+    },
+    {
+      "scene": "top-return-from-otty-acrylic-dark",
+      "selection": "one_light",
+      "layout": "top",
+      "image": "top-restored.png",
+      "native": {
+        "dpi": 168,
+        "dark": 0,
+        "system_backdrop_type": null,
+        "system_backdrop_type_hresult": -2147024809
+      },
+      "capture": "hwnd=4130808 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=65815",
+      "image_sha256": "853e64b7c9bb2e5536cb9732c361f5af35f750fe9442ccbc4ed110386fbb82a4",
+      "text_sha256": "99719c44eb58827bf389df2bd5ba7e9109fc6d0d24f98a3abad6a56d46e30fc9"
+    },
+    {
+      "scene": "top-otty-april",
+      "selection": "otty-april",
+      "layout": "top",
+      "image": "top-otty-april.png",
+      "native": {
+        "dpi": 168,
+        "dark": 0,
+        "system_backdrop_type": null,
+        "system_backdrop_type_hresult": -2147024809
+      },
+      "capture": "hwnd=4130808 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=67984",
+      "image_sha256": "3246b39d57f01511ba6c9fca88e308c1316d9c93e5bc5468b2acdd50a250e93f",
+      "text_sha256": "99719c44eb58827bf389df2bd5ba7e9109fc6d0d24f98a3abad6a56d46e30fc9"
+    },
+    {
+      "scene": "top-return-from-otty-april",
+      "selection": "one_light",
+      "layout": "top",
+      "image": "top-restored.png",
+      "native": {
+        "dpi": 168,
+        "dark": 0,
+        "system_backdrop_type": null,
+        "system_backdrop_type_hresult": -2147024809
+      },
+      "capture": "hwnd=4130808 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=65815",
+      "image_sha256": "853e64b7c9bb2e5536cb9732c361f5af35f750fe9442ccbc4ed110386fbb82a4",
+      "text_sha256": "99719c44eb58827bf389df2bd5ba7e9109fc6d0d24f98a3abad6a56d46e30fc9"
+    },
+    {
+      "scene": "top-otty-april-dark",
+      "selection": "otty-april-dark",
+      "layout": "top",
+      "image": "top-otty-april-dark.png",
+      "native": {
+        "dpi": 168,
+        "dark": 1,
+        "system_backdrop_type": null,
+        "system_backdrop_type_hresult": -2147024809
+      },
+      "capture": "hwnd=4130808 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=65699",
+      "image_sha256": "6cedc1e55a7703aefa6258af47fa9394fcd01090b0367f8720763a6fe2720d37",
+      "text_sha256": "99719c44eb58827bf389df2bd5ba7e9109fc6d0d24f98a3abad6a56d46e30fc9"
+    },
+    {
+      "scene": "top-return-from-otty-april-dark",
+      "selection": "one_light",
+      "layout": "top",
+      "image": "top-restored.png",
+      "native": {
+        "dpi": 168,
+        "dark": 0,
+        "system_backdrop_type": null,
+        "system_backdrop_type_hresult": -2147024809
+      },
+      "capture": "hwnd=4130808 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=65815",
+      "image_sha256": "853e64b7c9bb2e5536cb9732c361f5af35f750fe9442ccbc4ed110386fbb82a4",
+      "text_sha256": "99719c44eb58827bf389df2bd5ba7e9109fc6d0d24f98a3abad6a56d46e30fc9"
+    },
+    {
+      "scene": "top-otty-ayu-dark",
+      "selection": "otty-ayu-dark",
+      "layout": "top",
+      "image": "top-otty-ayu-dark.png",
+      "native": {
+        "dpi": 168,
+        "dark": 1,
+        "system_backdrop_type": null,
+        "system_backdrop_type_hresult": -2147024809
+      },
+      "capture": "hwnd=4130808 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=65738",
+      "image_sha256": "9f5716c584de7549c0ce7360de90ace01533feff647548ea7c86d7c29067af54",
+      "text_sha256": "99719c44eb58827bf389df2bd5ba7e9109fc6d0d24f98a3abad6a56d46e30fc9"
+    },
+    {
+      "scene": "top-return-from-otty-ayu-dark",
+      "selection": "one_light",
+      "layout": "top",
+      "image": "top-restored.png",
+      "native": {
+        "dpi": 168,
+        "dark": 0,
+        "system_backdrop_type": null,
+        "system_backdrop_type_hresult": -2147024809
+      },
+      "capture": "hwnd=4130808 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=65815",
+      "image_sha256": "853e64b7c9bb2e5536cb9732c361f5af35f750fe9442ccbc4ed110386fbb82a4",
+      "text_sha256": "99719c44eb58827bf389df2bd5ba7e9109fc6d0d24f98a3abad6a56d46e30fc9"
+    },
+    {
+      "scene": "top-otty-ayu-light",
+      "selection": "otty-ayu-light",
+      "layout": "top",
+      "image": "top-otty-ayu-light.png",
+      "native": {
+        "dpi": 168,
+        "dark": 0,
+        "system_backdrop_type": null,
+        "system_backdrop_type_hresult": -2147024809
+      },
+      "capture": "hwnd=4130808 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=65958",
+      "image_sha256": "cdb7e72c06ca621c70b112eef04eee18501084bda4704f3e3733a87888eb6baf",
+      "text_sha256": "99719c44eb58827bf389df2bd5ba7e9109fc6d0d24f98a3abad6a56d46e30fc9"
+    },
+    {
+      "scene": "top-return-from-otty-ayu-light",
+      "selection": "one_light",
+      "layout": "top",
+      "image": "top-restored.png",
+      "native": {
+        "dpi": 168,
+        "dark": 0,
+        "system_backdrop_type": null,
+        "system_backdrop_type_hresult": -2147024809
+      },
+      "capture": "hwnd=4130808 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=65815",
+      "image_sha256": "853e64b7c9bb2e5536cb9732c361f5af35f750fe9442ccbc4ed110386fbb82a4",
+      "text_sha256": "99719c44eb58827bf389df2bd5ba7e9109fc6d0d24f98a3abad6a56d46e30fc9"
+    },
+    {
+      "scene": "top-otty-catppuccin-mocha",
+      "selection": "otty-catppuccin-mocha",
+      "layout": "top",
+      "image": "top-otty-catppuccin-mocha.png",
+      "native": {
+        "dpi": 168,
+        "dark": 1,
+        "system_backdrop_type": null,
+        "system_backdrop_type_hresult": -2147024809
+      },
+      "capture": "hwnd=4130808 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=65665",
+      "image_sha256": "cae4da073354b0e9a710862b4fb7deca27c52a9ea99291c7cccf0cd4f20c04e9",
+      "text_sha256": "99719c44eb58827bf389df2bd5ba7e9109fc6d0d24f98a3abad6a56d46e30fc9"
+    },
+    {
+      "scene": "top-return-from-otty-catppuccin-mocha",
+      "selection": "one_light",
+      "layout": "top",
+      "image": "top-restored.png",
+      "native": {
+        "dpi": 168,
+        "dark": 0,
+        "system_backdrop_type": null,
+        "system_backdrop_type_hresult": -2147024809
+      },
+      "capture": "hwnd=4130808 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=65815",
+      "image_sha256": "853e64b7c9bb2e5536cb9732c361f5af35f750fe9442ccbc4ed110386fbb82a4",
+      "text_sha256": "99719c44eb58827bf389df2bd5ba7e9109fc6d0d24f98a3abad6a56d46e30fc9"
+    },
+    {
+      "scene": "top-otty-dracula",
+      "selection": "otty-dracula",
+      "layout": "top",
+      "image": "top-otty-dracula.png",
+      "native": {
+        "dpi": 168,
+        "dark": 1,
+        "system_backdrop_type": null,
+        "system_backdrop_type_hresult": -2147024809
+      },
+      "capture": "hwnd=4130808 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=65660",
+      "image_sha256": "30fa174ee17a53cc5cbf0e160b571aa311afacdf482b3d57d279af3df9c75bf0",
+      "text_sha256": "99719c44eb58827bf389df2bd5ba7e9109fc6d0d24f98a3abad6a56d46e30fc9"
+    },
+    {
+      "scene": "top-return-from-otty-dracula",
+      "selection": "one_light",
+      "layout": "top",
+      "image": "top-restored.png",
+      "native": {
+        "dpi": 168,
+        "dark": 0,
+        "system_backdrop_type": null,
+        "system_backdrop_type_hresult": -2147024809
+      },
+      "capture": "hwnd=4130808 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=65815",
+      "image_sha256": "853e64b7c9bb2e5536cb9732c361f5af35f750fe9442ccbc4ed110386fbb82a4",
+      "text_sha256": "99719c44eb58827bf389df2bd5ba7e9109fc6d0d24f98a3abad6a56d46e30fc9"
+    },
+    {
+      "scene": "top-otty-floating-card",
+      "selection": "otty-floating-card",
+      "layout": "top",
+      "image": "top-otty-floating-card.png",
+      "native": {
+        "dpi": 168,
+        "dark": 0,
+        "system_backdrop_type": null,
+        "system_backdrop_type_hresult": -2147024809
+      },
+      "capture": "hwnd=4130808 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=473447",
+      "image_sha256": "0b4a7b04089af456ec3448ea7bebc228fef7baf046b8ccf2019825b8e5eddbef",
+      "text_sha256": "99719c44eb58827bf389df2bd5ba7e9109fc6d0d24f98a3abad6a56d46e30fc9"
+    },
+    {
+      "scene": "top-return-from-otty-floating-card",
+      "selection": "one_light",
+      "layout": "top",
+      "image": "top-restored.png",
+      "native": {
+        "dpi": 168,
+        "dark": 0,
+        "system_backdrop_type": null,
+        "system_backdrop_type_hresult": -2147024809
+      },
+      "capture": "hwnd=4130808 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=65815",
+      "image_sha256": "853e64b7c9bb2e5536cb9732c361f5af35f750fe9442ccbc4ed110386fbb82a4",
+      "text_sha256": "99719c44eb58827bf389df2bd5ba7e9109fc6d0d24f98a3abad6a56d46e30fc9"
+    },
+    {
+      "scene": "top-otty-glass-dark",
+      "selection": "otty-glass-dark",
+      "layout": "top",
+      "image": "top-otty-glass-dark.png",
+      "native": {
+        "dpi": 168,
+        "dark": 1,
+        "system_backdrop_type": null,
+        "system_backdrop_type_hresult": -2147024809
+      },
+      "capture": "hwnd=4130808 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=1094246",
+      "image_sha256": "fe3a8afb9c583028a14e5789b2ea67c84a963c9c82cedccee59ce3c9e12f1b2e",
+      "text_sha256": "99719c44eb58827bf389df2bd5ba7e9109fc6d0d24f98a3abad6a56d46e30fc9"
+    },
+    {
+      "scene": "top-return-from-otty-glass-dark",
+      "selection": "one_light",
+      "layout": "top",
+      "image": "top-restored.png",
+      "native": {
+        "dpi": 168,
+        "dark": 0,
+        "system_backdrop_type": null,
+        "system_backdrop_type_hresult": -2147024809
+      },
+      "capture": "hwnd=4130808 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=65815",
+      "image_sha256": "853e64b7c9bb2e5536cb9732c361f5af35f750fe9442ccbc4ed110386fbb82a4",
+      "text_sha256": "99719c44eb58827bf389df2bd5ba7e9109fc6d0d24f98a3abad6a56d46e30fc9"
+    },
+    {
+      "scene": "top-otty-glass-light",
+      "selection": "otty-glass-light",
+      "layout": "top",
+      "image": "top-otty-glass-light.png",
+      "native": {
+        "dpi": 168,
+        "dark": 0,
+        "system_backdrop_type": null,
+        "system_backdrop_type_hresult": -2147024809
+      },
+      "capture": "hwnd=4130808 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=1092510",
+      "image_sha256": "cbe72ee76a0ef4c74b0de84f9348135a1eba9b6d96fbc5f6d87c860cb6309372",
+      "text_sha256": "99719c44eb58827bf389df2bd5ba7e9109fc6d0d24f98a3abad6a56d46e30fc9"
+    },
+    {
+      "scene": "top-return-from-otty-glass-light",
+      "selection": "one_light",
+      "layout": "top",
+      "image": "top-restored.png",
+      "native": {
+        "dpi": 168,
+        "dark": 0,
+        "system_backdrop_type": null,
+        "system_backdrop_type_hresult": -2147024809
+      },
+      "capture": "hwnd=4130808 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=65815",
+      "image_sha256": "853e64b7c9bb2e5536cb9732c361f5af35f750fe9442ccbc4ed110386fbb82a4",
+      "text_sha256": "99719c44eb58827bf389df2bd5ba7e9109fc6d0d24f98a3abad6a56d46e30fc9"
+    },
+    {
+      "scene": "top-otty-gruvbox-dark",
+      "selection": "otty-gruvbox-dark",
+      "layout": "top",
+      "image": "top-otty-gruvbox-dark.png",
+      "native": {
+        "dpi": 168,
+        "dark": 1,
+        "system_backdrop_type": null,
+        "system_backdrop_type_hresult": -2147024809
+      },
+      "capture": "hwnd=4130808 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=65588",
+      "image_sha256": "ce847fe20f0fad9a088b4b6d158d662c17d6c714f846cfb60a5935aae7272c8e",
+      "text_sha256": "99719c44eb58827bf389df2bd5ba7e9109fc6d0d24f98a3abad6a56d46e30fc9"
+    },
+    {
+      "scene": "top-return-from-otty-gruvbox-dark",
+      "selection": "one_light",
+      "layout": "top",
+      "image": "top-restored.png",
+      "native": {
+        "dpi": 168,
+        "dark": 0,
+        "system_backdrop_type": null,
+        "system_backdrop_type_hresult": -2147024809
+      },
+      "capture": "hwnd=4130808 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=65815",
+      "image_sha256": "853e64b7c9bb2e5536cb9732c361f5af35f750fe9442ccbc4ed110386fbb82a4",
+      "text_sha256": "99719c44eb58827bf389df2bd5ba7e9109fc6d0d24f98a3abad6a56d46e30fc9"
+    },
+    {
+      "scene": "top-otty-monokai-classic",
+      "selection": "otty-monokai-classic",
+      "layout": "top",
+      "image": "top-otty-monokai-classic.png",
+      "native": {
+        "dpi": 168,
+        "dark": 1,
+        "system_backdrop_type": null,
+        "system_backdrop_type_hresult": -2147024809
+      },
+      "capture": "hwnd=4130808 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=65600",
+      "image_sha256": "9173182f5d858548924c494ffa65a407c092e6661abeaeb9427b5caf40448482",
+      "text_sha256": "99719c44eb58827bf389df2bd5ba7e9109fc6d0d24f98a3abad6a56d46e30fc9"
+    },
+    {
+      "scene": "top-return-from-otty-monokai-classic",
+      "selection": "one_light",
+      "layout": "top",
+      "image": "top-restored.png",
+      "native": {
+        "dpi": 168,
+        "dark": 0,
+        "system_backdrop_type": null,
+        "system_backdrop_type_hresult": -2147024809
+      },
+      "capture": "hwnd=4130808 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=65815",
+      "image_sha256": "853e64b7c9bb2e5536cb9732c361f5af35f750fe9442ccbc4ed110386fbb82a4",
+      "text_sha256": "99719c44eb58827bf389df2bd5ba7e9109fc6d0d24f98a3abad6a56d46e30fc9"
+    },
+    {
+      "scene": "top-otty-newsprint",
+      "selection": "otty-newsprint",
+      "layout": "top",
+      "image": "top-otty-newsprint.png",
+      "native": {
+        "dpi": 168,
+        "dark": 0,
+        "system_backdrop_type": null,
+        "system_backdrop_type_hresult": -2147024809
+      },
+      "capture": "hwnd=4130808 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=67164",
+      "image_sha256": "7ad260346ad2061beea4adca7ab32953fa334f731f9d87ff93379e7f01c9bab6",
+      "text_sha256": "99719c44eb58827bf389df2bd5ba7e9109fc6d0d24f98a3abad6a56d46e30fc9"
+    },
+    {
+      "scene": "top-return-from-otty-newsprint",
+      "selection": "one_light",
+      "layout": "top",
+      "image": "top-restored.png",
+      "native": {
+        "dpi": 168,
+        "dark": 0,
+        "system_backdrop_type": null,
+        "system_backdrop_type_hresult": -2147024809
+      },
+      "capture": "hwnd=4130808 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=65815",
+      "image_sha256": "853e64b7c9bb2e5536cb9732c361f5af35f750fe9442ccbc4ed110386fbb82a4",
+      "text_sha256": "99719c44eb58827bf389df2bd5ba7e9109fc6d0d24f98a3abad6a56d46e30fc9"
+    },
+    {
+      "scene": "top-otty-night",
+      "selection": "otty-night",
+      "layout": "top",
+      "image": "top-otty-night.png",
+      "native": {
+        "dpi": 168,
+        "dark": 1,
+        "system_backdrop_type": null,
+        "system_backdrop_type_hresult": -2147024809
+      },
+      "capture": "hwnd=4130808 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=65690",
+      "image_sha256": "ff738a4ec89c5ce9cf80d96ed121cc308ce13c7deaa17948fecf1372eff38d09",
+      "text_sha256": "99719c44eb58827bf389df2bd5ba7e9109fc6d0d24f98a3abad6a56d46e30fc9"
+    },
+    {
+      "scene": "top-return-from-otty-night",
+      "selection": "one_light",
+      "layout": "top",
+      "image": "top-restored.png",
+      "native": {
+        "dpi": 168,
+        "dark": 0,
+        "system_backdrop_type": null,
+        "system_backdrop_type_hresult": -2147024809
+      },
+      "capture": "hwnd=4130808 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=65815",
+      "image_sha256": "853e64b7c9bb2e5536cb9732c361f5af35f750fe9442ccbc4ed110386fbb82a4",
+      "text_sha256": "99719c44eb58827bf389df2bd5ba7e9109fc6d0d24f98a3abad6a56d46e30fc9"
+    },
+    {
+      "scene": "top-otty-nord",
+      "selection": "otty-nord",
+      "layout": "top",
+      "image": "top-otty-nord.png",
+      "native": {
+        "dpi": 168,
+        "dark": 1,
+        "system_backdrop_type": null,
+        "system_backdrop_type_hresult": -2147024809
+      },
+      "capture": "hwnd=4130808 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=66386",
+      "image_sha256": "ea56dd5c8c6d9ef35c812067651fbd123c6be7303bb7070c7ddeaf18dee52aea",
+      "text_sha256": "99719c44eb58827bf389df2bd5ba7e9109fc6d0d24f98a3abad6a56d46e30fc9"
+    },
+    {
+      "scene": "top-return-from-otty-nord",
+      "selection": "one_light",
+      "layout": "top",
+      "image": "top-restored.png",
+      "native": {
+        "dpi": 168,
+        "dark": 0,
+        "system_backdrop_type": null,
+        "system_backdrop_type_hresult": -2147024809
+      },
+      "capture": "hwnd=4130808 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=65815",
+      "image_sha256": "853e64b7c9bb2e5536cb9732c361f5af35f750fe9442ccbc4ed110386fbb82a4",
+      "text_sha256": "99719c44eb58827bf389df2bd5ba7e9109fc6d0d24f98a3abad6a56d46e30fc9"
+    },
+    {
+      "scene": "top-otty-one-dark",
+      "selection": "otty-one-dark",
+      "layout": "top",
+      "image": "top-otty-one-dark.png",
+      "native": {
+        "dpi": 168,
+        "dark": 1,
+        "system_backdrop_type": null,
+        "system_backdrop_type_hresult": -2147024809
+      },
+      "capture": "hwnd=4130808 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=65479",
+      "image_sha256": "18c32985d1263699afd29d72d2e73418def89564d9567c4ddde4de5396ba9d74",
+      "text_sha256": "99719c44eb58827bf389df2bd5ba7e9109fc6d0d24f98a3abad6a56d46e30fc9"
+    },
+    {
+      "scene": "top-return-from-otty-one-dark",
+      "selection": "one_light",
+      "layout": "top",
+      "image": "top-restored.png",
+      "native": {
+        "dpi": 168,
+        "dark": 0,
+        "system_backdrop_type": null,
+        "system_backdrop_type_hresult": -2147024809
+      },
+      "capture": "hwnd=4130808 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=65815",
+      "image_sha256": "853e64b7c9bb2e5536cb9732c361f5af35f750fe9442ccbc4ed110386fbb82a4",
+      "text_sha256": "99719c44eb58827bf389df2bd5ba7e9109fc6d0d24f98a3abad6a56d46e30fc9"
+    },
+    {
+      "scene": "top-otty-one-light",
+      "selection": "otty-one-light",
+      "layout": "top",
+      "image": "top-otty-one-light.png",
+      "native": {
+        "dpi": 168,
+        "dark": 0,
+        "system_backdrop_type": null,
+        "system_backdrop_type_hresult": -2147024809
+      },
+      "capture": "hwnd=4130808 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=367389",
+      "image_sha256": "bd92fb69a67f5ead128e7433ef680fdeb704e6901871e046daba86aa98456611",
+      "text_sha256": "99719c44eb58827bf389df2bd5ba7e9109fc6d0d24f98a3abad6a56d46e30fc9"
+    },
+    {
+      "scene": "top-return-from-otty-one-light",
+      "selection": "one_light",
+      "layout": "top",
+      "image": "top-restored.png",
+      "native": {
+        "dpi": 168,
+        "dark": 0,
+        "system_backdrop_type": null,
+        "system_backdrop_type_hresult": -2147024809
+      },
+      "capture": "hwnd=4130808 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=65815",
+      "image_sha256": "853e64b7c9bb2e5536cb9732c361f5af35f750fe9442ccbc4ed110386fbb82a4",
+      "text_sha256": "99719c44eb58827bf389df2bd5ba7e9109fc6d0d24f98a3abad6a56d46e30fc9"
+    },
+    {
+      "scene": "top-otty-owl",
+      "selection": "otty-owl",
+      "layout": "top",
+      "image": "top-otty-owl.png",
+      "native": {
+        "dpi": 168,
+        "dark": 1,
+        "system_backdrop_type": null,
+        "system_backdrop_type_hresult": -2147024809
+      },
+      "capture": "hwnd=4130808 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=65624",
+      "image_sha256": "635755b9af91d398f3b87839bafb2d5b47630a5e12fbf83bf1b318b6dd75e2df",
+      "text_sha256": "99719c44eb58827bf389df2bd5ba7e9109fc6d0d24f98a3abad6a56d46e30fc9"
+    },
+    {
+      "scene": "top-return-from-otty-owl",
+      "selection": "one_light",
+      "layout": "top",
+      "image": "top-restored.png",
+      "native": {
+        "dpi": 168,
+        "dark": 0,
+        "system_backdrop_type": null,
+        "system_backdrop_type_hresult": -2147024809
+      },
+      "capture": "hwnd=4130808 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=65815",
+      "image_sha256": "853e64b7c9bb2e5536cb9732c361f5af35f750fe9442ccbc4ed110386fbb82a4",
+      "text_sha256": "99719c44eb58827bf389df2bd5ba7e9109fc6d0d24f98a3abad6a56d46e30fc9"
+    },
+    {
+      "scene": "top-otty-paper",
+      "selection": "otty-paper",
+      "layout": "top",
+      "image": "top-otty-paper.png",
+      "native": {
+        "dpi": 168,
+        "dark": 0,
+        "system_backdrop_type": null,
+        "system_backdrop_type_hresult": -2147024809
+      },
+      "capture": "hwnd=4130808 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=67556",
+      "image_sha256": "38e30015d6242bf799cc9d8f6aa9ee8e50528b154e04742a0d093aecb3a92f75",
+      "text_sha256": "99719c44eb58827bf389df2bd5ba7e9109fc6d0d24f98a3abad6a56d46e30fc9"
+    },
+    {
+      "scene": "top-return-from-otty-paper",
+      "selection": "one_light",
+      "layout": "top",
+      "image": "top-restored.png",
+      "native": {
+        "dpi": 168,
+        "dark": 0,
+        "system_backdrop_type": null,
+        "system_backdrop_type_hresult": -2147024809
+      },
+      "capture": "hwnd=4130808 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=65815",
+      "image_sha256": "853e64b7c9bb2e5536cb9732c361f5af35f750fe9442ccbc4ed110386fbb82a4",
+      "text_sha256": "99719c44eb58827bf389df2bd5ba7e9109fc6d0d24f98a3abad6a56d46e30fc9"
+    },
+    {
+      "scene": "top-otty-pink",
+      "selection": "otty-pink",
+      "layout": "top",
+      "image": "top-otty-pink.png",
+      "native": {
+        "dpi": 168,
+        "dark": 0,
+        "system_backdrop_type": null,
+        "system_backdrop_type_hresult": -2147024809
+      },
+      "capture": "hwnd=4130808 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=65815",
+      "image_sha256": "888e7bae646979b3c364c955abbf35b188544b54e72dc17d40e5a751cdda04ab",
+      "text_sha256": "99719c44eb58827bf389df2bd5ba7e9109fc6d0d24f98a3abad6a56d46e30fc9"
+    },
+    {
+      "scene": "top-return-from-otty-pink",
+      "selection": "one_light",
+      "layout": "top",
+      "image": "top-restored.png",
+      "native": {
+        "dpi": 168,
+        "dark": 0,
+        "system_backdrop_type": null,
+        "system_backdrop_type_hresult": -2147024809
+      },
+      "capture": "hwnd=4130808 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=65815",
+      "image_sha256": "853e64b7c9bb2e5536cb9732c361f5af35f750fe9442ccbc4ed110386fbb82a4",
+      "text_sha256": "99719c44eb58827bf389df2bd5ba7e9109fc6d0d24f98a3abad6a56d46e30fc9"
+    },
+    {
+      "scene": "top-otty-rose-pine",
+      "selection": "otty-rose-pine",
+      "layout": "top",
+      "image": "top-otty-rose-pine.png",
+      "native": {
+        "dpi": 168,
+        "dark": 1,
+        "system_backdrop_type": null,
+        "system_backdrop_type_hresult": -2147024809
+      },
+      "capture": "hwnd=4130808 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=65679",
+      "image_sha256": "7ca1175584ab720762c2f0d44b16f50f3f5a67bb686b8b8e5becdfd2db322619",
+      "text_sha256": "99719c44eb58827bf389df2bd5ba7e9109fc6d0d24f98a3abad6a56d46e30fc9"
+    },
+    {
+      "scene": "top-return-from-otty-rose-pine",
+      "selection": "one_light",
+      "layout": "top",
+      "image": "top-restored.png",
+      "native": {
+        "dpi": 168,
+        "dark": 0,
+        "system_backdrop_type": null,
+        "system_backdrop_type_hresult": -2147024809
+      },
+      "capture": "hwnd=4130808 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=65815",
+      "image_sha256": "853e64b7c9bb2e5536cb9732c361f5af35f750fe9442ccbc4ed110386fbb82a4",
+      "text_sha256": "99719c44eb58827bf389df2bd5ba7e9109fc6d0d24f98a3abad6a56d46e30fc9"
+    },
+    {
+      "scene": "top-otty-seafoam-pastel",
+      "selection": "otty-seafoam-pastel",
+      "layout": "top",
+      "image": "top-otty-seafoam-pastel.png",
+      "native": {
+        "dpi": 168,
+        "dark": 1,
+        "system_backdrop_type": null,
+        "system_backdrop_type_hresult": -2147024809
+      },
+      "capture": "hwnd=4130808 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=65596",
+      "image_sha256": "3bfe78d944ff52cc6f2e637708d4732d8471dc768b3c11385ae7a862c9e50c9f",
+      "text_sha256": "99719c44eb58827bf389df2bd5ba7e9109fc6d0d24f98a3abad6a56d46e30fc9"
+    },
+    {
+      "scene": "top-return-from-otty-seafoam-pastel",
+      "selection": "one_light",
+      "layout": "top",
+      "image": "top-restored.png",
+      "native": {
+        "dpi": 168,
+        "dark": 0,
+        "system_backdrop_type": null,
+        "system_backdrop_type_hresult": -2147024809
+      },
+      "capture": "hwnd=4130808 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=65815",
+      "image_sha256": "853e64b7c9bb2e5536cb9732c361f5af35f750fe9442ccbc4ed110386fbb82a4",
+      "text_sha256": "99719c44eb58827bf389df2bd5ba7e9109fc6d0d24f98a3abad6a56d46e30fc9"
+    },
+    {
+      "scene": "top-otty-solarized-dark",
+      "selection": "otty-solarized-dark",
+      "layout": "top",
+      "image": "top-otty-solarized-dark.png",
+      "native": {
+        "dpi": 168,
+        "dark": 1,
+        "system_backdrop_type": null,
+        "system_backdrop_type_hresult": -2147024809
+      },
+      "capture": "hwnd=4130808 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=65292",
+      "image_sha256": "780eb09e17b89d75fe987c75e692319cf2db62480d77c7ef4e224beb083657ad",
+      "text_sha256": "99719c44eb58827bf389df2bd5ba7e9109fc6d0d24f98a3abad6a56d46e30fc9"
+    },
+    {
+      "scene": "top-return-from-otty-solarized-dark",
+      "selection": "one_light",
+      "layout": "top",
+      "image": "top-restored.png",
+      "native": {
+        "dpi": 168,
+        "dark": 0,
+        "system_backdrop_type": null,
+        "system_backdrop_type_hresult": -2147024809
+      },
+      "capture": "hwnd=4130808 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=65815",
+      "image_sha256": "853e64b7c9bb2e5536cb9732c361f5af35f750fe9442ccbc4ed110386fbb82a4",
+      "text_sha256": "99719c44eb58827bf389df2bd5ba7e9109fc6d0d24f98a3abad6a56d46e30fc9"
+    },
+    {
+      "scene": "top-otty-solarized-light",
+      "selection": "otty-solarized-light",
+      "layout": "top",
+      "image": "top-otty-solarized-light.png",
+      "native": {
+        "dpi": 168,
+        "dark": 0,
+        "system_backdrop_type": null,
+        "system_backdrop_type_hresult": -2147024809
+      },
+      "capture": "hwnd=4130808 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=65502",
+      "image_sha256": "bb4df9f55fa12e9fd2990b4f4065905f1b4e6bb92d21b7e4c9daf22dd8eced07",
+      "text_sha256": "99719c44eb58827bf389df2bd5ba7e9109fc6d0d24f98a3abad6a56d46e30fc9"
+    },
+    {
+      "scene": "top-return-from-otty-solarized-light",
+      "selection": "one_light",
+      "layout": "top",
+      "image": "top-restored.png",
+      "native": {
+        "dpi": 168,
+        "dark": 0,
+        "system_backdrop_type": null,
+        "system_backdrop_type_hresult": -2147024809
+      },
+      "capture": "hwnd=4130808 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=65815",
+      "image_sha256": "853e64b7c9bb2e5536cb9732c361f5af35f750fe9442ccbc4ed110386fbb82a4",
+      "text_sha256": "99719c44eb58827bf389df2bd5ba7e9109fc6d0d24f98a3abad6a56d46e30fc9"
+    },
+    {
+      "scene": "top-otty-tokyo-night",
+      "selection": "otty-tokyo-night",
+      "layout": "top",
+      "image": "top-otty-tokyo-night.png",
+      "native": {
+        "dpi": 168,
+        "dark": 1,
+        "system_backdrop_type": null,
+        "system_backdrop_type_hresult": -2147024809
+      },
+      "capture": "hwnd=4130808 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=65753",
+      "image_sha256": "816026c09fe99892d26887c39ff855aa36c16daad7010314a301d5adfa675637",
+      "text_sha256": "99719c44eb58827bf389df2bd5ba7e9109fc6d0d24f98a3abad6a56d46e30fc9"
+    },
+    {
+      "scene": "top-return-from-otty-tokyo-night",
+      "selection": "one_light",
+      "layout": "top",
+      "image": "top-restored.png",
+      "native": {
+        "dpi": 168,
+        "dark": 0,
+        "system_backdrop_type": null,
+        "system_backdrop_type_hresult": -2147024809
+      },
+      "capture": "hwnd=4130808 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=65815",
+      "image_sha256": "853e64b7c9bb2e5536cb9732c361f5af35f750fe9442ccbc4ed110386fbb82a4",
+      "text_sha256": "99719c44eb58827bf389df2bd5ba7e9109fc6d0d24f98a3abad6a56d46e30fc9"
+    },
+    {
+      "scene": "top-restored",
+      "selection": "one_light",
+      "layout": "top",
+      "image": "top-restored.png",
+      "native": {
+        "dpi": 168,
+        "dark": 0,
+        "system_backdrop_type": null,
+        "system_backdrop_type_hresult": -2147024809
+      },
+      "capture": "hwnd=4130808 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=65815",
+      "image_sha256": "853e64b7c9bb2e5536cb9732c361f5af35f750fe9442ccbc4ed110386fbb82a4",
+      "text_sha256": "99719c44eb58827bf389df2bd5ba7e9109fc6d0d24f98a3abad6a56d46e30fc9"
+    }
+  ],
+  "terminal_output_preserved_after_round_trip": true,
+  "identical_pixels_after_round_trip": {
+    "left": true,
+    "top": true
+  },
+  "identical_native_state_after_round_trip": {
+    "left": true,
+    "top": true
+  },
+  "system_backdrop_query_supported": false
+}
