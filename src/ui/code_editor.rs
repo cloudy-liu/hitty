@@ -1966,7 +1966,7 @@ impl HittyApp {
         };
         let shell = shell.when(
             !chrome.is_dock() && self.document_header_below_chrome(window, cx),
-            |shell| shell.pt(px(crate::ui::theme::title_bar_height(cx))),
+            |shell| shell.pt(px(crate::ui::app::TITLE_BAR_HEIGHT)),
         );
         Some(
             shell
@@ -2041,7 +2041,7 @@ impl HittyApp {
         row.flex_none()
             .when_some(header_focus, |row, handle| row.track_focus(&handle))
             .min_w_0()
-            .h(px(crate::ui::theme::title_bar_height(cx)))
+            .h(px(crate::ui::app::TITLE_BAR_HEIGHT))
             .items_center()
             .bg(gpui::rgb(inactive_tab))
             .gap_1p5()
@@ -2663,11 +2663,7 @@ mod tests {
     fn editor_search_highlights_follow_the_resolved_editor_palette(cx: &mut TestAppContext) {
         use crate::ui::{editor_theme, presets};
         let (app, mut vcx) = markdown_window(cx);
-        // Imported terminal palettes retain their original contrast budget.
-        for preset in presets::builtins()
-            .into_iter()
-            .filter(|p| p.style.is_none())
-        {
+        for preset in presets::builtins() {
             app.update_in(&mut vcx, |app, window, cx| {
                 app.set_theme_follow_system(false, window, cx);
                 app.set_preset(&preset.id, window, cx);

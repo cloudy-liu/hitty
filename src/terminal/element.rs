@@ -232,9 +232,6 @@ fn snapshot_cell(
 
     if selection.is_some_and(|s| s.contains(point)) {
         rc.selected = true;
-        if let Some(foreground) = colors.selection_fg {
-            rc.fg = foreground;
-        }
     }
     if flags.contains(Flags::DIM) {
         rc.fg.a *= DIM_OPACITY;
@@ -290,8 +287,6 @@ struct PaintColors {
     default_bg: Hsla,
     caret: Hsla,
     selection_bg: Hsla,
-    selection_fg: Option<Hsla>,
-    caret_text: Option<Hsla>,
     match_bg: Hsla,
     current_match_bg: Hsla,
     fg_rgb: Rgb,
@@ -398,28 +393,14 @@ fn blend_toward(c: Hsla, dim: f32, under: Rgba) -> Hsla {
 
 impl PaintColors {
     fn resolve(theme: &gpui_component::Theme, cx: &gpui::App) -> Self {
-        let style = crate::ui::theme_style::active(cx);
-        let default_fg = style.map_or(theme.foreground, |s| {
-            s.terminal_color("foreground", theme.foreground)
-        });
-        let mut default_bg = style.map_or(theme.background, |s| {
-            s.terminal_color("background", theme.background)
-        });
-        if style.is_some() {
-            if let Some(opacity) = cx.global::<Config>().window_opacity {
-                default_bg.a = opacity;
-            }
-        }
-        let caret = style
-            .and_then(|s| s.cursor_color("block"))
-            .unwrap_or(theme.caret);
-        let selection_bg = style
-            .and_then(|s| s.color("terminal.selection-background"))
-            .unwrap_or_else(|| {
-                let mut c = default_fg;
-                c.a = 0.24;
-                c
-            });
+        let default_fg = theme.foreground;
+        let default_bg = theme.background;
+        let caret = theme.caret;
+        let selection_bg = {
+            let mut c = default_fg;
+            c.a = 0.24;
+            c
+        };
         // Opaque, and solved for a contrast against the background rather than
         // a fixed alpha: the selection tint is only 24% away from the
         // background to begin with, so a 0.32 alpha landed 7% off it in every
@@ -441,17 +422,14 @@ impl PaintColors {
             current_target,
         )));
         Self {
-            adaptive: crate::ui::theme_style::legible_palette(
-                cx.global::<Config>(),
-                style.is_some(),
-            )
-            .then(|| std::rc::Rc::new(super::adaptive_colors::AdaptiveColors::new(bg_packed))),
+            adaptive: cx
+                .global::<Config>()
+                .theme_legible_palette
+                .then(|| std::rc::Rc::new(super::adaptive_colors::AdaptiveColors::new(bg_packed))),
             default_fg,
             default_bg,
             caret,
             selection_bg,
-            selection_fg: style.and_then(|s| s.color("terminal.selection-foreground")),
-            caret_text: style.and_then(|s| s.cursor_text("block")),
             match_bg,
             current_match_bg,
             fg_rgb,
@@ -475,8 +453,6 @@ impl PaintColors {
             default_bg: blend_toward(self.default_bg, dim, under),
             caret: blend_toward(self.caret, dim, under),
             selection_bg: blend_toward(self.selection_bg, dim, under),
-            selection_fg: self.selection_fg.map(|c| blend_toward(c, dim, under)),
-            caret_text: self.caret_text.map(|c| blend_toward(c, dim, under)),
             match_bg: blend_toward(self.match_bg, dim, under),
             current_match_bg: blend_toward(self.current_match_bg, dim, under),
             fg_rgb: self.fg_rgb,
@@ -1324,9 +1300,7 @@ fn invert_cursor_cell(
     col: usize,
     colors: &PaintColors,
 ) {
-    let ink = colors.caret_text.unwrap_or_else(|| {
-        crate::ui::presets::caret_ink(colors.caret, colors.default_bg, colors.default_fg)
-    });
+    let ink = crate::ui::presets::caret_ink(colors.caret, colors.default_bg, colors.default_fg);
     // A TUI can park the cursor on the second half of a wide character. The
     // glyph lives on the lead cell, so inverting the spacer would fill half a
     // character with the caret and leave the glyph in its own colour across
@@ -2072,25 +2046,7 @@ impl Element for TerminalElement {
                     render_cursor,
                     focused,
                     cursor_visible,
-                    crate::ui::theme_style::active(cx)
-                        .and_then(|style| {
-                            render_cursor.and_then(|(_, _, shape)| {
-                                let shape = match shape {
-                                    crate::core::config::CursorStyle::Block => "block",
-                                    crate::core::config::CursorStyle::Bar => "bar",
-                                    crate::core::config::CursorStyle::Underline => "underline",
-                                };
-                                style.cursor_color(shape)
-                            })
-                        })
-                        .map(|c| {
-                            if dim < 1. {
-                                blend_toward(c, dim, under)
-                            } else {
-                                c
-                            }
-                        })
-                        .unwrap_or(colors.caret),
+                    colors.caret,
                 );
                 paint_marked(
                     window,
@@ -2209,8 +2165,6 @@ mod tests {
                 b: 0x5c,
             }),
             selection_bg: Hsla::default(),
-            selection_fg: None,
-            caret_text: None,
             match_bg: Hsla::default(),
             current_match_bg: Hsla::default(),
             fg_rgb: Rgb {
@@ -3135,59 +3089,11 @@ mod tests {
             default_bg: to_hsla(bg),
             caret: to_hsla(fg),
             selection_bg: wash(0.55),
-            selection_fg: None,
-            caret_text: None,
             match_bg: wash(0.32),
             current_match_bg: wash(0.85),
             fg_rgb: fg,
             bg_rgb: bg,
         }
-    }
-
-    #[gpui::test]
-    fn imported_theme_keeps_terminal_ink_selection_and_cursor_independent(
-        cx: &mut gpui::TestAppContext,
-    ) {
-        crate::core::config::pin_test_config_dir();
-        cx.update(|cx| {
-            gpui_component::init(cx);
-            cx.set_global(Config::default());
-            cx.global_mut::<Config>().theme_follow_system = false;
-            cx.global_mut::<Config>().theme_preset = "otty-nord".into();
-            crate::ui::theme::apply_theme(None, cx);
-            let colors = PaintColors::resolve(cx.theme(), cx);
-            assert_eq!(colors.default_fg, gpui::rgb(0xf1f6ff).into());
-            assert_eq!(cx.theme().foreground, gpui::rgb(0xe5e9f0).into());
-            assert_eq!(colors.selection_bg, gpui::rgb(0xe5e9f0).into());
-            assert_eq!(colors.selection_fg, Some(gpui::rgb(0x2e3440).into()));
-            assert_eq!(colors.caret_text, Some(gpui::rgb(0x2e3440).into()));
-            assert!(colors.adaptive.is_none(), "authored colors are the default");
-            let point = AlacPoint::new(AlacLine(0), AlacColumn(0));
-            let selection = SelectionRange {
-                start: point,
-                end: point,
-                is_block: false,
-            };
-            let selected = snapshot_cell(
-                &Cell::default(),
-                point,
-                &super::super::palette::build(),
-                &colors,
-                Some(&selection),
-            );
-            assert!(selected.selected);
-            assert_eq!(selected.fg, gpui::rgb(0x2e3440).into());
-            cx.global_mut::<Config>().theme_preset = "otty-glass-light".into();
-            crate::ui::theme::apply_theme(None, cx);
-            assert_eq!(PaintColors::resolve(cx.theme(), cx).default_bg.a, 0.);
-            cx.global_mut::<Config>().theme_preset = "one_light".into();
-            crate::ui::theme::apply_theme(None, cx);
-            let restored = PaintColors::resolve(cx.theme(), cx);
-            assert!(crate::ui::theme_style::active(cx).is_none());
-            assert!(restored.selection_fg.is_none());
-            assert!(restored.caret_text.is_none());
-            assert!(restored.adaptive.is_some());
-        });
     }
 
     #[gpui::test]

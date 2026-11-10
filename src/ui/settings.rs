@@ -1708,7 +1708,7 @@ impl HittyApp {
                     .w_full()
                     .px_2()
                     .gap_2()
-                    .pt(px(crate::ui::theme::title_bar_height(cx)))
+                    .pt(px(crate::ui::app::TITLE_BAR_HEIGHT))
                     .pb_1()
                     .child(
                         div()
@@ -1882,7 +1882,7 @@ impl HittyApp {
                         .top_0()
                         .left_0()
                         .right_0()
-                        .h(px(crate::ui::theme::title_bar_height(cx))),
+                        .h(px(crate::ui::app::TITLE_BAR_HEIGHT)),
                     "settings-titlebar-drag",
                     window,
                     cx,
@@ -2831,7 +2831,7 @@ impl HittyApp {
             .track_scroll(&detail_scroll)
             .child(
                 div()
-                    .pt(px(crate::ui::theme::title_bar_height(cx)))
+                    .pt(px(crate::ui::app::TITLE_BAR_HEIGHT))
                     .px_8()
                     .pb_8()
                     .child(
@@ -3008,7 +3008,7 @@ impl HittyApp {
         v_flex()
             .p_2()
             .gap_2()
-            .pt(px(crate::ui::theme::title_bar_height(cx)))
+            .pt(px(crate::ui::app::TITLE_BAR_HEIGHT))
             .child(header)
             .child(list)
             .into_any_element()
@@ -6743,10 +6743,7 @@ impl HittyApp {
                 this.set_theme_follow_system(*on, window, cx)
             }))
             .into_any_element();
-        let legible = crate::ui::theme_style::legible_palette(
-            cx.global::<Config>(),
-            crate::ui::theme_style::active(cx).is_some(),
-        );
+        let legible = cx.global::<Config>().theme_legible_palette;
         let legible_switch = crate::ui::theme::switch("theme-legible-palette", cx)
             .checked(legible)
             .on_click(cx.listener(|this, on: &bool, window, cx| {

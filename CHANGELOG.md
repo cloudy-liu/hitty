@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- Revert the Otty theme integration from cloudy-liu/hitty#31, restoring
+  Hitty's original 13 themes and appearance behavior. Removed theme selections
+  fall back to the default Light theme.
+
 ## v0.3.0 - 2026-11-10
 
 - Add an optional herdr-core engine for local panes, with agent messaging,

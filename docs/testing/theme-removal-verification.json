@@ -1,0 +1,55 @@
+{
+  "date": "2026-11-10",
+  "reverted_commit": "1cd00a4bc577b36500dbb52b294cc7839b082835",
+  "runtime_and_ci_match": "d73a736",
+  "workspace": {
+    "exit_code": 0,
+    "passed": 3293,
+    "ignored": 13,
+    "cli_e2e_passed": 13
+  },
+  "updater": {
+    "exit_code": 0,
+    "passed": 32,
+    "ignored": 1
+  },
+  "locked_workspace_build": {
+    "exit_code": 0
+  },
+  "checks_passed": [
+    "rustfmt",
+    "actionlint",
+    "pinned agent manifests",
+    "4 agent manifest unit tests",
+    "host boundary",
+    "diff whitespace",
+    "runtime/core/CI byte comparison to pre-PR source"
+  ],
+  "native": {
+    "before": {
+      "binary_sha256": "1f9e0602bef0ef2570973528aa3a9fed20b62bd05dd02749c13aa5ca233dc470",
+      "native_capture_count": 4,
+      "identical_pixels_after_round_trip": true
+    },
+    "after": {
+      "binary_sha256": "ccf7cde237a3e4071621df01575422914902f4e9018bd31f9b720bc8cc1d2ad2",
+      "native_capture_count": 4,
+      "identical_pixels_after_round_trip": true
+    }
+  },
+  "initial_failure": "An initial app run hit SendError in markdown_edits_release_image_budget_and_ignore_old_completions; the full final-source workspace rerun passed.",
+  "logs": {
+    "revert-build.log": {
+      "local_path": ".hitty-dev-theme-removal\\revert-build.log",
+      "sha256": "a4a52701ceebc72b560c45981749308a783b544af3ea257ad8a445cd4788ce53"
+    },
+    "workspace-revert-tests.log": {
+      "local_path": ".hitty-dev-theme-removal\\workspace-revert-tests.log",
+      "sha256": "a937d62b15b4d8ed3b3714038510dce76e7b9995ad9e2d2912fb44cbc0ddc848"
+    },
+    "updater-tests.log": {
+      "local_path": ".hitty-dev-theme-removal\\updater-tests.log",
+      "sha256": "8c1136a50425a309c77d6a2f8a2aba7d6dc7bd4e0a64ee8681ab4b2dc9d3b393"
+    }
+  }
+}

@@ -84,7 +84,7 @@ jobs:
     # Backstop under the per-step timeouts below. Without any timeout at all a
     # hung test runs to GitHub's six-hour job limit, which is how a 90-second
     # step turned into a six-hour one three times in a day.
-    timeout-minutes: ${{ matrix.target == 'x86_64-apple-darwin' && 120 || 60 }}
+    timeout-minutes: ${{ matrix.target == 'x86_64-apple-darwin' && 90 || 60 }}
     steps:
       - name: Checkout hitty
         uses: actions/checkout@v4
@@ -113,9 +113,6 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           cache-on-failure: true
-          # Release's `build` job caches optimized binaries under the default
-          # key. Keep CI's debug dependencies in their own immutable cache.
-          key: ci-${{ matrix.target }}
 
       # `--locked` on the build so a Cargo.lock that disagrees with Cargo.toml
       # fails here instead of being silently rewritten. Without it the drift is
@@ -124,10 +121,9 @@ jobs:
       # to be re-discarded before every commit. The release workflow locks its
       # build too, so all builds use the recorded dependency set.
       - name: Build
-        # PR #31 exhausted 45 minutes on a cold Intel build before reaching
-        # the application crate. Allow cold dependencies to finish; the Test
-        # step retains its separate hang timeout.
-        timeout-minutes: ${{ matrix.target == 'x86_64-apple-darwin' && 75 || 30 }}
+        # The Intel macOS bootstrap exceeded 30 minutes while still compiling.
+        # Keep other targets bounded as before; allow this runner a cold build.
+        timeout-minutes: ${{ matrix.target == 'x86_64-apple-darwin' && 45 || 30 }}
         run: cargo build --locked --target ${{ matrix.target }}
 
       # `cargo test` has no timeout of its own, so one hung test is
