@@ -1,15 +1,22 @@
 # Changelog
 
-## Unreleased
+## v0.3.0 - 2026-11-10
 
+- Add an optional herdr-core engine for local panes, with agent messaging,
+  terminal recovery and native fallback (cloudy-liu/hitty#30).
 - Add all 25 Otty theme profiles with authored terminal colors, transparent
-  surfaces, native material requests, styled tabs and terminal cards.
-
-- Match right-panel mode icons and labels to the surrounding toolbar size.
+  surfaces, native material requests, styled tabs and terminal cards;
+  full native visual parity remains incomplete (cloudy-liu/hitty#31).
+- Match right-panel mode icons and labels to the surrounding toolbar size
+  (cloudy-liu/hitty#29).
 - Present a single file-tree root as a title and remove its redundant child
-  indentation while preserving folding and file actions.
+  indentation while preserving folding and file actions (cloudy-liu/hitty#29).
 - Indicate hidden-file visibility with open/crossed-out eye icons instead of
-  a persistent selected background.
+  a persistent selected background (cloudy-liu/hitty#29).
+- Resolve GitHub commit-author avatars for ordinary email addresses
+  (cloudy-liu/hitty#27).
+
+See the [release notes](docs/releases/hitty-v0.3.0.md) for setup and limitations.
 
 ## v0.2.0 - 2026-11-09
 
