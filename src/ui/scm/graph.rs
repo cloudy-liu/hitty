@@ -1897,6 +1897,12 @@ mod tests {
     #[gpui::test]
     fn selected_commit_shows_message_details_above_the_existing_diff(cx: &mut TestAppContext) {
         let (app, mut vcx) = harness(cx);
+        // This rendering fixture supplies its own diff. An unregistered host
+        // prevents a real Git probe from replacing it between draw and click.
+        let fixture_repo = RepoKey {
+            host: HostId::from_connection_key("selected-commit-render-fixture"),
+            ..repo()
+        };
         let mut seed = commit_named(
             "fix(editor): retain the complete message",
             "Ada Lovelace",
@@ -1910,7 +1916,11 @@ mod tests {
             app.tabs
                 .push(crate::ui::app::Tab::new(crate::ui::pane::Pane::Empty));
             app.active = 0;
-            app.graph_open_commit(repo(), seed.clone(), window, cx);
+            app.graph_open_commit(fixture_repo.clone(), seed.clone(), window, cx);
+            assert!(
+                app.diff_probes_inflight.is_empty(),
+                "the rendering fixture must not dispatch a live Git probe"
+            );
         });
         vcx.update(|window, cx| {
             window.replace_root(cx, |_, _| SelectedCommit(app.clone()));
@@ -1978,7 +1988,7 @@ mod tests {
             use crate::terminal::git_diff::{DiffSnapshot, FileDiff, FileStatus};
             let overlay = app.tabs[0].diff_overlay.as_mut().unwrap();
             overlay.load = crate::ui::diff_overlay::DiffLoad::Ready(Arc::new(DiffSnapshot {
-                root: repo().root,
+                root: fixture_repo.root.clone(),
                 source: overlay.source.clone(),
                 branch: "main".into(),
                 files: ["first.rs", "second.rs"]
