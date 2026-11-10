@@ -452,7 +452,30 @@ mod tests {
 
     #[test]
     fn otty_surfaces_keep_hitty_text_sizes_and_weights() {
-        for theme in crate::ui::presets::builtins() {
+        let mut themes = crate::ui::presets::builtins();
+        let mut custom = themes.last().unwrap().clone();
+        custom.id = "custom-surface-typography".into();
+        custom.style = Some(std::sync::Arc::new(
+            toml::from_str(
+                r#"
+            [tab]
+            font-size = 11
+            font-weight = 400
+            [tab.active]
+            font-size = 13
+            font-weight = 700
+            [tab-bar.tab]
+            font-size = 12
+            font-weight = 400
+            [titlebar]
+            font-size = 13
+            font-weight = 400
+        "#,
+            )
+            .unwrap(),
+        ));
+        themes.push(custom);
+        for theme in themes {
             let Some(style) = theme.style else { continue };
             for path in ["tab", "tab.active", "tab-bar.tab", "titlebar"] {
                 let mut el = style.surface(

@@ -1122,108 +1122,10 @@ pub fn builtins() -> Vec<Theme> {
     themes
 }
 
-const OTTY_BUILTINS: &[(&str, &str)] = &[
-    (
-        "otty-acrylic-dark",
-        include_str!("../../assets/themes/otty/otty-acrylic-dark.yaml"),
-    ),
-    (
-        "otty-april",
-        include_str!("../../assets/themes/otty/otty-april.yaml"),
-    ),
-    (
-        "otty-april-dark",
-        include_str!("../../assets/themes/otty/otty-april-dark.yaml"),
-    ),
-    (
-        "otty-ayu-dark",
-        include_str!("../../assets/themes/otty/otty-ayu-dark.yaml"),
-    ),
-    (
-        "otty-ayu-light",
-        include_str!("../../assets/themes/otty/otty-ayu-light.yaml"),
-    ),
-    (
-        "otty-catppuccin-mocha",
-        include_str!("../../assets/themes/otty/otty-catppuccin-mocha.yaml"),
-    ),
-    (
-        "otty-dracula",
-        include_str!("../../assets/themes/otty/otty-dracula.yaml"),
-    ),
-    (
-        "otty-floating-card",
-        include_str!("../../assets/themes/otty/otty-floating-card.yaml"),
-    ),
-    (
-        "otty-glass-dark",
-        include_str!("../../assets/themes/otty/otty-glass-dark.yaml"),
-    ),
-    (
-        "otty-glass-light",
-        include_str!("../../assets/themes/otty/otty-glass-light.yaml"),
-    ),
-    (
-        "otty-gruvbox-dark",
-        include_str!("../../assets/themes/otty/otty-gruvbox-dark.yaml"),
-    ),
-    (
-        "otty-monokai-classic",
-        include_str!("../../assets/themes/otty/otty-monokai-classic.yaml"),
-    ),
-    (
-        "otty-newsprint",
-        include_str!("../../assets/themes/otty/otty-newsprint.yaml"),
-    ),
-    (
-        "otty-night",
-        include_str!("../../assets/themes/otty/otty-night.yaml"),
-    ),
-    (
-        "otty-nord",
-        include_str!("../../assets/themes/otty/otty-nord.yaml"),
-    ),
-    (
-        "otty-one-dark",
-        include_str!("../../assets/themes/otty/otty-one-dark.yaml"),
-    ),
-    (
-        "otty-one-light",
-        include_str!("../../assets/themes/otty/otty-one-light.yaml"),
-    ),
-    (
-        "otty-owl",
-        include_str!("../../assets/themes/otty/otty-owl.yaml"),
-    ),
-    (
-        "otty-paper",
-        include_str!("../../assets/themes/otty/otty-paper.yaml"),
-    ),
-    (
-        "otty-pink",
-        include_str!("../../assets/themes/otty/otty-pink.yaml"),
-    ),
-    (
-        "otty-rose-pine",
-        include_str!("../../assets/themes/otty/otty-rose-pine.yaml"),
-    ),
-    (
-        "otty-seafoam-pastel",
-        include_str!("../../assets/themes/otty/otty-seafoam-pastel.yaml"),
-    ),
-    (
-        "otty-solarized-dark",
-        include_str!("../../assets/themes/otty/otty-solarized-dark.yaml"),
-    ),
-    (
-        "otty-solarized-light",
-        include_str!("../../assets/themes/otty/otty-solarized-light.yaml"),
-    ),
-    (
-        "otty-tokyo-night",
-        include_str!("../../assets/themes/otty/otty-tokyo-night.yaml"),
-    ),
-];
+const OTTY_BUILTINS: &[(&str, &str)] = &[(
+    "otty-solarized-light",
+    include_str!("../../assets/themes/otty/otty-solarized-light.yaml"),
+)];
 
 struct BuiltinSpec {
     id: &'static str,
@@ -2421,13 +2323,15 @@ ansi:
     }
 
     #[test]
-    fn complete_otty_profiles_are_bundled_and_survive_duplicate_edit() {
+    fn only_reviewed_solarized_light_is_bundled_and_survives_duplicate_edit() {
         let themes = builtins();
-        assert_eq!(themes.len(), 38);
+        assert_eq!(themes.len(), 14);
         let ids: std::collections::HashSet<_> = themes.iter().map(|t| &t.id).collect();
-        assert_eq!(ids.len(), 38);
+        assert_eq!(ids.len(), 14);
         assert!(themes[..13].iter().all(|t| t.style.is_none()));
-        assert_eq!(themes[13..].iter().filter(|t| !t.dark).count(), 9);
+        assert_eq!(themes[13].id, "otty-solarized-light");
+        assert_eq!(themes[13].name, "Solarized Light");
+        assert!(!themes[13].dark);
         for theme in &themes[13..] {
             let style = theme.style.as_ref().unwrap();
             assert!(theme.id.starts_with("otty-"));
@@ -2451,25 +2355,6 @@ ansi:
             assert_eq!(duplicate.ansi16, theme.ansi16);
             assert!(!theme.name.contains("(solid)"));
         }
-        let glass = themes.iter().find(|t| t.id == "otty-glass-light").unwrap();
-        assert_eq!(
-            glass
-                .style
-                .as_ref()
-                .unwrap()
-                .color("terminal.background")
-                .unwrap()
-                .a,
-            0.
-        );
-        let card = themes
-            .iter()
-            .find(|t| t.id == "otty-floating-card")
-            .unwrap();
-        let style = card.style.as_ref().unwrap();
-        assert_eq!(style.spacing("container.margin"), Some([4., 16., 16., 16.]));
-        assert_eq!(style.number("container.radius"), Some(15.));
-        assert!(style.shadow("container.shadow").unwrap()[0].blur_radius > gpui::px(0.));
     }
 
     #[test]

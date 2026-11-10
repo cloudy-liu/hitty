@@ -1073,12 +1073,32 @@ mod tests {
             cx.global_mut::<Config>().cursor_blink = false;
             (terminal, daemon)
         });
-        let ids: Vec<_> = presets::builtins()
-            .into_iter()
-            .filter(|theme| theme.id.starts_with("otty-"))
-            .map(|theme| theme.id)
+        let mut themes = presets::builtins();
+        let mut custom = themes.last().unwrap().clone();
+        custom.id = "custom-typography".into();
+        custom.style = Some(std::sync::Arc::new(
+            toml::from_str(
+                r#"
+            [token]
+            font-ui = ["Times New Roman", "serif"]
+            font-mono = ["Consolas", "monospace"]
+            font-size = 13
+            adjust-cell-height = "20%"
+            [tab]
+            font-size = 11
+            font-weight = 400
+        "#,
+            )
+            .unwrap(),
+        ));
+        themes.push(custom);
+        let ids: Vec<_> = themes
+            .iter()
+            .filter(|theme| theme.style.is_some())
+            .map(|theme| theme.id.clone())
             .collect();
-        assert_eq!(ids.len(), 25);
+        assert_eq!(ids.len(), 2);
+        vcx.update(|_, cx| cx.set_global(presets::Themes(themes)));
         let ui_family = vcx.update(|_, cx| Theme::global(cx).font_family.clone());
         for (family, terminal_size, ui_size, height) in [
             (Config::default().font_family.clone(), 15., 14., 1.4),
@@ -1143,7 +1163,7 @@ mod tests {
             .iter()
             .filter(|theme| theme.style.is_some())
             .collect();
-        assert_eq!((originals.len(), imports.len()), (13, 25));
+        assert_eq!((originals.len(), imports.len()), (13, 1));
         let rendering_state = |window: &Window, cx: &App| {
             let bg = cx.global::<presets::ActiveBackground>();
             (
@@ -1197,30 +1217,79 @@ mod tests {
     #[test]
     fn imported_material_respects_explicit_user_overrides() {
         let themes = presets::builtins();
-        let glass = themes.iter().find(|t| t.id == "otty-glass-light").unwrap();
-        let nord = themes.iter().find(|t| t.id == "otty-nord").unwrap();
+        let solid = themes
+            .iter()
+            .find(|t| t.id == "otty-solarized-light")
+            .unwrap();
+        let mut glass = solid.clone();
+        glass.style = Some(std::sync::Arc::new(
+            toml::from_str(
+                r#"
+            [window]
+            material = "glass"
+        "#,
+            )
+            .unwrap(),
+        ));
         let mut config = Config::default();
         assert_eq!(
-            theme_backdrop(&config, glass),
+            theme_backdrop(&config, &glass),
             (WindowBackdrop::Acrylic, true)
         );
-        assert_eq!(theme_backdrop(&config, nord), (WindowBackdrop::Off, false));
+        assert_eq!(theme_backdrop(&config, solid), (WindowBackdrop::Off, false));
         config.window_backdrop = WindowBackdrop::Off;
-        assert_eq!(theme_backdrop(&config, glass), (WindowBackdrop::Off, false));
+        assert_eq!(
+            theme_backdrop(&config, &glass),
+            (WindowBackdrop::Off, false)
+        );
         config.window_backdrop = WindowBackdrop::MicaAlt;
         assert_eq!(
-            theme_backdrop(&config, glass),
+            theme_backdrop(&config, &glass),
             (WindowBackdrop::MicaAlt, true)
         );
         #[cfg(windows)]
         {
-            let acrylic = themes.iter().find(|t| t.id == "otty-acrylic-dark").unwrap();
-            let style = acrylic.style.as_ref().unwrap();
+            let style: crate::ui::theme_style::ThemeStyle = toml::from_str(
+                r##"
+                [windows]
+                material = "none"
+                color = "#202020"
+                [windows.sidebar]
+                material = "acrylic"
+                color = "#2c2c2c"
+                opacity = 0.8
+            "##,
+            )
+            .unwrap();
             assert!(style.sidebar_material());
             assert_eq!(style.backdrop(), WindowBackdrop::Acrylic);
             assert!((style.sidebar_color().a - 0.8).abs() < 0.001);
             assert_eq!(style.window_color().a, 1.);
         }
+    }
+
+    #[gpui::test]
+    fn removed_theme_preferences_fall_back_to_hitty(cx: &mut TestAppContext) {
+        let (app, mut vcx) = crate::ui::app::test_window::harness(cx);
+        let selection: serde_json::Value =
+            serde_json::from_str(include_str!("../../docs/testing/otty-theme-selection.json"))
+                .unwrap();
+        let removed = selection["decision"]["remove"].as_array().unwrap();
+        assert_eq!(removed.len(), 24);
+        app.update_in(&mut vcx, |app, window, cx| {
+            cx.global_mut::<Config>().theme_follow_system = false;
+            app.set_preset(presets::DEFAULT_ID, window, cx);
+            let expected = serde_json::to_value(Theme::global(cx)).unwrap();
+            for id in removed {
+                let id = id.as_str().unwrap();
+                app.set_preset("otty-solarized-light", window, cx);
+                cx.global_mut::<Config>().theme_preset = id.into();
+                apply_theme(Some(window), cx);
+                assert_eq!(presets::by_id(cx, id).id, presets::DEFAULT_ID);
+                assert!(super::super::theme_style::active(cx).is_none());
+                assert_eq!(serde_json::to_value(Theme::global(cx)).unwrap(), expected);
+            }
+        });
     }
 
     #[gpui::test]

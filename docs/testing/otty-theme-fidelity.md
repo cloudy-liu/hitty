@@ -5,6 +5,8 @@ November 10, 2026. Branch: `feat/otty-theme-fidelity`.
 This records the original #31 import. Its typography behavior is superseded by
 [the Hitty typography adaptation](otty-hidpi-adaptation.md): imported font
 declarations are retained as metadata, and Hitty owns all text metrics.
+The final maintainer review keeps only Solarized Light; the other 24 profiles
+are removed. See [the final selection](solarized-light-selection.md).
 
 The branch adds all 25 Otty 1.6.0-beta theme configuration profiles alongside
 Hitty's original 13 presets. Profiles are named **Theme name - otty** and keep

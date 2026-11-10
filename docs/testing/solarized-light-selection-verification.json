@@ -1,0 +1,161 @@
+{
+  "date": "2026-11-10",
+  "scope": {
+    "original_hitty_themes": 13,
+    "retained_imports": 1,
+    "removed_imports": 24,
+    "total_builtins": 14,
+    "display_name": "Solarized Light",
+    "compatibility_id": "otty-solarized-light",
+    "removed_preferences": "Existing default-theme fallback; no configuration migration",
+    "selection_record": "otty-theme-selection.json"
+  },
+  "packaged_theme": {
+    "id": "otty-solarized-light",
+    "name": "Solarized Light",
+    "author": null,
+    "source_sha256": "c3dcf2d871f31b854abf7d736cac8928d70857a1473974d32f1f79fa17930992",
+    "yaml_sha256": "1579f3faa1bd88b010f41ebdf02bf9635116b56938aab9bb3cd0208b03fd48d4",
+    "mode": "light"
+  },
+  "build": {
+    "command": "cargo build --locked --workspace",
+    "passed": true,
+    "binary_sha256": "70f69704b088161c1234f1fa848cefe142940cda7a4685efa2bfacfc2022faef"
+  },
+  "workspace": {
+    "command": "cargo test --locked --workspace",
+    "suites": 18,
+    "passed": 3288,
+    "failed": 0,
+    "ignored": 13
+  },
+  "updater": {
+    "command": "cargo test --locked --features updater --bin hitty-updater",
+    "suites": 1,
+    "passed": 32,
+    "failed": 0,
+    "ignored": 1
+  },
+  "regressions": {
+    "catalogue_and_duplicate_edit": "passed",
+    "default_and_custom_font_metrics": "passed; retained theme plus synthetic overrides",
+    "hitty_text_sizes_and_weights": "passed; retained theme plus synthetic overrides",
+    "selection_and_preview_cancel_paths": 26,
+    "original_destinations": 13,
+    "removed_preference_fallback_ids": 24,
+    "terminal_ink_selection_and_cursor": "passed; synthetic custom styles",
+    "application_test_scale_percent": 200
+  },
+  "importer": {
+    "packaged_hash_check": "passed",
+    "full_source_check": "passed",
+    "available_source_profiles": 25,
+    "isolated_regeneration": "passed; one YAML and one manifest, byte-identical to packaged files"
+  },
+  "checks": {
+    "rustfmt": "passed",
+    "agent_detection_manifests": "passed",
+    "agent_detection_unit_tests": 4,
+    "host_boundary": "passed; 117 files",
+    "whitespace": "passed",
+    "offline_review_regeneration": "passed"
+  },
+  "native": {
+    "command": "python scripts/otty-typography-native.py --stage retained --bin-dir D:/tmp/hitty-build/debug",
+    "record": "images/otty-hidpi/retained/captures.json",
+    "events": 8,
+    "logical_window": [
+      1200,
+      800
+    ],
+    "physical_capture": [
+      2104,
+      1402
+    ],
+    "dpi": 168,
+    "scale_percent": 175,
+    "ui_font_size": 14,
+    "terminal_font": "Hack",
+    "terminal_font_size": 15,
+    "line_height": 1.4,
+    "left_scene": "Complete left session sidebar and right Info panel",
+    "method": "PrintWindow; no pointer",
+    "visually_inspected": true,
+    "all_terminal_text_hashes_match": true,
+    "terminal_text_sha256": "99719c44eb58827bf389df2bd5ba7e9109fc6d0d24f98a3abad6a56d46e30fc9",
+    "comparisons": {
+      "left": {
+        "selected_matches_pre_pruning": true,
+        "selected_sha256": "48acd045c550e2528f36010416cb8be465d9c8b6919d849d637074d095501a3c",
+        "immediate_and_final_returns_match_baseline": true,
+        "baseline_and_restored_sha256": "11251d238a14f956d57459d79a23eabe9f0373399ab603fb0de5ceaf35660bf1"
+      },
+      "top": {
+        "selected_matches_pre_pruning": true,
+        "selected_sha256": "bb4df9f55fa12e9fd2990b4f4065905f1b4e6bb92d21b7e4c9daf22dd8eced07",
+        "immediate_and_final_returns_match_baseline": true,
+        "baseline_and_restored_sha256": "853e64b7c9bb2e5536cb9732c361f5af35f750fe9442ccbc4ed110386fbb82a4"
+      }
+    },
+    "native_state_restored": {
+      "left": true,
+      "top": true
+    }
+  },
+  "offline_review": {
+    "record": "images/otty-hidpi/review-final-verification.json",
+    "screenshots": [
+      "images/otty-hidpi/review-final-window.png",
+      "images/otty-hidpi/review-final-sidebars.png"
+    ],
+    "finalDecision": {
+      "keep": "1",
+      "remove": "24",
+      "name": "Solarized Light"
+    },
+    "historicalImages": 25,
+    "sidebarCanvases": [
+      [
+        388,
+        1402
+      ],
+      [
+        460,
+        1402
+      ]
+    ]
+  },
+  "limitations": [
+    "Native macOS and Linux theme visuals remain unverified.",
+    "Windows display scales other than 175% remain unverified.",
+    "Retained Solarized Light requests no acrylic/glass backdrop; deleted materials are outside this selection."
+  ],
+  "pr_state": "Draft pending remaining native visual acceptance.",
+  "local_logs": {
+    "retained-build.log": {
+      "sha256": "4bdc763d4e3bf976f3b48ece275c8938fb7fb2ed35e96e2db27f1dcbd9b5c478",
+      "location": ".hitty-dev-otty-hidpi/retained-build.log"
+    },
+    "retained-workspace-tests-final.log": {
+      "sha256": "704a60483860a2b4b8b52a837500fb34423211b8de080dc32fea5a8ce2bc6641",
+      "location": ".hitty-dev-otty-hidpi/retained-workspace-tests-final.log"
+    },
+    "retained-updater-tests.log": {
+      "sha256": "d2a32300360d2ab298309129a0ef887216d23767a5b50ce0a07640e0c907a179",
+      "location": ".hitty-dev-otty-hidpi/retained-updater-tests.log"
+    },
+    "retained-removed-id-test.log": {
+      "sha256": "b6a49c21b618fd39ab8e221ce50255532c3afef6b00d8d144aa766a616d09cbc",
+      "location": ".hitty-dev-otty-hidpi/retained-removed-id-test.log"
+    },
+    "retained-native.log": {
+      "sha256": "ca61386e961f18aa225f8ddb01b26ddba6b5c06285a5a284e5532c7881e421fc",
+      "location": ".hitty-dev-otty-hidpi/retained-native.log"
+    },
+    "retained-checks.log": {
+      "sha256": "158771a648495dfeecc5198e2f8a29c4d0398d7d27c5aea6ae4043c181657356",
+      "location": ".hitty-dev-otty-hidpi/retained-checks.log"
+    }
+  }
+}

@@ -33,7 +33,7 @@ def native_state(capture):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--stage", choices=("before", "after"), required=True)
+    parser.add_argument("--stage", choices=("before", "after", "retained"), required=True)
     parser.add_argument("--bin-dir", type=Path, required=True)
     args = parser.parse_args()
     app = (args.bin_dir / "hitty-app.exe").resolve()
@@ -121,13 +121,13 @@ def main():
             ids = sorted(entry["id"] for entry in entries)
             modes = {entry["id"]: entry["mode"] for entry in entries}
             modes["one_light"] = "light"
-            assert len(ids) == 25
+            assert ids == ["otty-solarized-light"]
             scenes = []
             for layout in ["left", "top"]:
                 scenes.append((f"{layout}-baseline", "one_light", layout))
                 for theme in ids:
                     scenes.append((f"{layout}-{theme}", theme, layout))
-                    if args.stage == "after":
+                    if args.stage != "before":
                         scenes.append((f"{layout}-return-from-{theme}", "one_light", layout))
                 scenes.append((f"{layout}-restored", "one_light", layout))
             for scene, theme, layout in scenes:

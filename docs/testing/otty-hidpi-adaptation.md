@@ -2,10 +2,15 @@
 
 November 10, 2026. Branch: `fix/otty-hitty-typography`.
 
-This adapts the 25 profiles from #31 to Hitty's text settings. It is an
-alternative to the complete removal proposed in #33; the two changes should
-not be merged together. Original theme YAML and provenance hashes remain
-intact, along with all 13 original Hitty themes.
+The final reviewed scope retains only **Solarized Light**, displayed without
+an Otty suffix, and removes the other 24 profiles from #31. Its internal ID
+stays `otty-solarized-light` for existing preferences. The original 13 Hitty
+themes remain. The importer cannot regenerate the rejected candidates.
+
+The initial 25-profile typography work and its evidence below are historical.
+The final selection, current tests and new native captures are recorded in
+[Solarized Light acceptance](solarized-light-selection.md). This remains an
+alternative to complete removal in #33; the two PRs should not merge together.
 
 ## Reproduced regression
 
@@ -77,7 +82,7 @@ height 1.4, the same English/Chinese sample and an open Info panel. Automatic
 updates, tray registration and CLI installation are disabled. The harness
 does not use the installed application's profile or move the real pointer.
 
-The After stage selects each of the 25 profiles in Left and Top layouts,
+The historical After stage selected each of the 25 profiles in Left and Top layouts,
 returning to One Light after each selection. Every return image and terminal
 output hash must match its baseline. Each capture also checks native dark
 mode and records window DPI, plus DWM backdrop type when the OS supports that

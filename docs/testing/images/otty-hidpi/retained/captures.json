@@ -1,0 +1,176 @@
+{
+  "stage": "retained",
+  "app": "D:\\tmp\\hitty-build\\debug\\hitty-app.exe",
+  "binary_sha256": "70f69704b088161c1234f1fa848cefe142940cda7a4685efa2bfacfc2022faef",
+  "profile": "C:\\Users\\cloudy\\AppData\\Local\\Temp\\hitty-otty-hidpi-retained-rncls7sn",
+  "configuration": {
+    "theme_preset": "one_light",
+    "theme_follow_system": false,
+    "theme_style_legible_palette": true,
+    "theme_legible_palette": true,
+    "window_blur": null,
+    "window_backdrop": "auto",
+    "window_opacity": null,
+    "gui_language": "en",
+    "font_family": "Hack",
+    "font_size": 15,
+    "line_height": 1.4,
+    "ui_font_size": 14,
+    "cursor_blink": false,
+    "tab_bar_position": "top",
+    "right_panel_visible": true,
+    "right_panel_tab": "info",
+    "check_for_updates": false,
+    "auto_download_updates": false,
+    "install_cli_on_path": false,
+    "show_tray_icon": false,
+    "shell": {
+      "program": "powershell.exe",
+      "args": [
+        "-NoLogo",
+        "-NoProfile",
+        "-NoExit",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-Command",
+        "Set-Location $env:SystemRoot; function global:prompt { 'PS typography-review> ' }; & 'D:\\gh-prj\\hitty-otty-hidpi-adaptation\\.hitty-dev-otty-hidpi\\sample.ps1'"
+      ]
+    }
+  },
+  "logical_window": [
+    1200,
+    800
+  ],
+  "captures": [
+    {
+      "scene": "left-baseline",
+      "selection": "one_light",
+      "layout": "left",
+      "image": "left-baseline.png",
+      "native": {
+        "dpi": 168,
+        "dark": 0,
+        "system_backdrop_type": null,
+        "system_backdrop_type_hresult": -2147024809
+      },
+      "capture": "hwnd=3606860 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=74972",
+      "image_sha256": "11251d238a14f956d57459d79a23eabe9f0373399ab603fb0de5ceaf35660bf1",
+      "text_sha256": "99719c44eb58827bf389df2bd5ba7e9109fc6d0d24f98a3abad6a56d46e30fc9"
+    },
+    {
+      "scene": "left-otty-solarized-light",
+      "selection": "otty-solarized-light",
+      "layout": "left",
+      "image": "left-otty-solarized-light.png",
+      "native": {
+        "dpi": 168,
+        "dark": 0,
+        "system_backdrop_type": null,
+        "system_backdrop_type_hresult": -2147024809
+      },
+      "capture": "hwnd=3606860 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=74991",
+      "image_sha256": "48acd045c550e2528f36010416cb8be465d9c8b6919d849d637074d095501a3c",
+      "text_sha256": "99719c44eb58827bf389df2bd5ba7e9109fc6d0d24f98a3abad6a56d46e30fc9"
+    },
+    {
+      "scene": "left-return-from-otty-solarized-light",
+      "selection": "one_light",
+      "layout": "left",
+      "image": "left-restored.png",
+      "native": {
+        "dpi": 168,
+        "dark": 0,
+        "system_backdrop_type": null,
+        "system_backdrop_type_hresult": -2147024809
+      },
+      "capture": "hwnd=3606860 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=74972",
+      "image_sha256": "11251d238a14f956d57459d79a23eabe9f0373399ab603fb0de5ceaf35660bf1",
+      "text_sha256": "99719c44eb58827bf389df2bd5ba7e9109fc6d0d24f98a3abad6a56d46e30fc9"
+    },
+    {
+      "scene": "left-restored",
+      "selection": "one_light",
+      "layout": "left",
+      "image": "left-restored.png",
+      "native": {
+        "dpi": 168,
+        "dark": 0,
+        "system_backdrop_type": null,
+        "system_backdrop_type_hresult": -2147024809
+      },
+      "capture": "hwnd=3606860 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=74972",
+      "image_sha256": "11251d238a14f956d57459d79a23eabe9f0373399ab603fb0de5ceaf35660bf1",
+      "text_sha256": "99719c44eb58827bf389df2bd5ba7e9109fc6d0d24f98a3abad6a56d46e30fc9"
+    },
+    {
+      "scene": "top-baseline",
+      "selection": "one_light",
+      "layout": "top",
+      "image": "top-baseline.png",
+      "native": {
+        "dpi": 168,
+        "dark": 0,
+        "system_backdrop_type": null,
+        "system_backdrop_type_hresult": -2147024809
+      },
+      "capture": "hwnd=3606860 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=65815",
+      "image_sha256": "853e64b7c9bb2e5536cb9732c361f5af35f750fe9442ccbc4ed110386fbb82a4",
+      "text_sha256": "99719c44eb58827bf389df2bd5ba7e9109fc6d0d24f98a3abad6a56d46e30fc9"
+    },
+    {
+      "scene": "top-otty-solarized-light",
+      "selection": "otty-solarized-light",
+      "layout": "top",
+      "image": "top-otty-solarized-light.png",
+      "native": {
+        "dpi": 168,
+        "dark": 0,
+        "system_backdrop_type": null,
+        "system_backdrop_type_hresult": -2147024809
+      },
+      "capture": "hwnd=3606860 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=65502",
+      "image_sha256": "bb4df9f55fa12e9fd2990b4f4065905f1b4e6bb92d21b7e4c9daf22dd8eced07",
+      "text_sha256": "99719c44eb58827bf389df2bd5ba7e9109fc6d0d24f98a3abad6a56d46e30fc9"
+    },
+    {
+      "scene": "top-return-from-otty-solarized-light",
+      "selection": "one_light",
+      "layout": "top",
+      "image": "top-restored.png",
+      "native": {
+        "dpi": 168,
+        "dark": 0,
+        "system_backdrop_type": null,
+        "system_backdrop_type_hresult": -2147024809
+      },
+      "capture": "hwnd=3606860 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=65815",
+      "image_sha256": "853e64b7c9bb2e5536cb9732c361f5af35f750fe9442ccbc4ed110386fbb82a4",
+      "text_sha256": "99719c44eb58827bf389df2bd5ba7e9109fc6d0d24f98a3abad6a56d46e30fc9"
+    },
+    {
+      "scene": "top-restored",
+      "selection": "one_light",
+      "layout": "top",
+      "image": "top-restored.png",
+      "native": {
+        "dpi": 168,
+        "dark": 0,
+        "system_backdrop_type": null,
+        "system_backdrop_type_hresult": -2147024809
+      },
+      "capture": "hwnd=3606860 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=65815",
+      "image_sha256": "853e64b7c9bb2e5536cb9732c361f5af35f750fe9442ccbc4ed110386fbb82a4",
+      "text_sha256": "99719c44eb58827bf389df2bd5ba7e9109fc6d0d24f98a3abad6a56d46e30fc9"
+    }
+  ],
+  "terminal_output_preserved_after_round_trip": true,
+  "identical_pixels_after_round_trip": {
+    "left": true,
+    "top": true
+  },
+  "identical_native_state_after_round_trip": {
+    "left": true,
+    "top": true
+  },
+  "system_backdrop_query_supported": false
+}

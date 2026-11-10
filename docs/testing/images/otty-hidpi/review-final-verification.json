@@ -1,0 +1,22 @@
+{
+  "date": "2026-11-10",
+  "browser": "Chrome headless, isolated profile",
+  "checks": {
+    "finalDecision": {
+      "keep": "1",
+      "remove": "24",
+      "name": "Solarized Light"
+    },
+    "historicalImages": 25,
+    "sidebarCanvases": [
+      [
+        388,
+        1402
+      ],
+      [
+        460,
+        1402
+      ]
+    ]
+  }
+}

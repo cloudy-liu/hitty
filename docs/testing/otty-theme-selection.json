@@ -1,0 +1,239 @@
+{
+  "source": "Otty 1.6.0-beta theme configuration",
+  "reference": "https://docs.otty.sh/reference/theme-format",
+  "themes": [
+    {
+      "id": "otty-acrylic-dark",
+      "name": "Acrylic Dark - otty",
+      "author": "Otty",
+      "source_sha256": "4501eb2257784be9309f1f14b655fe23c39a431ef1d8e58c407ec2139c3ebf60",
+      "yaml_sha256": "28e458d4cbe638a7bd83c64cfd80c8d26bf498890e2706dc223442fecc058ca3",
+      "mode": "dark"
+    },
+    {
+      "id": "otty-april-dark",
+      "name": "April Dark - otty",
+      "author": "Abner",
+      "source_sha256": "d7cb6220fbd90e6f4ddaf750dcc09e733f60df350d83f7bdcc58445467bc786a",
+      "yaml_sha256": "8d85c1b87dfbef4200086967d623f39e5defb84cc807cbcf3788fb1d3f38e527",
+      "mode": "dark"
+    },
+    {
+      "id": "otty-april",
+      "name": "April - otty",
+      "author": "Otty",
+      "source_sha256": "a9f3bf33a04d53abd681aadefb106934fa7fb62526faaa33d8b122a074dbfad4",
+      "yaml_sha256": "f6bce01265dc4a5eca0814ed33b19094b83d3d52983b3fdb1edc06eb768b547c",
+      "mode": "light"
+    },
+    {
+      "id": "otty-ayu-dark",
+      "name": "Ayu Dark - otty",
+      "author": null,
+      "source_sha256": "714f7d5d58232c1e4bc67e633b21c3c998e918432988c84b149608c32b226d74",
+      "yaml_sha256": "1cbb3bb548799baa19c01ecb62d70d56209501472029975c9d07b783c806b544",
+      "mode": "dark"
+    },
+    {
+      "id": "otty-ayu-light",
+      "name": "Ayu Light - otty",
+      "author": null,
+      "source_sha256": "0f8f37e83c5e3f4dd1b5358ed32e1465a6683ebde36a02594aafc8f077e4edfd",
+      "yaml_sha256": "a322842dab2bce83853bbe37f3d7fbf5e8233fbe3e88b76a077f47fa43fbcd82",
+      "mode": "light"
+    },
+    {
+      "id": "otty-catppuccin-mocha",
+      "name": "Catppuccin Mocha - otty",
+      "author": null,
+      "source_sha256": "3bdfd3e42eca133535ed334645639408b15e1ef55ea0dccc203fea961c1d2abf",
+      "yaml_sha256": "3f93306cd1de3251eb94e8157b40eabc692696411cc14b2f81e5a7471f9cfed3",
+      "mode": "dark"
+    },
+    {
+      "id": "otty-dracula",
+      "name": "Dracula - otty",
+      "author": null,
+      "source_sha256": "b07b59d7ae0f261c69ff0a389b15b816718fbbf3870d517043b05a64028eb51c",
+      "yaml_sha256": "3592f322d746bc0271bd522dab763b0c21c35e03915cf7372a1dc79e28d3bb4a",
+      "mode": "dark"
+    },
+    {
+      "id": "otty-floating-card",
+      "name": "Floating Card - otty",
+      "author": "Otty",
+      "source_sha256": "371e34924fc355df980cb6c0607e0bd6586695cf440b44fdd7d58ce2500261b2",
+      "yaml_sha256": "22167421650e2ce2c067ffe553beb5dcdf103f8d1058c2c21ef5cc45f8b18141",
+      "mode": "light"
+    },
+    {
+      "id": "otty-glass-dark",
+      "name": "Glass Dark - otty",
+      "author": "Otty",
+      "source_sha256": "f99566b6211c68f009e06c70139be86b8bd51ce0c49b983fb2f9a8367a1e5f72",
+      "yaml_sha256": "11c707f0f8f0fd587620a82039fb4fb8399a517d5c90392b00f3cbd6f94c5387",
+      "mode": "dark"
+    },
+    {
+      "id": "otty-glass-light",
+      "name": "Glass Light - otty",
+      "author": "Otty",
+      "source_sha256": "da3c8c3dd5a1e58fb67a436be5be4efb62b2709c846745b3519ea092afda24de",
+      "yaml_sha256": "fcad9ff40b377fca59731a0c2da4dac2fd1c340f388656570c344c64aaea5b0b",
+      "mode": "light"
+    },
+    {
+      "id": "otty-gruvbox-dark",
+      "name": "Gruvbox Dark - otty",
+      "author": null,
+      "source_sha256": "8625e3fcd617bb3c65821a1a5944e157996463dbaead8fe824a15f1e882d8803",
+      "yaml_sha256": "4e4d275c5cb9f7322db6e16939bcaf45bbed8a0a6c7e5736cb5279206e81d9d5",
+      "mode": "dark"
+    },
+    {
+      "id": "otty-monokai-classic",
+      "name": "Monokai Classic - otty",
+      "author": null,
+      "source_sha256": "efc0d05a212c3917824053fc22ae58b8b5bfa86c42406ffba9a9922b63dbd0c3",
+      "yaml_sha256": "6ee54b983822a8d181d927e498378b933758e9ae8210b37af09bfef38c3d3a3f",
+      "mode": "dark"
+    },
+    {
+      "id": "otty-newsprint",
+      "name": "Newsprint - otty",
+      "author": "Otty",
+      "source_sha256": "50655eda946dafc0cfb958046527e30a83dbc9a5e7d2eb53a0dd360f455d9063",
+      "yaml_sha256": "0b5cc6bb6e55494225e58b9a40fbd4b96d2436630fef4d7030cf9765711d95ec",
+      "mode": "light"
+    },
+    {
+      "id": "otty-night",
+      "name": "Night - otty",
+      "author": "Typora",
+      "source_sha256": "85381694f0cc8b8060245118f6f33f59f87a109f8bdf0f93dec3fcfe1d8fad94",
+      "yaml_sha256": "57e323b6515bf01263a085ffc08b9ebf247e8934f11132d30c6bca8791fb1f25",
+      "mode": "dark"
+    },
+    {
+      "id": "otty-nord",
+      "name": "Nord - otty",
+      "author": "arcticicestudio",
+      "source_sha256": "fd855e04d89f8cc68bd5eea678f137208f36ccc3f39aac1a04fdf199d60003b4",
+      "yaml_sha256": "b5e7e4031fdab0530cbbc3ce43014cb8d3004be33a1a56d6f39069b208902303",
+      "mode": "dark"
+    },
+    {
+      "id": "otty-one-dark",
+      "name": "One Dark - otty",
+      "author": null,
+      "source_sha256": "187c168c31555245e80eb8ac2316ab3e09dbab4c1d36dbed67164ee162cce0bc",
+      "yaml_sha256": "d21815119150e901d35fcf1d27530db46c40c3031bc6d6b504f65d516c77306f",
+      "mode": "dark"
+    },
+    {
+      "id": "otty-one-light",
+      "name": "One Light - otty",
+      "author": null,
+      "source_sha256": "51d9262dbe31b70ab00bb1d9c594c1cad05a634dbdfa6fec134c190b91476bfa",
+      "yaml_sha256": "ca1d85cdb18262368024be8f9d98b7d7a5fc158c0df0ca57ed534d9c089abf04",
+      "mode": "light"
+    },
+    {
+      "id": "otty-owl",
+      "name": "Owl - otty",
+      "author": null,
+      "source_sha256": "7500a6d3621cf251760fe75108fe22c9f4ec05ce1eb9abbf12b308789268cc6f",
+      "yaml_sha256": "0d1f15d697dbfd1a089da54632916ff8028386d6112b133615d8ba8a174f02e2",
+      "mode": "dark"
+    },
+    {
+      "id": "otty-paper",
+      "name": "Paper - otty",
+      "author": "Otty",
+      "source_sha256": "1fa31131ad0444e23857e228f547957f3159aee459f26fb84d73f3ae58fffecb",
+      "yaml_sha256": "1fa2b6b672986da2a9d1a063f7c056f8202b1678b834d847123a8dddf81301a7",
+      "mode": "light"
+    },
+    {
+      "id": "otty-pink",
+      "name": "Pink - otty",
+      "author": "Otty",
+      "source_sha256": "e0e05d4aac0f1886babdd27c9edec95fc817e94b9bab037bd72bdb372da03a4e",
+      "yaml_sha256": "d3fca7d7d139c7bd246d5ee9b9701de628bb4b87ae1de242cde9abe250bc55b5",
+      "mode": "light"
+    },
+    {
+      "id": "otty-rose-pine",
+      "name": "Rosé Pine - otty",
+      "author": null,
+      "source_sha256": "88435dc4786c6967be5a74a49b354349ac0b92763228d866ecd030806c627ec2",
+      "yaml_sha256": "06e6d00102ea28f2d2f137e090a95b57d795d4034b60509d1c3e078f04302067",
+      "mode": "dark"
+    },
+    {
+      "id": "otty-seafoam-pastel",
+      "name": "Seafoam Pastel - otty",
+      "author": null,
+      "source_sha256": "af168646f842b1df9972ea3614e548509344af30e576740eebf34db0db169582",
+      "yaml_sha256": "e2a8373bcfabfff5c9357da64484ef4ff7e458f41af01751de4e839752471444",
+      "mode": "dark"
+    },
+    {
+      "id": "otty-solarized-dark",
+      "name": "Solarized Dark - otty",
+      "author": null,
+      "source_sha256": "b6062048b3f9371196e3caf336d050887639277c4ac52ff91771449c09c74bf9",
+      "yaml_sha256": "1704970bbbd2218836f0b8c0c626dc2f3f232d081c6f53f026a235cfddc0cfe4",
+      "mode": "dark"
+    },
+    {
+      "id": "otty-solarized-light",
+      "name": "Solarized Light - otty",
+      "author": null,
+      "source_sha256": "c3dcf2d871f31b854abf7d736cac8928d70857a1473974d32f1f79fa17930992",
+      "yaml_sha256": "ba9d84557050437b0aa82f7a51f0d7296908199f8042431c0e35c46608603de5",
+      "mode": "light"
+    },
+    {
+      "id": "otty-tokyo-night",
+      "name": "Tokyo Night - otty",
+      "author": null,
+      "source_sha256": "fa12aed8174cdec01f1e2702912d62a0e5b5791732f0a5f8694ce7531c06185d",
+      "yaml_sha256": "7dd9631834270b0f60d32f161894bb1af7b8d26df7d09f5e3266232332dc213c",
+      "mode": "dark"
+    }
+  ],
+  "review_date": "2026-11-10",
+  "decision": {
+    "keep": [
+      "otty-solarized-light"
+    ],
+    "remove": [
+      "otty-acrylic-dark",
+      "otty-april-dark",
+      "otty-april",
+      "otty-ayu-dark",
+      "otty-ayu-light",
+      "otty-catppuccin-mocha",
+      "otty-dracula",
+      "otty-floating-card",
+      "otty-glass-dark",
+      "otty-glass-light",
+      "otty-gruvbox-dark",
+      "otty-monokai-classic",
+      "otty-newsprint",
+      "otty-night",
+      "otty-nord",
+      "otty-one-dark",
+      "otty-one-light",
+      "otty-owl",
+      "otty-paper",
+      "otty-pink",
+      "otty-rose-pine",
+      "otty-seafoam-pastel",
+      "otty-solarized-dark",
+      "otty-tokyo-night"
+    ],
+    "display_name": "Solarized Light"
+  }
+}

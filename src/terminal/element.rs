@@ -3153,7 +3153,34 @@ mod tests {
             gpui_component::init(cx);
             cx.set_global(Config::default());
             cx.global_mut::<Config>().theme_follow_system = false;
-            cx.global_mut::<Config>().theme_preset = "otty-nord".into();
+            let mut themes = crate::ui::presets::builtins();
+            let mut custom = themes.last().unwrap().clone();
+            custom.id = "custom-ink".into();
+            custom.style = Some(std::sync::Arc::new(
+                toml::from_str(
+                    r##"
+                [token]
+                foreground = "#e5e9f0"
+                [terminal]
+                foreground = "#f1f6ff"
+                background = "#2e3440"
+                selection-background = "#e5e9f0"
+                selection-foreground = "#2e3440"
+                cursor-text = "#2e3440"
+            "##,
+                )
+                .unwrap(),
+            ));
+            let mut transparent = custom.clone();
+            transparent.id = "custom-transparent".into();
+            let mut profile = transparent.style.as_ref().unwrap().0.clone();
+            profile["terminal"]["background"] = toml::Value::String("none".into());
+            transparent.style = Some(std::sync::Arc::new(crate::ui::theme_style::ThemeStyle(
+                profile,
+            )));
+            themes.extend([custom, transparent]);
+            cx.set_global(crate::ui::presets::Themes(themes));
+            cx.global_mut::<Config>().theme_preset = "custom-ink".into();
             crate::ui::theme::apply_theme(None, cx);
             let colors = PaintColors::resolve(cx.theme(), cx);
             assert_eq!(colors.default_fg, gpui::rgb(0xf1f6ff).into());
@@ -3177,7 +3204,7 @@ mod tests {
             );
             assert!(selected.selected);
             assert_eq!(selected.fg, gpui::rgb(0x2e3440).into());
-            cx.global_mut::<Config>().theme_preset = "otty-glass-light".into();
+            cx.global_mut::<Config>().theme_preset = "custom-transparent".into();
             crate::ui::theme::apply_theme(None, cx);
             assert_eq!(PaintColors::resolve(cx.theme(), cx).default_bg.a, 0.);
             cx.global_mut::<Config>().theme_preset = "one_light".into();

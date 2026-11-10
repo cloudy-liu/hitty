@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="zh-CN">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Otty 主题评审 · Hitty</title>
+<style>
+:root{color-scheme:light;--paper:#f4f6f9;--ink:#202e42;--muted:#627188;--line:#dce2eb;--blue:#3d5ba9;--keep:#256849;--drop:#a33b42;--amber:#805c16;font-family:"Segoe UI Variable Text","Segoe UI","Microsoft YaHei",sans-serif;font-size:15px;color:var(--ink);background:var(--paper)}
+*{box-sizing:border-box}body{margin:0}button,input,select,textarea{font:inherit}button,select{cursor:pointer}button{color:inherit;background:white;border:1px solid var(--line);border-radius:7px;padding:9px 13px;font-weight:600}button:hover{border-color:#99a8bf;background:#f3f5fa}button:disabled{opacity:.4;cursor:default}button.primary{background:var(--blue);border-color:var(--blue);color:white}button.primary:hover{background:#304b92}:focus-visible{outline:3px solid #7e9ce2;outline-offset:3px}input,select,textarea{color:inherit;background:white;border:1px solid #cad3df;border-radius:7px;padding:9px 11px}a{color:var(--blue)}button svg{width:17px;height:17px;vertical-align:-3px;margin-right:6px}.mono{font-family:"Cascadia Code",Consolas,monospace;font-size:12px;letter-spacing:.02em}.muted{color:var(--muted)}.hidden,[hidden]{display:none!important}
+.masthead{background:#fff;border-bottom:1px solid var(--line)}.masthead-inner{max-width:1540px;margin:auto;padding:28px 36px 22px}.brand{display:flex;align-items:center;gap:9px;font-size:13px;font-weight:650;color:var(--muted)}.brand-mark{width:23px;height:23px;background:var(--ink);color:white;border-radius:5px;display:grid;place-items:center;font-family:Consolas,monospace;font-size:14px}.brand strong{color:var(--ink)}.intro{display:flex;justify-content:space-between;gap:30px;align-items:flex-end;margin-top:22px}h1{font-size:32px;letter-spacing:-.035em;line-height:1.25;margin:0 0 10px;font-weight:700}.intro p{margin:0;line-height:1.8;color:var(--muted)}.progress{min-width:235px;text-align:right}.progress strong{font-size:26px;font-variant-numeric:tabular-nums}.progress-track{height:5px;background:#e9edf3;margin:10px 0;border-radius:9px;overflow:hidden;display:flex}.progress-track i{height:100%;transition:width .15s}.progress-keep{background:var(--keep)}.progress-drop{background:var(--drop)}.counts{display:flex;justify-content:flex-end;gap:16px;font-size:12px}.counts b{font-variant-numeric:tabular-nums}.keep-text{color:var(--keep)}.drop-text{color:var(--drop)}
+.conditions{display:flex;flex-wrap:wrap;gap:8px 20px;padding-top:20px;margin-top:20px;border-top:1px solid #edf0f5;font-size:12px;color:var(--muted)}.conditions strong{font-weight:600;color:var(--ink)}.workspace{max-width:1540px;margin:auto;padding:0 36px 36px}.toolbar{z-index:2;position:sticky;top:0;background:var(--paper);padding:18px 0 12px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}.segmented{display:inline-flex;background:#e7ecf3;padding:3px;border-radius:8px;gap:3px}.segmented button{background:transparent;border:0;padding:8px 12px;font-size:13px;color:var(--muted);white-space:nowrap}.segmented button[aria-pressed="true"]{background:white;box-shadow:0 1px 4px #263d6314;color:var(--ink)}.search{min-width:150px;flex:1;max-width:250px}.toolbar select,.toolbar input{font-size:13px;height:38px}.toolbar .spacer{flex:1}.toolbar>button{font-size:13px;white-space:nowrap}.notice{background:#edf1f9;border:1px solid #d9e1f2;color:#475b80;border-radius:8px;padding:11px 14px;font-size:12px;line-height:1.75;margin:4px 0 20px}.notice strong{color:#304769}.results-bar{display:flex;justify-content:space-between;gap:15px;align-items:baseline;margin:18px 0 12px;font-size:13px}.results-bar p{margin:0}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px}.theme-card{border:1px solid var(--line);border-radius:11px;background:white;overflow:hidden;box-shadow:0 2px 5px #273a5a04}.card-heading{display:flex;align-items:center;gap:10px;justify-content:space-between;padding:16px 17px 12px}.card-heading h2{font-size:18px;margin:0;font-weight:650;letter-spacing:-.025em}.card-meta{display:flex;gap:7px;align-items:center;margin-top:7px;font-size:11px;color:var(--muted)}.dot{width:7px;height:7px;border:1px solid #9caabd;border-radius:50%;display:inline-block;margin-right:4px}.dot.dark{background:#34425b;border-color:#34425b}.material-badge{color:var(--amber);background:#fff4dc;padding:2px 6px;border-radius:4px}.status{font-size:11px;padding:4px 8px;border:1px solid var(--line);border-radius:20px;color:var(--muted);white-space:nowrap}.status.keep{color:var(--keep);background:#eff8f3;border-color:#bfddcb}.status.delete{color:var(--drop);background:#fff1f1;border-color:#edcbcd}.preview{display:block;width:100%;border:0;border-radius:0;background:#e5e9ef;padding:0;position:relative;overflow:hidden;cursor:zoom-in}.preview:hover{background:#e5e9ef;border:0}.preview img{display:block;width:100%;height:auto;aspect-ratio:2104/1402}.preview-label{position:absolute;right:10px;bottom:10px;background:#15253ee0;color:white;padding:6px 9px;border:1px solid #ffffff2a;border-radius:5px;font-size:11px;font-weight:500}.card-footer{padding:13px 17px 15px;display:flex;gap:10px;align-items:center;justify-content:space-between}.decision-group{display:flex;gap:5px}.decision-group button{font-size:12px;padding:7px 12px;font-weight:550}.decision-group button[data-decision="keep"][aria-pressed="true"]{background:#eaf5ef;border-color:#9bc5ae;color:var(--keep)}.decision-group button[data-decision="delete"][aria-pressed="true"]{background:#fff0f1;border-color:#d8a4a8;color:var(--drop)}.decision-group button[data-decision="undecided"][aria-pressed="true"]{background:#e9edf4;border-color:#b4c0d1;color:var(--ink)}.note-indicator{font-size:11px;color:var(--muted);overflow:hidden;white-space:nowrap;text-overflow:ellipsis;max-width:42%}.empty{text-align:center;padding:80px 20px;color:var(--muted);background:white;border:1px dashed #b8c5d8;border-radius:10px}.page-footer{display:flex;justify-content:space-between;gap:20px;color:var(--muted);font-size:12px;line-height:1.8;margin-top:28px}.page-footer p{margin:0}.saved-state{white-space:nowrap}.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:10;background:#24364f;color:white;border-radius:8px;padding:11px 18px;font-size:13px;box-shadow:0 4px 24px #0002;max-width:90vw;text-align:center}
+dialog{padding:0;border:1px solid #b7c5d8;border-radius:12px;color:var(--ink);background:white;box-shadow:0 20px 100px #12203655}dialog::backdrop{background:#13233bc9}dialog.viewer{width:min(1600px,96vw);height:94vh;max-height:94vh;max-width:96vw;overflow:hidden}dialog.viewer[open]{display:flex;flex-direction:column}.viewer-head{display:flex;justify-content:space-between;align-items:center;gap:20px;padding:16px 20px 12px}.viewer-head h2{margin:0;font-size:21px}.viewer-head .sub{font-size:12px;margin-top:5px;color:var(--muted)}.icon-button{padding:6px 10px;font-size:20px;font-weight:400;line-height:1.1}.viewer-tools{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:0 20px 12px}.viewer-tools button{font-size:12px}.viewer-tools label{font-size:12px;display:flex;align-items:center;gap:7px;cursor:pointer}.viewer-tools input{accent-color:var(--blue);width:16px;height:16px}.viewer-tools .hint{margin-left:auto;font-size:11px;color:var(--muted)}.viewer-warning{font-size:12px;line-height:1.7;color:var(--amber);background:#fff5e1;padding:8px 20px;border-top:1px solid #f1e0bd}.stage{flex:1;min-height:80px;margin:0;overflow:auto;background:#dde3ec;overscroll-behavior:contain}.stage img{display:block;max-width:none;width:var(--native-width);height:auto}.stage.fit img{width:100%;height:100%;object-fit:contain}.viewer-footer{padding:13px 20px;display:flex;gap:14px;align-items:center;border-top:1px solid var(--line);flex-wrap:wrap}.viewer-footer .note-field{display:flex;align-items:center;gap:8px;font-size:12px;flex:1;min-width:160px;white-space:nowrap}.viewer-footer input{min-width:50px;width:100%;font-size:12px}.navigation{display:flex;gap:6px}.navigation button{font-size:13px;padding:7px 12px}.viewer-footnote{padding:0 20px 10px;color:var(--muted);font-size:11px}.export-dialog{width:min(700px,94vw);max-height:90vh;padding:24px;overflow:auto}.export-dialog h2{margin:0 0 10px;font-size:23px}.export-dialog p{font-size:13px;line-height:1.8;color:var(--muted)}.export-dialog textarea{resize:vertical;width:100%;height:44vh;min-height:180px;background:#f8fafc;font-size:12px;line-height:1.8;font-family:"Cascadia Code",Consolas,"Microsoft YaHei",monospace}.export-actions{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;margin-top:14px}.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}
+@media(min-width:1850px){.masthead-inner,.workspace{max-width:1920px}.grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:850px){.masthead-inner{padding:24px 20px 20px}.workspace{padding:0 20px 25px}.intro{align-items:flex-start;gap:20px}h1{font-size:27px}.progress{min-width:170px}.progress strong{font-size:23px}.grid{gap:16px}.card-heading{padding:13px 12px 10px}.card-heading h2{font-size:16px}.card-footer{padding:11px 12px;flex-wrap:wrap}.note-indicator{max-width:100%}.toolbar .spacer{display:none}.toolbar .search{max-width:none}.card-meta{flex-wrap:wrap}.page-footer{flex-direction:column;gap:7px}}
+@media(max-width:600px){.masthead-inner{padding:20px 16px 17px}.workspace{padding:0 12px 24px}.intro{display:block;margin-top:18px}h1{font-size:27px}.intro p{font-size:13px}.progress{text-align:left;margin-top:18px}.progress strong{font-size:22px}.progress-track{margin:8px 0}.counts{justify-content:flex-start}.conditions{gap:6px 16px;padding-top:14px;margin-top:15px;font-size:11px}.toolbar{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:12px 0}.toolbar .search{width:100%;min-width:0}.toolbar .segmented button{padding:8px 10px}.toolbar select{width:100%}.toolbar select{flex:1;min-width:0}.toolbar>button{padding:8px 10px}.grid{grid-template-columns:1fr}.notice{margin-top:5px;margin-bottom:16px}.results-bar{font-size:12px}.results-bar .muted{max-width:64%;text-align:right;font-size:11px}.card-heading h2{font-size:18px}.viewer-head{padding:13px 12px 10px}.viewer-head h2{font-size:18px}.viewer-tools{padding:0 12px 10px;gap:8px}.viewer-tools .hint{display:none}.viewer-warning{padding:7px 12px;font-size:11px}.viewer-footer{padding:10px 12px;gap:10px}.viewer-footer .note-field{flex-basis:100%;order:3}.navigation{margin-left:auto}.viewer-footnote{padding:0 12px 10px;line-height:1.6}.export-dialog{padding:18px}.export-actions button{font-size:12px;padding:8px 10px}.status{font-size:10px}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+.grid{grid-template-columns:minmax(0,1fr);gap:32px}.workspace,.masthead-inner{max-width:1440px}.sidebar-state{font-size:13px;font-weight:650;white-space:nowrap;color:var(--keep);padding:8px 0}.image-caption{display:flex;justify-content:space-between;gap:10px;padding:8px 17px;background:#f6f8fb;border-top:1px solid var(--line);font-size:12px;color:var(--muted)}.card-actions{display:flex;gap:12px;align-items:center}.sidebar-detail-button{font-size:12px;padding:7px 12px;color:var(--blue)}.sidebar-stage{flex:1;min-height:0;overflow:auto;background:#dde3ec;overscroll-behavior:contain;padding:14px 20px}.sidebar-pair{display:grid;grid-template-columns:388fr 460fr;gap:20px;max-width:848px;margin:auto}.sidebar-pair figure{margin:0;min-width:0}.sidebar-pair figcaption{font-size:13px;font-weight:650;margin-bottom:8px}.sidebar-pair canvas{display:block;width:100%;height:auto;box-shadow:0 1px 5px #14254022;background:#e5e9ef}.sidebar-error{color:var(--drop);padding:20px;font-size:13px}.sidebar-stage .crop-note{font-size:12px;line-height:1.7;color:var(--muted);margin:0 auto 12px;max-width:848px}
+@media(max-width:600px){.sidebar-state{font-size:12px;grid-column:1/-1;padding:2px 0}.card-footer{align-items:flex-start}.card-actions{flex-wrap:wrap;gap:8px}.image-caption{font-size:11px;padding:7px 12px}.sidebar-stage{padding:12px}.sidebar-pair{gap:10px}.sidebar-pair figcaption{font-size:12px}.viewer-tools .segmented button{font-size:11px;padding:8px}.sidebar-stage .crop-note{font-size:11px}.viewer-footnote{line-height:1.65}}
+</style>
+<header class="masthead">
+  <div class="masthead-inner">
+    <div class="brand"><span class="brand-mark" aria-hidden="true">&gt;_</span><strong>HITTY</strong><span>/</span><span>Otty 主题评审</span></div>
+    <div class="intro">
+      <div><h1>主题评审结果</h1><p>已选定 Solarized Light，其余 24 个候选已移除。下方保留评审时的完整双侧栏截图。</p></div>
+      <div class="progress" aria-live="polite"><div><strong id="reviewed-count">0</strong><span class="muted"> / 25 已评审</span></div><div class="progress-track" aria-hidden="true"><i class="progress-keep" id="progress-keep"></i><i class="progress-drop" id="progress-drop"></i></div><div class="counts"><span class="keep-text">保留 <b id="keep-count">0</b></span><span class="drop-text">删除 <b id="delete-count">0</b></span><span class="muted">待定 <b id="undecided-count">25</b></span></div></div>
+    </div>
+    <div class="conditions"><span>拍摄 <strong>2026.11.10 · 本地适配版</strong></span><span>界面 <strong>14 px</strong></span><span>终端 <strong>Hack 15 px / 行高 1.4</strong></span><span>Windows <strong>175% HiDPI</strong></span><span>原图 <strong>2104 × 1402</strong></span></div>
+  </div>
+</header>
+<main class="workspace">
+  <div class="toolbar" aria-label="主题筛选与视图">
+    <span class="sidebar-state">✓ 左侧会话栏 + 右侧 Info 栏均展开</span>
+    <label class="sr-only" for="search">搜索主题</label><input class="search" id="search" type="search" placeholder="搜索主题…" autocomplete="off">
+    <label class="sr-only" for="mode-filter">明暗筛选</label><select id="mode-filter"><option value="all">全部明暗</option><option value="dark">深色主题</option><option value="light">浅色主题</option><option value="material">含材质主题</option></select>
+    <label class="sr-only" for="decision-filter">评审筛选</label><select id="decision-filter"><option value="all">全部决定</option><option value="undecided">待定</option><option value="keep">保留</option><option value="delete">删除</option></select>
+    <span class="spacer"></span><button type="button" id="baseline-open">Hitty 原生参考</button><button type="button" class="primary" id="export-open">导出评审</button>
+  </div>
+  <aside class="notice"><strong>关于透明与玻璃材质：</strong>这些是原始 PrintWindow 实拍，未补色、未美化。它不能捕获 Windows 系统合成的背景材质，部分主题会出现黑色区域；带“材质待确认”标记的主题请结合实窗再决定。所有截图使用同一字号、终端内容和窗口大小；缩略图会缩小文字，请用“1:1 像素”检查清晰度。</aside>
+  <div class="results-bar"><p id="result-count">全部 25 个主题</p><p class="muted">完整窗口大图 · 可单独放大左右侧栏</p></div>
+  <div class="grid" id="theme-grid"></div>
+  <div class="empty" id="empty" hidden>没有匹配的主题。请换个关键词或调整筛选条件。</div>
+  <footer class="page-footer"><p>此页仅记录评审选择。导出后把文件或文字给我，再按你的选择处理主题。<br>单文件离线页面 · 截图内嵌 · 评审数据保存在当前浏览器</p><p class="saved-state" id="saved-state" role="status">尚未开始评审</p></footer>
+</main>
+<dialog class="viewer" id="viewer" aria-labelledby="viewer-title">
+  <div class="viewer-head"><div><h2 id="viewer-title"></h2><div class="sub" id="viewer-subtitle"></div></div><button type="button" class="icon-button" id="viewer-close" aria-label="关闭原图">×</button></div>
+  <div class="viewer-tools"><div class="segmented" role="group" aria-label="截图查看方式"><button type="button" data-view="window" aria-pressed="true">完整窗口 · 双侧栏</button><button type="button" data-view="sidebars" aria-pressed="false">左右侧栏放大</button></div><button type="button" id="zoom-toggle" aria-pressed="false">1:1 像素</button><label id="baseline-toggle-label"><input type="checkbox" id="baseline-toggle">对照 Hitty 原生</label><span class="hint">← → 切主题 · K 保留 · D 删除 · U 待定 · Esc 关闭</span></div>
+  <div class="viewer-warning" id="viewer-warning" hidden>材质待确认：截图缺少系统合成层，黑色区域不代表完整实窗效果。</div>
+  <figure class="stage fit" id="stage"><img id="viewer-image" alt="" width="2104" height="1402"></figure>
+  <section class="sidebar-stage" id="sidebar-stage" aria-label="左右侧栏完整高度放大" hidden><p class="crop-note">直接裁取同一张实拍的左右两侧，保留完整高度；可向下滚动到底部。配色与文字未经修改。</p><div class="sidebar-pair"><figure><figcaption>左侧会话栏 · 完整高度</figcaption><canvas id="left-sidebar" width="388" height="1402" role="img" aria-label="左侧会话栏完整截图"></canvas></figure><figure><figcaption>右侧 Info 栏 · 完整高度</figcaption><canvas id="right-sidebar" width="460" height="1402" role="img" aria-label="右侧 Info 栏完整截图"></canvas></figure></div><p id="sidebar-error" class="sidebar-error" hidden>截图读取失败，请重新打开此主题。</p></section>
+  <div class="viewer-footer"><div class="decision-group" id="viewer-decisions" role="group" aria-label="当前主题决定"><button type="button" data-decision="keep">保留</button><button type="button" data-decision="delete">删除</button><button type="button" data-decision="undecided">待定</button></div><label class="note-field" id="note-label" for="theme-note">备注<input id="theme-note" type="text" placeholder="例如：侧栏对比不足、配色喜欢…" maxlength="2000"></label><div class="navigation"><button type="button" id="previous" aria-label="上一个主题">←</button><button type="button" id="next" aria-label="下一个主题">→</button></div></div>
+  <div class="viewer-footnote" id="viewer-footnote">完整窗口默认同时显示左右侧栏。“1:1 像素”需要横向滚动；可用“左右侧栏放大”把两侧并排查看。</div>
+</dialog>
+<dialog class="export-dialog" id="export-dialog" aria-labelledby="export-title"><h2 id="export-title">导出你的评审</h2><p>下载 JSON，或复制下方文字发给我。备注和待定项也会保留。</p><label class="sr-only" for="export-text">评审结果文字</label><textarea id="export-text" readonly spellcheck="false"></textarea><div class="export-actions"><button type="button" id="export-close">关闭</button><button type="button" id="copy-review">复制文字</button><button type="button" class="primary" id="download-review">下载 JSON</button></div></dialog>
+<div class="toast" id="toast" role="status" hidden></div>
+<noscript><p style="padding:20px">请在浏览器中启用 JavaScript，以查看内嵌截图和记录评审。</p></noscript>
+<script id="review-data" type="application/json">__REVIEW_DATA__</script>
+<script>
+"use strict";
+const data = JSON.parse(document.getElementById("review-data").textContent);
+const $ = id => document.getElementById(id);
+const labels = {keep:"保留",delete:"删除",undecided:"待定"};
+const key = "hitty-otty-review:" + data.version;
+const decisions = {};
+let storageWorks = true;
+try {
+  const saved = JSON.parse(localStorage.getItem(key) || "{}");
+  for (const theme of data.themes) {
+    const entry = saved?.[theme.id];
+    if (entry && Object.hasOwn(labels,entry.decision)) decisions[theme.id] = {decision:entry.decision,note:typeof entry.note === "string" ? entry.note.slice(0,2000) : ""};
+  }
+} catch { storageWorks = false; }
+if (data.decision) {
+  for (const theme of data.themes) decisions[theme.id] = {
+    decision:data.decision.keep.includes(theme.id) ? "keep" : "delete",
+    note:decisions[theme.id]?.note || "",
+  };
+}
+let current = null, sequence = [], nativeSize = false, view = "window", toastTimer, cropRequest = 0;
+const getDecision = id => decisions[id]?.decision || "undecided";
+const noteFor = id => decisions[id]?.note || "";
+function toast(message) { $("toast").textContent = message; $("toast").hidden = false; clearTimeout(toastTimer); toastTimer = setTimeout(() => {$("toast").hidden = true;},2500); }
+function persist() {
+  try {localStorage.setItem(key,JSON.stringify(decisions));storageWorks = true;} catch {storageWorks = false;}
+  $("saved-state").textContent = storageWorks ? "已保存在当前浏览器 · 建议完成后导出" : "浏览器未能保存 · 请导出评审结果";
+}
+function filteredThemes() {
+  const query = $("search").value.trim().toLocaleLowerCase();
+  return data.themes.filter(theme => (!query || (theme.name + " " + theme.id).toLocaleLowerCase().includes(query)) &&
+    ($("mode-filter").value === "all" || ($("mode-filter").value === "material" ? theme.materials.length > 0 : theme.mode === $("mode-filter").value)) &&
+    ($("decision-filter").value === "all" || getDecision(theme.id) === $("decision-filter").value));
+}
+function updateCounts() {
+  for (const decision of Object.keys(labels)) $(decision + "-count").textContent = data.themes.filter(theme => getDecision(theme.id) === decision).length;
+  const keep = Number($("keep-count").textContent), drop = Number($("delete-count").textContent);
+  $("reviewed-count").textContent = keep + drop;
+  $("progress-keep").style.width = keep * 4 + "%"; $("progress-drop").style.width = drop * 4 + "%";
+}
+function updateDecisionSurface(theme) {
+  const card = $("theme-grid").querySelector(`[data-theme="${theme.id}"]`);
+  if (card) {
+    const status = card.querySelector(".status");status.className = "status " + getDecision(theme.id);status.textContent = labels[getDecision(theme.id)];
+    card.querySelectorAll("[data-decision]").forEach(button => button.setAttribute("aria-pressed",String(button.dataset.decision === getDecision(theme.id))));
+    card.querySelector(".note-indicator").textContent = noteFor(theme.id) ? "备注：" + noteFor(theme.id) : "";
+  }
+  if (current?.id === theme.id) $("viewer-decisions").querySelectorAll("[data-decision]").forEach(button => button.setAttribute("aria-pressed",String(button.dataset.decision === getDecision(theme.id))));
+}
+function setDecision(id,decision) {
+  decisions[id] = {decision,note:noteFor(id)};persist();updateCounts();
+  updateDecisionSurface(data.themes.find(theme => theme.id === id));
+  if ($("decision-filter").value !== "all") renderGrid();
+}
+function renderGrid() {
+  const themes = filteredThemes();
+  $("theme-grid").replaceChildren();
+  for (const theme of themes) {
+    const card = document.createElement("article");card.className = "theme-card";card.dataset.theme = theme.id;
+    card.innerHTML = `<div class="card-heading"><div><h2></h2><div class="card-meta"><span><i class="dot ${theme.mode}" aria-hidden="true"></i>${theme.mode === "dark" ? "深色" : "浅色"}</span>${theme.materials.length ? '<span class="material-badge" title="主题含透明或系统材质声明，需实窗确认">材质待确认</span>' : ""}</div></div><span class="status"></span></div><button type="button" class="preview"><img width="2104" height="1402" loading="lazy" decoding="async"><span class="preview-label">查看全窗原图 ↗</span></button><div class="card-footer"><div class="decision-group" role="group"><button type="button" data-decision="keep">保留</button><button type="button" data-decision="delete">删除</button><button type="button" data-decision="undecided">待定</button></div><span class="note-indicator"></span></div>`;
+    card.querySelector("h2").textContent = theme.name;
+    card.querySelector(".decision-group").setAttribute("aria-label",theme.name + " 的决定");
+    const preview = card.querySelector(".preview");preview.setAttribute("aria-label","放大查看 " + theme.name);
+    const image = card.querySelector("img");image.src = theme.images.left;image.alt = theme.name + "，左侧会话栏和右侧 Info 栏全部展开的完整实拍";
+    preview.addEventListener("click",() => openTheme(theme.id));
+    const caption = document.createElement("div");caption.className = "image-caption";
+    caption.innerHTML = "<span>← 左侧会话栏完整显示</span><span>右侧 Info 栏完整显示 →</span>";preview.after(caption);
+    const actions = document.createElement("div");actions.className = "card-actions";
+    const group = card.querySelector(".decision-group");group.before(actions);actions.append(group);
+    const detail = document.createElement("button");detail.type = "button";detail.className = "sidebar-detail-button";detail.textContent = "放大左右侧栏";detail.addEventListener("click",() => openTheme(theme.id,"sidebars"));actions.append(detail);
+    card.querySelectorAll("[data-decision]").forEach(button => button.addEventListener("click",() => setDecision(theme.id,button.dataset.decision)));
+    $("theme-grid").append(card);updateDecisionSurface(theme);
+  }
+  $("empty").hidden = themes.length > 0;
+  $("result-count").textContent = themes.length === 25 ? "全部 25 个主题" : `显示 ${themes.length} / 25 个主题`;
+}
+function renderViewer() {
+  const baseline = !current || $("baseline-toggle").checked;
+  const theme = current;
+  $("viewer-title").textContent = baseline ? "Hitty 原生 · One Light" : theme.name;
+  $("viewer-subtitle").textContent = theme ? `${sequence.indexOf(theme.id) + 1} / ${sequence.length} · ${theme.id}${baseline ? " · 正在显示原生参考，决定仍记录到 " + theme.name : ""}` : "原生参考 · 同字号 / 同布局 / 同一终端内容";
+  $("viewer-image").src = baseline ? data.baseline.left : theme.images.left;
+  $("viewer-image").alt = (baseline ? "Hitty 原生 One Light" : theme.name) + "完整实拍";
+  $("viewer-warning").hidden = baseline || !theme.materials.length;
+  $("viewer-decisions").hidden = !theme;$("note-label").hidden = !theme;$("baseline-toggle-label").hidden = !theme;
+  $("previous").disabled = !theme || sequence.indexOf(theme.id) === 0;
+  $("next").disabled = !theme || sequence.indexOf(theme.id) === sequence.length - 1;
+  if (theme) {$("theme-note").value = noteFor(theme.id);updateDecisionSurface(theme);}
+  updateView();
+}
+function updateView() {
+  const sidebars = view === "sidebars";
+  $("stage").hidden = sidebars;$("sidebar-stage").hidden = !sidebars;$("zoom-toggle").hidden = sidebars;
+  document.querySelectorAll("[data-view]").forEach(button => button.setAttribute("aria-pressed",String(button.dataset.view === view)));
+  if (sidebars) drawSidebars();
+  updateZoom();
+}
+async function drawSidebars() {
+  const request = ++cropRequest;
+  const image = new Image();image.src = $("viewer-image").src;
+  $("sidebar-error").hidden = true;
+  try {
+    await image.decode();if (request !== cropRequest) return;
+    for (const [side,bounds] of Object.entries(data.sidebarCrops)) {
+      const canvas = $(side + "-sidebar");const context = canvas.getContext("2d");
+      context.clearRect(0,0,canvas.width,canvas.height);context.drawImage(image,...bounds,0,0,canvas.width,canvas.height);
+    }
+  } catch { if (request === cropRequest) $("sidebar-error").hidden = false; }
+}
+function updateZoom() {
+  $("stage").classList.toggle("fit",!nativeSize);
+  $("stage").style.setProperty("--native-width",2104 / (window.devicePixelRatio || 1) + "px");
+  $("zoom-toggle").setAttribute("aria-pressed",String(nativeSize));
+  $("zoom-toggle").textContent = nativeSize ? "适应窗口" : "1:1 像素";
+}
+function openTheme(id,nextView = "window") {
+  sequence = filteredThemes().map(theme => theme.id);
+  current = data.themes.find(theme => theme.id === id);
+  $("baseline-toggle").checked = false;nativeSize = false;view = nextView;
+  renderViewer();$("viewer").showModal();$("stage").scrollTo(0,0);$("sidebar-stage").scrollTo(0,0);
+}
+function navigate(direction) {
+  if (!current) return;
+  const next = sequence[sequence.indexOf(current.id) + direction];
+  if (next) {current = data.themes.find(theme => theme.id === next);$("baseline-toggle").checked = false;renderViewer();$("stage").scrollTo(0,0);$("sidebar-stage").scrollTo(0,0);}
+}
+function exportData() {
+  return {format:"hitty-otty-theme-review-v1",captureVersion:data.version,reviewedAt:new Date().toISOString(),binarySha256:data.binarySha256,
+    themes:data.themes.map(theme => ({id:theme.id,name:theme.name,decision:getDecision(theme.id),note:noteFor(theme.id),materialVisualAcceptance:theme.materials.length ? "unverified" : "not-applicable"}))};
+}
+function exportText() {
+  const lines = ["Hitty / Otty 主题评审", "截图版本：" + data.version, ""];
+  for (const decision of ["keep","delete","undecided"]) {
+    const themes = data.themes.filter(theme => getDecision(theme.id) === decision);
+    lines.push(`${labels[decision]}（${themes.length}）`);
+    if (!themes.length) lines.push("（无）");
+    for (const theme of themes) lines.push(`- ${theme.name} [${theme.id}]${noteFor(theme.id) ? " · " + noteFor(theme.id) : ""}`);
+    lines.push("");
+  }
+  lines.push("说明：带材质的主题尚需实窗确认；此评审只记录选择，未执行代码删除。");
+  return lines.join("\n");
+}
+$("search").addEventListener("input",renderGrid);
+$("mode-filter").addEventListener("change",renderGrid);$("decision-filter").addEventListener("change",renderGrid);
+document.querySelectorAll("[data-view]").forEach(button => button.addEventListener("click",() => {view = button.dataset.view;nativeSize = false;updateView();}));
+$("viewer-close").addEventListener("click",() => $("viewer").close());
+$("zoom-toggle").addEventListener("click",() => {nativeSize = !nativeSize;updateZoom();});
+$("baseline-toggle").addEventListener("change",renderViewer);
+$("baseline-open").addEventListener("click",() => {current = null;nativeSize = false;view = "window";renderViewer();$("viewer").showModal();});
+$("previous").addEventListener("click",() => navigate(-1));$("next").addEventListener("click",() => navigate(1));
+$("viewer-decisions").querySelectorAll("[data-decision]").forEach(button => button.addEventListener("click",() => {if(current)setDecision(current.id,button.dataset.decision);}));
+$("theme-note").addEventListener("input",() => {if(!current)return;decisions[current.id] = {decision:getDecision(current.id),note:$("theme-note").value};persist();updateDecisionSurface(current);});
+$("viewer").addEventListener("keydown",event => {
+  if (event.target.matches("input,textarea,select") || event.ctrlKey || event.metaKey || event.altKey) return;
+  if (event.key === "ArrowLeft") {event.preventDefault();navigate(-1);}
+  if (event.key === "ArrowRight") {event.preventDefault();navigate(1);}
+  const shortcut = {k:"keep",d:"delete",u:"undecided"}[event.key.toLowerCase()];
+  if (shortcut && current) {event.preventDefault();setDecision(current.id,shortcut);}
+});
+$("export-open").addEventListener("click",() => {$("export-text").value = exportText();$("export-dialog").showModal();});
+$("export-close").addEventListener("click",() => $("export-dialog").close());
+$("copy-review").addEventListener("click",async () => {
+  try {await navigator.clipboard.writeText($("export-text").value);toast("评审文字已复制");}
+  catch {$("export-text").focus();$("export-text").select();toast("请按 Ctrl+C 复制已选中的评审文字");}
+});
+$("download-review").addEventListener("click",() => {
+  const url = URL.createObjectURL(new Blob([JSON.stringify(exportData(),null,2)],{type:"application/json;charset=utf-8"}));
+  const link = document.createElement("a");link.href = url;link.download = "hitty-otty-review-" + new Date().toISOString().slice(0,10) + ".json";document.body.append(link);link.click();link.remove();setTimeout(() => URL.revokeObjectURL(url),1000);toast("已生成 JSON 评审文件");
+});
+window.addEventListener("resize",updateZoom);
+updateCounts();renderGrid();
+if (!storageWorks) $("saved-state").textContent = "浏览器未能读取保存数据 · 请完成后导出";
+else if (Object.keys(decisions).length) $("saved-state").textContent = "已恢复当前浏览器中保存的评审";
+</script>
+</html>
