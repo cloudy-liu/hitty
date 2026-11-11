@@ -109,11 +109,16 @@ impl crate::host::server::PaneDirectory for Registry {
     }
 }
 
-/// Shared Codex hooks name the app-server's first pane, not their own.
+/// Local hooks have a process owner. A shared Codex server needs session routing.
 fn report_agent_event(registry: &Registry, named: u64, pid: u32, body: &str) -> Result<(), String> {
     let event = crate::core::cli_agent::parse_agent_event_body(body.as_bytes())
         .ok_or_else(|| "not an agent event".to_string())?;
     if event.agent == Some(crate::core::cli_agent::CLIAgent::Codex) {
+        if let Some(pane) = registry.get(named)
+            && pane.owns_codex_hook(pid)
+        {
+            return pane.apply_reported_agent_event(body);
+        }
         let panes = registry.all();
         let candidates: Vec<_> = panes.iter().map(|pane| pane.codex_candidate()).collect();
         if let Some(target) = crate::daemon::pane::codex_report_target(&candidates, &event)

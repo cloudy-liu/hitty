@@ -1,0 +1,11 @@
+{
+  "profile": "D:\\tmp\\hc-4r41auy2",
+  "codex_cli": "codex-cli 0.167.0",
+  "mode": "stop",
+  "shell": "powershell",
+  "original_ids": {
+    "2": null,
+    "3": null
+  },
+  "result": "baseline failure reproduced"
+}

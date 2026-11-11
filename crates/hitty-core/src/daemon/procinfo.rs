@@ -10,6 +10,76 @@ pub fn descends_from(pid: u32, ancestor: u32) -> bool {
     runs_under(pid, ancestor, parent_pid)
 }
 
+/// A shared Codex server can live under its first pane while serving others.
+/// Only a hook without that shared ancestor can use process ownership.
+pub(super) fn local_codex_hook(pid: u32, shell_pid: u32) -> bool {
+    local_codex_hook_with(&process_table(), pid, shell_pid, |pid| {
+        #[cfg(windows)]
+        return crate::daemon::winproc::process_argv(pid);
+        #[cfg(not(windows))]
+        crate::daemon::remote::foreground_argv(pid as i32)
+    })
+}
+
+fn local_codex_hook_with(
+    table: &HashMap<u32, Row>,
+    pid: u32,
+    shell_pid: u32,
+    argv_for: impl Fn(u32) -> Option<Vec<String>>,
+) -> bool {
+    let parent = |pid| {
+        let row = table.get(&pid)?;
+        if crate::core::cli_agent::CLIAgent::detect_from_argv(std::slice::from_ref(&row.name))
+            == Some(crate::core::cli_agent::CLIAgent::Codex)
+            && codex_shared_server(&argv_for(pid)?)
+        {
+            return None;
+        }
+        Some(row.ppid)
+    };
+    // Include a pane launched directly into Codex, where Codex is the shell.
+    parent(shell_pid).is_some() && runs_under(pid, shell_pid, parent)
+}
+
+pub(super) fn codex_shared_server(argv: &[String]) -> bool {
+    let mut args = argv.iter().skip(1).peekable();
+    loop {
+        match args.next().map(String::as_str) {
+            Some(
+                "-c"
+                | "--config"
+                | "--enable"
+                | "--disable"
+                | "--remote"
+                | "--remote-auth-token-env"
+                | "-m"
+                | "--model"
+                | "--local-provider"
+                | "-p"
+                | "--profile"
+                | "-s"
+                | "--sandbox"
+                | "-C"
+                | "--cd"
+                | "--add-dir"
+                | "-a"
+                | "--ask-for-approval",
+            ) => {
+                args.next();
+            }
+            Some("-i" | "--image") => {
+                while args.peek().is_some_and(|arg| !arg.starts_with('-')) {
+                    args.next();
+                }
+            }
+            Some("--") => return false,
+            Some(arg) if arg.starts_with('-') => {}
+            Some("app-server" | "remote-control") => return true,
+            _ => return false,
+        }
+    }
+}
+
 const MAX_ANCESTRY: usize = 64;
 
 fn runs_under(pid: u32, ancestor: u32, parent_of: impl Fn(u32) -> Option<u32>) -> bool {
@@ -514,5 +584,65 @@ mod tests {
             30
         })));
         assert!(descends_from(std::process::id(), std::process::id()));
+    }
+
+    #[test]
+    fn local_codex_hooks_exclude_shared_server_ancestors() {
+        let table = [
+            (10, row(1, "cmd.exe")),
+            (20, row(10, "codex.exe")),
+            (30, row(20, "hitty-server.exe")),
+        ]
+        .into_iter()
+        .collect();
+        let argv = |args: &[&str]| args.iter().map(|arg| arg.to_string()).collect::<Vec<_>>();
+        assert!(local_codex_hook_with(&table, 30, 10, |_| Some(argv(&[
+            "codex",
+            "--model",
+            "app-server"
+        ]))));
+        assert!(!codex_shared_server(&argv(&["codex", "--", "app-server"])));
+        assert!(!codex_shared_server(&argv(&[
+            "codex",
+            "resume",
+            "app-server"
+        ])));
+        assert!(!local_codex_hook_with(&table, 30, 99, |_| Some(argv(&[
+            "codex"
+        ]))));
+        assert!(!local_codex_hook_with(&table, 30, 10, |_| None));
+        for image in ["-i", "--image"] {
+            assert!(!codex_shared_server(&argv(&[
+                "codex",
+                image,
+                "first.png",
+                "app-server"
+            ])));
+        }
+        for args in [
+            vec!["codex", "app-server"],
+            vec!["codex", "--config", "model='test'", "app-server"],
+            vec!["codex", "--enable=hooks", "app-server"],
+            vec!["codex", "--strict-config", "app-server"],
+            vec!["codex", "--model", "test", "app-server"],
+            vec!["codex", "--profile", "test", "app-server"],
+            vec!["codex", "--image=first.png", "app-server"],
+            vec!["codex", "-ifirst.png", "app-server"],
+            vec![
+                "codex",
+                "--image",
+                "first.png",
+                "--strict-config",
+                "app-server",
+            ],
+            vec!["codex", "remote-control", "run"],
+        ] {
+            for shell in [10, 20] {
+                assert!(
+                    !local_codex_hook_with(&table, 30, shell, |_| Some(argv(&args))),
+                    "a shared server's hooks cannot identify pane {shell}: {args:?}"
+                );
+            }
+        }
     }
 }

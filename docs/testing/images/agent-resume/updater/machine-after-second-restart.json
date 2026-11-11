@@ -1,0 +1,172 @@
+{
+  "workspaces": [
+    {
+      "id": "b2a743fa-9b9d-4d0d-992c-89ae4973ebb8",
+      "name": "ochre-newt",
+      "last_active": 1794412939,
+      "tabs": [
+        {
+          "id": "99404320-c754-491d-b194-9ec6d356864d",
+          "name": null,
+          "sidebar_group": null,
+          "focused_pane": 8,
+          "root": {
+            "Leaf": {
+              "pane": 8
+            }
+          }
+        },
+        {
+          "id": "4b255fe9-d769-4f85-ad77-8acc9b243b00",
+          "name": null,
+          "sidebar_group": null,
+          "focused_pane": 15,
+          "root": {
+            "Leaf": {
+              "pane": 15
+            }
+          }
+        },
+        {
+          "id": "6b4fe2b4-4c86-4e96-8300-236edb501229",
+          "name": null,
+          "sidebar_group": null,
+          "focused_pane": 13,
+          "root": {
+            "Leaf": {
+              "pane": 13
+            }
+          }
+        },
+        {
+          "id": "9506896a-4562-4e07-a663-5ca00cc873de",
+          "name": null,
+          "sidebar_group": null,
+          "focused_pane": 12,
+          "root": {
+            "Leaf": {
+              "pane": 12
+            }
+          }
+        },
+        {
+          "id": "9855e089-abd1-4c63-a0a1-cce0045c1070",
+          "name": null,
+          "sidebar_group": null,
+          "focused_pane": 14,
+          "root": {
+            "Leaf": {
+              "pane": 14
+            }
+          }
+        }
+      ],
+      "active_tab": "9855e089-abd1-4c63-a0a1-cce0045c1070"
+    }
+  ],
+  "panes": [
+    {
+      "id": 8,
+      "cwd": "C:\\Users\\cloudy\\AppData\\Local\\Temp\\acceptance-s0qy5cvf\\project",
+      "title": "",
+      "osc_title": null,
+      "ssh_spec": null,
+      "agent": null,
+      "foreground_app": null,
+      "shell": null,
+      "live": false
+    },
+    {
+      "id": 12,
+      "cwd": "C:\\Users\\cloudy\\AppData\\Local\\Temp\\acceptance-s0qy5cvf\\project",
+      "title": "",
+      "osc_title": "C:\\Windows\\system32\\cmd.exe - claude  --resume cf074a5a-8f41-4442-bb8e-baf7b3400113",
+      "ssh_spec": null,
+      "agent": {
+        "agent": "Claude",
+        "session_id": "cf074a5a-8f41-4442-bb8e-baf7b3400113",
+        "launch_argv": [
+          "claude",
+          "--resume",
+          "cf074a5a-8f41-4442-bb8e-baf7b3400113"
+        ],
+        "status": null
+      },
+      "foreground_app": null,
+      "shell": {
+        "program": "cmd.exe",
+        "args": [
+          "/d",
+          "/k"
+        ],
+        "args_are_hitty_defaults": false
+      },
+      "live": true
+    },
+    {
+      "id": 14,
+      "cwd": "C:\\Users\\cloudy\\AppData\\Local\\Temp\\acceptance-s0qy5cvf\\project",
+      "title": "",
+      "osc_title": null,
+      "ssh_spec": null,
+      "agent": null,
+      "foreground_app": null,
+      "shell": null,
+      "live": true
+    },
+    {
+      "id": 15,
+      "cwd": "C:\\Users\\cloudy\\AppData\\Local\\Temp\\acceptance-s0qy5cvf\\project",
+      "title": "",
+      "osc_title": null,
+      "ssh_spec": null,
+      "agent": {
+        "agent": "Codex",
+        "session_id": "0199c3f2-1b0e-7c3a-9f21-6d4b8e2a5c17",
+        "launch_argv": [
+          "codex",
+          "resume",
+          "0199c3f2-1b0e-7c3a-9f21-6d4b8e2a5c17"
+        ],
+        "status": null
+      },
+      "foreground_app": null,
+      "shell": {
+        "program": "cmd.exe",
+        "args": [
+          "/d",
+          "/k"
+        ],
+        "args_are_hitty_defaults": false
+      },
+      "live": true
+    },
+    {
+      "id": 13,
+      "cwd": "C:\\Users\\cloudy\\AppData\\Local\\Temp\\acceptance-s0qy5cvf\\project",
+      "title": "",
+      "osc_title": null,
+      "ssh_spec": null,
+      "agent": {
+        "agent": "Codex",
+        "session_id": "c2ef37e9-62b8-4ee8-a031-4e9c596544c0",
+        "launch_argv": [
+          "codex",
+          "resume",
+          "c2ef37e9-62b8-4ee8-a031-4e9c596544c0"
+        ],
+        "status": null
+      },
+      "foreground_app": null,
+      "shell": {
+        "program": "cmd.exe",
+        "args": [
+          "/d",
+          "/k"
+        ],
+        "args_are_hitty_defaults": false
+      },
+      "live": true
+    }
+  ]
+}

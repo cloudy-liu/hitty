@@ -1,0 +1,28 @@
+{
+  "profile": "C:\\Users\\cloudy\\AppData\\Local\\Temp\\acceptance-s0qy5cvf",
+  "version": "0.3.1",
+  "package_sha256": "24cc82c2519b06cbabd88bf5fa1380fa62812ccdc21cf1a1c038f2b1f1ece058",
+  "fixture": "two Codex and one Claude, same directory",
+  "package": "private fixed debug build, same-version replacement",
+  "identity_capture": "passed",
+  "portable_update": "passed",
+  "five_panes_restored": "passed",
+  "codex_same_directory": "passed",
+  "claude_restore": "passed",
+  "second_restart": "passed",
+  "agent_calls": [
+    "[--resume cf074a5a-8f41-4442-bb8e-baf7b3400113]",
+    "[--resume cf074a5a-8f41-4442-bb8e-baf7b3400113]",
+    "[]",
+    "[-c \"shell_environment_policy.set.HITTY_PANE='13'\" resume c2ef37e9-62b8-4ee8-a031-4e9c596544c0]",
+    "[-c \"shell_environment_policy.set.HITTY_PANE='15'\" resume 0199c3f2-1b0e-7c3a-9f21-6d4b8e2a5c17]",
+    "[-c \"shell_environment_policy.set.HITTY_PANE='2'\"]",
+    "[-c \"shell_environment_policy.set.HITTY_PANE='3'\"]",
+    "[-c \"shell_environment_policy.set.HITTY_PANE='7'\" resume c2ef37e9-62b8-4ee8-a031-4e9c596544c0]",
+    "[-c \"shell_environment_policy.set.HITTY_PANE='9'\" resume 0199c3f2-1b0e-7c3a-9f21-6d4b8e2a5c17]"
+  ],
+  "outcome": {
+    "version": "0.3.1",
+    "ok": true
+  }
+}

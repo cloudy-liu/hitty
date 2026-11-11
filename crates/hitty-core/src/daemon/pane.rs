@@ -230,7 +230,7 @@ fn build_shell_command(
     if let Some(integration) = &integration {
         apply_shell_integration(&mut cmd, &resolved_program, integration);
     }
-    let integration_dir = integration.as_ref().and_then(|i| i.dir.clone());
+    let mut integration_dir = integration.as_ref().and_then(|i| i.dir.clone());
     let launched = launched_shell_program(&cmd, &resolved_program);
     let extra_env = crate::core::config::extra_env();
     apply_common_command_setup(
@@ -246,6 +246,15 @@ fn build_shell_command(
     // override, and merge list-valued additions with the pane's final value.
     if let Some(integration) = &integration {
         pin_integration_env(&mut cmd, integration, &extra_env);
+    }
+    #[cfg(windows)]
+    if let Err(error) = crate::daemon::codex_launch::prepare(
+        &mut cmd,
+        &resolved_program,
+        pane,
+        &mut integration_dir,
+    ) {
+        log::warn!("could not prepare pane {pane}'s Codex launcher: {error}");
     }
     Ok((cmd, integration_dir))
 }
@@ -2444,6 +2453,12 @@ impl DaemonPane {
         Ok(())
     }
 
+    pub(super) fn owns_codex_hook(&self, pid: u32) -> bool {
+        self.pty()
+            .and_then(|pty| pty.shell_pid)
+            .is_some_and(|shell| crate::daemon::procinfo::local_codex_hook(pid, shell))
+    }
+
     pub fn codex_candidate(&self) -> CodexCandidate {
         let st = self.state.lock().unwrap();
         CodexCandidate {
@@ -2666,6 +2681,7 @@ impl DaemonPane {
             .name("hitty-daemon-pane-exit-monitor".to_string())
             .spawn(move || {
                 let handle = handle as windows_sys::Win32::Foundation::HANDLE;
+                let mut process_agent = None;
                 while unsafe {
                     WaitForSingleObject(handle, REMOTE_CONTEXT_POLL_INTERVAL.as_millis() as u32)
                 } == WAIT_TIMEOUT
@@ -2673,18 +2689,35 @@ impl DaemonPane {
                     if !report_exit && shutting_down.load(Ordering::SeqCst) {
                         break; // A preserved hc shell can outlive this pane.
                     }
-                    if shutting_down.load(Ordering::SeqCst) || state.lock().unwrap().agent.is_none()
-                    {
+                    if shutting_down.load(Ordering::SeqCst) {
                         continue;
                     }
                     // An idle editor may emit no more output after taking or
                     // returning console input. Refresh independently of reads.
-                    let (_, suspended) = crate::daemon::winproc::foreground_agent_input(
+                    let (detected, suspended) = crate::daemon::winproc::foreground_agent_input(
                         pid,
                         crate::core::config::agent_commands_cached(),
                     );
                     let mut st = state.lock().unwrap();
+                    let before = observed_facts(&st);
+                    // The first TUI frame can arrive before its process scan
+                    // is due. An idle agent then emits no more output to trigger
+                    // detection, so the monitor also establishes its identity.
+                    if let Some(change) =
+                        windows_agent_probe_signal(&mut process_agent, detected, st.agent)
+                    {
+                        apply_agent(&mut st, change);
+                    }
                     apply_agent_input_suspended(&mut st, suspended);
+                    let after = observed_facts(&st);
+                    let id = st.id;
+                    let alive = st.alive;
+                    drop(st);
+                    if !shutting_down.load(Ordering::SeqCst) && facts_changed(&before, &after) {
+                        let changed =
+                            agent_facts_changed(before.agent.as_ref(), after.agent.as_ref());
+                        publish_facts(id, alive, after, changed, false);
+                    }
                 }
                 unsafe {
                     CloseHandle(handle);
