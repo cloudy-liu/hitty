@@ -105,6 +105,10 @@ impl OpenFile {
 
 pub(crate) struct TabCode {
     pub(crate) visible: bool,
+    /// The reader asked for another right-panel mode while this column was
+    /// showing a document's outline. Their choice holds until the column is
+    /// empty again, so opening one file after another keeps it.
+    pub(crate) outline_follow_declined: bool,
     pub(crate) files: Vec<OpenFile>,
     pub(crate) active: usize,
     tab_scroll: gpui::ScrollHandle,
@@ -123,6 +127,7 @@ impl TabCode {
     pub(crate) fn new() -> Self {
         Self {
             visible: false,
+            outline_follow_declined: false,
             files: Vec::new(),
             active: 0,
             tab_scroll: gpui::ScrollHandle::new(),
@@ -1731,6 +1736,9 @@ impl HittyApp {
         let empty = code.files.is_empty();
         if empty {
             code.visible = false;
+            // An empty column is what a reader's mode choice was holding the
+            // outline off for; the next document starts fresh.
+            code.outline_follow_declined = false;
         }
         if tab_ix == self.active {
             if empty || self.document_front() == Some(crate::ui::app::OverlayTop::Diff) {
@@ -3239,7 +3247,9 @@ mod tests {
             app.editor_install_file(
                 hitty_core::host::local::LocalHost::new(),
                 "/work/guide.md".into(),
-                "# Guide\n\n## Section\n\nRead here.\n".into(),
+                // One heading: too few for the outline to take the panel by
+                // itself, so reaching it is still the reader's click.
+                "# Guide\n\nRead here.\n".into(),
                 None,
                 window,
                 cx,
@@ -3272,6 +3282,375 @@ mod tests {
         app.read_with(&vcx, |app, _| {
             assert!(!app.right_panel_visible);
             assert_eq!((app.tabs.len(), app.active), before);
+        });
+    }
+
+    /// Opens `source` as a Markdown preview and draws until the reading view
+    /// has parsed it — `anchor` names one of its headings — plus the frames
+    /// the outline follow needs to decide from those headings.
+    fn read_markdown(
+        app: &Entity<HittyApp>,
+        vcx: &mut VisualTestContext,
+        path: &str,
+        source: &str,
+        anchor: &str,
+    ) {
+        app.update_in(vcx, |app, window, cx| {
+            app.editor_install_file(
+                hitty_core::host::local::LocalHost::new(),
+                path.into(),
+                source.into(),
+                None,
+                window,
+                cx,
+            );
+            cx.notify();
+        });
+        wait_for_markdown(vcx, |vcx| {
+            vcx.update(|window, cx| {
+                let _ = window.draw(cx);
+            });
+            app.read_with(vcx, |app, cx| {
+                app.tab_code()
+                    .and_then(|code| code.active_file())
+                    .and_then(|file| file.reading.as_ref())
+                    .is_some_and(|reading| {
+                        reading
+                            .read(cx)
+                            .text
+                            .read(cx)
+                            .anchor_index(anchor)
+                            .is_some()
+                    })
+            })
+        });
+        // The headings the follow counts are parsed from the source, off the
+        // main thread, once the preview has it.
+        draw_frames(vcx, 4);
+    }
+
+    fn draw_frames(vcx: &mut VisualTestContext, frames: usize) {
+        for _ in 0..frames {
+            vcx.run_until_parked();
+            vcx.update(|window, cx| {
+                let _ = window.draw(cx);
+            });
+        }
+        vcx.run_until_parked();
+    }
+
+    fn shown_mode(
+        app: &Entity<HittyApp>,
+        vcx: &VisualTestContext,
+    ) -> crate::core::config::RightPanelTab {
+        app.read_with(vcx, |app, _| app.right_panel_shown_tab())
+    }
+
+    const TWO_HEADINGS: &str = "# Guide\n\n## Section\n\nRead here.\n";
+
+    #[gpui::test]
+    fn markdown_preview_takes_the_open_right_panel_for_its_outline(cx: &mut TestAppContext) {
+        use crate::core::config::{Config, RightPanelTab};
+        let (app, mut vcx) = markdown_window(cx);
+        app.update_in(&mut vcx, |app, _, cx| {
+            app.set_right_panel_tab(RightPanelTab::Files, cx)
+        });
+        let before = app.read_with(&vcx, |app, _| (app.tabs.len(), app.active));
+        read_markdown(&app, &mut vcx, "/work/guide.md", TWO_HEADINGS, "section");
+        assert!(
+            vcx.debug_bounds("outline-heading-section").is_some(),
+            "the headings appear without the reader switching modes"
+        );
+        app.read_with(&vcx, |app, cx| {
+            assert_eq!(app.right_panel_shown_tab(), RightPanelTab::Outline);
+            assert_eq!((app.tabs.len(), app.active), before);
+            assert_eq!(
+                app.tab_code().unwrap().active_file().unwrap().path,
+                Path::new("/work/guide.md")
+            );
+            // The reader's own mode is neither replaced nor saved over: it is
+            // what the panel comes back to.
+            assert_eq!(app.right_panel_tab, RightPanelTab::Files);
+            assert_eq!(cx.global::<Config>().right_panel_tab, RightPanelTab::Files);
+        });
+        // The lit tile still puts the panel away.
+        let outline = vcx.debug_bounds("right-panel-outline").unwrap();
+        vcx.simulate_click(outline.center(), gpui::Modifiers::none());
+        draw_frames(&mut vcx, 2);
+        app.read_with(&vcx, |app, cx| {
+            assert!(!app.right_panel_visible);
+            assert_eq!(cx.global::<Config>().right_panel_tab, RightPanelTab::Files);
+            assert_eq!((app.tabs.len(), app.active), before);
+        });
+    }
+
+    #[gpui::test]
+    fn one_heading_markdown_leaves_the_right_panel_alone(cx: &mut TestAppContext) {
+        use crate::core::config::RightPanelTab;
+        let (app, mut vcx) = markdown_window(cx);
+        app.update_in(&mut vcx, |app, _, cx| {
+            app.set_right_panel_tab(RightPanelTab::Files, cx)
+        });
+        read_markdown(
+            &app,
+            &mut vcx,
+            "/work/CONTEXT.md",
+            "# Session language\n\nThe maintained terminology.\n",
+            "session-language",
+        );
+        assert_eq!(shown_mode(&app, &vcx), RightPanelTab::Files);
+        assert!(
+            vcx.debug_bounds("outline-heading-session-language")
+                .is_none()
+        );
+    }
+
+    #[gpui::test]
+    fn a_mode_the_reader_asks_for_holds_until_the_documents_close(cx: &mut TestAppContext) {
+        use crate::core::config::{Config, RightPanelTab};
+        let (app, mut vcx) = markdown_window(cx);
+        app.update_in(&mut vcx, |app, _, cx| {
+            app.set_right_panel_tab(RightPanelTab::Info, cx)
+        });
+        read_markdown(&app, &mut vcx, "/work/guide.md", TWO_HEADINGS, "section");
+        assert_eq!(shown_mode(&app, &vcx), RightPanelTab::Outline);
+
+        // Back to the file tree, to open the next document from it.
+        let files = vcx.debug_bounds("right-panel-files").unwrap();
+        vcx.simulate_click(files.center(), gpui::Modifiers::none());
+        draw_frames(&mut vcx, 2);
+        assert_eq!(shown_mode(&app, &vcx), RightPanelTab::Files);
+        read_markdown(
+            &app,
+            &mut vcx,
+            "/work/second.md",
+            "# Second\n\n## Part\n\nMore.\n",
+            "part",
+        );
+        assert_eq!(
+            shown_mode(&app, &vcx),
+            RightPanelTab::Files,
+            "the next document must not take the panel back from the reader"
+        );
+
+        // An empty document column ends the reader's override.
+        app.update_in(&mut vcx, |app, window, cx| {
+            app.editor_close_file(0, window, cx);
+            app.editor_close_file(0, window, cx);
+        });
+        draw_frames(&mut vcx, 2);
+        app.read_with(&vcx, |app, _| assert!(app.document_front().is_none()));
+        read_markdown(
+            &app,
+            &mut vcx,
+            "/work/third.md",
+            "# Third\n\n## Again\n\nMore.\n",
+            "again",
+        );
+        assert_eq!(shown_mode(&app, &vcx), RightPanelTab::Outline);
+        app.read_with(&vcx, |app, cx| {
+            assert_eq!(app.right_panel_tab, RightPanelTab::Files);
+            assert_eq!(cx.global::<Config>().right_panel_tab, RightPanelTab::Files);
+        });
+    }
+
+    #[gpui::test]
+    fn the_readers_mode_returns_when_markdown_leaves_the_front(cx: &mut TestAppContext) {
+        use crate::core::config::RightPanelTab;
+        let (app, mut vcx) = markdown_window(cx);
+        app.update_in(&mut vcx, |app, _, cx| {
+            app.set_right_panel_tab(RightPanelTab::Files, cx)
+        });
+        read_markdown(&app, &mut vcx, "/work/guide.md", TWO_HEADINGS, "section");
+        assert_eq!(shown_mode(&app, &vcx), RightPanelTab::Outline);
+
+        // A source file has no outline to follow it into.
+        app.update_in(&mut vcx, |app, window, cx| {
+            app.editor_install_file(
+                hitty_core::host::local::LocalHost::new(),
+                "/work/main.rs".into(),
+                "fn main() {}\n".into(),
+                None,
+                window,
+                cx,
+            );
+        });
+        draw_frames(&mut vcx, 4);
+        assert_eq!(shown_mode(&app, &vcx), RightPanelTab::Files);
+
+        // Nothing was declined, so the document tab brings its outline back.
+        let guide = vcx.debug_bounds("editor-file-tab-0").unwrap();
+        vcx.simulate_click(guide.center(), gpui::Modifiers::none());
+        draw_frames(&mut vcx, 4);
+        assert_eq!(shown_mode(&app, &vcx), RightPanelTab::Outline);
+
+        // Markdown source has no reading view for an entry to navigate.
+        app.update_in(&mut vcx, |app, window, cx| {
+            app.editor_toggle_preview(window, cx)
+        });
+        draw_frames(&mut vcx, 4);
+        app.read_with(&vcx, |app, _| {
+            let file = app.tab_code().unwrap().active_file().unwrap();
+            assert_eq!(file.path, Path::new("/work/guide.md"));
+            assert!(!file.preview);
+        });
+        assert_eq!(shown_mode(&app, &vcx), RightPanelTab::Files);
+        app.update_in(&mut vcx, |app, window, cx| {
+            app.editor_toggle_preview(window, cx)
+        });
+        draw_frames(&mut vcx, 4);
+        assert_eq!(shown_mode(&app, &vcx), RightPanelTab::Outline);
+
+        // A diff in front of the document has the column, and gives it back.
+        app.update_in(&mut vcx, |app, window, cx| {
+            app.open_diff_overlay(
+                HostId::LOCAL,
+                "/no/such/hitty/repo".into(),
+                crate::terminal::git_diff::DiffSource::Head,
+                None,
+                window,
+                cx,
+            );
+        });
+        draw_frames(&mut vcx, 4);
+        app.read_with(&vcx, |app, _| {
+            assert_eq!(app.document_front(), Some(crate::ui::app::OverlayTop::Diff));
+        });
+        assert_eq!(shown_mode(&app, &vcx), RightPanelTab::Files);
+        app.update_in(&mut vcx, |app, window, cx| {
+            app.close_diff_overlay(window, cx)
+        });
+        draw_frames(&mut vcx, 4);
+        assert_eq!(shown_mode(&app, &vcx), RightPanelTab::Outline);
+
+        app.update_in(&mut vcx, |app, window, cx| {
+            app.editor_close_file(1, window, cx);
+            app.editor_close_file(0, window, cx);
+        });
+        draw_frames(&mut vcx, 4);
+        assert_eq!(shown_mode(&app, &vcx), RightPanelTab::Files);
+    }
+
+    #[gpui::test]
+    fn a_mode_the_reader_asks_for_belongs_to_the_session_that_asked(cx: &mut TestAppContext) {
+        use crate::core::config::RightPanelTab;
+        let (app, mut vcx) = markdown_window(cx);
+        let first = app.read_with(&vcx, |app, _| app.active);
+        app.update_in(&mut vcx, |app, _, cx| {
+            app.set_right_panel_tab(RightPanelTab::Info, cx)
+        });
+        read_markdown(&app, &mut vcx, "/work/guide.md", TWO_HEADINGS, "section");
+        let files = vcx.debug_bounds("right-panel-files").unwrap();
+        vcx.simulate_click(files.center(), gpui::Modifiers::none());
+        draw_frames(&mut vcx, 2);
+        assert_eq!(shown_mode(&app, &vcx), RightPanelTab::Files);
+
+        // Another session has its own documents, and its own answer.
+        app.update_in(&mut vcx, |app, window, cx| {
+            app.tabs
+                .push(crate::ui::app::Tab::new(crate::ui::pane::Pane::Empty));
+            app.activate(app.tabs.len() - 1, window, cx);
+        });
+        draw_frames(&mut vcx, 2);
+        read_markdown(
+            &app,
+            &mut vcx,
+            "/work/second.md",
+            "# Second\n\n## Part\n\nMore.\n",
+            "part",
+        );
+        assert_eq!(shown_mode(&app, &vcx), RightPanelTab::Outline);
+
+        // Looking at that session did not close this one's documents.
+        app.update_in(&mut vcx, |app, window, cx| app.activate(first, window, cx));
+        draw_frames(&mut vcx, 4);
+        app.read_with(&vcx, |app, _| {
+            assert_eq!(
+                app.tab_code().unwrap().active_file().unwrap().path,
+                Path::new("/work/guide.md")
+            );
+        });
+        assert_eq!(shown_mode(&app, &vcx), RightPanelTab::Files);
+    }
+
+    #[gpui::test]
+    fn hiding_the_document_column_keeps_the_readers_mode(cx: &mut TestAppContext) {
+        use crate::core::config::RightPanelTab;
+        let (app, mut vcx) = markdown_window(cx);
+        app.update_in(&mut vcx, |app, _, cx| {
+            app.set_right_panel_tab(RightPanelTab::Info, cx)
+        });
+        read_markdown(&app, &mut vcx, "/work/guide.md", TWO_HEADINGS, "section");
+        let files = vcx.debug_bounds("right-panel-files").unwrap();
+        vcx.simulate_click(files.center(), gpui::Modifiers::none());
+        draw_frames(&mut vcx, 2);
+        assert_eq!(shown_mode(&app, &vcx), RightPanelTab::Files);
+
+        // Hidden is not closed: the document is still open behind it.
+        app.update_in(&mut vcx, |app, window, cx| {
+            app.toggle_code_panel(window, cx)
+        });
+        draw_frames(&mut vcx, 2);
+        app.read_with(&vcx, |app, _| assert!(app.document_front().is_none()));
+        app.update_in(&mut vcx, |app, window, cx| {
+            app.toggle_code_panel(window, cx)
+        });
+        draw_frames(&mut vcx, 4);
+        app.read_with(&vcx, |app, _| {
+            assert_eq!(app.document_front(), Some(crate::ui::app::OverlayTop::Code));
+        });
+        assert_eq!(shown_mode(&app, &vcx), RightPanelTab::Files);
+    }
+
+    #[gpui::test]
+    fn a_short_document_does_not_hold_the_next_one_back(cx: &mut TestAppContext) {
+        use crate::core::config::RightPanelTab;
+        let (app, mut vcx) = markdown_window(cx);
+        read_markdown(
+            &app,
+            &mut vcx,
+            "/work/CONTEXT.md",
+            "# Session language\n\nThe maintained terminology.\n",
+            "session-language",
+        );
+        // The outline never claims the panel for one heading, so opening the
+        // panel onto a mode here overrules nothing.
+        app.update_in(&mut vcx, |app, _, cx| {
+            app.set_right_panel_tab(RightPanelTab::Files, cx)
+        });
+        draw_frames(&mut vcx, 4);
+        assert_eq!(shown_mode(&app, &vcx), RightPanelTab::Files);
+        read_markdown(&app, &mut vcx, "/work/guide.md", TWO_HEADINGS, "section");
+        assert_eq!(shown_mode(&app, &vcx), RightPanelTab::Outline);
+    }
+
+    #[gpui::test]
+    fn a_closed_right_panel_opens_on_what_the_reader_asked_for(cx: &mut TestAppContext) {
+        use crate::core::config::RightPanelTab;
+        let (app, mut vcx) = markdown_window(cx);
+        read_markdown(&app, &mut vcx, "/work/guide.md", TWO_HEADINGS, "section");
+        app.read_with(&vcx, |app, _| {
+            assert!(
+                !app.right_panel_visible,
+                "opening Markdown must not bring a closed panel up"
+            );
+        });
+
+        // The toggle names no mode, so the document in front decides.
+        app.update_in(&mut vcx, |app, _, cx| app.toggle_right_panel(cx));
+        draw_frames(&mut vcx, 4);
+        assert_eq!(shown_mode(&app, &vcx), RightPanelTab::Outline);
+        app.update_in(&mut vcx, |app, _, cx| app.toggle_right_panel(cx));
+        draw_frames(&mut vcx, 2);
+
+        // What the palette and the mode shortcuts call: a mode, by name.
+        app.update_in(&mut vcx, |app, _, cx| {
+            app.set_right_panel_tab(RightPanelTab::Scm, cx)
+        });
+        draw_frames(&mut vcx, 4);
+        app.read_with(&vcx, |app, _| {
+            assert!(app.right_panel_visible);
+            assert_eq!(app.right_panel_shown_tab(), RightPanelTab::Scm);
         });
     }
 

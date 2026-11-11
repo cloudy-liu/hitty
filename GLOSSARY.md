@@ -20,6 +20,11 @@ terminal/document area. Mode selection is independent of the session list.
 Agent turns or recorded shell commands. Selecting an entry changes reading
 position; it does not execute a command.
 
+**Outline follow**: the right panel showing Outline for the Markdown preview in
+front of the reader, without replacing the mode they chose. It ends when that
+document leaves the front, and a mode the reader asks for while it has the
+panel outranks it until that session has no open file left.
+
 **Tab avatar**: the icon identifying a session in navigation. In a split tab it
 represents the focused pane, including when that tab moves into the background.
 
