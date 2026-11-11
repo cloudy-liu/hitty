@@ -4996,67 +4996,73 @@ mod tests {
     /// gives up only after three seconds. Nothing here plays the emulator, so
     /// the pane has to reach its prompt on the daemon's answer alone — and the
     /// query must not stay in the stream for a client to answer a second time.
+    ///
+    /// The wait is a floor under every start it is not answered for, so one
+    /// start that beats it shows the answer was taken. A machine that is
+    /// merely busy gets more than one try.
     #[cfg(windows)]
     #[test]
     fn live_bare_cmd_pane_starts_without_a_client_answering_conpty() {
         let cmd =
             std::env::var("ComSpec").unwrap_or_else(|_| r"C:\Windows\System32\cmd.exe".to_string());
 
-        let (tx, rx) = mpsc::channel();
-        let started = std::time::Instant::now();
-        let pane = DaemonPane::spawn(
-            8,
-            Some(std::env::current_dir().expect("cwd")),
-            ws(80, 24),
-            Some(ShellSpec {
-                program: cmd,
-                // /D keeps this machine's AutoRun — which may inject Clink —
-                // out of a test that is about ConPTY's own handshake.
-                args: vec!["/D".into()],
-                args_are_hitty_defaults: true,
-            }),
-            None,
-            None,
-            None,
-            || {},
-        )
-        .expect("spawn bare cmd pane");
-        pane.attach(tx);
+        let mut first_prompts = Vec::new();
+        for _ in 0..3 {
+            let (tx, rx) = mpsc::channel();
+            let started = std::time::Instant::now();
+            let pane = DaemonPane::spawn(
+                8,
+                Some(std::env::current_dir().expect("cwd")),
+                ws(80, 24),
+                Some(ShellSpec {
+                    program: cmd.clone(),
+                    // /D keeps this machine's AutoRun — which may inject Clink —
+                    // out of a test that is about ConPTY's own handshake.
+                    args: vec!["/D".into()],
+                    args_are_hitty_defaults: true,
+                }),
+                None,
+                None,
+                None,
+                || {},
+            )
+            .expect("spawn bare cmd pane");
+            pane.attach(tx);
 
-        let deadline = started + Duration::from_secs(10);
-        let mut transcript = Vec::new();
-        let mut first_prompt = None;
-        while std::time::Instant::now() < deadline {
-            let Ok(msg) = rx.recv_timeout(Duration::from_millis(50)) else {
-                continue;
-            };
-            match msg {
-                DaemonMsg::Snapshot(bytes) | DaemonMsg::Output(bytes) => transcript.extend(bytes),
-                DaemonMsg::Prompt {
-                    at_prompt: true, ..
-                } => {
-                    first_prompt = Some(started.elapsed());
-                    break;
+            let deadline = started + Duration::from_secs(10);
+            let mut transcript = Vec::new();
+            let mut first_prompt = None;
+            while std::time::Instant::now() < deadline {
+                let Ok(msg) = rx.recv_timeout(Duration::from_millis(50)) else {
+                    continue;
+                };
+                match msg {
+                    DaemonMsg::Snapshot(bytes) | DaemonMsg::Output(bytes) => {
+                        transcript.extend(bytes)
+                    }
+                    DaemonMsg::Prompt {
+                        at_prompt: true, ..
+                    } => {
+                        first_prompt = Some(started.elapsed());
+                        break;
+                    }
+                    _ => {}
                 }
-                _ => {}
             }
-        }
-        pane.kill();
+            pane.kill();
 
-        let Some(first_prompt) = first_prompt else {
-            panic!(
-                "the bare cmd pane never reported a prompt; transcript: {:?}",
+            assert!(
+                !transcript.windows(3).any(|window| window == b"\x1b[c"),
+                "ConPTY's startup query was left for a client to answer; transcript: {:?}",
                 String::from_utf8_lossy(&transcript)
             );
-        };
-        assert!(
-            !transcript.windows(3).any(|window| window == b"\x1b[c"),
-            "ConPTY's startup query was left for a client to answer; transcript: {:?}",
-            String::from_utf8_lossy(&transcript)
-        );
-        assert!(
-            first_prompt < Duration::from_millis(2500),
-            "the pane sat out ConPTY's three-second wait: first prompt after {first_prompt:?}"
+            if first_prompt.is_some_and(|after| after < Duration::from_millis(2500)) {
+                return;
+            }
+            first_prompts.push(first_prompt);
+        }
+        panic!(
+            "every start sat out ConPTY's three-second wait; first prompts after {first_prompts:?}"
         );
     }
 
