@@ -4,6 +4,8 @@
 
 - Keep all Otty themes on Hitty's interface and terminal typography settings,
   and prevent imported fonts from remaining after switching themes.
+- Draw hover tooltips smaller and closer to the control they belong to, and
+  show a control's shortcut in a quieter style beside its name.
 
 ## v0.3.0 - 2026-11-10
 

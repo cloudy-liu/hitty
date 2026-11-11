@@ -140,11 +140,16 @@ fn snap_to_separator(tail: &str) -> &str {
     }
 }
 
-pub(crate) fn key_hint(action: &str, cx: &App) -> Option<String> {
+/// The first stroke of the chord bound to `action`, for a caller that hands it
+/// to a component to draw rather than spelling it out as text.
+pub(crate) fn key_stroke(action: &str, cx: &App) -> Option<Keystroke> {
     let spec = crate::ui::keymap::effective_key(action, cx)?;
     let first = spec.split_whitespace().next()?;
-    let stroke = Keystroke::parse(first).ok()?;
-    Some(Kbd::format(&stroke))
+    Keystroke::parse(first).ok()
+}
+
+pub(crate) fn key_hint(action: &str, cx: &App) -> Option<String> {
+    key_stroke(action, cx).map(|stroke| Kbd::format(&stroke))
 }
 
 fn home_shortcut_label(action: &str, closed: Option<&str>) -> String {

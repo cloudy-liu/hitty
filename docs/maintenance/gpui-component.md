@@ -1,7 +1,7 @@
 # UI dependency maintenance
 
 Hitty pins its GPUI component packages to the reviewed revision
-`f95e3b89b9a9ec704f9e3e502e4dc0e02cca636e` in `cloudy-liu/gpui-component`.
+`e7663b39f0be922d4f371b8e462a2d58eb342db4` in `cloudy-liu/gpui-component`.
 The authoritative revisions and versions are in `Cargo.toml` and `Cargo.lock`.
 All component packages must resolve to the same revision.
 
