@@ -25,6 +25,8 @@ pub mod server;
 pub mod singleton;
 pub mod spawn;
 pub mod ssh;
+/// Answering the query a fresh ConPTY holds its shell back for.
+mod startup_query;
 pub mod transport;
 
 pub(crate) const DETECTED_SHELL_ENV: &str = "HITTY_DETECTED_SHELL";

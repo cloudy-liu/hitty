@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Open Windows tabs and splits without the three-second pause before the shell
+  starts: the daemon now answers the pseudoconsole's startup query itself.
 - Keep all Otty themes on Hitty's interface and terminal typography settings,
   and prevent imported fonts from remaining after switching themes.
 
