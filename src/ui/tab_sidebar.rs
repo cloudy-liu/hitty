@@ -18,7 +18,7 @@ use std::path::{Path, PathBuf};
 use crate::core::config::{Config, SidebarGrouping};
 use crate::daemon::protocol::RemoteKind;
 use crate::terminal::git_status::GitStatusCache;
-use crate::ui::app::HittyApp;
+use crate::ui::app::{HittyApp, TITLE_BAR_HEIGHT};
 use crate::ui::hints::tab_badge_label;
 use crate::ui::i18n::{L10nKey, t, t_fmt};
 use crate::ui::reorder::{self, Reorder, Surface};
@@ -141,13 +141,9 @@ impl HittyApp {
     /// the document column's budget and the sidebar itself can never disagree
     /// about how much width is already spoken for.
     pub(crate) fn sidebar_px(&self, window: &Window, cx: &gpui::App) -> f32 {
-        let mut width = self.sidebar_width.get();
-        if width == crate::ui::theme_style::default_sidebar_width() {
-            width = crate::ui::theme_style::active(cx)
-                .and_then(|style| style.number("sidebar.width"))
-                .unwrap_or(width);
-        }
-        width.clamp(MIN_SIDEBAR_WIDTH, self.sidebar_max_px(window, cx))
+        self.sidebar_width
+            .get()
+            .clamp(MIN_SIDEBAR_WIDTH, self.sidebar_max_px(window, cx))
     }
 
     pub(crate) fn tab_sidebar(
@@ -919,37 +915,6 @@ impl HittyApp {
                         s.text_color(cx.theme().sidebar_foreground)
                             .hover(|s| s.bg(gpui::rgb(sf.hover)))
                     })
-                    .when_some(crate::ui::theme_style::active(cx), |el, style| {
-                        style
-                            .tab(
-                                el,
-                                false,
-                                is_active,
-                                window.is_window_active(),
-                                cx.theme().border,
-                            )
-                            .when(!is_active, |el| {
-                                el.hover(|s| style.surface(s, "tab.hover", cx.theme().border))
-                            })
-                            .when(
-                                is_active && style.text("tab.indicator") == Some("bar"),
-                                |el| {
-                                    el.relative().child(
-                                        div()
-                                            .absolute()
-                                            .left(px(1.))
-                                            .top(px(8.))
-                                            .bottom(px(8.))
-                                            .w(px(3.))
-                                            .rounded(px(2.))
-                                            .bg(style
-                                                .color("tab.active.indicator-color")
-                                                .or_else(|| style.color("tab.indicator-color"))
-                                                .unwrap_or(cx.theme().primary)),
-                                    )
-                                },
-                            )
-                    })
                     .when(row_preview.as_ref().is_some_and(|p| p.from == slot), |s| {
                         s.opacity(0.75)
                     })
@@ -1660,7 +1625,7 @@ impl HittyApp {
 
         let controls = h_flex()
             .flex_shrink_0()
-            .h(px(crate::ui::theme::title_bar_height(cx)))
+            .h(px(TITLE_BAR_HEIGHT))
             .border_b_1()
             .border_color(cx.theme().transparent)
             .items_center()
@@ -1866,15 +1831,6 @@ impl HittyApp {
             .bg(crate::ui::theme::workspace_surface_color(cx))
             .border_r_1()
             .border_color(cx.theme().sidebar_border)
-            .when_some(crate::ui::theme_style::active(cx), |el, style| {
-                let el = style
-                    .surface(el, "sidebar", cx.theme().sidebar_border)
-                    .bg(style.sidebar_color());
-                match style.border("sidebar.border-right", cx.theme().sidebar_border) {
-                    Some((width, color)) => el.border_r(px(width)).border_color(color),
-                    None => el,
-                }
-            })
             .child(backing)
             .child(
                 // Real pixels, not `size_full`: the rail's own width is a

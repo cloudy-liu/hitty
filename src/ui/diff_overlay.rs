@@ -1103,7 +1103,7 @@ impl HittyApp {
         };
         let shell = shell.when(
             !chrome.is_dock() && self.document_header_below_chrome(window, cx),
-            |shell| shell.pt(px(crate::ui::theme::title_bar_height(cx))),
+            |shell| shell.pt(px(crate::ui::app::TITLE_BAR_HEIGHT)),
         );
         Some(
             shell
@@ -1174,7 +1174,7 @@ impl HittyApp {
             row
         };
         row.flex_shrink_0()
-            .h(px(crate::ui::theme::title_bar_height(cx)))
+            .h(px(crate::ui::app::TITLE_BAR_HEIGHT))
             .pl(px(lead))
             .pr(px(crate::ui::app::tile_trailing_inset()))
             .when(

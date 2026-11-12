@@ -1885,25 +1885,6 @@ impl HittyApp {
                     s.text_color(cx.theme().muted_foreground)
                         .hover(|s| s.bg(cx.theme().muted))
                 })
-                .when_some(crate::ui::theme_style::active(cx), |el, style| {
-                    style
-                        .tab(
-                            el,
-                            true,
-                            is_active,
-                            window.is_window_active(),
-                            cx.theme().border,
-                        )
-                        .when(!is_active, |el| {
-                            el.hover(|s| {
-                                style.surface(
-                                    style.surface(s, "tab.hover", cx.theme().border),
-                                    "tab-bar.tab.hover",
-                                    cx.theme().border,
-                                )
-                            })
-                        })
-                })
                 .when(dragged, |s| s.opacity(0.75))
                 .child(
                     canvas(
@@ -2095,18 +2076,6 @@ impl HittyApp {
             .when(!show_chips, |this| this.w_full())
             .pl_0()
             .min_w_0()
-            .when_some(
-                crate::ui::theme_style::active(cx).filter(|_| show_chips),
-                |el, style| {
-                    let mut el = style.surface(el, "tab-bar", cx.theme().border);
-                    if let Some((width, color)) =
-                        style.border("tab-bar.border-bottom", cx.theme().border)
-                    {
-                        el = el.border_b(px(width)).border_color(color);
-                    }
-                    el
-                },
-            )
             .when_some(left_group, |this, g| this.child(g))
             .child(chips)
             .when(show_chips, move |this| this.child(add_button))

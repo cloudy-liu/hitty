@@ -1,0 +1,83 @@
+{
+  "stage": "after",
+  "app": "D:\\tmp\\hitty-outline-follow-build\\debug\\hitty-app.exe",
+  "binary_sha256": "193ec4952c99713c5315ca7ab84c8cf24f41aea4ad87bbf9be45bdaa633513b1",
+  "profile": "C:\\Users\\cloudy\\AppData\\Local\\Temp\\hitty-theme-removal-after-qucp121_",
+  "configuration": {
+    "theme_preset": "light",
+    "theme_follow_system": false,
+    "theme_style_legible_palette": true,
+    "theme_legible_palette": true,
+    "window_blur": null,
+    "window_backdrop": "auto",
+    "window_opacity": null,
+    "gui_language": "en",
+    "font_family": "Hack",
+    "font_size": 15,
+    "line_height": 1.4,
+    "ui_font_size": 14,
+    "cursor_blink": false,
+    "tab_bar_position": "left",
+    "right_panel_visible": true,
+    "right_panel_tab": "info",
+    "check_for_updates": false,
+    "auto_download_updates": false,
+    "install_cli_on_path": false,
+    "show_tray_icon": false,
+    "shell": {
+      "program": "powershell.exe",
+      "args": [
+        "-NoLogo",
+        "-NoProfile",
+        "-NoExit",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-Command",
+        "Set-Location $env:SystemRoot; function global:prompt { 'PS theme-restore> ' }; & 'D:\\gh-prj\\hitty-revert-otty\\.hitty-dev-theme-removal\\sample.ps1'"
+      ]
+    }
+  },
+  "logical_window": [
+    1200,
+    800
+  ],
+  "captures": [
+    {
+      "scene": "legacy-selection",
+      "selection": "otty-solarized-light",
+      "capture": "hwnd=5704522 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=75788",
+      "image_sha256": "6bd60ebd3bbf5e1ca4a317411f3b826cea6218c87d5bce079c3548073656b7a5",
+      "text_sha256": "47038dcb456f3fb3c53f057cfac55dfa7659ff0d84d271447c12a9f6988d1327"
+    },
+    {
+      "scene": "one-light",
+      "selection": "one_light",
+      "capture": "hwnd=5704522 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=73272",
+      "image_sha256": "3b2097ded8ddf6b66fc4ed89c71f4b3bafcefb274c05ecd10f145fac59e68a23",
+      "text_sha256": "47038dcb456f3fb3c53f057cfac55dfa7659ff0d84d271447c12a9f6988d1327"
+    },
+    {
+      "scene": "dark",
+      "selection": "dark",
+      "capture": "hwnd=5704522 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=80713",
+      "image_sha256": "3c2d20380b8c979d4c7a8c39b58ec6297ad28cf02b1beae334c8cafaa90bea61",
+      "text_sha256": "47038dcb456f3fb3c53f057cfac55dfa7659ff0d84d271447c12a9f6988d1327"
+    },
+    {
+      "scene": "one-light-again",
+      "selection": "one_light",
+      "capture": "hwnd=5704522 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=73272",
+      "image_sha256": "3b2097ded8ddf6b66fc4ed89c71f4b3bafcefb274c05ecd10f145fac59e68a23",
+      "text_sha256": "47038dcb456f3fb3c53f057cfac55dfa7659ff0d84d271447c12a9f6988d1327"
+    },
+    {
+      "scene": "default-light",
+      "selection": "light",
+      "capture": "hwnd=5704522 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=75788",
+      "image_sha256": "6bd60ebd3bbf5e1ca4a317411f3b826cea6218c87d5bce079c3548073656b7a5",
+      "text_sha256": "47038dcb456f3fb3c53f057cfac55dfa7659ff0d84d271447c12a9f6988d1327"
+    }
+  ],
+  "terminal_output_preserved_after_round_trip": true,
+  "identical_pixels_after_round_trip": true
+}
