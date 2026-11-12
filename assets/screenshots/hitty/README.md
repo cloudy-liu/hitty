@@ -1,8 +1,8 @@
 # Hitty product screenshots
 
-Captured from the current Hitty application on Windows using the existing
+Refreshed on November 12, 2026 from `main` at `0a9dedc` on Windows using the existing
 `prepare-readme-captures.py` document scenes and `capture-native-window.ps1`
-PrintWindow harness. All four original PNGs were inspected. No image is
+PrintWindow harness. All four refreshed PNGs were inspected. No image is
 composited, retouched, or generated; no pointer appears in the captures.
 
 The viewport is 1380 by 760 logical pixels at 175% display scale. The native
@@ -11,7 +11,7 @@ a throwaway Git repository provide a reproducible workspace.
 
 | Image | Content |
 | --- | --- |
-| workspace-light.png | Light workspace, project groups, Agent states, Markdown and Mermaid |
+| workspace-light.png | Light workspace, project groups, Agent states, Markdown, Mermaid and automatic Outline follow |
 | workspace-dark.png | The same scene in dark appearance |
 | editor-light.png | Source editing with document tabs and project navigation |
 | html-preview-light.png | Native WebView2 rendering of a local HTML page |
@@ -24,6 +24,7 @@ The opt-in fixture exits before normal application startup and hook refresh.
 `captures.json` records source revision, binary digest, exact scene settings,
 readiness, capture output, and each PNG digest. The documentation homepage uses
 byte-identical copies of the light and dark workspace images.
+The source and HTML scenes explicitly select Files; Markdown follows its outline.
 
 Reproduce with a new scratch directory:
 

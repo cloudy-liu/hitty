@@ -2,7 +2,7 @@
 
 Status: implemented. The import and first release are recorded in
 [source provenance](../provenance/source-baseline.md) and
-[release verification](../testing/hitty-bootstrap.md).
+[first release notes](../releases/hitty-v0.1.0.md).
 
 Hitty imported a reviewed ctty7 source snapshot after its README bootstrap
 commit, without importing the old repository's Git history, branches, tags,

@@ -104,7 +104,6 @@
     }
   ],
   "hero_aliases": [
-    "assets/hero.webp",
-    "docs/images/hero.webp"
+    "assets/hero.webp"
   ]
 }

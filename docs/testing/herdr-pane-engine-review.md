@@ -142,7 +142,8 @@ Intel macOS failures on November 10, 2026 (Asia/Shanghai):
 - CI run `42655833478`, job `129293943711`, built successfully but failed
   `selected_commit_shows_message_details_above_the_existing_diff` at its
   final `focus.is_none()` assertion. This unchanged test had also failed on
-  the imported source baseline, as recorded in [bootstrap verification](hitty-bootstrap.md).
+  the imported source baseline, as recorded in the
+  [archived bootstrap verification](https://github.com/cloudy-liu/hitty/blob/0a9dedcd5e2aab59f4c72b259b873620348318c7/docs/testing/hitty-bootstrap.md#cross-platform-ci).
 - Release run `42655833344`, job `129296730746`, compiled and created the
   macOS ZIP and DMG, then artifact upload failed with
   `Failed to CreateArtifact: Unable to make request: ENOTFOUND`.

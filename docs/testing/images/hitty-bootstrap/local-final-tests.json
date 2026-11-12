@@ -1,8 +1,0 @@
-{
-  "command": "cargo test --locked --workspace --features updater -- --test-threads=4",
-  "standard_tests_passed": 3281,
-  "failed": 0,
-  "ignored": 13,
-  "log_sha256": "2fc5228594d08119fb719649bae96fa595faa302346cd04b4bb4ca852a079171",
-  "note": "The custom CLI end-to-end harness also completed successfully. Default-concurrency fixture timeouts are recorded in the verification document."
-}

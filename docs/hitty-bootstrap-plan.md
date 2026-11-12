@@ -18,6 +18,6 @@ Hitty began as an independent source snapshot, recorded in
   harnesses; keep unrelated feature work separate.
 
 Windows, macOS and Linux `v0.1.0` were published together on November 8, 2026.
-[Verification](testing/hitty-bootstrap.md) records the acceptance scope and known
+[Release notes](releases/hitty-v0.1.0.md) record the first release's scope and known
 distribution limitations. Use the current [release procedure](maintenance/hitty-release.md)
 for subsequent work; do not overwrite published tags or binaries.

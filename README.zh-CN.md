@@ -38,7 +38,7 @@ Windows 包未签名；macOS 使用 ad-hoc 签名，尚未公证，系统可能�
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="assets/screenshots/hitty/workspace-dark.png" />
-  <img src="assets/screenshots/hitty/workspace-light.png" alt="Hitty 工作台：Agent 状态、项目分组、文档标签、Markdown 预览和文件树" width="100%" />
+  <img src="assets/screenshots/hitty/workspace-light.png" alt="Hitty 工作台：Agent 状态、项目分组、文档标签、Markdown 预览及标题大纲" width="100%" />
 </picture>
 
 *Hitty 的 Windows 原生窗口截图。Agent 状态使用受控演示事件，不发起真实 Agent 请求。[截图说明](assets/screenshots/hitty/README.md)。*
@@ -54,6 +54,8 @@ Windows 包未签名；macOS 使用 ad-hoc 签名，尚未公证，系统可能�
 ### 看清哪个 Agent 需要你
 
 识别 Claude Code、Codex、Gemini、Cursor、OpenCode 等编码 Agent。每个面板显示工作中、等待输入、空闲或结果未读等状态。桌面通知、托盘提醒和声音让你不必一直盯着终端。
+
+Agent 窗格在终端上方显示名称。在“设置 → 窗口与标签页”中开启任务标题后，还能看到 Agent 写入的当前任务名称。桌面通知也会优先使用来源 Agent 的任务标题。
 
 命令面板可以把选区或仓库 diff 发送给当前 Agent；CLI 可以查询状态，或等待状态变化。状态细节和对话恢复能力取决于具体 Agent 及其集成方式。[Agent 状态](docs/agents/status.mdx) · [会话恢复](docs/agents/sessions.mdx)
 

@@ -44,7 +44,7 @@ Every release includes `checksums.txt`.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="assets/screenshots/hitty/workspace-dark.png" />
-  <img src="assets/screenshots/hitty/workspace-light.png" alt="Hitty workspace with agent status, project groups, document tabs, Markdown preview, and a file tree" width="100%" />
+  <img src="assets/screenshots/hitty/workspace-light.png" alt="Hitty workspace with agent status, project groups, document tabs, Markdown preview, and its heading outline" width="100%" />
 </picture>
 
 *Native Windows captures of Hitty. Agent states use controlled sample events;
@@ -69,6 +69,10 @@ Recognize coding agents including Claude Code, Codex, Gemini, Cursor, and OpenCo
 Per-pane status distinguishes working, waiting for input, idle, and unread results.
 Desktop notifications, tray attention, and sounds help you notice completed work
 without watching every terminal.
+
+Agent panes show their name above the terminal. Enable task titles in
+Settings → Window & Tabs to add the task name supplied by the agent. Desktop
+notifications also use the source agent's task title when available.
 
 Send a selection or repository diff to the active agent from the command palette.
 Use the CLI to inspect agent status or wait for a state change. Available status

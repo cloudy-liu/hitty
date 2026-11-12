@@ -5,9 +5,9 @@ For `v0.4.0`, compare against `v0.3.1`, published on November 10, 2026.
 Always compare a later release against the immediately preceding published
 Hitty tag.
 
-1. Complete the checks in `docs/testing/hitty-bootstrap.md` and the agreed
+1. Complete the checks in `docs/testing/README.md` and the agreed
    Windows x86_64, Linux x86_64, macOS ARM64, and macOS Intel acceptance gate.
-   Follow the maintainer-approved scope in that record; retain known
+   Follow the maintainer-approved acceptance scope; retain known
    distribution limitations without adding unrelated feature or signing work.
 2. Packaging-related PRs run the Release workflow with read-only permissions
    and ad-hoc macOS signing. Once the workflow exists on the default branch,

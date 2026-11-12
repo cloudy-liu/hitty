@@ -61,11 +61,12 @@ def main():
             "dark": dark,
             "dock": False,
             "readme": True,
-            # The README scenes show the file tree beside the document; without
-            # a named mode the Markdown preview's outline takes the panel.
-            "panel_mode": "files",
             "hold_seconds": 600,
         }
+        # Show the default outline follow for Markdown; keep project navigation
+        # beside the source editor and HTML preview.
+        if active != 0:
+            options["panel_mode"] = "files"
         (output / f"{name}.json").write_text(json.dumps(options, indent=2), encoding="utf-8")
     for name, sidebar in (("remote-top", False), ("remote-sidebar", True)):
         options = {"sidebar": sidebar, "auto_names": True,

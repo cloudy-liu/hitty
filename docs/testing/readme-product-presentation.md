@@ -1,59 +1,51 @@
-# Product README presentation
+# Current product screenshots
 
-The README introduces Hitty through its capabilities, installation, and first
-workflow. English is the default; the Chinese page uses the same information
-hierarchy and reciprocal language navigation. The approved icon-plus-wordmark
-SVGs are unchanged, with a 240 px display width and responsive shrinking.
+Refreshed on November 12, 2026 from `main` at `0a9dedc` (v0.4.0 plus the
+notification task-title fix). English and Chinese READMEs share the same four
+native application images. The documentation homepage uses byte-identical
+copies of the light and dark workspace images.
 
-## Native images
+The existing document fixture runs with isolated configuration and sample
+Agent states. The Markdown scenes show automatic Outline follow; the source
+and local HTML scenes show Files. No live Agent or remote connection is implied.
+All images use a 1380 × 760 logical viewport, 175% Windows display scale and
+the original PrintWindow harness with the synthetic pointer at `(1,1)`.
+The real pointer is not moved. Images are unretouched native captures.
 
-Built the existing opt-in application fixtures with:
+Reproduce with:
 
 ```sh
 cargo build --locked --features markdown-visual-tests --bin hitty-app
+python scripts/prepare-readme-captures.py <new-temporary-scene-directory>
 ```
 
-Used `scripts/prepare-readme-captures.py` and the original
-`scripts/capture-native-window.ps1` PrintWindow harness. All four new application
-captures were inspected: light workspace, dark workspace, source editor, and
-native HTML preview. Each uses a separate temporary configuration directory.
-The fixture branches before ordinary application startup and hook refresh.
-No live Agent or remote connection is implied by the controlled sample states.
-Capture metadata and PNG digests are in `assets/screenshots/hitty/captures.json`.
+Launch each scene with `hitty-app --config-dir <isolated-directory>
+--document-visual <scene.json>`, wait for its readiness record, then run
+`scripts/capture-native-window.ps1 -ProcId <pid> -Out <image.png> -MoveTo "1,1"`.
+Binary, image hashes, readiness and exact scene options are recorded in
+[capture metadata](../../assets/screenshots/hitty/captures.json).
 
-## GitHub rendering
+## Native comparison
 
-The logo was reduced on November 8, 2026 after reviewing its visual weight in
-the README. Before (`d3f8350`) and After (`9b182c5`) show GitHub's actual rendered
-README at the same 1440 by 1000 CSS-pixel viewport, scale factor 1, light
-appearance, and article offset of approximately 80 px below the viewport top.
-The logo changes from 360 by 144 px to 240 by 96 px, remains centered, and
-brings the introduction and quick start 48 px higher. Both saved images were
-inspected; badges and embedded product images still load successfully.
+Before images are the previously published README assets; After images are
+new captures of the corresponding sample project, viewport and appearance.
+The old workspace images show Files; the current Markdown scenes show the
+automatic Outline behavior. These compare product documentation across versions,
+not a runtime UI change made in this documentation update.
 
-![Before: 360 px logo](images/readme/logo-size-before.png)
+| Scene | Before | Current |
+| --- | --- | --- |
+| Light workspace | ![Previous light workspace](images/readme-current/before-workspace-light.png) | ![Current light workspace](images/readme-current/after-workspace-light.png) |
+| Dark workspace | ![Previous dark workspace](images/readme-current/before-workspace-dark.png) | ![Current dark workspace](images/readme-current/after-workspace-dark.png) |
+| Source editor | ![Previous source editor](images/readme-current/before-editor-light.png) | ![Current source editor](images/readme-current/after-editor-light.png) |
+| Local HTML | ![Previous HTML preview](images/readme-current/before-html-preview-light.png) | ![Current HTML preview](images/readme-current/after-html-preview-light.png) |
 
-![After: 240 px logo](images/readme/logo-size-after.png)
+The locked native build passed. All four refreshed application images were
+visually inspected. Relative documentation links and image references were
+checked after cleanup. Live GitHub rendering has not been rechecked because
+these changes have not been pushed.
 
-At 390 by 844 CSS pixels, the 240 by 96 px logo remains centered within the
-approximately 325 px article, the three badges fit, and the page has no
-horizontal overflow. English and Chinese use the same logo width; their
-reciprocal language links resolve to the corresponding rendered files.
-The Chinese logo also renders at 240 by 96 px without horizontal overflow.
-
-![Mobile](images/readme/logo-size-mobile.png)
-
-## Content and attribution checks
-
-- All README relative links and image paths resolve.
-- Earlier product names occur only in the final credits sections of both
-  READMEs and the documentation introduction.
-- GitHub About describes Hitty's capabilities without predecessor branding.
-- The root Apache-2.0 license, its original copyright, and bundled third-party
-  license files retain their exact bytes.
-- Product documentation no longer presents historical benchmark measurements
-  as new Hitty measurements or claims running processes survive a reboot.
-- No runtime code, preference defaults, dependencies, or hooks were changed.
-
-The GitHub documentation configuration and link checks passed. The live GitHub
-README was reviewed; a separately deployed documentation site was not exercised.
+Completed right-panel prototypes, superseded native panel captures, early
+release verification bundles and old GitHub README layout screenshots have
+been removed. Their original bytes remain in Git history. Current feature
+acceptance records, published release notes, provenance and licenses remain.

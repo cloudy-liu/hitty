@@ -17,8 +17,10 @@ No application renderer was changed to produce these images.
 
 [Capture metadata](captures.json) records the production revision, executable
 hash, capture times, dimensions, and native/encoded image hashes.
-[assets/hero.webp](../hero.webp) and [docs/images/hero.webp](../../docs/images/hero.webp)
-are byte-identical copies of `workspace-light.webp` for existing documentation links.
+[assets/hero.webp](../hero.webp) remains a byte-identical copy of
+`workspace-light.webp` for existing documentation links. The former
+`docs/images/hero.webp` copy is available in Git history. Current Hitty product
+screenshots and documentation copies are described in [Hitty captures](hitty/README.md).
 
 ## Capture method
 
@@ -70,8 +72,10 @@ Use `--ssh-tab-visual` instead of `--document-visual` for `remote-top.json` and
 window for up to ten minutes. On Windows, select the returned native window,
 capture it with Alt+PrintScreen and save the clipboard image as PNG. Preserve
 the original size when encoding WebP and compare decoded pixels before replacing
-an asset. See [document evidence](../../docs/testing/document-tabs-native.md)
-for the underlying fixture and [SSH naming evidence](../../docs/testing/ssh-tab-auto-name.md)
+an asset. See the
+[archived document evidence](https://github.com/cloudy-liu/hitty/blob/4699e7eb4294883c324bf0c630bcde22fd709946/docs/testing/document-tabs-native.md)
+for the underlying fixture and
+[archived SSH naming evidence](https://github.com/cloudy-liu/hitty/blob/4699e7eb4294883c324bf0c630bcde22fd709946/docs/testing/ssh-tab-auto-name.md)
 for the remote sample cases.
 
 The capture matrix covers Windows light/dark workspaces, source editing, local

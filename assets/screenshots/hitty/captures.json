@@ -1,10 +1,31 @@
 {
-  "source_commit": "e62171a83414c32840884f5c3b9c3dd2c5b9042c",
-  "binary_sha256": "b55c47ab4573e37b89d0e5478b3175f4a895d9ad08990aa2505cddf383eb84ce",
-  "method": "Native HittyApp document fixture plus original PrintWindow script; no pointer movement or compositing",
+  "source_commit": "0a9dedcd5e2aab59f4c72b259b873620348318c7",
+  "binary_sha256": "fd05ed5d18ef62763f9e03e673b0d1204d8148f1d7f964ae5aaf8841ea0a6a80",
+  "method": "Native current Hitty document fixture; PrintWindow; isolated configuration; synthetic pointer at 1,1; no compositing",
   "scenes": [
     {
       "name": "workspace-light",
+      "options": {
+        "root": "D:\\tmp\\hitty-readme-20261112-scenes\\hitty",
+        "files": [
+          "README.md",
+          "src/settings.rs",
+          "overview.html"
+        ],
+        "output": "D:\\tmp\\hitty-readme-20261112-scenes\\workspace-light.ready.json",
+        "active": 0,
+        "preview": true,
+        "width": 1380,
+        "height": 760,
+        "dark": false,
+        "dock": false,
+        "readme": true,
+        "hold_seconds": 600,
+        "hover_at": [
+          1,
+          1
+        ]
+      },
       "native": {
         "ready": true,
         "title": "hitty document acceptance",
@@ -22,20 +43,41 @@
         "history_profile": null,
         "history_commits": null,
         "files": [
-          "\\\\?\\D:\\tmp\\hitty-readme-refresh\\scenes\\hitty\\README.md",
-          "\\\\?\\D:\\tmp\\hitty-readme-refresh\\scenes\\hitty\\src\\settings.rs",
-          "\\\\?\\D:\\tmp\\hitty-readme-refresh\\scenes\\hitty\\overview.html"
+          "\\\\?\\D:\\tmp\\hitty-readme-20261112-scenes\\hitty\\README.md",
+          "\\\\?\\D:\\tmp\\hitty-readme-20261112-scenes\\hitty\\src\\settings.rs",
+          "\\\\?\\D:\\tmp\\hitty-readme-20261112-scenes\\hitty\\overview.html"
         ],
-        "active": "\\\\?\\D:\\tmp\\hitty-readme-refresh\\scenes\\hitty\\README.md",
+        "active": "\\\\?\\D:\\tmp\\hitty-readme-20261112-scenes\\hitty\\README.md",
         "preview": true,
         "open_files": 3,
         "capture": "No GPU image requested"
       },
-      "capture": "hwnd=5114708 client=2415x1330 frame=2419x1332 printwindow=True pointer=none size=163561",
-      "sha256": "80394d19173ad97e73588ab49f5bce55a47ad7bd4d629ef438df69f9d58bd3b8"
+      "capture": "hwnd=20319046 client=2415x1330 frame=2419x1332 printwindow=True pointer=move=1,1 size=162877",
+      "sha256": "eb3e596f07552cc57058f2ec8c73ab6baa19b22a48d41b1482196586c4545141"
     },
     {
       "name": "workspace-dark",
+      "options": {
+        "root": "D:\\tmp\\hitty-readme-20261112-scenes\\hitty",
+        "files": [
+          "README.md",
+          "src/settings.rs",
+          "overview.html"
+        ],
+        "output": "D:\\tmp\\hitty-readme-20261112-scenes\\workspace-dark.ready.json",
+        "active": 0,
+        "preview": true,
+        "width": 1380,
+        "height": 760,
+        "dark": true,
+        "dock": false,
+        "readme": true,
+        "hold_seconds": 600,
+        "hover_at": [
+          1,
+          1
+        ]
+      },
       "native": {
         "ready": true,
         "title": "hitty document acceptance",
@@ -53,20 +95,42 @@
         "history_profile": null,
         "history_commits": null,
         "files": [
-          "\\\\?\\D:\\tmp\\hitty-readme-refresh\\scenes\\hitty\\README.md",
-          "\\\\?\\D:\\tmp\\hitty-readme-refresh\\scenes\\hitty\\src\\settings.rs",
-          "\\\\?\\D:\\tmp\\hitty-readme-refresh\\scenes\\hitty\\overview.html"
+          "\\\\?\\D:\\tmp\\hitty-readme-20261112-scenes\\hitty\\README.md",
+          "\\\\?\\D:\\tmp\\hitty-readme-20261112-scenes\\hitty\\src\\settings.rs",
+          "\\\\?\\D:\\tmp\\hitty-readme-20261112-scenes\\hitty\\overview.html"
         ],
-        "active": "\\\\?\\D:\\tmp\\hitty-readme-refresh\\scenes\\hitty\\README.md",
+        "active": "\\\\?\\D:\\tmp\\hitty-readme-20261112-scenes\\hitty\\README.md",
         "preview": true,
         "open_files": 3,
         "capture": "No GPU image requested"
       },
-      "capture": "hwnd=6425126 client=2415x1330 frame=2419x1332 printwindow=True pointer=none size=164567",
-      "sha256": "6bd20ffaf12ee55264d5d9d4006764121c1fcfd7badf3195ce4d761e26d0fffc"
+      "capture": "hwnd=1115868 client=2415x1330 frame=2419x1332 printwindow=True pointer=move=1,1 size=163624",
+      "sha256": "95d199d91d05d806613fefa3835b2ede4863396e85bb085a29a4eafd3ed55693"
     },
     {
       "name": "editor-light",
+      "options": {
+        "root": "D:\\tmp\\hitty-readme-20261112-scenes\\hitty",
+        "files": [
+          "README.md",
+          "src/settings.rs",
+          "overview.html"
+        ],
+        "output": "D:\\tmp\\hitty-readme-20261112-scenes\\editor-light.ready.json",
+        "active": 1,
+        "preview": false,
+        "width": 1380,
+        "height": 760,
+        "dark": false,
+        "dock": false,
+        "readme": true,
+        "hold_seconds": 600,
+        "panel_mode": "files",
+        "hover_at": [
+          1,
+          1
+        ]
+      },
       "native": {
         "ready": true,
         "title": "hitty document acceptance",
@@ -84,20 +148,42 @@
         "history_profile": null,
         "history_commits": null,
         "files": [
-          "\\\\?\\D:\\tmp\\hitty-readme-refresh\\scenes\\hitty\\README.md",
-          "\\\\?\\D:\\tmp\\hitty-readme-refresh\\scenes\\hitty\\src\\settings.rs",
-          "\\\\?\\D:\\tmp\\hitty-readme-refresh\\scenes\\hitty\\overview.html"
+          "\\\\?\\D:\\tmp\\hitty-readme-20261112-scenes\\hitty\\README.md",
+          "\\\\?\\D:\\tmp\\hitty-readme-20261112-scenes\\hitty\\src\\settings.rs",
+          "\\\\?\\D:\\tmp\\hitty-readme-20261112-scenes\\hitty\\overview.html"
         ],
-        "active": "\\\\?\\D:\\tmp\\hitty-readme-refresh\\scenes\\hitty\\src\\settings.rs",
+        "active": "\\\\?\\D:\\tmp\\hitty-readme-20261112-scenes\\hitty\\src\\settings.rs",
         "preview": false,
         "open_files": 3,
         "capture": "No GPU image requested"
       },
-      "capture": "hwnd=6621798 client=2415x1330 frame=2419x1332 printwindow=True pointer=none size=119950",
-      "sha256": "797a6b38bbaf9a0a729aced3a88d21fd119ad1b48b6b73a17ee9ab0687f6da66"
+      "capture": "hwnd=22808040 client=2415x1330 frame=2419x1332 printwindow=True pointer=move=1,1 size=119890",
+      "sha256": "efb41c64d074ef5479686dea1a05bc1e058269c3475787fa4e3ebb12dfc5f809"
     },
     {
       "name": "html-preview-light",
+      "options": {
+        "root": "D:\\tmp\\hitty-readme-20261112-scenes\\hitty",
+        "files": [
+          "README.md",
+          "src/settings.rs",
+          "overview.html"
+        ],
+        "output": "D:\\tmp\\hitty-readme-20261112-scenes\\html-preview-light.ready.json",
+        "active": 2,
+        "preview": true,
+        "width": 1380,
+        "height": 760,
+        "dark": false,
+        "dock": false,
+        "readme": true,
+        "hold_seconds": 600,
+        "panel_mode": "files",
+        "hover_at": [
+          1,
+          1
+        ]
+      },
       "native": {
         "ready": true,
         "title": "hitty document acceptance",
@@ -115,17 +201,17 @@
         "history_profile": null,
         "history_commits": null,
         "files": [
-          "\\\\?\\D:\\tmp\\hitty-readme-refresh\\scenes\\hitty\\README.md",
-          "\\\\?\\D:\\tmp\\hitty-readme-refresh\\scenes\\hitty\\src\\settings.rs",
-          "\\\\?\\D:\\tmp\\hitty-readme-refresh\\scenes\\hitty\\overview.html"
+          "\\\\?\\D:\\tmp\\hitty-readme-20261112-scenes\\hitty\\README.md",
+          "\\\\?\\D:\\tmp\\hitty-readme-20261112-scenes\\hitty\\src\\settings.rs",
+          "\\\\?\\D:\\tmp\\hitty-readme-20261112-scenes\\hitty\\overview.html"
         ],
-        "active": "\\\\?\\D:\\tmp\\hitty-readme-refresh\\scenes\\hitty\\overview.html",
+        "active": "\\\\?\\D:\\tmp\\hitty-readme-20261112-scenes\\hitty\\overview.html",
         "preview": true,
         "open_files": 3,
-        "capture": "Use native screenshot: GPUI images omit the child WebView"
+        "capture": "No GPU image requested"
       },
-      "capture": "hwnd=6556198 client=2415x1330 frame=2419x1332 printwindow=True pointer=none size=159015",
-      "sha256": "12b8ee17fb09d9fa76946588d1f56480d283ae3527dbc01eeb9862164322983e"
+      "capture": "hwnd=1312476 client=2415x1330 frame=2419x1332 printwindow=True pointer=move=1,1 size=158960",
+      "sha256": "d4aa89668f9fff29ba75e3daa4d705baf2020e48803715ac9fe8917fefb74677"
     }
   ]
 }
