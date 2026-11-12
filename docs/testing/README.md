@@ -24,8 +24,10 @@ python scripts/prepare-readme-captures.py <new-temporary-directory>
 
 Pass the generated document options to `hitty-app --config-dir <isolated-directory>
 --document-visual <options.json>`. The fixture supports `panel_mode` values
-`info`, `outline`, `changes` and `files`. Use the existing Markdown, Agent and SSH
-visual scripts for their corresponding scenarios.
+`info`, `outline`, `changes` and `files`; the generated scenes name `files`.
+Remove it to leave the mode to the document in front, as a reader opening a
+file does. Use the existing Markdown, Agent and SSH visual scripts for their
+corresponding scenarios.
 
 Capture a Windows application window with `scripts/capture-native-window.ps1`.
 Use matching data, viewport, DPI, appearance and pointer state for Before/After.
@@ -41,6 +43,7 @@ prototype is design guidance, not proof of native application behavior.
 - [README presentation](readme-product-presentation.md).
 - [Right-panel implementation](right-panel.md).
 - [Compact right panel and file-tree alignment](right-panel-compact.md).
+- [Outline follow for Markdown previews](outline-follow.md).
 
 Keep new verification records concise and tied to reproducible commands. Avoid
 copying per-run logs or completed design proposals into this directory. The

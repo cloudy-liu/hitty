@@ -1,0 +1,282 @@
+cargo :    Compiling hitty-core v0.3.1 (D:\gh-prj\hitty-agent-resume-fix\crates\hitty-core)
+所在位置 行:2 字符: 111
++ ... sume-build; cargo build --locked --workspace --bins --features update ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (   Compiling hi...tes\hitty-core):String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+   Compiling hitty v0.3.1 (D:\gh-prj\hitty-agent-resume-fix)
+warning: unused import: `Mutex`
+ --> crates\hitty-core\src\daemon\duplex.rs:2:22
+  |
+2 | use std::sync::{Arc, Mutex};
+  |                      ^^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `Path`
+ --> crates\hitty-core\src\host\server.rs:3:17
+  |
+3 | use std::path::{Path, PathBuf};
+  |                 ^^^^
+
+warning: variable does not need to be mutable
+   --> crates\hitty-core\src\core\git\diff.rs:919:9
+    |
+919 |     let mut push_char = |bytes: &mut Vec<u8>, ch: char| {
+    |         ----^^^^^^^^^
+    |         |
+    |         help: remove this `mut`
+    |
+    = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: method `tail_size` is never used
+    --> crates\hitty-core\src\daemon\pane.rs:2925:8
+     |
+2887 | impl ReplayRing {
+     | --------------- method in this implementation
+...
+2925 |     fn tail_size(&self) -> WinSize {
+     |        ^^^^^^^^^
+     |
+     = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `parse_listen_addr` is never used
+   --> crates\hitty-core\src\daemon\procinfo.rs:470:4
+    |
+470 | fn parse_listen_addr(name: &str) -> Option<(&str, u16)> {
+    |    ^^^^^^^^^^^^^^^^^
+
+warning: function `foreground_argv` is never used
+   --> crates\hitty-core\src\daemon\remote.rs:204:15
+    |
+204 | pub(crate) fn foreground_argv(pid: i32) -> Option<Vec<String>> {
+    |               ^^^^^^^^^^^^^^^
+
+warning: function `platform_foreground_argv` is never used
+   --> crates\hitty-core\src\daemon\remote.rs:294:4
+    |
+294 | fn platform_foreground_argv(_pid: i32) -> Option<Vec<String>> {
+    |    ^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `is_supported_shell` is never used
+    --> crates\hitty-core\src\daemon\spawn.rs:1120:4
+     |
+1120 | fn is_supported_shell(path: &Path) -> bool {
+     |    ^^^^^^^^^^^^^^^^^^
+
+warning: `hitty-core` (lib) generated 8 warnings (run `cargo fix --lib -p hitty-core` to apply 3 suggestions)
+   Compiling hitty-cli v0.3.1 (D:\gh-prj\hitty-agent-resume-fix\crates\hitty-cli)
+   Compiling hitty-server v0.3.1 (D:\gh-prj\hitty-agent-resume-fix\crates\hitty-server)
+warning: function `may_start_daemon` is never used
+   --> crates\hitty-server\src\main.rs:235:4
+    |
+235 | fn may_start_daemon(args: &[String]) -> bool {
+    |    ^^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `log_stderr` is never used
+   --> crates\hitty-server\src\main.rs:253:4
+    |
+253 | fn log_stderr(args: std::fmt::Arguments<'_>) {
+    |    ^^^^^^^^^^
+
+warning: unused imports: `RegQueryInfoKeyW` and `RegQueryValueExW`
+   --> src\core\explorer_context_menu.rs:161:57
+    |
+161 |         RegCreateKeyExW, RegDeleteTreeW, RegOpenKeyExW, RegQueryInfoKeyW, RegQueryValueExW,
+    |                                                         ^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: linker stdout: 正在创建库 D:\tmp\hitty-agent-resume-build\debug\deps\hitty_server.lib 和对象 D:\tmp\hitty-agent-resume
+-build\debug\deps\hitty_server.exp
+  |
+  = note: `#[warn(linker_messages)]` on by default
+
+warning: `hitty-server` (bin "hitty-server") generated 3 warnings
+warning: linker stdout: 正在创建库 D:\tmp\hitty-agent-resume-build\debug\deps\hitty_updater.lib 和对象 D:\tmp\hitty-agent-resum
+e-build\debug\deps\hitty_updater.exp
+  |
+  = note: `#[warn(linker_messages)]` on by default
+
+warning: `hitty` (bin "hitty-updater") generated 1 warning
+warning: linker stdout: 正在创建库 D:\tmp\hitty-agent-resume-build\debug\deps\hitty.lib 和对象 D:\tmp\hitty-agent-resume-build\
+debug\deps\hitty.exp
+  |
+  = note: `#[warn(linker_messages)]` on by default
+
+warning: `hitty-cli` (bin "hitty") generated 1 warning
+warning: variants `InstalledOffPath` and `Occupied` are never constructed
+  --> src\core\cli_install.rs:50:5
+   |
+37 | pub enum Outcome {
+   |          ------- variants in this enum
+...
+50 |     InstalledOffPath(PathBuf),
+   |     ^^^^^^^^^^^^^^^^
+...
+56 |     Occupied(PathBuf),
+   |     ^^^^^^^^
+   |
+   = note: `Outcome` has a derived impl for the trait `Debug`, but this is intentionally ignored during dead code analy
+sis
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: associated function `plain` is never used
+    --> src\core\update.rs:1898:8
+     |
+1897 | impl PackageOffer {
+     | ----------------- associated function in this implementation
+1898 |     fn plain(name: String) -> Self {
+     |        ^^^^^
+
+warning: methods `known_status` and `probed` are never used
+   --> src\terminal\git_data.rs:382:12
+    |
+368 | impl ScmData {
+    | ------------ methods in this implementation
+...
+382 |     pub fn known_status(
+    |            ^^^^^^^^^^^^
+...
+392 |     pub fn probed(&self, host: HostId, root: &Path) -> bool {
+    |            ^^^^^^
+
+warning: associated function `local` is never used
+   --> src\terminal\search.rs:751:12
+    |
+748 | impl LinkRoots {
+    | -------------- associated function in this implementation
+...
+751 |     pub fn local(dirs: Vec<PathBuf>) -> Self {
+    |            ^^^^^
+
+warning: associated function `with_session` is never used
+    --> src\ui\app.rs:1349:19
+     |
+1195 | impl HittyApp {
+     | ------------- associated function in this implementation
+...
+1349 |     pub(crate) fn with_session(
+     |                   ^^^^^^^^^^^^
+
+warning: variant `Delete` is never constructed
+    --> src\ui\file_tree.rs:1729:5
+     |
+1725 | enum TreeWrite {
+     |      --------- variant in this enum
+...
+1729 |     Delete,
+     |     ^^^^^^
+
+warning: multiple variants are never constructed
+    --> src\ui\i18n\mod.rs:79:5
+     |
+  62 |         pub enum L10nKey { $($key),* }
+     |                  ------- variants in this enum
+...
+  79 |     Search,
+     |     ^^^^^^
+...
+  94 |     TrayQuitStopServer,
+     |     ^^^^^^^^^^^^^^^^^^
+...
+ 305 |     SettingsNoneLower,
+     |     ^^^^^^^^^^^^^^^^^
+...
+ 581 |     SettingsDaemonStaleRestart,
+     |     ^^^^^^^^^^^^^^^^^^^^^^^^^^
+...
+ 593 |     SettingsUpdateUnsupportedMacos,
+     |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ 594 |     SettingsUpdateUnsupportedLinux,
+     |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ 595 |     SettingsUpdateLinuxPackage,
+     |     ^^^^^^^^^^^^^^^^^^^^^^^^^^
+...
+ 598 |     SettingsUpdateUnsupportedPlatform,
+     |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+...
+ 641 |     SettingsSearchCommandLineToolTitle,
+     |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+...
+ 708 |     OtherMachines,
+     |     ^^^^^^^^^^^^^
+...
+ 819 |     PanelChangesTitle,
+     |     ^^^^^^^^^^^^^^^^^
+...
+ 963 |     DiffViewSplit,
+     |     ^^^^^^^^^^^^^
+ 964 |     DiffViewUnified,
+     |     ^^^^^^^^^^^^^^^
+...
+ 990 |     HomeTimeOverWeekAgo,
+     |     ^^^^^^^^^^^^^^^^^^^
+...
+1047 |     AppMenuEnterFullscreen,
+     |     ^^^^^^^^^^^^^^^^^^^^^^
+...
+1164 |     SwitcherConnectToUse,
+     |     ^^^^^^^^^^^^^^^^^^^^
+...
+1343 |     AppForkStillConnecting,
+     |     ^^^^^^^^^^^^^^^^^^^^^^
+...
+1387 |     AppAgentHooksOpFailed,
+     |     ^^^^^^^^^^^^^^^^^^^^^
+...
+1407 |     SwitcherStatusRestarting,
+     |     ^^^^^^^^^^^^^^^^^^^^^^^^
+1408 |     SwitcherStatusInstalling,
+     |     ^^^^^^^^^^^^^^^^^^^^^^^^
+1409 |     SwitcherStatusConnecting,
+     |     ^^^^^^^^^^^^^^^^^^^^^^^^
+1410 |     SwitcherStatusConnectFailed,
+     |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+1411 |     SwitcherStatusNotConnected,
+     |     ^^^^^^^^^^^^^^^^^^^^^^^^^^
+1412 |     SwitcherStatusReconnecting,
+     |     ^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = note: `L10nKey` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during
+ dead code analysis
+     = note: this warning originates in the macro `l10n_keys` (in Nightly builds, run with -Z macro-backtrace for more 
+info)
+
+warning: function `t_select` is never used
+    --> src\ui\i18n\mod.rs:1539:8
+     |
+1539 | pub fn t_select(key: L10nKey, branch: &'static str, args: &[(&str, &str)]) -> String {
+     |        ^^^^^^^^
+
+warning: associated function `new` is never used
+    --> src\ui\palette.rs:1103:12
+     |
+1102 | impl PaletteView {
+     | ---------------- associated function in this implementation
+1103 |     pub fn new(commands: Vec<Command>, window: &mut Window, cx: &mut Context<Self>) -> Self {
+     |            ^^^
+
+warning: associated constant `ALL` is never used
+  --> src\ui\status_indicator.rs:29:15
+   |
+28 | impl StatusIndicator {
+   | -------------------- associated constant in this implementation
+29 |     pub const ALL: [StatusIndicator; 5] = [
+   |               ^^^
+
+warning: linker stdout: 正在创建库 D:\tmp\hitty-agent-resume-build\debug\deps\hitty_app.lib 和对象 D:\tmp\hitty-agent-resume-bu
+ild\debug\deps\hitty_app.exp
+  |
+  = note: `#[warn(linker_messages)]` on by default
+
+warning: `hitty` (bin "hitty-app") generated 12 warnings (run `cargo fix --bin "hitty-app" -p hitty` to apply 1 suggest
+ion)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 3m 26s
+warning: the following packages contain code that will be rejected by a future version of Rust: proc-macro-error2 v2.0.
+1
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibi
+lities --id 1`

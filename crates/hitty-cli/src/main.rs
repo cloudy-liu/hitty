@@ -15,6 +15,8 @@ mod testbed;
 use clap::Parser;
 
 fn main() -> std::process::ExitCode {
+    #[cfg(windows)]
+    hitty_core::daemon::codex_launch::run_if_launcher();
     // Before the first byte goes out, and before clap can print a usage error.
     stdio::end_pipelines_quietly();
     let cli = cli::Cli::parse();

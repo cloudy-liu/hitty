@@ -1,0 +1,104 @@
+{
+  "workspaces": [
+    {
+      "id": "a035853f-7c61-4cbc-8098-f11d987fe17e",
+      "name": "hazel-newt",
+      "last_active": 1794411458,
+      "tabs": [
+        {
+          "id": "3e14d5d2-74e4-46f4-87aa-5af7481204e5",
+          "name": null,
+          "sidebar_group": null,
+          "focused_pane": 1,
+          "root": {
+            "Leaf": {
+              "pane": 1
+            }
+          }
+        },
+        {
+          "id": "d717a451-9f1e-4cf4-a5fb-a3a736ffa3ae",
+          "name": null,
+          "sidebar_group": null,
+          "focused_pane": 2,
+          "root": {
+            "Leaf": {
+              "pane": 2
+            }
+          }
+        },
+        {
+          "id": "90df27b2-b6f1-43ac-9adf-3a2c6a71c25b",
+          "name": null,
+          "sidebar_group": null,
+          "focused_pane": 3,
+          "root": {
+            "Leaf": {
+              "pane": 3
+            }
+          }
+        }
+      ],
+      "active_tab": "90df27b2-b6f1-43ac-9adf-3a2c6a71c25b"
+    }
+  ],
+  "panes": [
+    {
+      "id": 1,
+      "cwd": "D:\\tmp\\hc-4r41auy2\\project",
+      "title": "",
+      "osc_title": null,
+      "ssh_spec": null,
+      "agent": null,
+      "foreground_app": null,
+      "shell": null,
+      "live": true
+    },
+    {
+      "id": 2,
+      "cwd": "D:\\tmp\\hc-4r41auy2\\project",
+      "title": "",
+      "osc_title": "project",
+      "ssh_spec": null,
+      "agent": {
+        "agent": "Codex",
+        "session_id": null,
+        "launch_argv": null,
+        "status": null
+      },
+      "foreground_app": null,
+      "shell": {
+        "program": "powershell.exe",
+        "args": [
+          "-NoLogo",
+          "-NoProfile"
+        ],
+        "args_are_hitty_defaults": false
+      },
+      "live": true
+    },
+    {
+      "id": 3,
+      "cwd": "D:\\tmp\\hc-4r41auy2\\project",
+      "title": "",
+      "osc_title": "project",
+      "ssh_spec": null,
+      "agent": {
+        "agent": "Codex",
+        "session_id": null,
+        "launch_argv": null,
+        "status": null
+      },
+      "foreground_app": null,
+      "shell": {
+        "program": "powershell.exe",
+        "args": [
+          "-NoLogo",
+          "-NoProfile"
+        ],
+        "args_are_hitty_defaults": false
+      },
+      "live": true
+    }
+  ]
+}

@@ -13,6 +13,10 @@ pub(super) fn probe(agent: CLIAgent, shell_pid: u32, foreground: Option<i32>) ->
     let mut processes = super::procinfo::processes(shell_pid, foreground)
         .into_iter()
         .filter(|process| {
+            #[cfg(windows)]
+            if super::codex_launch::is_launcher(process.pid) {
+                return false;
+            }
             CLIAgent::detect_from_argv(std::slice::from_ref(&process.name)) == Some(agent)
         });
     let process = processes.next()?;

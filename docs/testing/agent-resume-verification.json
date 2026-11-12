@@ -1,0 +1,40 @@
+{
+  "date": "2026-11-12",
+  "baseline": "f36c16713d1d3b9edc53bf517343843c5d637ae1",
+  "target": "x86_64-pc-windows-msvc",
+  "build": {
+    "command": "cargo build --locked --workspace --bins --features updater --target-dir D:/tmp/hitty-agent-resume-build",
+    "exit_code": 0,
+    "log": "records/agent-resume-2026-11-12/final-build.log"
+  },
+  "tests": {
+    "command": "cargo test --locked --workspace --features updater --target-dir D:/tmp/hitty-agent-resume-build -- --test-threads=2",
+    "exit_code": 0,
+    "passed": 3325,
+    "failed": 0,
+    "ignored": 14,
+    "log": "records/agent-resume-2026-11-12/verified-workspace-tests.log"
+  },
+  "binary_sha256": {
+    "hitty-app.exe": "d315f8ee6a793961267027424f9e67065a713a6e554e7d79d49decf3ada58ddd",
+    "hitty.exe": "8549cad8a35be6131aebdb2647e14b3b4573b6a13cf4452568d0449b6a4506df",
+    "hitty-updater.exe": "3a5e7a4a21b53e494486f34a14ed920042761783acc4ea2ac5076c4b434d7ee3"
+  },
+  "real_codex": "images/agent-resume/after-powershell/result.json",
+  "baseline_reproduction": "images/agent-resume/before/result.json",
+  "updater_fixture": "images/agent-resume/updater/result.json",
+  "native_launcher": "passed native argv, PowerShell literal/multiline arguments, exit code and batch caller return",
+  "image_dimensions": [
+    2017,
+    1315
+  ],
+  "review": {
+    "standards_findings": 0,
+    "spec_findings": 0
+  },
+  "limitations": [
+    "Forced isolated process-tree termination simulates reboot; no physical Windows reboot performed.",
+    "Updater uses a private same-version package after update selection/preparation. Claude uses an agent fixture.",
+    "Absolute-path/PATH-bypassing aliases keep existing launch behavior; see agents overview."
+  ]
+}

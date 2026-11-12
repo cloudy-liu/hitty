@@ -16,6 +16,7 @@ use crate::daemon::protocol::{
     ShellSpec, WinSize,
 };
 use crate::daemon::shell_integration;
+use crate::daemon::startup_query::{self, StartupQuery};
 
 #[cfg(windows)]
 fn default_prog() -> CommandBuilder {
@@ -230,7 +231,7 @@ fn build_shell_command(
     if let Some(integration) = &integration {
         apply_shell_integration(&mut cmd, &resolved_program, integration);
     }
-    let integration_dir = integration.as_ref().and_then(|i| i.dir.clone());
+    let mut integration_dir = integration.as_ref().and_then(|i| i.dir.clone());
     let launched = launched_shell_program(&cmd, &resolved_program);
     let extra_env = crate::core::config::extra_env();
     apply_common_command_setup(
@@ -246,6 +247,15 @@ fn build_shell_command(
     // override, and merge list-valued additions with the pane's final value.
     if let Some(integration) = &integration {
         pin_integration_env(&mut cmd, integration, &extra_env);
+    }
+    #[cfg(windows)]
+    if let Err(error) = crate::daemon::codex_launch::prepare(
+        &mut cmd,
+        &resolved_program,
+        pane,
+        &mut integration_dir,
+    ) {
+        log::warn!("could not prepare pane {pane}'s Codex launcher: {error}");
     }
     Ok((cmd, integration_dir))
 }
@@ -909,6 +919,10 @@ struct PtyParts {
     hc: Option<Arc<crate::daemon::hc::Session>>,
     reader_handle: Box<dyn Read + Send>,
     writer: Arc<Mutex<Box<dyn Write + Send>>>,
+    /// The pseudoconsole was opened for this pane just now, so its startup
+    /// query is still to come and is the reader's to answer — see
+    /// [`startup_query`].
+    fresh_conpty: bool,
 }
 
 struct NativeSshBackend {
@@ -1453,6 +1467,7 @@ fn native_pty_parts(spawn: &SpawnConfig, pty_size: PtySize) -> anyhow::Result<Pt
         hc: None,
         reader_handle,
         writer,
+        fresh_conpty: cfg!(windows),
     })
 }
 
@@ -1536,6 +1551,7 @@ fn herdr_pty_parts(
         hc: Some(session.clone()),
         reader_handle: Box::new(reader),
         writer: Arc::new(Mutex::new(Box::new(hc::HcWriter(session)))),
+        fresh_conpty: false,
     })
 }
 
@@ -1706,6 +1722,7 @@ impl DaemonPane {
             reader_handle,
             writer,
             hc,
+            fresh_conpty,
         } = parts;
 
         let id = state.id;
@@ -1783,6 +1800,7 @@ impl DaemonPane {
             gate,
             reader_handle,
             writer.clone(),
+            StartupQuery::new(fresh_conpty),
             move |reports_command_start| {
                 foreground_command_running(&fg_master, shell_pid, reports_command_start)
             },
@@ -1895,6 +1913,7 @@ impl DaemonPane {
                 integration_dir: carried.integration_dir,
                 reader_handle,
                 writer,
+                fresh_conpty: false,
             },
             PaneState {
                 id: carried.id,
@@ -2022,6 +2041,7 @@ impl DaemonPane {
             gate,
             reader_handle,
             writer.clone(),
+            StartupQuery::new(false),
             |_| false,
             ForegroundProbes {
                 remote: Box::new(|| None),
@@ -2070,6 +2090,7 @@ impl DaemonPane {
         // query replies (`\x1b_G…;OK\x1b\\`) straight back to the PTY — see the
         // graphics sniff in the loop below.
         writer: Arc<Mutex<Box<dyn Write + Send>>>,
+        mut startup: StartupQuery,
         foreground_running: impl Fn(bool) -> bool + Send + 'static,
         probes: ForegroundProbes,
         death: Arc<DeathReporter>,
@@ -2143,7 +2164,20 @@ impl DaemonPane {
                                 tr_reads += 1;
                                 tr_bytes += n as u64;
                             }
-                            let raw = &buf[..n];
+                            // ConPTY's startup query is answered here, before the
+                            // ring or a client can see it: the shell is held back
+                            // until the answer lands, and a query left in the stream
+                            // would be answered a second time by whoever attached.
+                            // Past a pane's first bytes this borrows the read as is.
+                            let (raw, asked) = startup.strip(&buf[..n]);
+                            if asked && let Ok(mut w) = writer.lock() {
+                                let _ = w.write_all(startup_query::REPLY);
+                                let _ = w.flush();
+                            }
+                            if raw.is_empty() {
+                                continue;
+                            }
+                            let raw: &[u8] = &raw;
                             // Kitty graphics: strip any image sequences out of the
                             // stream before anything else sees them. On the common
                             // no-graphics chunk this borrows `raw` unchanged; only a
@@ -2444,6 +2478,12 @@ impl DaemonPane {
         Ok(())
     }
 
+    pub(super) fn owns_codex_hook(&self, pid: u32) -> bool {
+        self.pty()
+            .and_then(|pty| pty.shell_pid)
+            .is_some_and(|shell| crate::daemon::procinfo::local_codex_hook(pid, shell))
+    }
+
     pub fn codex_candidate(&self) -> CodexCandidate {
         let st = self.state.lock().unwrap();
         CodexCandidate {
@@ -2666,6 +2706,7 @@ impl DaemonPane {
             .name("hitty-daemon-pane-exit-monitor".to_string())
             .spawn(move || {
                 let handle = handle as windows_sys::Win32::Foundation::HANDLE;
+                let mut process_agent = None;
                 while unsafe {
                     WaitForSingleObject(handle, REMOTE_CONTEXT_POLL_INTERVAL.as_millis() as u32)
                 } == WAIT_TIMEOUT
@@ -2673,18 +2714,35 @@ impl DaemonPane {
                     if !report_exit && shutting_down.load(Ordering::SeqCst) {
                         break; // A preserved hc shell can outlive this pane.
                     }
-                    if shutting_down.load(Ordering::SeqCst) || state.lock().unwrap().agent.is_none()
-                    {
+                    if shutting_down.load(Ordering::SeqCst) {
                         continue;
                     }
                     // An idle editor may emit no more output after taking or
                     // returning console input. Refresh independently of reads.
-                    let (_, suspended) = crate::daemon::winproc::foreground_agent_input(
+                    let (detected, suspended) = crate::daemon::winproc::foreground_agent_input(
                         pid,
                         crate::core::config::agent_commands_cached(),
                     );
                     let mut st = state.lock().unwrap();
+                    let before = observed_facts(&st);
+                    // The first TUI frame can arrive before its process scan
+                    // is due. An idle agent then emits no more output to trigger
+                    // detection, so the monitor also establishes its identity.
+                    if let Some(change) =
+                        windows_agent_probe_signal(&mut process_agent, detected, st.agent)
+                    {
+                        apply_agent(&mut st, change);
+                    }
                     apply_agent_input_suspended(&mut st, suspended);
+                    let after = observed_facts(&st);
+                    let id = st.id;
+                    let alive = st.alive;
+                    drop(st);
+                    if !shutting_down.load(Ordering::SeqCst) && facts_changed(&before, &after) {
+                        let changed =
+                            agent_facts_changed(before.agent.as_ref(), after.agent.as_ref());
+                        publish_facts(id, alive, after, changed, false);
+                    }
                 }
                 unsafe {
                     CloseHandle(handle);
@@ -4750,11 +4808,11 @@ mod tests {
                 DaemonMsg::Snapshot(bytes) | DaemonMsg::Output(bytes) => {
                     let scan_from = transcript.len().saturating_sub(2);
                     transcript.extend(bytes);
-                    // The real terminal parser answers cmd/Clink's primary
-                    // device-attributes query. This daemon-only harness must
-                    // play that one client-side role or startup waits forever.
-                    // Answer every newly completed query: Clink versions may
-                    // legitimately ask again after loading their Lua scripts.
+                    // ConPTY's own startup query never gets this far: the
+                    // pane's reader answers it. A program in the pane may
+                    // still ask — Clink versions legitimately do after loading
+                    // their Lua scripts — and that answer is the client's,
+                    // which this daemon-only harness stands in for.
                     let replies = transcript[scan_from..]
                         .windows(3)
                         .filter(|window| *window == b"\x1b[c")
@@ -4964,6 +5022,80 @@ mod tests {
             "the editor never came back after the command finished; \
              transcript: {:?}",
             String::from_utf8_lossy(&transcript)
+        );
+    }
+
+    /// ConPTY holds the shell back until its startup query is answered and
+    /// gives up only after three seconds. Nothing here plays the emulator, so
+    /// the pane has to reach its prompt on the daemon's answer alone — and the
+    /// query must not stay in the stream for a client to answer a second time.
+    ///
+    /// The wait is a floor under every start it is not answered for, so one
+    /// start that beats it shows the answer was taken. A machine that is
+    /// merely busy gets more than one try.
+    #[cfg(windows)]
+    #[test]
+    fn live_bare_cmd_pane_starts_without_a_client_answering_conpty() {
+        let cmd =
+            std::env::var("ComSpec").unwrap_or_else(|_| r"C:\Windows\System32\cmd.exe".to_string());
+
+        let mut first_prompts = Vec::new();
+        for _ in 0..3 {
+            let (tx, rx) = mpsc::channel();
+            let started = std::time::Instant::now();
+            let pane = DaemonPane::spawn(
+                8,
+                Some(std::env::current_dir().expect("cwd")),
+                ws(80, 24),
+                Some(ShellSpec {
+                    program: cmd.clone(),
+                    // /D keeps this machine's AutoRun — which may inject Clink —
+                    // out of a test that is about ConPTY's own handshake.
+                    args: vec!["/D".into()],
+                    args_are_hitty_defaults: true,
+                }),
+                None,
+                None,
+                None,
+                || {},
+            )
+            .expect("spawn bare cmd pane");
+            pane.attach(tx);
+
+            let deadline = started + Duration::from_secs(10);
+            let mut transcript = Vec::new();
+            let mut first_prompt = None;
+            while std::time::Instant::now() < deadline {
+                let Ok(msg) = rx.recv_timeout(Duration::from_millis(50)) else {
+                    continue;
+                };
+                match msg {
+                    DaemonMsg::Snapshot(bytes) | DaemonMsg::Output(bytes) => {
+                        transcript.extend(bytes)
+                    }
+                    DaemonMsg::Prompt {
+                        at_prompt: true, ..
+                    } => {
+                        first_prompt = Some(started.elapsed());
+                        break;
+                    }
+                    _ => {}
+                }
+            }
+            pane.kill();
+
+            assert!(
+                !transcript.windows(3).any(|window| window == b"\x1b[c"),
+                "ConPTY's startup query was left for a client to answer; transcript: {:?}",
+                String::from_utf8_lossy(&transcript)
+            );
+            if first_prompt.is_some_and(|after| after < Duration::from_millis(2500)) {
+                return;
+            }
+            first_prompts.push(first_prompt);
+        }
+        panic!(
+            "every start sat out ConPTY's three-second wait; first prompts after {first_prompts:?}"
         );
     }
 
@@ -5773,6 +5905,7 @@ mod tests {
                 pane.gate.clone(),
                 Box::new(bridge.reader),
                 writer,
+                StartupQuery::new(false),
                 |_| false,
                 ForegroundProbes {
                     remote: Box::new(|| None),
@@ -6107,6 +6240,7 @@ mod tests {
                 read_count: 0,
             }),
             null_writer(),
+            StartupQuery::new(false),
             // Windows only probes cmd's children until OSC 133 C arrives.
             |reports_command_start| !reports_command_start,
             ForegroundProbes {
@@ -6235,6 +6369,7 @@ mod tests {
                     submitted: false,
                 }),
                 null_writer(),
+                StartupQuery::new(false),
                 |reports_command_start| !reports_command_start,
                 ForegroundProbes {
                     remote: Box::new(|| None),
@@ -6773,6 +6908,7 @@ mod tests {
                     b"\x1b]0;shell starting\x07\x1b]133;A\x07".to_vec(),
                 )),
                 null_writer(),
+                StartupQuery::new(false),
                 |_| false,
                 ForegroundProbes {
                     remote: Box::new(|| None),
@@ -6963,6 +7099,7 @@ mod tests {
                     Arc::new(OutputGate::new()),
                     Box::new(std::io::Cursor::new(b"agent ready".to_vec())),
                     null_writer(),
+                    StartupQuery::new(false),
                     |_| true,
                     ForegroundProbes {
                         remote: Box::new(|| None),
@@ -7038,6 +7175,7 @@ mod tests {
                 Arc::new(OutputGate::new()),
                 Box::new(std::io::Cursor::new(b"\x1b]133;D;0\x07".to_vec())),
                 null_writer(),
+                StartupQuery::new(false),
                 |_| false,
                 ForegroundProbes {
                     remote: Box::new(|| None),
@@ -7100,6 +7238,7 @@ mod tests {
                 Arc::new(OutputGate::new()),
                 Box::new(std::io::Cursor::new(output.to_vec())),
                 null_writer(),
+                StartupQuery::new(false),
                 |_| false,
                 ForegroundProbes {
                     remote: Box::new(|| None),
@@ -7619,6 +7758,7 @@ mod tests {
             Arc::new(OutputGate::new()),
             Box::new(std::io::Cursor::new(output.into_bytes())),
             null_writer(),
+            StartupQuery::new(false),
             |_| true,
             ForegroundProbes {
                 remote: Box::new(|| None),
@@ -7673,6 +7813,7 @@ mod tests {
                     Arc::new(OutputGate::new()),
                     Box::new(std::io::Cursor::new(output.to_vec())),
                     null_writer(),
+                    StartupQuery::new(false),
                     |_| false,
                     ForegroundProbes {
                         remote: Box::new(|| None),
@@ -7859,6 +8000,7 @@ mod tests {
             Arc::new(OutputGate::new()),
             Box::new(std::io::Cursor::new(b"\x1b]133;A\x07\x1b]133;C\x07codex: command not found\r\n\x1b]133;D;127\x07\x1b]133;A\x07".to_vec())),
             null_writer(),
+            StartupQuery::new(false),
             |_| false,
             ForegroundProbes {
                 remote: Box::new(|| None),
@@ -8500,6 +8642,7 @@ mod tests {
             Arc::new(OutputGate::new()),
             Box::new(std::io::Cursor::new(b"tail".to_vec())),
             null_writer(),
+            StartupQuery::new(false),
             |_| false,
             ForegroundProbes {
                 remote: Box::new(|| None),
@@ -8605,6 +8748,7 @@ mod tests {
                 delayed: false,
             }),
             null_writer(),
+            StartupQuery::new(false),
             |_| false,
             ForegroundProbes {
                 remote: Box::new(|| None),
@@ -8703,6 +8847,7 @@ mod tests {
             Arc::new(OutputGate::new()),
             Box::new(NeverEofReader),
             null_writer(),
+            StartupQuery::new(false),
             |_| false,
             ForegroundProbes {
                 remote: Box::new(|| None),
@@ -8741,6 +8886,7 @@ mod tests {
             Arc::new(OutputGate::new()),
             Box::new(std::io::empty()),
             null_writer(),
+            StartupQuery::new(false),
             |_| false,
             ForegroundProbes {
                 remote: Box::new(|| None),
@@ -8812,6 +8958,7 @@ mod tests {
             Arc::new(OutputGate::new()),
             Box::new(std::io::Cursor::new(stream.into_bytes())),
             writer,
+            StartupQuery::new(false),
             |_| false,
             ForegroundProbes {
                 remote: Box::new(|| None),
@@ -8859,6 +9006,7 @@ mod tests {
             Arc::new(OutputGate::new()),
             Box::new(std::io::Cursor::new(b"x\x1b_Ga=d,d=A\x1b\\y".to_vec())),
             null_writer(),
+            StartupQuery::new(false),
             |_| false,
             ForegroundProbes {
                 remote: Box::new(|| None),
@@ -8911,6 +9059,7 @@ mod tests {
             Arc::new(OutputGate::new()),
             Box::new(std::io::Cursor::new(b"alice@host ~ % ".to_vec())),
             null_writer(),
+            StartupQuery::new(false),
             |_| false,
             ForegroundProbes {
                 remote: Box::new(|| None),
@@ -8943,6 +9092,7 @@ mod tests {
             Arc::new(OutputGate::new()),
             Box::new(std::io::Cursor::new(Vec::new())),
             null_writer(),
+            StartupQuery::new(false),
             |_| false,
             ForegroundProbes {
                 remote: Box::new(|| None),
@@ -8970,6 +9120,7 @@ mod tests {
             Arc::new(OutputGate::new()),
             Box::new(std::io::Cursor::new(Vec::new())),
             null_writer(),
+            StartupQuery::new(false),
             |_| false,
             ForegroundProbes {
                 remote: Box::new(|| None),

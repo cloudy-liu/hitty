@@ -3,11 +3,19 @@ use gpui::{
 };
 use gpui_component::{ActiveTheme as _, h_flex, v_flex};
 use std::collections::HashSet;
+use std::path::PathBuf;
 
+use crate::core::config::RightPanelTab;
 use crate::ui::{
     app::HittyApp,
     i18n::{L10nKey, t},
 };
+
+/// Headings a Markdown preview needs before its outline is worth taking the
+/// panel for. A one-heading document — `CONTEXT.md` and its like — would put a
+/// single row where the file tree was, which costs the reader more than it
+/// gives them.
+const FOLLOW_MIN_HEADINGS: usize = 2;
 
 #[derive(Clone, Debug, PartialEq, serde::Deserialize)]
 pub(crate) struct Heading {
@@ -16,11 +24,28 @@ pub(crate) struct Heading {
     pub anchor: String,
 }
 
+/// A Markdown preview in front of the reader, with everything an outline
+/// entry for it is built from.
+struct FrontMarkdown {
+    path: PathBuf,
+    /// The file's editing state — the identity an entry's click is checked
+    /// against, so a row can never navigate a document that replaced it.
+    owner: EntityId,
+    /// What the headings are parsed from.
+    source: SharedString,
+    reading: Entity<crate::ui::markdown_preview::MarkdownPreview>,
+}
+
 #[derive(Default)]
 pub(crate) struct OutlineState {
     markdown: Option<(EntityId, SharedString)>,
     headings: Vec<Heading>,
     loading: bool,
+    /// Whether the panel is showing Outline for the document in front because
+    /// of the follow rather than because the reader asked for it. Decided once
+    /// a frame by [`HittyApp::sync_outline_follow`], and the one answer
+    /// [`HittyApp::right_panel_shown_tab`] hands out.
+    pub(crate) follow_showing: bool,
     #[cfg(any(windows, target_os = "macos"))]
     html_key: Option<(EntityId, EntityId, u64)>,
     #[cfg(any(windows, target_os = "macos"))]
@@ -318,20 +343,9 @@ impl HittyApp {
     ) -> AnyElement {
         let title = self.panel_title(t(L10nKey::PanelOutlineTitle), None, None, window, cx);
         if self.document_front() == Some(crate::ui::app::OverlayTop::Code) {
-            let document = self
-                .tab_code()
-                .and_then(|code| code.active_file())
-                .map(|file| {
-                    (
-                        file.path.clone(),
-                        file.input.entity_id(),
-                        file.reading.clone(),
-                        file.preview,
-                    )
-                });
-            if let Some((path, owner, Some(reading), true)) = document {
-                let source = reading.read(cx).text.read(cx).source();
-                self.sync_markdown_outline(owner, source, cx);
+            if let Some(front) = self.front_markdown_preview(cx) {
+                self.sync_markdown_outline(front.owner, front.source.clone(), cx);
+                let owner = front.owner;
                 let headings = self.right_panel.outline.headings.clone();
                 let mut body = v_flex().px_2().py_1().gap_1();
                 body = body.child(
@@ -342,23 +356,19 @@ impl HittyApp {
                         .text_color(cx.theme().muted_foreground)
                         .truncate()
                         .child(
-                            path.file_name()
+                            front
+                                .path
+                                .file_name()
                                 .unwrap_or_default()
                                 .to_string_lossy()
                                 .to_string(),
                         ),
                 );
                 for heading in headings {
-                    if reading
-                        .read(cx)
-                        .text
-                        .read(cx)
-                        .anchor_index(&heading.anchor)
-                        .is_none()
-                    {
+                    if !Self::markdown_heading_is_rendered(&front.reading, &heading, cx) {
                         continue;
                     }
-                    let target = reading.clone();
+                    let target = front.reading.clone();
                     let anchor = heading.anchor.clone();
                     let selector = format!("outline-heading-{}", heading.anchor);
                     body = body.child(
@@ -569,6 +579,137 @@ impl HittyApp {
         self.panel_scroll(body, title)
     }
 
+    /// Decides, once a frame, whether the Outline is showing for the document
+    /// in front of the reader.
+    ///
+    /// The headings are parsed whether or not the panel is open: a mode the
+    /// reader asks for is weighed against them, and the outline is ready the
+    /// moment the panel opens.
+    ///
+    /// Called before anything draws, so the tiles, the panel and every other
+    /// reader of the mode see the same panel. Nothing is written to the
+    /// configuration: the reader's chosen mode is only ever theirs.
+    pub(crate) fn sync_outline_follow(&mut self, cx: &mut Context<Self>) {
+        let front = self.front_markdown_preview(cx);
+        if !self.outline_follow_declined()
+            && let Some(front) = front.as_ref()
+        {
+            self.sync_markdown_outline(front.owner, front.source.clone(), cx);
+        }
+        let follow = if self.outline_follow_declined() || !self.right_panel_open(cx) {
+            false
+        } else if let Some(front) = front.as_ref() {
+            match self.markdown_outline_len(front, cx) {
+                Some(headings) => headings >= FOLLOW_MIN_HEADINGS,
+                // Still parsing. Hold what the reader is looking at rather
+                // than showing them their chosen tab for those frames.
+                None => self.right_panel.outline.follow_showing,
+            }
+        } else {
+            false
+        };
+        self.right_panel.outline.follow_showing = follow;
+    }
+
+    /// Hands the panel back to the reader's choice, for as long as this
+    /// session's document column holds a document.
+    pub(crate) fn decline_outline_follow(&mut self, cx: &gpui::App) {
+        if self.outline_follow_claims(cx)
+            && let Some(code) = self.tab_code_mut()
+        {
+            code.outline_follow_declined = true;
+        }
+        self.right_panel.outline.follow_showing = false;
+    }
+
+    /// Whether the reader of this session's documents has overruled the
+    /// follow. The flag belongs to the session tab, so one session's choice
+    /// neither leaks into another nor ends when this one is merely hidden.
+    fn outline_follow_declined(&self) -> bool {
+        self.tab_code()
+            .is_some_and(|code| code.outline_follow_declined)
+    }
+
+    /// Whether the follow would take the panel for the document in front of
+    /// the reader — what a mode they ask for has to outrank.
+    ///
+    /// Reading a document whose headings would never claim the panel is not
+    /// overridden by asking for another mode, so switching to the file tree to
+    /// open the next file still shows that file's outline. One whose headings
+    /// have not been parsed yet counts as claiming one: the request may be
+    /// what opens the panel, and the follow would take it straight back.
+    fn outline_follow_claims(&self, cx: &gpui::App) -> bool {
+        let Some(front) = self.front_markdown_preview(cx) else {
+            return false;
+        };
+        let outline = &self.right_panel.outline;
+        let parsed = !outline.loading
+            && outline
+                .markdown
+                .as_ref()
+                .is_some_and(|(id, _)| *id == front.owner);
+        if !parsed {
+            return true;
+        }
+        self.markdown_outline_len(&front, cx)
+            .is_some_and(|headings| headings >= FOLLOW_MIN_HEADINGS)
+    }
+
+    /// The Markdown preview in front of the reader. Only a preview counts: in
+    /// source mode there is no reading view for an entry to navigate.
+    fn front_markdown_preview(&self, cx: &gpui::App) -> Option<FrontMarkdown> {
+        if self.document_front() != Some(crate::ui::app::OverlayTop::Code) {
+            return None;
+        }
+        let file = self.tab_code().and_then(|code| code.active_file())?;
+        // A reading view exists for Markdown alone (`editor_install_file`).
+        let reading = file.reading.clone()?;
+        if !file.preview {
+            return None;
+        }
+        let source = reading.read(cx).text.read(cx).source();
+        Some(FrontMarkdown {
+            path: file.path.clone(),
+            owner: file.input.entity_id(),
+            source,
+            reading,
+        })
+    }
+
+    /// Whether the preview rendered `heading`, so a row for it has somewhere
+    /// to go. The headings are parsed apart from the renderer, so each is
+    /// confirmed against what it drew before it becomes an entry.
+    fn markdown_heading_is_rendered(
+        reading: &Entity<crate::ui::markdown_preview::MarkdownPreview>,
+        heading: &Heading,
+        cx: &gpui::App,
+    ) -> bool {
+        reading
+            .read(cx)
+            .text
+            .read(cx)
+            .anchor_index(&heading.anchor)
+            .is_some()
+    }
+
+    /// How many entries the Outline would draw for the document in front, or
+    /// `None` while its headings are still being parsed.
+    fn markdown_outline_len(&self, front: &FrontMarkdown, cx: &gpui::App) -> Option<usize> {
+        match self.right_panel.outline.loading {
+            true => None,
+            false => Some(
+                self.right_panel
+                    .outline
+                    .headings
+                    .iter()
+                    .filter(|heading| {
+                        Self::markdown_heading_is_rendered(&front.reading, heading, cx)
+                    })
+                    .count(),
+            ),
+        }
+    }
+
     fn sync_markdown_outline(
         &mut self,
         owner: EntityId,
@@ -645,8 +786,7 @@ impl HittyApp {
                     return;
                 }
                 app.right_panel.outline.html_pending = false;
-                if app.right_panel_visible
-                    && app.right_panel_tab == crate::core::config::RightPanelTab::Outline
+                if app.right_panel_visible && app.right_panel_shown_tab() == RightPanelTab::Outline
                 {
                     cx.notify();
                 }

@@ -908,7 +908,7 @@ impl HittyApp {
 
     pub(crate) fn file_tree_on_screen(&self, cx: &App) -> bool {
         self.right_panel_open(cx)
-            && self.right_panel_tab == RightPanelTab::Files
+            && self.right_panel_shown_tab() == RightPanelTab::Files
             && self.sftp_panel.open_pane_id.is_none()
     }
 

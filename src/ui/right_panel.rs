@@ -289,7 +289,22 @@ impl HittyApp {
         cx.notify();
     }
 
+    /// The mode the right panel is showing.
+    ///
+    /// Usually the reader's own [`HittyApp::right_panel_tab`] — but while a
+    /// Markdown preview is in front of them the Outline has the panel for that
+    /// document, and this is the single answer the panel body, its mode tiles
+    /// and every "is the file tree on screen?" check agree on.
+    pub(crate) fn right_panel_shown_tab(&self) -> RightPanelTab {
+        if self.right_panel.outline.follow_showing {
+            RightPanelTab::Outline
+        } else {
+            self.right_panel_tab
+        }
+    }
+
     pub(crate) fn set_right_panel_tab(&mut self, tab: RightPanelTab, cx: &mut Context<Self>) {
+        self.decline_outline_follow(cx);
         self.right_panel_tab = tab;
         self.right_panel_visible = true;
         self.update_config(cx, |cfg| {
@@ -314,7 +329,7 @@ impl HittyApp {
             return None;
         }
         let width = self.right_panel_px(window, cx);
-        let tab = self.right_panel_tab;
+        let tab = self.right_panel_shown_tab();
 
         let body = match tab {
             RightPanelTab::Info => self.render_panel_info(window, cx),
@@ -1275,8 +1290,8 @@ impl HittyApp {
                         app.loopback_panel.managed = managed;
                     }
                     cx.notify();
-                    let wanted =
-                        app.right_panel_visible && app.right_panel_tab == RightPanelTab::Info;
+                    let wanted = app.right_panel_visible
+                        && app.right_panel_shown_tab() == RightPanelTab::Info;
                     if !wanted {
                         app.right_panel.procs_loading = false;
                     }
@@ -1291,7 +1306,8 @@ impl HittyApp {
                 if app.right_panel.procs_gen != generation {
                     return;
                 }
-                let wanted = app.right_panel_visible && app.right_panel_tab == RightPanelTab::Info;
+                let wanted =
+                    app.right_panel_visible && app.right_panel_shown_tab() == RightPanelTab::Info;
                 if wanted {
                     let forwards = app.right_panel.procs_forwards.clone();
                     app.spawn_procs_query(pane_id, generation, forwards, cx);

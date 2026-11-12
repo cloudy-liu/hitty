@@ -1,0 +1,112 @@
+{
+  "workspaces": [
+    {
+      "id": "daea4719-8824-4d36-b868-3889e2d8863b",
+      "name": "quiet-quail",
+      "last_active": 1794412845,
+      "tabs": [
+        {
+          "id": "48af4e35-52e7-468a-b3b6-1686ca44e77a",
+          "name": null,
+          "sidebar_group": null,
+          "focused_pane": 7,
+          "root": {
+            "Leaf": {
+              "pane": 7
+            }
+          }
+        },
+        {
+          "id": "a74f7828-f6e2-42bd-a20b-3310c24eaf9b",
+          "name": null,
+          "sidebar_group": null,
+          "focused_pane": 8,
+          "root": {
+            "Leaf": {
+              "pane": 8
+            }
+          }
+        },
+        {
+          "id": "e869adc7-d95b-48b9-afc9-35fce7beaf3d",
+          "name": null,
+          "sidebar_group": null,
+          "focused_pane": 9,
+          "root": {
+            "Leaf": {
+              "pane": 9
+            }
+          }
+        }
+      ],
+      "active_tab": "e869adc7-d95b-48b9-afc9-35fce7beaf3d"
+    }
+  ],
+  "panes": [
+    {
+      "id": 7,
+      "cwd": "D:\\tmp\\hc-cmqx19js\\project",
+      "title": "",
+      "osc_title": null,
+      "ssh_spec": null,
+      "agent": null,
+      "foreground_app": null,
+      "shell": null,
+      "live": true
+    },
+    {
+      "id": 8,
+      "cwd": "D:\\tmp\\hc-cmqx19js\\project",
+      "title": "",
+      "osc_title": "project",
+      "ssh_spec": null,
+      "agent": {
+        "agent": "Codex",
+        "session_id": "01a1cb57-518b-7ee1-abc9-e4a04aca1d1b",
+        "launch_argv": [
+          "codex",
+          "resume",
+          "01a1cb57-518b-7ee1-abc9-e4a04aca1d1b"
+        ],
+        "status": null
+      },
+      "foreground_app": null,
+      "shell": {
+        "program": "powershell.exe",
+        "args": [
+          "-NoLogo",
+          "-NoProfile"
+        ],
+        "args_are_hitty_defaults": false
+      },
+      "live": true
+    },
+    {
+      "id": 9,
+      "cwd": "D:\\tmp\\hc-cmqx19js\\project",
+      "title": "",
+      "osc_title": "project",
+      "ssh_spec": null,
+      "agent": {
+        "agent": "Codex",
+        "session_id": "01a1cb57-8084-7863-bd37-e5234b409c3a",
+        "launch_argv": [
+          "codex",
+          "resume",
+          "01a1cb57-8084-7863-bd37-e5234b409c3a"
+        ],
+        "status": null
+      },
+      "foreground_app": null,
+      "shell": {
+        "program": "powershell.exe",
+        "args": [
+          "-NoLogo",
+          "-NoProfile"
+        ],
+        "args_are_hitty_defaults": false
+      },
+      "live": true
+    }
+  ]
+}
