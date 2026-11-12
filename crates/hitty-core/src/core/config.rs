@@ -256,6 +256,10 @@ pub struct Config {
     /// depend on it.
     #[serde(default = "default_true")]
     pub show_agent_pane_titles: bool,
+    /// Add the title the agent wrote for its own pane (OSC 0/2: what it is
+    /// working on) after its name in that row. Off by default.
+    #[serde(default)]
+    pub show_agent_pane_task_titles: bool,
     /// Custom sidebar group titles, keyed by the group's root path — `""`
     /// stands for the Scratch group. A group without an entry keeps the name
     /// derived from its path, and an entry is removed (not blanked) when the
@@ -691,6 +695,7 @@ impl Default for Config {
             sidebar_diff_preview: true,
             sidebar_agent_status_text: true,
             show_agent_pane_titles: true,
+            show_agent_pane_task_titles: false,
             sidebar_group_names: BTreeMap::new(),
             sidebar_collapsed_groups: BTreeSet::new(),
             sidebar_pinned_groups: Vec::new(),
@@ -1499,6 +1504,22 @@ mod tests {
         let json = serde_json::to_string(&off).unwrap();
         assert!(
             json.contains("\"show_agent_pane_titles\":false"),
+            "persisted"
+        );
+    }
+
+    #[test]
+    fn show_agent_pane_task_titles_defaults_off_and_round_trips() {
+        assert!(!Config::default().show_agent_pane_task_titles);
+
+        let old: Config = serde_json::from_str(r#"{"font_size": 15.0}"#).unwrap();
+        assert!(!old.show_agent_pane_task_titles, "absent key means off");
+
+        let on: Config = serde_json::from_str(r#"{"show_agent_pane_task_titles": true}"#).unwrap();
+        assert!(on.show_agent_pane_task_titles);
+        let json = serde_json::to_string(&on).unwrap();
+        assert!(
+            json.contains("\"show_agent_pane_task_titles\":true"),
             "persisted"
         );
     }

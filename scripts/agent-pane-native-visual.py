@@ -48,7 +48,23 @@ SCENES = [  # (name, titles, dark, hover pane, zoom, settings page, layout)
     ("zoom-hover-dark", True, True, 0, True, False, "grid"),
     ("settings-light", True, False, None, False, True, "grid"),
     ("titles-column-dark", True, True, None, False, False, "column"),
+    ("task-titles-off-dark", True, True, None, False, False, "grid"),
+    ("task-titles-dark", True, True, None, False, False, "grid"),
+    ("task-titles-light", True, False, None, False, False, "grid"),
+    ("task-titles-hover-dark", True, True, 0, False, False, "grid"),
+    ("task-titles-column-dark", True, True, None, False, False, "column"),
+    ("task-titles-settings-light", True, False, None, False, True, "grid"),
 ]
+# Scenes whose agent panes title themselves with a task, and whether the
+# task-title setting is on: scene name -> (tasks, task_titles).
+TASKS = {
+    "task-titles-off-dark": (True, False),
+    "task-titles-dark": (True, True),
+    "task-titles-light": (True, True),
+    "task-titles-hover-dark": (True, True),
+    "task-titles-column-dark": (True, True),
+    "task-titles-settings-light": (False, True),
+}
 SETTINGS_HEIGHT = 1400  # the Window & Tabs page is taller than the pane scenes
 
 
@@ -74,11 +90,13 @@ def prepare_before(destination):
 
 def capture_scene(binary, output, phase, scene, scale):
     name, titles, dark, hover, zoom, settings, layout = scene
+    tasks, task_titles = TASKS.get(name, (False, False))
     png = output / f"{phase}-{name}.png"
     log = output / f"{phase}-{name}.log"
     with tempfile.TemporaryDirectory(prefix="hitty-agent-pane-visual-") as temporary:
         options = pathlib.Path(temporary) / "options.json"
         options.write_text(json.dumps({"output": str(png), "titles": titles, "dark": dark,
+                                       "tasks": tasks, "task_titles": task_titles,
                                        "zoom": zoom, "settings": settings, "layout": layout, "hold_seconds": 90,
                                        "height": SETTINGS_HEIGHT if settings else None}), encoding="utf-8")
         with log.open("w", encoding="utf-8") as log_stream:
@@ -131,7 +149,7 @@ def capture(binary, output, phase, repository, scale, only=None):
         "revision": revision, "platform": "Windows / GPUI / PrintWindow",
         "viewport": [W, H], "display_scale": scale,
         "source": "Production HittyApp render; deterministic daemon messages, no live agent.",
-        "scenes": [s[0] for s in SCENES],
+        "scenes": [s[0] for s in SCENES if not only or s[0] in only],
     }, indent=2), encoding="utf-8")
 
 

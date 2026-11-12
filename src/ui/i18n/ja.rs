@@ -646,6 +646,12 @@ pub fn translate_ja(key: L10nKey) -> Option<&'static str> {
         L10nKey::SettingsShowAgentPaneTitlesDesc => {
             "エージェントのアイコンと名前をターミナルの上の行に表示します。通常のターミナルには表示されません。ホバー操作（分割・拡大・閉じる）はどのペインでも使えます。"
         }
+        L10nKey::SettingsShowAgentPaneTaskTitles => {
+            "ペインタイトルにエージェントのタスクタイトルを表示"
+        }
+        L10nKey::SettingsShowAgentPaneTaskTitlesDesc => {
+            "ペインタイトル行のエージェント名の後に、エージェントがセッションに設定したタイトル（作業内容）を表示します。エージェントペインのタイトルを有効にする必要があります。"
+        }
         L10nKey::DocumentDock => "ターミナルの隣にドック",
         L10nKey::DocumentFill => "ウィンドウ全体",
         L10nKey::DocumentFillTooltip => "ワークスペース全体に表示",
@@ -884,6 +890,9 @@ pub fn translate_ja(key: L10nKey) -> Option<&'static str> {
         }
         L10nKey::SettingsSearchShowAgentPaneTitlesKeywords => {
             "エージェント ペイン タイトル アイコン 名前 agent pane title icon name header row split zoom close hover"
+        }
+        L10nKey::SettingsSearchShowAgentPaneTaskTitlesKeywords => {
+            "エージェント ペイン タスク タイトル セッション 要約 agent pane task title session topic summary header row osc"
         }
         L10nKey::SettingsSearchDimInactivePanesKeywords => {
             "非アクティブ ペイン 暗く フォーカス 分割 fade unfocused inactive split pane focus opacity highlight active dimming"

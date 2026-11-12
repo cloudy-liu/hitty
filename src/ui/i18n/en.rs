@@ -636,6 +636,10 @@ pub fn translate_en(key: L10nKey) -> &'static str {
         L10nKey::SettingsShowAgentPaneTitlesDesc => {
             "Draw the agent's icon and name in a row above its terminal. Ordinary terminals get no row; the hover actions (split, zoom, close) are on every pane either way."
         }
+        L10nKey::SettingsShowAgentPaneTaskTitles => "Show the agent's task title in pane titles",
+        L10nKey::SettingsShowAgentPaneTaskTitlesDesc => {
+            "Add the title the agent sets for its session (what it is working on) after its name in the pane title row. Needs agent pane titles on."
+        }
         L10nKey::DocumentDock => "Dock beside terminal",
         L10nKey::DocumentFill => "Fill window",
         L10nKey::DocumentFillTooltip => "Fill workspace",
@@ -856,6 +860,9 @@ pub fn translate_en(key: L10nKey) -> &'static str {
         }
         L10nKey::SettingsSearchShowAgentPaneTitlesKeywords => {
             "agent pane title icon name header row split zoom close hover"
+        }
+        L10nKey::SettingsSearchShowAgentPaneTaskTitlesKeywords => {
+            "agent pane task title session topic summary header row osc"
         }
         L10nKey::SettingsSearchDimInactivePanesKeywords => {
             "fade unfocused inactive split pane focus opacity highlight active dimming"

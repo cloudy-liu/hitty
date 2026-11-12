@@ -1,0 +1,17 @@
+{
+  "revision": "f36c16713d1d3b9edc53bf517343843c5d637ae1",
+  "platform": "Windows / GPUI / PrintWindow",
+  "viewport": [
+    1200,
+    700
+  ],
+  "display_scale": 1.75,
+  "source": "Production HittyApp render; deterministic daemon messages, no live agent.",
+  "scenes": [
+    "task-titles-dark",
+    "task-titles-light",
+    "task-titles-hover-dark",
+    "task-titles-column-dark",
+    "task-titles-settings-light"
+  ]
+}

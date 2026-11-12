@@ -13,6 +13,9 @@
 - Show a Markdown preview's outline in the open right panel when the document
   has two or more headings, and return to the chosen mode when it closes
   (cloudy-liu/hitty#39).
+- Add an optional setting that shows the task title an agent writes for its
+  session after its name in the agent pane title row. Off by default
+  (cloudy-liu/hitty#41).
 
 ## v0.3.0 - 2026-11-10
 
