@@ -95,7 +95,13 @@ and WKWebView on macOS; Linux uses the source view.
 Browse files, search source, review Git changes in split or unified diffs, inspect
 commit history, and manage worktrees. Expand a document to fill the workspace and
 restore it when you return to the terminal.
-[Markdown themes](docs/customization/markdown-themes.mdx) · [Git review](docs/git/source-control.mdx)
+
+The right panel keeps Info, Outline, Git, and Files beside the terminal and your
+documents. Outline lists a document's headings, an agent conversation's turns, or
+recorded shell commands, and jumps to the one you pick. With the panel open, a
+Markdown preview that has two or more headings shows its outline on its own; the
+view you chose returns when the document closes.
+[Markdown themes](docs/customization/markdown-themes.mdx) · [Git review](docs/git/source-control.mdx) · [Right panel](docs/window/side-panel.mdx)
 
 <table>
   <tr>

@@ -67,7 +67,9 @@ Windows 包未签名；macOS 使用 ad-hoc 签名，尚未公证，系统可能�
 
 用文档标签同时打开多个文件，各自保留编辑内容和预览模式。Markdown 预览支持 Mermaid 图表、缩放和平移、代码复制、front matter 与自定义阅读主题。本地 HTML 在 Windows 上使用 WebView2，在 macOS 上使用 WKWebView；Linux 使用源码视图。
 
-浏览文件、搜索源码、以并排或统一布局查看 Git diff、阅读提交历史、管理 worktree。需要专注阅读时，可以把文档展开到整个工作区，再恢复原布局。[Markdown 主题](docs/customization/markdown-themes.mdx) · [Git 审查](docs/git/source-control.mdx)
+浏览文件、搜索源码、以并排或统一布局查看 Git diff、阅读提交历史、管理 worktree。需要专注阅读时，可以把文档展开到整个工作区，再恢复原布局。
+
+右侧面板在终端和文档旁提供信息、大纲、Git 和文件四种视图。大纲列出文档标题、Agent 对话轮次或记录下来的 shell 命令，点击即可跳转。面板展开时，打开含两个及以上标题的 Markdown 预览会自动显示它的大纲；文档关闭后回到你原先选择的视图。[Markdown 主题](docs/customization/markdown-themes.mdx) · [Git 审查](docs/git/source-control.mdx) · [右侧面板](docs/window/side-panel.mdx)
 
 <table>
   <tr>
