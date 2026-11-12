@@ -33,6 +33,71 @@ fn harness(
 }
 
 #[gpui::test]
+fn agent_notifications_name_the_source_task(cx: &mut TestAppContext) {
+    use crate::core::cli_agent::CLIAgent;
+
+    let (window, first, mut first_daemon) = harness(cx);
+    let (second, mut second_daemon) = window
+        .update(cx, |_, window, cx| quiet_test_pane(136, window, cx))
+        .unwrap();
+    for (view, daemon, task) in [
+        (&first, &mut first_daemon, "修复登录回调"),
+        (&second, &mut second_daemon, "补充通知测试"),
+    ] {
+        DaemonMsg::Agent(Some(CLIAgent::Claude))
+            .encode(daemon)
+            .unwrap();
+        report(AgentStatus::Working, daemon, window, view, cx);
+        cx.update(|cx| assert_eq!(view.read(cx).agent_status(), Some(AgentStatus::Working)));
+        // The previous task can still be displayed while a new OSC title
+        // settles. Notifications must snapshot the latest source title.
+        window
+            .update(cx, |_, _, cx| {
+                view.update(cx, |pane, cx| {
+                    pane.title = "Previous task".into();
+                    pane.handle_event(AlacEvent::Title(task.into()), cx);
+                    assert_eq!(pane.pending_title.as_deref(), Some(task));
+                });
+            })
+            .unwrap();
+        report(AgentStatus::Done, daemon, window, view, cx);
+        report(AgentStatus::Working, daemon, window, view, cx);
+        report(AgentStatus::Waiting, daemon, window, view, cx);
+    }
+    cx.update(|cx| {
+        let deliveries = &cx.global::<RecordingDelivery>().desktops;
+        assert_eq!(deliveries.len(), 4);
+        for (delivered, (task, pane)) in deliveries.iter().zip([
+            ("修复登录回调", first.entity_id()),
+            ("修复登录回调", first.entity_id()),
+            ("补充通知测试", second.entity_id()),
+            ("补充通知测试", second.entity_id()),
+        ]) {
+            assert_eq!(delivered.0, task);
+            assert_eq!(delivered.2, pane);
+        }
+    });
+    for title in ["   ", "hitty"] {
+        window
+            .update(cx, |_, _, cx| {
+                first.update(cx, |pane, _| {
+                    pane.pending_title = None;
+                    pane.title = title.into();
+                });
+            })
+            .unwrap();
+        report(AgentStatus::Working, &mut first_daemon, window, &first, cx);
+        report(AgentStatus::Done, &mut first_daemon, window, &first, cx);
+        cx.update(|cx| {
+            assert_eq!(
+                cx.global::<RecordingDelivery>().desktops.last().unwrap().0,
+                "Claude Code"
+            );
+        });
+    }
+}
+
+#[gpui::test]
 fn agent_lifecycle_osc_progress_drives_live_and_replayed_status(cx: &mut TestAppContext) {
     use crate::core::cli_agent::CLIAgent;
 
