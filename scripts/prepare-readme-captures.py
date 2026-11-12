@@ -61,6 +61,9 @@ def main():
             "dark": dark,
             "dock": False,
             "readme": True,
+            # The README scenes show the file tree beside the document; without
+            # a named mode the Markdown preview's outline takes the panel.
+            "panel_mode": "files",
             "hold_seconds": 600,
         }
         (output / f"{name}.json").write_text(json.dumps(options, indent=2), encoding="utf-8")

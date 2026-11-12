@@ -950,6 +950,9 @@ pub struct HittyApp {
     pub(crate) document_ratio: Rc<Cell<f32>>,
     pub(crate) document_dragging: Rc<Cell<bool>>,
     pub(crate) right_panel_visible: bool,
+    /// The mode the reader chose. What the panel is *showing* can be the
+    /// Outline instead, while a Markdown preview is in front — ask
+    /// [`HittyApp::right_panel_shown_tab`], never this, for that.
     pub(crate) right_panel_tab: RightPanelTab,
     pub(crate) sidebar_collapsed: bool,
     pub(crate) run_badge_animation: Rc<RefCell<crate::ui::tab_strip::RunBadgeAnimation>>,
@@ -7648,6 +7651,7 @@ impl Render for HittyApp {
         self.claim_pending_tab(window, cx);
         self.touch_active_tab();
         self.declare_displayed_panes(cx);
+        self.sync_outline_follow(cx);
         self.scm_sync_watchers(window, cx);
         #[cfg(any(windows, target_os = "macos"))]
         if self.editor_needs_html_preview_sync() {

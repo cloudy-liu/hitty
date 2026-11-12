@@ -54,6 +54,20 @@ scrollback buffer reaches its limit; entries can remain visible without a
 valid jump. Shells that do not report command text cannot provide named entries.
 Content without usable headings or entries shows an empty state.
 
+### Reading Markdown
+
+With the panel open, a Markdown preview that has two or more headings shows its
+outline there without being asked — open `README.md` from Files and its
+headings take the tree's place. The mode you chose is not replaced or saved
+over: close the document, switch to another kind of file, or switch to Markdown
+source, and the panel returns to it.
+
+Choosing a mode yourself while the outline has the panel keeps it there until
+that session has no open file left, so going back to Files to open the next
+file is not undone by the file you open. Hiding the document column or looking
+at another session does not end it. A closed panel stays closed, and a document
+with a single heading leaves the panel as it is.
+
 ## Git
 
 The git panel for the focused pane's repository, in four groups — **Merge
