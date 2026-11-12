@@ -571,6 +571,10 @@ pub fn translate_zh(key: L10nKey) -> Option<&'static str> {
         L10nKey::SettingsShowAgentPaneTitlesDesc => {
             "在 Agent 窗格的终端上方显示一行图标和名称。普通终端不显示这一行；无论开关如何，悬浮操作（分屏、放大、关闭）每个窗格都有。"
         }
+        L10nKey::SettingsShowAgentPaneTaskTitles => "在 Agent 窗格标题中显示任务标题",
+        L10nKey::SettingsShowAgentPaneTaskTitlesDesc => {
+            "在窗格标题行的 Agent 名称后面，显示 Agent 为会话写入的标题（它正在做什么）。需要先开启 Agent 窗格标题。"
+        }
         L10nKey::DocumentDock => "停靠在终端旁",
         L10nKey::DocumentFill => "铺满窗口",
         L10nKey::DocumentFillTooltip => "铺满主工作区",
@@ -791,6 +795,9 @@ pub fn translate_zh(key: L10nKey) -> Option<&'static str> {
         }
         L10nKey::SettingsSearchShowAgentPaneTitlesKeywords => {
             "显示 Agent 窗格标题 窗格 标题 图标 名称 agent pane title icon name header row split zoom close hover"
+        }
+        L10nKey::SettingsSearchShowAgentPaneTaskTitlesKeywords => {
+            "在 Agent 窗格标题中显示任务标题 任务 会话 标题 总结 摘要 agent pane task title session topic summary header row osc"
         }
         L10nKey::SettingsSearchDimInactivePanesKeywords => {
             "调暗 非活动窗格 淡化 未聚焦 分屏 高亮 active dimming pane focus"

@@ -30,6 +30,8 @@ const TITLE_PAD_X: f32 = 10.;
 /// would run under them.
 const TITLE_PAD_RIGHT: f32 = 4. * TILE_SIZE_XS + 3. * TOOLBAR_GAP + TOOLBAR_RIGHT + 6.;
 const TITLE_GAP: f32 = 7.;
+/// Between the agent's name and the task title it wrote.
+const TASK_SEPARATOR: &str = "·";
 /// Where the tiles sit below whatever the pane reserves above its content
 /// (the drag grip's strip, in a split): centred on the title row when there
 /// is one, else just under that strip.
@@ -76,9 +78,57 @@ pub(crate) fn chrome_for(
     }
 }
 
-/// The row above an agent pane's terminal: its mark and its name, nothing
-/// else. Status stays in the sidebar, where it already is.
-pub(crate) fn title_row(pane: EntityId, agent: CLIAgent, dim: f32, cx: &App) -> AnyElement {
+/// What an agent wrote for its own pane, if it says anything the row's name
+/// does not, or `None`.
+///
+/// The title arrives as prose — Claude Code's `◐ Fixing the tab title`, Codex's
+/// `查看会话讨论内容 | hitty` — behind the mark its agent spins while it works,
+/// so the mark comes off: this row has the agent's identity already, and a
+/// glyph that changes every few frames would make the row flicker. What is
+/// left is dropped when it is only the agent's own name (an idle Claude Code
+/// titles itself `✳ Claude Code`), empty, or a shell's path: none of those are
+/// the task title the setting asks for, and the row would otherwise say
+/// "Claude Code · Claude Code".
+///
+/// Public to the pane, which reads the pane's title for it — the row cannot,
+/// because the terminal it belongs to is drawn as a separate child.
+pub(crate) fn task_title(raw: &str, agent: CLIAgent) -> Option<&str> {
+    let title = strip_leading_mark(raw.trim()).trim();
+    if title.is_empty()
+        || title.eq_ignore_ascii_case(agent.display_name())
+        || hitty_core::core::tab_view::shell_title_path(title).is_some()
+    {
+        return None;
+    }
+    Some(title)
+}
+
+/// Drops the one mark an agent prefixes its title with — a spinner frame, a
+/// status glyph, an asterisk — and the space after it. Only a single leading
+/// character that is not a letter or digit, and only when a space follows:
+/// `*urgent* fix` keeps its asterisk, and a CJK title has no prefix to lose.
+/// A mark with nothing after it is a title that says nothing.
+fn strip_leading_mark(raw: &str) -> &str {
+    let mut chars = raw.chars();
+    match chars.next() {
+        Some(first) if !first.is_alphanumeric() => match chars.as_str() {
+            "" => "",
+            rest => rest.strip_prefix(' ').unwrap_or(raw),
+        },
+        _ => raw,
+    }
+}
+
+/// The row above an agent pane's terminal: its mark and its name, and — when
+/// the user turns `show_agent_pane_task_titles` on — what the agent says it is
+/// working on. Status stays in the sidebar, where it already is.
+pub(crate) fn title_row(
+    pane: EntityId,
+    agent: CLIAgent,
+    task: Option<&str>,
+    dim: f32,
+    cx: &App,
+) -> AnyElement {
     let ink = cx.global::<crate::ui::presets::AgentIcons>().ink(agent);
     div()
         .debug_selector(move || format!("agent-pane-title-{}", pane.as_u64()))
@@ -102,9 +152,14 @@ pub(crate) fn title_row(pane: EntityId, agent: CLIAgent, dim: f32, cx: &App) -> 
             // The repository's truncation idiom: take the rest of the row and be
             // allowed to shrink, so the ellipsis only ever comes from a pane
             // that is really too narrow, not from a min-content measurement.
+            //
+            // With a task title beside it the name keeps its width instead, and
+            // the task title is the one that takes the rest and is cut.
             div()
-                .flex_1()
-                .min_w_0()
+                .map(|d| match task {
+                    Some(_) => d.flex_shrink_0(),
+                    None => d.flex_1().min_w_0(),
+                })
                 .truncate()
                 .text_size(px(TITLE_TEXT))
                 .text_color(cx.theme().foreground)
@@ -113,6 +168,28 @@ pub(crate) fn title_row(pane: EntityId, agent: CLIAgent, dim: f32, cx: &App) -> 
                 .text_ellipsis()
                 .child(agent.display_name().to_string()),
         )
+        .when_some(task, |d, task| {
+            d.child(
+                div()
+                    .flex_shrink_0()
+                    .text_size(px(TITLE_TEXT))
+                    .text_color(cx.theme().muted_foreground)
+                    .whitespace_nowrap()
+                    .child(TASK_SEPARATOR.to_string()),
+            )
+            .child(
+                div()
+                    .flex_1()
+                    .min_w_0()
+                    .truncate()
+                    .text_size(px(TITLE_TEXT))
+                    .text_color(cx.theme().muted_foreground)
+                    .overflow_hidden()
+                    .whitespace_nowrap()
+                    .text_ellipsis()
+                    .child(task.to_string()),
+            )
+        })
         .into_any_element()
 }
 
@@ -246,6 +323,38 @@ mod tests {
                 }
             );
         }
+    }
+
+    #[test]
+    fn a_task_title_loses_its_mark_and_says_more_than_the_agents_name() {
+        for (raw, expected) in [
+            (
+                "◐ Hitty 分屏终端启动 10 倍提速",
+                Some("Hitty 分屏终端启动 10 倍提速"),
+            ),
+            (
+                "⠇ 查看会话讨论内容 | hitty",
+                Some("查看会话讨论内容 | hitty"),
+            ),
+            ("✳ Fix login", Some("Fix login")),
+            ("Fix login", Some("Fix login")),
+            ("查看会话讨论内容", Some("查看会话讨论内容")),
+            ("*urgent* fix", Some("*urgent* fix")),
+            ("✳ Claude Code", None),
+            ("claude code", None),
+            ("", None),
+            ("  ", None),
+            ("◐ ", None),
+            ("~/dev/hitty", None),
+            ("ann@BOX:C:/src", None),
+        ] {
+            assert_eq!(task_title(raw, CLIAgent::Claude), expected, "{raw:?}");
+        }
+        assert_eq!(
+            task_title("✳ Claude Code", CLIAgent::Codex),
+            Some("Claude Code"),
+            "only its own name is a repeat"
+        );
     }
 
     #[test]

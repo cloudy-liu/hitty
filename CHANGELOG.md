@@ -4,6 +4,8 @@
 
 - Keep all Otty themes on Hitty's interface and terminal typography settings,
   and prevent imported fonts from remaining after switching themes.
+- Add an optional setting that shows the task title an agent writes for its
+  session after its name in the agent pane title row. Off by default.
 
 ## v0.3.0 - 2026-11-10
 

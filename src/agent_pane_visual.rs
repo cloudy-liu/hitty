@@ -27,6 +27,13 @@ struct Options {
     output: PathBuf,
     #[serde(default)]
     titles: bool,
+    /// Agent panes title themselves with a task, as a live agent does, instead
+    /// of with their own name.
+    #[serde(default)]
+    tasks: bool,
+    /// `show_agent_pane_task_titles`.
+    #[serde(default)]
+    task_titles: bool,
     #[serde(default)]
     dark: bool,
     #[serde(default)]
@@ -52,28 +59,45 @@ impl Render for Fixture {
     }
 }
 
-const CASES: [(&str, Option<CLIAgent>, &str); 4] = [
+/// Name, agent, the title that agent would write for its task, and its screen.
+const CASES: [(&str, Option<CLIAgent>, &str, &str); 4] = [
     (
         "Claude Code",
         Some(CLIAgent::Claude),
+        "\u{25D0} Hitty \u{5206}\u{5C4F}\u{7EC8}\u{7AEF}\u{542F}\u{52A8} 10 \u{500D}\u{63D0}\u{901F}",
         "> Add a title row to every agent pane\r\n\r\n  Reading src/ui/pane.rs\r\n",
     ),
     (
         "Codex",
         Some(CLIAgent::Codex),
+        "\u{2807} \u{67E5}\u{770B}\u{4F1A}\u{8BDD}\u{8BA8}\u{8BBA}\u{5185}\u{5BB9} | hitty",
         "> Check the title row's spacing\r\n\r\n  Waiting for the visual direction\r\n",
     ),
     (
         "Cursor",
         Some(CLIAgent::Cursor),
+        "Check narrow panes and cut a long task title before it reaches the toolbar",
         "> Check narrow panes\r\n\r\n  Icon and name truncate within the row\r\n",
     ),
     (
         "PowerShell",
         None,
+        "PowerShell",
         "PS D:\\gh-prj\\hitty> git status\r\nOn branch main\r\nnothing to commit, working tree clean\r\nPS D:\\gh-prj\\hitty> ",
     ),
 ];
+
+/// What a pane's title settles on: its task when the scene asks for tasks and
+/// it is an agent's, else its name.
+fn pane_title(
+    case: &(&'static str, Option<CLIAgent>, &'static str, &str),
+    tasks: bool,
+) -> &'static str {
+    match case.1 {
+        Some(_) if tasks => case.2,
+        _ => case.0,
+    }
+}
 
 pub(crate) fn run(path: &std::ffi::OsStr) {
     let options: Options = serde_json::from_slice(&std::fs::read(path).unwrap()).unwrap();
@@ -94,6 +118,7 @@ pub(crate) fn run(path: &std::ffi::OsStr) {
             // built against does not know the setting and ignores the key.
             let mut value = serde_json::to_value(&config.0).unwrap();
             value["show_agent_pane_titles"] = serde_json::Value::Bool(options.titles);
+            value["show_agent_pane_task_titles"] = serde_json::Value::Bool(options.task_titles);
             let config = Config(serde_json::from_value(value).unwrap());
             cx.set_global(config);
             crate::core::session::WorkspaceStore::init(cx);
@@ -130,7 +155,9 @@ pub(crate) fn run(path: &std::ffi::OsStr) {
                         });
                         let mut streams = Vec::new();
                         owner.update(cx, |app, cx| {
-                            for (index, (name, agent, screen)) in CASES.iter().enumerate() {
+                            for (index, case) in CASES.iter().enumerate() {
+                                let (_, agent, _, screen) = case;
+                                let name = pane_title(case, options.tasks);
                                 let (view, mut stream) =
                                     quiet_test_pane(index as u64 + 1, window, cx);
                                 DaemonMsg::Agent(*agent).encode(&mut stream).unwrap();
@@ -221,14 +248,11 @@ pub(crate) fn run(path: &std::ffi::OsStr) {
                     cx.background_executor()
                         .timer(Duration::from_millis(100))
                         .await;
-                    let ready = views
-                        .iter()
-                        .zip(CASES.iter())
-                        .all(|(view, (name, agent, _))| {
-                            view.read_with(cx, |view, _| {
-                                view.title == *name && view.agent() == *agent
-                            })
-                        });
+                    let ready = views.iter().zip(CASES.iter()).all(|(view, case)| {
+                        view.read_with(cx, |view, _| {
+                            view.title == pane_title(case, options.tasks) && view.agent() == case.1
+                        })
+                    });
                     if ready {
                         break;
                     }

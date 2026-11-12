@@ -731,6 +731,11 @@ fn settings_search_entries() -> &'static [SearchEntry] {
         },
         SearchEntry {
             section: WindowTabs,
+            title: SettingsShowAgentPaneTaskTitles,
+            keywords: SettingsSearchShowAgentPaneTaskTitlesKeywords,
+        },
+        SearchEntry {
+            section: WindowTabs,
             title: SettingsNotifyOnCommandFinish,
             keywords: SettingsSearchNotifyOnCommandFinishKeywords,
         },
@@ -5937,6 +5942,7 @@ impl HittyApp {
         let sidebar_diff_preview = cfg.sidebar_diff_preview;
         let sidebar_agent_status_text = cfg.sidebar_agent_status_text;
         let show_agent_pane_titles = cfg.show_agent_pane_titles;
+        let show_agent_pane_task_titles = cfg.show_agent_pane_task_titles;
         let sidebar_group_arrows = cfg.sidebar_group_arrows;
         let sidebar_group_folders = cfg.sidebar_group_folders;
         let sidebar_grouping_idx = match cfg.sidebar_grouping {
@@ -6164,6 +6170,13 @@ impl HittyApp {
                 cx.listener(|this, on: &bool, _w, cx| this.set_show_agent_pane_titles(*on, cx)),
             )
             .into_any_element();
+        let agent_pane_task_titles_switch =
+            crate::ui::theme::switch("wt-agent-pane-task-titles", cx)
+                .checked(show_agent_pane_task_titles)
+                .on_click(cx.listener(|this, on: &bool, _w, cx| {
+                    this.set_show_agent_pane_task_titles(*on, cx)
+                }))
+                .into_any_element();
         let sidebar_grouping_radio = self.segmented(
             "wt-sidebar-grouping",
             &[
@@ -6257,6 +6270,12 @@ impl HittyApp {
                 t(L10nKey::SettingsShowAgentPaneTitles),
                 t(L10nKey::SettingsShowAgentPaneTitlesDesc),
                 agent_pane_titles_switch,
+                cx,
+            ))
+            .child(self.settings_row(
+                t(L10nKey::SettingsShowAgentPaneTaskTitles),
+                t(L10nKey::SettingsShowAgentPaneTaskTitlesDesc),
+                agent_pane_task_titles_switch,
                 cx,
             ))
             .child(self.section_rule(cx))

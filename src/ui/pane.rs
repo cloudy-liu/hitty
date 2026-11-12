@@ -126,6 +126,9 @@ pub(crate) struct PaneChrome {
     /// Draw a recognized agent pane's icon and name above its terminal
     /// (`Config::show_agent_pane_titles`).
     pub agent_titles: bool,
+    /// Add the agent's own pane title to that row
+    /// (`Config::show_agent_pane_task_titles`).
+    pub agent_task_titles: bool,
     /// The pane filling the tab alone, whose toolbar offers restore where
     /// zoom was.
     pub zoomed: Option<gpui::EntityId>,
@@ -943,18 +946,25 @@ impl Pane<PaneSlot> {
                 let id = v.entity_id();
                 let focused = v.contains_focused(window, cx);
                 let lifted = chrome.lifted == Some(id);
-                let (agent, herdr) = match v {
+                let (agent, herdr, task) = match v {
                     PaneSlot::Ready(t) => {
                         let terminal = t.read(cx);
+                        let agent = terminal.agent();
                         (
-                            terminal.agent(),
+                            agent,
                             matches!(
                                 terminal.foreground_app(),
                                 Some(crate::core::foreground_app::ForegroundApp::Herdr)
                             ),
+                            agent
+                                .filter(|_| chrome.agent_task_titles)
+                                .and_then(|agent| {
+                                    crate::ui::pane_title::task_title(&terminal.title, agent)
+                                        .map(str::to_owned)
+                                }),
                         )
                     }
-                    PaneSlot::Connecting(_) => (None, false),
+                    PaneSlot::Connecting(_) => (None, false, None),
                 };
                 // Herdr manages its own tabs and panes. Keep hitty's controls
                 // off its screen so the nested workspace stays unobstructed.
@@ -1011,7 +1021,13 @@ impl Pane<PaneSlot> {
                                 Some(agent) => d
                                     .flex()
                                     .flex_col()
-                                    .child(crate::ui::pane_title::title_row(id, agent, dim, cx))
+                                    .child(crate::ui::pane_title::title_row(
+                                        id,
+                                        agent,
+                                        task.as_deref(),
+                                        dim,
+                                        cx,
+                                    ))
                                     .child(div().flex_1().min_h(px(0.)).w_full().child(t.clone())),
                                 None => d.child(t.clone()),
                             }

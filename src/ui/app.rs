@@ -2956,6 +2956,7 @@ impl HittyApp {
             },
             drag: self.pane_drag.clone(),
             agent_titles: cx.global::<Config>().show_agent_pane_titles,
+            agent_task_titles: cx.global::<Config>().show_agent_pane_task_titles,
             zoomed,
         }
     }
@@ -3339,6 +3340,10 @@ impl HittyApp {
 
     pub(crate) fn set_show_agent_pane_titles(&mut self, on: bool, cx: &mut Context<Self>) {
         self.update_config(cx, |cfg| cfg.show_agent_pane_titles = on);
+    }
+
+    pub(crate) fn set_show_agent_pane_task_titles(&mut self, on: bool, cx: &mut Context<Self>) {
+        self.update_config(cx, |cfg| cfg.show_agent_pane_task_titles = on);
     }
 
     pub(crate) fn toggle_tab_sidebar(&mut self, cx: &mut Context<Self>) {
