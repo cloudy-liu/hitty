@@ -481,10 +481,21 @@ impl Render for DragTab {
 /// What a chrome tile says on hover: what it does, then the chord that does it.
 /// The tile's own name is no use as a tooltip — the workspace head already
 /// wears it as its label.
-pub(crate) fn chord_hint(what: &str, action: &str, cx: &gpui::App) -> SharedString {
-    match crate::ui::home::key_hint(action, cx) {
-        Some(keys) => SharedString::from(format!("{what}  {keys}")),
-        None => SharedString::from(what.to_string()),
+///
+/// The chord goes in the tooltip's own key slot, which draws it a step quieter
+/// than the name. Concatenated into one string the two read as a single label,
+/// and on `Ctrl+Shift+B` the chord was the longer half of it.
+pub(crate) fn chord_hint(
+    what: &str,
+    action: &str,
+    cx: &gpui::App,
+) -> impl Fn(&mut Window, &mut gpui::App) -> gpui::AnyView + use<> {
+    let what = SharedString::from(what.to_string());
+    let chord = crate::ui::home::key_stroke(action, cx).map(gpui_component::kbd::Kbd::new);
+    move |window, cx| {
+        gpui_component::tooltip::Tooltip::new(what.clone())
+            .key_binding(chord.clone())
+            .build(window, cx)
     }
 }
 
@@ -973,7 +984,7 @@ impl HittyApp {
                     .w_full()
                     .h(px(30.))
                     .rounded_md()
-                    .tooltip(chord_hint(
+                    .tooltip_element(chord_hint(
                         t(L10nKey::HomeSwitchWorkspace),
                         "ToggleSwitcher",
                         cx,
@@ -1010,7 +1021,7 @@ impl HittyApp {
                             cx,
                         )
                         .rounded_lg()
-                        .tooltip(chord_hint(
+                        .tooltip_element(chord_hint(
                             match panel_open {
                                 true => t(L10nKey::TabTooltipHideDetailPanel),
                                 false => t(L10nKey::TabTooltipShowDetailPanel),
@@ -1051,7 +1062,7 @@ impl HittyApp {
                             cx,
                         )
                         .rounded_lg()
-                        .tooltip(chord_hint(
+                        .tooltip_element(chord_hint(
                             t(L10nKey::AppMenuCommandPalette),
                             "TogglePalette",
                             cx,
@@ -1076,7 +1087,7 @@ impl HittyApp {
                             cx,
                         )
                         .rounded_lg()
-                        .tooltip(chord_hint(
+                        .tooltip_element(chord_hint(
                             t(L10nKey::AppMenuSettings),
                             "OpenSettings",
                             cx,
@@ -1494,7 +1505,7 @@ impl HittyApp {
             // come through here were the ones left silent. The chord is worth
             // more here than anywhere else in the row: it is the way back to
             // opening a tab without reading a menu first.
-            .tooltip(chord_hint(t(L10nKey::AppMenuNewTab), "NewTab", cx))
+            .tooltip_element(chord_hint(t(L10nKey::AppMenuNewTab), "NewTab", cx))
             // Built when the menu opens, not when the strip draws: this
             // closure runs once per press, and again after each dismissal.
             .dropdown_menu(move |menu, window, cx| {
@@ -2072,7 +2083,7 @@ impl HittyApp {
                             cx,
                         )
                         .rounded_lg()
-                        .tooltip(chord_hint(
+                        .tooltip_element(chord_hint(
                             t(L10nKey::TabTooltipShowSidebar),
                             "ToggleLeftPanel",
                             cx,

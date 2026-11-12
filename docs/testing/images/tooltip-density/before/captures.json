@@ -1,0 +1,93 @@
+{
+  "stage": "before",
+  "app": "D:\\tmp\\hitty-tooltip-baseline-bin\\hitty-app.exe",
+  "binary_sha256": "270675ff40f2430faa4397915d732cec2b3f06663d453ab319c194cea74a0567",
+  "configuration": {
+    "theme_preset": "one_light",
+    "theme_follow_system": false,
+    "gui_language": "en",
+    "font_size": 15,
+    "ui_font_size": 16,
+    "cursor_blink": false,
+    "sidebar_grouping": "none",
+    "tab_bar_position": "left",
+    "check_for_updates": false,
+    "auto_download_updates": false,
+    "install_cli_on_path": false,
+    "show_tray_icon": false,
+    "shell": {
+      "program": "C:\\WINDOWS\\system32\\cmd.exe",
+      "args": []
+    }
+  },
+  "tab_name": "A tab name long enough that the sidebar truncates it",
+  "logical_window": [
+    1100,
+    700
+  ],
+  "display_scale": 1.75,
+  "captures": [
+    {
+      "scene": "hide-sidebar",
+      "hover": [
+        201,
+        15
+      ],
+      "keybindings": {},
+      "profile": "C:\\Users\\cloudy\\AppData\\Local\\Temp\\hitty-tooltip-density-guoi9vya",
+      "capture": "hwnd=7145144 client=1925x1225 frame=1929x1227 printwindow=True pointer=move=352,26 size=34887"
+    },
+    {
+      "scene": "new-tab",
+      "hover": [
+        171,
+        15
+      ],
+      "keybindings": {},
+      "profile": "C:\\Users\\cloudy\\AppData\\Local\\Temp\\hitty-tooltip-density-guoi9vya",
+      "capture": "hwnd=7145144 client=1925x1225 frame=1929x1227 printwindow=True pointer=move=299,26 size=35431"
+    },
+    {
+      "scene": "settings",
+      "hover": [
+        982,
+        15
+      ],
+      "keybindings": {},
+      "profile": "C:\\Users\\cloudy\\AppData\\Local\\Temp\\hitty-tooltip-density-guoi9vya",
+      "capture": "hwnd=7145144 client=1925x1225 frame=1929x1227 printwindow=True pointer=move=1718,26 size=34350"
+    },
+    {
+      "scene": "close-tab",
+      "hover": [
+        198,
+        131
+      ],
+      "keybindings": {},
+      "profile": "C:\\Users\\cloudy\\AppData\\Local\\Temp\\hitty-tooltip-density-guoi9vya",
+      "capture": "hwnd=7145144 client=1925x1225 frame=1929x1227 printwindow=True pointer=move=346,229 size=34037"
+    },
+    {
+      "scene": "tab-card",
+      "hover": [
+        100,
+        131
+      ],
+      "keybindings": {},
+      "profile": "C:\\Users\\cloudy\\AppData\\Local\\Temp\\hitty-tooltip-density-guoi9vya",
+      "capture": "hwnd=7145144 client=1925x1225 frame=1929x1227 printwindow=True pointer=move=175,229 size=39556"
+    },
+    {
+      "scene": "switch-workspace-unbound",
+      "hover": [
+        120,
+        60
+      ],
+      "keybindings": {
+        "ToggleSwitcher": ""
+      },
+      "profile": "C:\\Users\\cloudy\\AppData\\Local\\Temp\\hitty-tooltip-density-jr_6_9za",
+      "capture": "hwnd=19532070 client=1925x1225 frame=1929x1227 printwindow=True pointer=move=210,105 size=32967"
+    }
+  ]
+}

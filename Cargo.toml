@@ -159,7 +159,7 @@ tray-icon = "0.24"
 
 # Native HTML preview uses WebView2 on Windows and system WKWebView on macOS.
 # Keep WRY off Linux: this GPUI integration does not use GTK/WebKitGTK.
-gpui-wry = { git = "https://github.com/cloudy-liu/gpui-component", rev = "f95e3b89b9a9ec704f9e3e502e4dc0e02cca636e" }
+gpui-wry = { git = "https://github.com/cloudy-liu/gpui-component", rev = "e7663b39f0be922d4f371b8e462a2d58eb342db4" }
 wry = { package = "lb-wry", version = "0.53.3" }
 # GPUI implements this existing dependency's safe native-window handle trait.
 raw-window-handle = "0.6"
@@ -326,10 +326,10 @@ version = "0.3.1"
 # that, since a path dependency can't resolve on CI.
 #
 # `tree-sitter-languages` compiles the grammars the code editor highlights with.
-gpui-component = { git = "https://github.com/cloudy-liu/gpui-component", rev = "f95e3b89b9a9ec704f9e3e502e4dc0e02cca636e", version = "0.5.2", features = [
+gpui-component = { git = "https://github.com/cloudy-liu/gpui-component", rev = "e7663b39f0be922d4f371b8e462a2d58eb342db4", version = "0.5.2", features = [
     "tree-sitter-languages",
 ] }
-gpui-component-assets = { git = "https://github.com/cloudy-liu/gpui-component", rev = "f95e3b89b9a9ec704f9e3e502e4dc0e02cca636e", version = "0.5.1" }
+gpui-component-assets = { git = "https://github.com/cloudy-liu/gpui-component", rev = "e7663b39f0be922d4f371b8e462a2d58eb342db4", version = "0.5.1" }
 
 gpui = { git = "https://github.com/zed-industries/zed", rev = "1d217ee39d381ac101b7cf49d3d22451ac1093fe" }
 # Base features are cross-platform (`font-kit`, `runtime_shaders` only map to the

@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Draw hover tooltips smaller and closer to the control they belong to, and
+  show a control's shortcut in a quieter style beside its name
+  (cloudy-liu/hitty#38).
 - Open Windows sessions and splits without the three-second pause before the
   shell starts: the daemon now answers the pseudoconsole's startup query itself
   (cloudy-liu/hitty#40).
