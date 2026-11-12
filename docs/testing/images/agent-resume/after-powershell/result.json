@@ -1,0 +1,11 @@
+{
+  "profile": "D:\\tmp\\hc-cmqx19js",
+  "codex_cli": "codex-cli 0.167.0",
+  "mode": "abrupt",
+  "shell": "powershell",
+  "original_ids": {
+    "2": "01a1cb57-518b-7ee1-abc9-e4a04aca1d1b",
+    "3": "01a1cb57-8084-7863-bd37-e5234b409c3a"
+  },
+  "result": "passed: two exact conversations across two restarts and new turns"
+}

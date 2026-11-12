@@ -1,4 +1,6 @@
 mod agent_session;
+#[cfg(windows)]
+pub mod codex_launch;
 pub mod control;
 pub mod duplex;
 /// Upgrading the daemon in place, keeping the ptys and the shells on them.

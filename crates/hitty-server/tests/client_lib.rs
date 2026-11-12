@@ -390,6 +390,119 @@ fn ambiguous_codex_hooks_leave_existing_sessions_untouched() {
 }
 
 #[cfg(windows)]
+#[test]
+fn local_codex_hooks_bind_concurrent_sessions_in_the_same_directory() {
+    use hitty_core::core::cli_agent::AgentStatus;
+
+    let daemon = Daemon::start();
+    // This test isolates hook ownership. The renamed cmd.exe fixture does not
+    // implement Codex's launch flags; native launch/restore has its own check.
+    std::fs::write(
+        daemon.dir.path().join("config.json"),
+        r#"{"restore_agent_sessions":false}"#,
+    )
+    .unwrap();
+    let panes = daemon.panes();
+    let cwd = daemon.dir.path().join("shared-project");
+    std::fs::create_dir(&cwd).unwrap();
+    // Give the fixture a real Codex-named ancestor so Windows argv inspection
+    // runs as it does for the native CLI, without starting an agent service.
+    let codex = daemon.dir.path().join("codex.exe");
+    std::fs::copy(std::env::var_os("COMSPEC").unwrap(), &codex).unwrap();
+    let mut sessions = Vec::new();
+    for index in 0..2 {
+        let fixture = daemon.dir.path().join(format!("local-codex-{index}.cmd"));
+        let payload = daemon.dir.path().join(format!("session-{index}.json"));
+        let start = daemon.dir.path().join(format!("start-{index}"));
+        std::fs::write(
+            &payload,
+            serde_json::json!({
+                "session_id": format!("local-session-{index}"),
+                "cwd": cwd,
+                "source": "startup",
+                "prompt": "first message"
+            })
+            .to_string(),
+        )
+        .unwrap();
+        std::fs::write(
+            &fixture,
+            format!(
+                "@echo off\r\necho \x1b]777;notify;hitty://cli-agent;{{\"agent\":\"codex\",\"event\":\"prompt-submit\"}}\x07\r\n\
+                 :wait\r\nif exist \"{}\" goto report\r\nping -n 2 127.0.0.1 > nul\r\ngoto wait\r\n\
+                 :report\r\n\"{}\" agent-hook codex session-start < \"{}\"\r\n\
+                 \"{}\" agent-hook codex prompt-submit < \"{}\"\r\nping -n 61 127.0.0.1 > nul\r\n",
+                start.display(),
+                env!("CARGO_BIN_EXE_hitty-server"),
+                payload.display(),
+                env!("CARGO_BIN_EXE_hitty-server"),
+                payload.display(),
+            ),
+        )
+        .unwrap();
+        let mut session = panes
+            .spawn(
+                Some(cwd.clone()),
+                size(),
+                Some(ShellSpec {
+                    program: codex.to_string_lossy().into_owned(),
+                    args: vec![
+                        "/d".into(),
+                        "/c".into(),
+                        fixture.to_string_lossy().into_owned(),
+                    ],
+                    args_are_hitty_defaults: false,
+                }),
+                None,
+                None,
+            )
+            .unwrap();
+        session.set_recv_timeout(Some(STREAM_WITHIN)).unwrap();
+        loop {
+            if matches!(
+                session.recv().unwrap(),
+                DaemonMsg::AgentStatus(Some(state))
+                    if state.session_id.is_none() && state.status == AgentStatus::Working
+            ) {
+                break;
+            }
+        }
+        sessions.push(session);
+    }
+
+    // Both panes lack an ID when their own descendant hooks report one.
+    for index in 0..2 {
+        std::fs::write(daemon.dir.path().join(format!("start-{index}")), "").unwrap();
+    }
+    let control = daemon.control("local-codex-hooks");
+    let deadline = Instant::now() + Duration::from_secs(5);
+    loop {
+        let ReplyOk::AgentStates(states) = control.request(ControlRequest::AgentStates).unwrap()
+        else {
+            panic!("expected agent states");
+        };
+        if sessions.iter().enumerate().all(|(index, session)| {
+            states.iter().any(|state| {
+                state.pane_id == session.pane_id()
+                    && state.state.session_id.as_deref()
+                        == Some(format!("local-session-{index}").as_str())
+                    && state.state.status == AgentStatus::Working
+            })
+        }) {
+            break;
+        }
+        assert!(
+            Instant::now() < deadline,
+            "each local Codex hook must retain its own conversation ID: {states:?}"
+        );
+        std::thread::sleep(Duration::from_millis(50));
+    }
+    for session in sessions {
+        session.kill().unwrap();
+    }
+}
+
+#[cfg(windows)]
 fn check_codex_hook_routing(shared_directory: bool) {
     use hitty_core::core::cli_agent::AgentStatus;
     use std::io::Write as _;
