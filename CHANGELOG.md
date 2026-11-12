@@ -8,8 +8,8 @@
 - Open Windows sessions and splits without the three-second pause before the
   shell starts: the daemon now answers the pseudoconsole's startup query itself
   (cloudy-liu/hitty#40).
-- Keep all Otty themes on Hitty's interface and terminal typography settings,
-  and prevent imported fonts from remaining after switching themes.
+- Remove the remaining Otty Solarized Light preset and its theme-style
+  integration, restoring Hitty's original 13 built-in themes.
 - Show a Markdown preview's outline in the open right panel when the document
   has two or more headings, and return to the chosen mode when it closes
   (cloudy-liu/hitty#39).

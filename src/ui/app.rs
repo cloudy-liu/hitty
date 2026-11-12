@@ -1366,7 +1366,6 @@ impl HittyApp {
         cx: &mut Context<Self>,
     ) -> Self {
         let workspace = workspace.unwrap_or_default();
-        apply_theme(Some(window), cx);
         let pane_ws = crate::ui::remote_workspace::pane_workspace_for(cx, workspace);
         let (
             font_size,
@@ -1457,7 +1456,7 @@ impl HittyApp {
                 cx.notify();
             });
         });
-
+        apply_theme(Some(window), cx);
         set_menus(cx);
         let mut startup_error: Option<gpui::SharedString> = None;
         // A restored session is not a path open. Only a window that is born
@@ -2402,89 +2401,8 @@ impl HittyApp {
         window: &mut Window,
         cx: &mut Context<Self>,
     ) {
-        if crate::ui::theme_style::active(cx).is_some() {
-            cx.global_mut::<Config>().theme_style_legible_palette = on;
-        } else {
-            cx.global_mut::<Config>().theme_legible_palette = on;
-        }
+        cx.global_mut::<Config>().theme_legible_palette = on;
         self.after_theme_change(window, cx);
-    }
-
-    fn sync_config_fonts(&mut self, cx: &mut Context<Self>) {
-        let (font_size, line_height, font_family, font_features) = {
-            let cfg = cx.global::<Config>();
-            (
-                cfg.font_size,
-                cfg.line_height,
-                cfg.font_family.clone(),
-                cfg.font_features
-                    .as_ref()
-                    .map(crate::core::config::gpui_font_features),
-            )
-        };
-        if font_size != self.font_size {
-            self.font_size = font_size;
-            let px_size = px(font_size);
-            for tab in &self.tabs {
-                for leaf in tab.pane.terminals() {
-                    leaf.update(cx, |v, cx| {
-                        v.font_size = px_size;
-                        cx.notify();
-                    });
-                }
-            }
-        }
-        if line_height != self.line_height {
-            self.line_height = line_height;
-            for tab in &self.tabs {
-                for leaf in tab.pane.terminals() {
-                    leaf.update(cx, |v, cx| {
-                        v.line_height_mul = line_height;
-                        cx.notify();
-                    });
-                }
-            }
-        }
-        if font_family != self.font_family {
-            self.font_family = font_family.clone();
-            for tab in &self.tabs {
-                for leaf in tab.pane.terminals() {
-                    let family = font_family.clone();
-                    leaf.update(cx, |v, cx| v.set_font_family(family, cx));
-                }
-            }
-        }
-        if font_features != self.font_features {
-            self.font_features = font_features.clone();
-            for tab in &self.tabs {
-                for leaf in tab.pane.terminals() {
-                    let features = font_features.clone();
-                    leaf.update(cx, |v, cx| v.set_font_features(features, cx));
-                }
-            }
-        }
-        let (bold, italic) = {
-            let cfg = cx.global::<Config>();
-            (cfg.font_family_bold.clone(), cfg.font_family_italic.clone())
-        };
-        if bold != self.font_family_bold {
-            self.font_family_bold = bold.clone();
-            for tab in &self.tabs {
-                for leaf in tab.pane.terminals() {
-                    let bold = bold.clone();
-                    leaf.update(cx, |v, cx| v.set_font_family_bold(bold, cx));
-                }
-            }
-        }
-        if italic != self.font_family_italic {
-            self.font_family_italic = italic.clone();
-            for tab in &self.tabs {
-                for leaf in tab.pane.terminals() {
-                    let italic = italic.clone();
-                    leaf.update(cx, |v, cx| v.set_font_family_italic(italic, cx));
-                }
-            }
-        }
     }
 
     fn after_theme_change(&mut self, window: &mut Window, cx: &mut Context<Self>) {
@@ -2496,7 +2414,6 @@ impl HittyApp {
     /// each of those keystrokes into a `config.json` write.
     fn apply_theme_change(&mut self, persist: bool, window: &mut Window, cx: &mut Context<Self>) {
         apply_theme(Some(window), cx);
-        self.sync_config_fonts(cx);
         set_menus(cx);
         if persist {
             cx.global::<Config>().save();
@@ -6617,12 +6534,85 @@ impl HittyApp {
             self.terminal_scrollback_limit = config.scrollback_limit;
             self.apply_terminal_config_to_panes(&config, cx);
         }
+        let (font_size, line_height, font_family, font_features) = {
+            let cfg = cx.global::<Config>();
+            (
+                cfg.font_size,
+                cfg.line_height,
+                cfg.font_family.clone(),
+                cfg.font_features
+                    .as_ref()
+                    .map(crate::core::config::gpui_font_features),
+            )
+        };
         self.sidebar_width.set(cx.global::<Config>().sidebar_width);
         self.right_panel_width
             .set(cx.global::<Config>().right_panel_width);
         self.document_ratio
             .set(cx.global::<Config>().document_ratio);
-        self.sync_config_fonts(cx);
+        if font_size != self.font_size {
+            self.font_size = font_size;
+            let px_size = px(font_size);
+            for tab in &self.tabs {
+                for leaf in tab.pane.terminals() {
+                    leaf.update(cx, |v, cx| {
+                        v.font_size = px_size;
+                        cx.notify();
+                    });
+                }
+            }
+        }
+        if line_height != self.line_height {
+            self.line_height = line_height;
+            for tab in &self.tabs {
+                for leaf in tab.pane.terminals() {
+                    leaf.update(cx, |v, cx| {
+                        v.line_height_mul = line_height;
+                        cx.notify();
+                    });
+                }
+            }
+        }
+        if font_family != self.font_family {
+            self.font_family = font_family.clone();
+            for tab in &self.tabs {
+                for leaf in tab.pane.terminals() {
+                    let family = font_family.clone();
+                    leaf.update(cx, |v, cx| v.set_font_family(family, cx));
+                }
+            }
+        }
+        if font_features != self.font_features {
+            self.font_features = font_features.clone();
+            for tab in &self.tabs {
+                for leaf in tab.pane.terminals() {
+                    let features = font_features.clone();
+                    leaf.update(cx, |v, cx| v.set_font_features(features, cx));
+                }
+            }
+        }
+        let (bold, italic) = {
+            let cfg = cx.global::<Config>();
+            (cfg.font_family_bold.clone(), cfg.font_family_italic.clone())
+        };
+        if bold != self.font_family_bold {
+            self.font_family_bold = bold.clone();
+            for tab in &self.tabs {
+                for leaf in tab.pane.terminals() {
+                    let bold = bold.clone();
+                    leaf.update(cx, |v, cx| v.set_font_family_bold(bold, cx));
+                }
+            }
+        }
+        if italic != self.font_family_italic {
+            self.font_family_italic = italic.clone();
+            for tab in &self.tabs {
+                for leaf in tab.pane.terminals() {
+                    let italic = italic.clone();
+                    leaf.update(cx, |v, cx| v.set_font_family_italic(italic, cx));
+                }
+            }
+        }
         let report_mouse = cx.global::<Config>().mouse_reporting;
         let prompt_editor = cx.global::<Config>().prompt_editor;
         for tab in &self.tabs {
@@ -7765,48 +7755,12 @@ impl Render for HittyApp {
         };
 
         let title_bar = TitleBar::new()
-            .h(px(crate::ui::theme::title_bar_height(cx)))
+            .h(px(TITLE_BAR_HEIGHT))
             .bg(cx.theme().transparent)
             .border_color(cx.theme().transparent)
-            .when_some(crate::ui::theme_style::active(cx), |bar, style| {
-                let bar = style.surface(bar, "titlebar", cx.theme().border);
-                if window.is_window_active() {
-                    bar
-                } else {
-                    style.surface(bar, "titlebar.unfocused", cx.theme().border)
-                }
-            })
             .child(strip);
-        let body = div()
-            .flex_1()
-            .min_h_0()
-            .min_w_0()
-            .relative()
-            .when_some(crate::ui::theme_style::active(cx), |el, style| {
-                let background = style.terminal_color("background", cx.theme().background);
-                let el = style
-                    .surface(el.bg(background), "container", cx.theme().border)
-                    .p_0()
-                    .when_some(cx.global::<Config>().window_opacity, |el, opacity| {
-                        el.bg(style
-                            .color("container.background")
-                            .unwrap_or(background)
-                            .alpha(opacity))
-                    });
-                let margin = match cx.global::<Config>().tab_bar_position {
-                    TabBarPosition::Top if style.get("container.tabs-top.margin").is_some() => {
-                        "container.tabs-top.margin"
-                    }
-                    _ => "container.margin",
-                };
-                style.margin(el, margin)
-            })
-            .child(body);
         let body_area = div()
             .flex_1()
-            .min_h_0()
-            .flex()
-            .flex_col()
             .relative()
             .overflow_hidden()
             .child(
@@ -7918,13 +7872,6 @@ impl Render for HittyApp {
             .flex()
             .flex_col()
             .relative()
-            .when_some(crate::ui::theme_style::active(cx), |el, style| {
-                if style.sidebar_material() {
-                    el.bg(style.window_color())
-                } else {
-                    el
-                }
-            })
             .when_some(column_title_bar, |this, bar| this.child(bar))
             .child(body_area)
             .children(column_overlays);
@@ -7999,7 +7946,7 @@ impl Render for HittyApp {
                                     div()
                                         .absolute()
                                         .top_0()
-                                        .h(px(crate::ui::theme::title_bar_height(cx)))
+                                        .h(px(TITLE_BAR_HEIGHT))
                                         .right(px(panel_px))
                                         .w(px(document_px))
                                         .when(panel_px <= 0., |d| {
@@ -8037,11 +7984,11 @@ impl Render for HittyApp {
                 .top_0()
                 .right_0()
                 .w(px(crate::ui::tab_strip::trailing_chrome_w()))
-                .h(px(crate::ui::theme::title_bar_height(cx)))
+                .h(px(TITLE_BAR_HEIGHT))
                 .occlude()
                 .child(
                     TitleBar::new()
-                        .h(px(crate::ui::theme::title_bar_height(cx)))
+                        .h(px(TITLE_BAR_HEIGHT))
                         .pl_0()
                         .bg(crate::ui::theme::workspace_surface_color(cx))
                         .when(self.document_front() == Some(OverlayTop::Code), |bar| {
@@ -8072,17 +8019,6 @@ impl Render for HittyApp {
             div()
                 .id("hitty-root")
                 .size_full()
-                .when_some(crate::ui::theme_style::active(cx), |el, style| {
-                    let opacity = if window.is_window_active() {
-                        1.
-                    } else {
-                        style.number("window.unfocused.opacity").unwrap_or(1.)
-                    };
-                    el.opacity(opacity)
-                        .when_some(style.number("window.radius"), |el, radius| {
-                            el.rounded(px(radius))
-                        })
-                })
                 .flex()
                 .flex_col()
                 .bg(window_bg)

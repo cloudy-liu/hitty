@@ -45,7 +45,6 @@ pub struct Theme {
     pub image: Option<Image>,
     pub ansi16: [(u8, u8, u8); 16],
     pub path: Option<PathBuf>,
-    pub style: Option<std::sync::Arc<super::theme_style::ThemeStyle>>,
 }
 
 #[derive(Debug, Clone)]
@@ -391,7 +390,6 @@ impl Theme {
             image: None,
             ansi16: b.ansi16,
             path: None,
-            style: None,
         }
     }
 }
@@ -784,16 +782,6 @@ pub fn to_yaml(t: &Theme) -> String {
     s.push_str("ansi:\n");
     s.push_str(&format!("  normal: [{}]\n", row(0..8)));
     s.push_str(&format!("  bright: [{}]\n", row(8..16)));
-    if let Some(style) = &t.style {
-        let document = serde_yaml::to_string(&**style).expect("theme style is serializable");
-        s.push_str("style:\n");
-        for line in document.lines() {
-            s.push_str("  ");
-            s.push_str(line);
-            s.push('\n');
-        }
-    }
-
     s
 }
 
@@ -940,8 +928,6 @@ struct ThemeFile {
     #[serde(default)]
     background_image: Option<ImageFile>,
     ansi: AnsiFile,
-    #[serde(default)]
-    style: Option<super::theme_style::ThemeStyle>,
 }
 
 #[derive(Deserialize)]
@@ -971,15 +957,8 @@ fn default_image_opacity() -> f32 {
 
 fn load_yaml_theme(path: &std::path::Path) -> Result<Theme, String> {
     let text = std::fs::read_to_string(path).map_err(|e| e.to_string())?;
-    load_yaml_theme_text(&text, path)
-}
-
-fn load_yaml_theme_text(text: &str, path: &std::path::Path) -> Result<Theme, String> {
     let file: ThemeFile =
-        serde_yaml::from_str(crate::core::config::strip_bom(text)).map_err(|e| e.to_string())?;
-    if let Some(style) = &file.style {
-        style.validate()?;
-    }
+        serde_yaml::from_str(crate::core::config::strip_bom(&text)).map_err(|e| e.to_string())?;
     let (id, derived_name) = id_and_name(path);
 
     let background = file.background.into_fill()?;
@@ -1007,7 +986,6 @@ fn load_yaml_theme_text(text: &str, path: &std::path::Path) -> Result<Theme, Str
         }),
         ansi16,
         path: Some(path.to_path_buf()),
-        style: file.style.map(std::sync::Arc::new),
     })
 }
 
@@ -1094,7 +1072,6 @@ fn load_iterm_theme(path: &std::path::Path) -> Result<Theme, String> {
         image: None,
         ansi16,
         path: Some(path.to_path_buf()),
-        style: None,
     })
 }
 
@@ -1112,20 +1089,8 @@ fn parse_rgb(s: &str) -> Result<(u8, u8, u8), String> {
 }
 
 pub fn builtins() -> Vec<Theme> {
-    let mut themes: Vec<_> = BUILTINS.iter().map(Theme::from_builtin).collect();
-    for (id, source) in OTTY_BUILTINS {
-        let mut theme = load_yaml_theme_text(source, &PathBuf::from(format!("{id}.yaml")))
-            .expect("bundled Otty theme must be valid");
-        theme.path = None;
-        themes.push(theme);
-    }
-    themes
+    BUILTINS.iter().map(Theme::from_builtin).collect()
 }
-
-const OTTY_BUILTINS: &[(&str, &str)] = &[(
-    "otty-solarized-light",
-    include_str!("../../assets/themes/otty/otty-solarized-light.yaml"),
-)];
 
 struct BuiltinSpec {
     id: &'static str,
@@ -1572,7 +1537,7 @@ mod tests {
     fn dark_is_inferred_from_background() {
         let dark: Vec<_> = builtins()
             .into_iter()
-            .filter(|t| t.style.is_none() && t.dark)
+            .filter(|t| t.dark)
             .map(|t| t.id)
             .collect();
         assert_eq!(
@@ -1870,9 +1835,7 @@ mod tests {
         // above it because these are 1.5px lines a few pixels apart, not
         // patches side by side, and the eye is much worse at hairlines.
         const FLOOR: f32 = 12.0;
-        // These contrast/distinction guarantees belong to Hitty's authored
-        // designs. Imported profiles preserve their source colors verbatim.
-        for t in builtins().into_iter().filter(|t| t.style.is_none()) {
+        for t in builtins() {
             let lanes = t.lanes();
             for slot in 0..LANE_SLOTS - 1 {
                 let d = delta_e76(lanes.ink[slot], lanes.ink[slot + 1]);
@@ -1915,9 +1878,7 @@ mod tests {
 
     #[test]
     fn resting_labels_stay_readable() {
-        // These contrast/distinction guarantees belong to Hitty's authored
-        // designs. Imported profiles preserve their source colors verbatim.
-        for t in builtins().into_iter().filter(|t| t.style.is_none()) {
+        for t in builtins() {
             let s = t.surfaces();
             for (name, sf) in [("window", s.window), ("popover", s.popover)] {
                 let ratio = contrast(sf.text_resting, sf.base);
@@ -1981,9 +1942,7 @@ mod tests {
 
     #[test]
     fn switch_tracks_and_knob_stay_legible() {
-        // These contrast/distinction guarantees belong to Hitty's authored
-        // designs. Imported profiles preserve their source colors verbatim.
-        for t in builtins().into_iter().filter(|t| t.style.is_none()) {
+        for t in builtins() {
             let m = t.neutrals();
             let unchecked = t.surfaces().window.selected;
             let checked = m.accent;
@@ -2013,9 +1972,7 @@ mod tests {
 
     #[test]
     fn semantic_colors_clear_their_floors() {
-        // These contrast/distinction guarantees belong to Hitty's authored
-        // designs. Imported profiles preserve their source colors verbatim.
-        for t in builtins().into_iter().filter(|t| t.style.is_none()) {
+        for t in builtins() {
             let bg = t.background_color();
             let m = t.neutrals();
             let s = t.semantics();
@@ -2223,9 +2180,7 @@ mod tests {
         // visibility is a step down in the contrast the glyph has left. This is
         // the ceiling both targets are chosen against — on every builtin, and
         // in the accent the terminal actually washes with.
-        // These contrast/distinction guarantees belong to Hitty's authored
-        // designs. Imported profiles preserve their source colors verbatim.
-        for t in builtins().into_iter().filter(|t| t.style.is_none()) {
+        for t in builtins() {
             let n = t.neutrals();
             let (hit_t, cur_t) = match_wash_targets(n.background, n.foreground);
             let hit = wash(n.background, n.accent, hit_t);
@@ -2320,41 +2275,6 @@ ansi:
         assert_eq!(bg, 0x101010);
         assert_eq!(parse_rgb(&file.ansi.normal[0]).unwrap(), (0, 0, 0));
         assert_eq!(parse_rgb(&file.ansi.bright[7]).unwrap(), (0xff, 0xff, 0xff));
-    }
-
-    #[test]
-    fn only_reviewed_solarized_light_is_bundled_and_survives_duplicate_edit() {
-        let themes = builtins();
-        assert_eq!(themes.len(), 14);
-        let ids: std::collections::HashSet<_> = themes.iter().map(|t| &t.id).collect();
-        assert_eq!(ids.len(), 14);
-        assert!(themes[..13].iter().all(|t| t.style.is_none()));
-        assert_eq!(themes[13].id, "otty-solarized-light");
-        assert_eq!(themes[13].name, "Solarized Light");
-        assert!(!themes[13].dark);
-        for theme in &themes[13..] {
-            let style = theme.style.as_ref().unwrap();
-            assert!(theme.id.starts_with("otty-"));
-            assert_eq!(
-                theme.foreground,
-                style.packed("terminal.foreground").unwrap()
-            );
-            for (i, value) in style
-                .get("terminal.palette")
-                .unwrap()
-                .as_array()
-                .unwrap()
-                .iter()
-                .enumerate()
-            {
-                assert_eq!(theme.ansi16[i], parse_rgb(value.as_str().unwrap()).unwrap());
-            }
-            let duplicate =
-                load_yaml_theme_text(&to_yaml(theme), std::path::Path::new("copy.yaml")).unwrap();
-            assert_eq!(duplicate.style.unwrap().0, style.0);
-            assert_eq!(duplicate.ansi16, theme.ansi16);
-            assert!(!theme.name.contains("(solid)"));
-        }
     }
 
     #[test]

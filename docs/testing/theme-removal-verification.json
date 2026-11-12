@@ -1,0 +1,212 @@
+{
+  "pre_otty_preset_source_identical": true,
+  "builtin_count": 13,
+  "builtin_ids": [
+    "light",
+    "one_light",
+    "catppuccin_latte",
+    "rose_pine_dawn",
+    "dark",
+    "dracula",
+    "harbor",
+    "one_dark_pro",
+    "rose_pine",
+    "catppuccin_mocha",
+    "gruvbox_dark",
+    "nord",
+    "tokyo_night"
+  ],
+  "dependencies_ci_and_provenance_unchanged": true,
+  "date": "2026-11-12",
+  "base_commit": "9922cac4e112f2b5af7dc567115dff30fd1b8231",
+  "reverted_commits": [
+    "b4de21bbae703784fb42dcfa222b640025d1ad41",
+    "1cd00a4bc577b36500dbb52b294cc7839b082835"
+  ],
+  "builds": {
+    "before": {
+      "command": "cargo build --locked --workspace",
+      "passed": true,
+      "log": ".hitty-dev-theme-removal\\before-build.log",
+      "log_sha256": "8ad53a280a3904da68f98fedcd1b33c457aa93aaeb4e67f007a870af4f913899"
+    },
+    "after": {
+      "command": "cargo build --locked --workspace",
+      "passed": true,
+      "log": ".hitty-dev-theme-removal\\after-build.log",
+      "log_sha256": "2ae8e7a534490ca006c3c20c660c4d0285b1601063078e87ebe628996a0fd1c6"
+    }
+  },
+  "native": {
+    "before": {
+      "stage": "before",
+      "app": "D:\\gh-prj\\hitty-revert-otty\\.hitty-dev-theme-removal\\before-bin\\hitty-app.exe",
+      "binary_sha256": "bb900b904cfeed2d3917189626c2d80ddb1391514c40781778d130c5c3200ea5",
+      "profile": "C:\\Users\\cloudy\\AppData\\Local\\Temp\\hitty-theme-removal-before-b0i6xwfr",
+      "configuration": {
+        "theme_preset": "light",
+        "theme_follow_system": false,
+        "theme_style_legible_palette": true,
+        "theme_legible_palette": true,
+        "window_blur": null,
+        "window_backdrop": "auto",
+        "window_opacity": null,
+        "gui_language": "en",
+        "font_family": "Hack",
+        "font_size": 15,
+        "line_height": 1.4,
+        "ui_font_size": 14,
+        "cursor_blink": false,
+        "tab_bar_position": "left",
+        "right_panel_visible": true,
+        "right_panel_tab": "info",
+        "check_for_updates": false,
+        "auto_download_updates": false,
+        "install_cli_on_path": false,
+        "show_tray_icon": false,
+        "shell": {
+          "program": "powershell.exe",
+          "args": [
+            "-NoLogo",
+            "-NoProfile",
+            "-NoExit",
+            "-ExecutionPolicy",
+            "Bypass",
+            "-Command",
+            "Set-Location $env:SystemRoot; function global:prompt { 'PS theme-restore> ' }; & 'D:\\gh-prj\\hitty-revert-otty\\.hitty-dev-theme-removal\\sample.ps1'"
+          ]
+        }
+      },
+      "logical_window": [
+        1200,
+        800
+      ],
+      "captures": [
+        {
+          "scene": "legacy-selection",
+          "selection": "otty-solarized-light",
+          "capture": "hwnd=5243654 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=73305",
+          "image_sha256": "21a5adb211922ea98e37e3bde719c7d7e45fb538d6aa50ce2bab9b61dae3b974",
+          "text_sha256": "47038dcb456f3fb3c53f057cfac55dfa7659ff0d84d271447c12a9f6988d1327"
+        },
+        {
+          "scene": "one-light",
+          "selection": "one_light",
+          "capture": "hwnd=5243654 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=73272",
+          "image_sha256": "3b2097ded8ddf6b66fc4ed89c71f4b3bafcefb274c05ecd10f145fac59e68a23",
+          "text_sha256": "47038dcb456f3fb3c53f057cfac55dfa7659ff0d84d271447c12a9f6988d1327"
+        },
+        {
+          "scene": "dark",
+          "selection": "dark",
+          "capture": "hwnd=5243654 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=80713",
+          "image_sha256": "3c2d20380b8c979d4c7a8c39b58ec6297ad28cf02b1beae334c8cafaa90bea61",
+          "text_sha256": "47038dcb456f3fb3c53f057cfac55dfa7659ff0d84d271447c12a9f6988d1327"
+        },
+        {
+          "scene": "one-light-again",
+          "selection": "one_light",
+          "capture": "hwnd=5243654 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=73272",
+          "image_sha256": "3b2097ded8ddf6b66fc4ed89c71f4b3bafcefb274c05ecd10f145fac59e68a23",
+          "text_sha256": "47038dcb456f3fb3c53f057cfac55dfa7659ff0d84d271447c12a9f6988d1327"
+        },
+        {
+          "scene": "default-light",
+          "selection": "light",
+          "capture": "hwnd=5243654 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=75788",
+          "image_sha256": "6bd60ebd3bbf5e1ca4a317411f3b826cea6218c87d5bce079c3548073656b7a5",
+          "text_sha256": "47038dcb456f3fb3c53f057cfac55dfa7659ff0d84d271447c12a9f6988d1327"
+        }
+      ],
+      "terminal_output_preserved_after_round_trip": true,
+      "identical_pixels_after_round_trip": true
+    },
+    "after": {
+      "stage": "after",
+      "app": "D:\\tmp\\hitty-outline-follow-build\\debug\\hitty-app.exe",
+      "binary_sha256": "193ec4952c99713c5315ca7ab84c8cf24f41aea4ad87bbf9be45bdaa633513b1",
+      "profile": "C:\\Users\\cloudy\\AppData\\Local\\Temp\\hitty-theme-removal-after-qucp121_",
+      "configuration": {
+        "theme_preset": "light",
+        "theme_follow_system": false,
+        "theme_style_legible_palette": true,
+        "theme_legible_palette": true,
+        "window_blur": null,
+        "window_backdrop": "auto",
+        "window_opacity": null,
+        "gui_language": "en",
+        "font_family": "Hack",
+        "font_size": 15,
+        "line_height": 1.4,
+        "ui_font_size": 14,
+        "cursor_blink": false,
+        "tab_bar_position": "left",
+        "right_panel_visible": true,
+        "right_panel_tab": "info",
+        "check_for_updates": false,
+        "auto_download_updates": false,
+        "install_cli_on_path": false,
+        "show_tray_icon": false,
+        "shell": {
+          "program": "powershell.exe",
+          "args": [
+            "-NoLogo",
+            "-NoProfile",
+            "-NoExit",
+            "-ExecutionPolicy",
+            "Bypass",
+            "-Command",
+            "Set-Location $env:SystemRoot; function global:prompt { 'PS theme-restore> ' }; & 'D:\\gh-prj\\hitty-revert-otty\\.hitty-dev-theme-removal\\sample.ps1'"
+          ]
+        }
+      },
+      "logical_window": [
+        1200,
+        800
+      ],
+      "captures": [
+        {
+          "scene": "legacy-selection",
+          "selection": "otty-solarized-light",
+          "capture": "hwnd=5704522 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=75788",
+          "image_sha256": "6bd60ebd3bbf5e1ca4a317411f3b826cea6218c87d5bce079c3548073656b7a5",
+          "text_sha256": "47038dcb456f3fb3c53f057cfac55dfa7659ff0d84d271447c12a9f6988d1327"
+        },
+        {
+          "scene": "one-light",
+          "selection": "one_light",
+          "capture": "hwnd=5704522 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=73272",
+          "image_sha256": "3b2097ded8ddf6b66fc4ed89c71f4b3bafcefb274c05ecd10f145fac59e68a23",
+          "text_sha256": "47038dcb456f3fb3c53f057cfac55dfa7659ff0d84d271447c12a9f6988d1327"
+        },
+        {
+          "scene": "dark",
+          "selection": "dark",
+          "capture": "hwnd=5704522 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=80713",
+          "image_sha256": "3c2d20380b8c979d4c7a8c39b58ec6297ad28cf02b1beae334c8cafaa90bea61",
+          "text_sha256": "47038dcb456f3fb3c53f057cfac55dfa7659ff0d84d271447c12a9f6988d1327"
+        },
+        {
+          "scene": "one-light-again",
+          "selection": "one_light",
+          "capture": "hwnd=5704522 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=73272",
+          "image_sha256": "3b2097ded8ddf6b66fc4ed89c71f4b3bafcefb274c05ecd10f145fac59e68a23",
+          "text_sha256": "47038dcb456f3fb3c53f057cfac55dfa7659ff0d84d271447c12a9f6988d1327"
+        },
+        {
+          "scene": "default-light",
+          "selection": "light",
+          "capture": "hwnd=5704522 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=75788",
+          "image_sha256": "6bd60ebd3bbf5e1ca4a317411f3b826cea6218c87d5bce079c3548073656b7a5",
+          "text_sha256": "47038dcb456f3fb3c53f057cfac55dfa7659ff0d84d271447c12a9f6988d1327"
+        }
+      ],
+      "terminal_output_preserved_after_round_trip": true,
+      "identical_pixels_after_round_trip": true
+    }
+  },
+  "original_themes_pixel_identical_before_after": true,
+  "retired_selection_matches_default_light": true,
+  "windows_scale_percent": 175,
+  "images_inspected": true
+}

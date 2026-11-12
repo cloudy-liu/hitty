@@ -1136,9 +1136,6 @@ impl Pane<PaneSlot> {
                 .absolute()
                 .size_full();
 
-                let style = crate::ui::theme_style::active(cx);
-                let idle = style.and_then(|s| s.color("divider.color")).unwrap_or(idle);
-                let line_width = style.and_then(|s| s.number("divider.width")).unwrap_or(1.);
                 let line_color = if dragging.get() { active } else { idle };
                 // The gutter stays 5px so the split looks the same; the target
                 // is the 8px the sidebar and right-panel edges already hand
@@ -1181,8 +1178,8 @@ impl Pane<PaneSlot> {
                     .when(!row, |d| d.h(px(DIVIDER_THICKNESS)).w_full())
                     .child(
                         div()
-                            .when(row, |d| d.w(px(line_width)).h_full())
-                            .when(!row, |d| d.h(px(line_width)).w_full())
+                            .when(row, |d| d.w(px(1.)).h_full())
+                            .when(!row, |d| d.h(px(1.)).w_full())
                             .bg(line_color)
                             .group_hover("split-divider", |s| s.bg(active)),
                     )
