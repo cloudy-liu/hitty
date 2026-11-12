@@ -33,6 +33,8 @@ struct Options {
     tray_disabled: bool,
     #[serde(default)]
     dark: bool,
+    #[serde(default)]
+    notifications: bool,
 }
 
 #[derive(Deserialize)]
@@ -182,7 +184,11 @@ pub(crate) fn run(path: &std::ffi::OsStr) {
                 TabBarPosition::Left
             };
             config.show_tray_icon = !options.tray_disabled;
-            config.notify_on_command_finish = NotifyMode::Never;
+            config.notify_on_command_finish = if options.notifications {
+                NotifyMode::Always
+            } else {
+                NotifyMode::Never
+            };
             config.agent_notification_sound = NotifyMode::Never;
             cx.set_global(config);
             WorkspaceStore::init(cx);

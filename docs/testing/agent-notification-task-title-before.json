@@ -1,0 +1,68 @@
+{
+  "binary_sha256": "989A13CE03DB666A654E8A52173069478E63DF8E67A963550F6E5E9129D640CE",
+  "fixture_state": {
+    "sequence": 1,
+    "attention": false,
+    "windows": [
+      {
+        "active": false,
+        "panes": [
+          {
+            "status": "done",
+            "unread": true,
+            "focused": false
+          },
+          {
+            "status": "done",
+            "unread": true,
+            "focused": false
+          },
+          {
+            "status": null,
+            "unread": false,
+            "focused": true
+          }
+        ]
+      },
+      {
+        "active": true,
+        "panes": [
+          {
+            "status": "working",
+            "unread": false,
+            "focused": false
+          },
+          {
+            "status": "working",
+            "unread": false,
+            "focused": false
+          },
+          {
+            "status": null,
+            "unread": false,
+            "focused": true
+          }
+        ]
+      }
+    ]
+  },
+  "source_titles": [
+    "Agent A",
+    "Agent B"
+  ],
+  "baseline": "d82c162",
+  "visual_acceptance": "unverified",
+  "notifications": [
+    {
+      "title": "Claude Code",
+      "body": "Finished after 16s",
+      "xml": "<toast>\r\n  <visual>\r\n    <binding template=\"ToastText02\">\r\n      <text id=\"1\">Claude Code</text>\r\n      <text id=\"2\">Finished after 16s</text>\r\n    </binding>\r\n  </visual>\r\n  <audio silent=\"true\"/>\r\n</toast>"
+    },
+    {
+      "title": "Claude Code",
+      "body": "Finished after 16s",
+      "xml": "<toast>\r\n  <visual>\r\n    <binding template=\"ToastText02\">\r\n      <text id=\"1\">Claude Code</text>\r\n      <text id=\"2\">Finished after 16s</text>\r\n    </binding>\r\n  </visual>\r\n  <audio silent=\"true\"/>\r\n</toast>"
+    }
+  ],
+  "phase": "before"
+}

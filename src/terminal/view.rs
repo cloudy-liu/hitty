@@ -655,7 +655,15 @@ impl TerminalView {
         window: &Window,
         cx: &mut Context<Self>,
     ) {
-        let title = self.notification_title(Some(agent_name), cx);
+        // Use this pane's latest OSC title, even while the tab label settles.
+        // Looking up the selected tab would name the wrong task in a split.
+        let task = self.pending_title.as_deref().unwrap_or(&self.title).trim();
+        let lead = if task.is_empty() || task == self.default_title {
+            agent_name
+        } else {
+            task
+        };
+        let title = self.notification_title(Some(lead), cx);
         super::agent_notification::deliver(
             &title,
             body,
