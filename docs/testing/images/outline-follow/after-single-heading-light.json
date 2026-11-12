@@ -1,0 +1,34 @@
+{
+  "ready": true,
+  "title": "hitty document acceptance",
+  "os": "windows",
+  "scale_factor": 1.75,
+  "width": 1380.0,
+  "height": 760.0,
+  "dark": false,
+  "dock": false,
+  "right_panel": false,
+  "readme": true,
+  "history": false,
+  "history_width": null,
+  "history_height": null,
+  "history_profile": null,
+  "history_commits": null,
+  "files": [
+    "\\\\?\\D:\\tmp\\hitty-outline-follow-capture\\scene\\hitty\\archive\\README.md"
+  ],
+  "active": "\\\\?\\D:\\tmp\\hitty-outline-follow-capture\\scene\\hitty\\archive\\README.md",
+  "preview": true,
+  "open_files": 1,
+  "capture": "No GPU image requested",
+  "binary_sha256": "70e96f133de11cda6da0d15234caeb66035dbc03678ef04939c40c4f37391eeb",
+  "source": "feat/outline-follow working tree",
+  "phase": "after",
+  "panel_mode": null,
+  "panel_width": 240,
+  "pointer": [
+    1,
+    1
+  ],
+  "image_sha256": "4596583f7a6450be5de1e8a0f0c31615778f9b9ea3d4a0b58817747adf0b68f5"
+}

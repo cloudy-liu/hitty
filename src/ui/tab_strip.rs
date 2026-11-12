@@ -1097,7 +1097,7 @@ impl HittyApp {
     }
 
     pub(crate) fn right_panel_tabs(&self, size: f32, cx: &mut Context<Self>) -> Vec<AnyElement> {
-        let active_tab = self.right_panel_tab;
+        let active_tab = self.right_panel_shown_tab();
         // The count the source control tile carries. It reads the same status
         // the panel draws, so the badge and the group headers can never
         // disagree — and it counts entries, not files, because a path that is
@@ -1183,7 +1183,7 @@ impl HittyApp {
                         // while the panel is open, so `ToggleRightPanel` and the
                         // chrome tile beside them are still what brings it back.)
                         .on_click(cx.listener(move |this, _, window, cx| {
-                            match this.right_panel_open(cx) && this.right_panel_tab == tab {
+                            match this.right_panel_open(cx) && this.right_panel_shown_tab() == tab {
                                 true => {
                                     this.toggle_right_panel(cx);
                                     // These tiles live inside the panel, so

@@ -1,13 +1,24 @@
 ---
 title: "Coding agents"
-description: "What hitty does around Claude Code, Codex, and 20 others — without ever wrapping them."
+description: "What hitty adds around Claude Code, Codex, and 20 others."
 ---
 
-hitty recognises coding agents running in a pane and builds around them. It does
-not wrap them, proxy them, or replace their interface: the agent you start is
-the agent you get, running in a normal PTY, with its own UI. hitty adds the
+hitty recognises coding agents running in a pane and builds around them. Agents
+run in a normal PTY with their own UI. hitty adds the
 things a terminal is in a position to add — who is running where, what they
 need, and what changed.
+
+On native Windows shells, with agent-session restoration enabled, Hitty adds a
+pane-local native Codex launcher to PATH. It forwards arguments to your installed
+Codex with a per-invocation pane configuration. Current Codex versions use their
+embedded server for this override, so simultaneous conversations in the same
+directory can be identified and restored independently. Turning off
+`restore_agent_sessions` leaves command resolution unchanged.
+
+This applies to `codex`, `codex.exe`, and a pane configured directly with Codex.
+An absolute path typed inside a shell, or an alias that bypasses PATH, bypasses
+the launcher. For those launches, use `codex --no-daemon` where supported or
+start with an explicit `codex resume <session-id>` to retain an exact target.
 
 ## Which agents
 

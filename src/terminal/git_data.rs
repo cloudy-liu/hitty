@@ -839,7 +839,7 @@ impl HittyApp {
     fn scm_panel_target(&self, window: &Window, cx: &gpui::App) -> Option<(HostId, PathBuf)> {
         use crate::core::config::RightPanelTab;
 
-        if !self.right_panel_visible || self.right_panel_tab != RightPanelTab::Scm {
+        if !self.right_panel_visible || self.right_panel_shown_tab() != RightPanelTab::Scm {
             return None;
         }
         if let Some(repo) = self.scm.active_repo() {

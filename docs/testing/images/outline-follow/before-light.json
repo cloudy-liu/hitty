@@ -1,0 +1,36 @@
+{
+  "ready": true,
+  "title": "hitty document acceptance",
+  "os": "windows",
+  "scale_factor": 1.75,
+  "width": 1380.0,
+  "height": 760.0,
+  "dark": false,
+  "dock": false,
+  "right_panel": false,
+  "readme": true,
+  "history": false,
+  "history_width": null,
+  "history_height": null,
+  "history_profile": null,
+  "history_commits": null,
+  "files": [
+    "\\\\?\\D:\\tmp\\hitty-outline-follow-capture\\scene\\hitty\\README.md",
+    "\\\\?\\D:\\tmp\\hitty-outline-follow-capture\\scene\\hitty\\src\\settings.rs",
+    "\\\\?\\D:\\tmp\\hitty-outline-follow-capture\\scene\\hitty\\overview.html"
+  ],
+  "active": "\\\\?\\D:\\tmp\\hitty-outline-follow-capture\\scene\\hitty\\README.md",
+  "preview": true,
+  "open_files": 3,
+  "capture": "No GPU image requested",
+  "binary_sha256": "074cd6c053bd85b02a89361b8ffa0b90f6d04fd06e20727475231c6dce321132",
+  "source": "f36c167",
+  "phase": "before",
+  "panel_mode": null,
+  "panel_width": 240,
+  "pointer": [
+    1,
+    1
+  ],
+  "image_sha256": "7a632d612c0fae20ad534b7fbd99999f4880be9a8ba92d9e265dcf91baf85847"
+}

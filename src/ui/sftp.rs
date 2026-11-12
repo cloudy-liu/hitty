@@ -418,7 +418,7 @@ fn free_local_path(dir: &Path, name: &str, claimed: &HashSet<PathBuf>) -> Option
 impl HittyApp {
     pub(crate) fn toggle_sftp(&mut self, _window: &mut Window, cx: &mut Context<Self>) {
         use crate::core::config::RightPanelTab;
-        if self.right_panel_visible && self.right_panel_tab == RightPanelTab::Files {
+        if self.right_panel_visible && self.right_panel_shown_tab() == RightPanelTab::Files {
             self.toggle_right_panel(cx);
             return;
         }

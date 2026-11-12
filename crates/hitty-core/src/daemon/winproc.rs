@@ -105,29 +105,44 @@ fn detect_agent_process_with<F>(
 where
     F: Fn(u32) -> Option<std::path::PathBuf>,
 {
-    for (depth, pid, name) in walk(procs, shell_pid) {
-        if depth > AGENT_SCAN_MAX_DEPTH {
-            break;
-        }
+    let mut root = shell_pid;
+    'launchers: for _ in 0..=AGENT_SCAN_MAX_DEPTH {
+        for (depth, pid, name) in walk(procs, root) {
+            if depth > AGENT_SCAN_MAX_DEPTH {
+                break;
+            }
 
-        let launcher = name.to_ascii_lowercase();
-        let mut agent = CLIAgent::detect_from_argv_with(std::slice::from_ref(&launcher), custom);
-        if agent.is_none()
-            && let Some(path) = image_path_for(pid)
-        {
-            // Script-installed agents often leave only a generic interpreter
-            // in ToolHelp (`node.exe`). The image path still carries the
-            // package name (`...\cursor-agent\...\node.exe`). That is not
-            // argv — feeding the whole path to the argv detector would
-            // treat a home folder named `claude` as Claude.
-            agent = CLIAgent::detect_from_image_path_with(&path, custom);
+            let launcher = name.to_ascii_lowercase();
+            if launcher == "codex.exe"
+                && image_path_for(pid)
+                    .is_some_and(|path| super::codex_launch::is_launcher_path(&path))
+            {
+                // Our native forwarder is transparent. Re-root the bounded scan
+                // so npm's PowerShell -> node -> Codex chain still fits, and the
+                // input owner is Codex rather than a parent waiting for its exit.
+                root = pid;
+                continue 'launchers;
+            }
+            let mut agent =
+                CLIAgent::detect_from_argv_with(std::slice::from_ref(&launcher), custom);
+            if agent.is_none()
+                && let Some(path) = image_path_for(pid)
+            {
+                // Script-installed agents often leave only a generic interpreter
+                // in ToolHelp (`node.exe`). The image path still carries the
+                // package name (`...\cursor-agent\...\node.exe`). That is not
+                // argv — feeding the whole path to the argv detector would
+                // treat a home folder named `claude` as Claude.
+                agent = CLIAgent::detect_from_image_path_with(&path, custom);
+            }
+            if let Some(agent) = agent {
+                // ToolHelp does not expose the command line. An invented argv is
+                // unsafe to replay for session resume (especially interpreter
+                // wrappers), so this probe reports identity only.
+                return Some((pid, agent));
+            }
         }
-        if let Some(agent) = agent {
-            // ToolHelp does not expose the command line. An invented argv is
-            // unsafe to replay for session resume (especially interpreter
-            // wrappers), so this probe reports identity only.
-            return Some((pid, agent));
-        }
+        return None;
     }
     None
 }
@@ -334,7 +349,7 @@ where
 /// ToolHelp only names the image. An interactive `ssh user@host` hop is
 /// identified by argv; without it we can still see `ssh.exe` in the tree but
 /// not the destination.
-fn process_argv(pid: u32) -> Option<Vec<String>> {
+pub(super) fn process_argv(pid: u32) -> Option<Vec<String>> {
     let line = process_command_line(pid)?;
     let argv = split_command_line(&line);
     (!argv.is_empty()).then_some(argv)
@@ -1210,6 +1225,29 @@ mod tests {
             detected.as_ref().map(|(agent, _)| *agent),
             Some(CLIAgent::Codex)
         );
+    }
+
+    #[test]
+    fn pane_local_codex_launcher_is_transparent_to_the_bounded_agent_scan() {
+        let procs = vec![
+            p(100, 1, "powershell.exe"),
+            p(200, 100, "codex.exe"),
+            p(300, 200, "powershell.exe"),
+            p(400, 300, "node.exe"),
+            p(500, 400, "codex.exe"),
+            p(600, 500, "cmd.exe"),
+        ];
+        let detected = detect_agent_process_with(
+            &procs,
+            100,
+            |pid| match pid {
+                200 => Some(r"C:\temp\pane\hitty-agent-bin\codex.exe".into()),
+                500 => Some(r"C:\tools\codex.exe".into()),
+                _ => None,
+            },
+            &Default::default(),
+        );
+        assert_eq!(detected, Some((500, CLIAgent::Codex)));
     }
 
     #[test]
