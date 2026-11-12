@@ -5,10 +5,14 @@
 - Draw hover tooltips smaller and closer to the control they belong to, and
   show a control's shortcut in a quieter style beside its name
   (cloudy-liu/hitty#38).
+- Open Windows sessions and splits without the three-second pause before the
+  shell starts: the daemon now answers the pseudoconsole's startup query itself
+  (cloudy-liu/hitty#40).
 - Keep all Otty themes on Hitty's interface and terminal typography settings,
   and prevent imported fonts from remaining after switching themes.
-- Draw hover tooltips smaller and closer to the control they belong to, and
-  show a control's shortcut in a quieter style beside its name.
+- Show a Markdown preview's outline in the open right panel when the document
+  has two or more headings, and return to the chosen mode when it closes
+  (cloudy-liu/hitty#39).
 
 ## v0.3.0 - 2026-11-10
 
