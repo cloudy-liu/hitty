@@ -5,8 +5,8 @@
 - Add `hitty ask` and `hitty peers`, so an agent can be told "ask the Claude on
   the right" in words: panes resolve by side or agent name, the message is
   delivered only to an agent that is free, and its answer comes back. Claude
-  Code and Codex return their own final text; reinstall agent hooks to enable
-  it. `capture`, `wait` and `procs` accept the same pane words.
+  Code and Codex return their own final text through their existing hooks.
+  `capture`, `wait` and `procs` accept the same pane words.
 
 ## v0.4.0 - 2026-11-12
 

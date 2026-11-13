@@ -144,8 +144,8 @@ prompt: that decision stays with you. `124` means it is still working after
 the `reply` when it finishes.
 
 The reply travels over the server's socket, not through the terminal, so it
-needs a pane on this machine's server and current hooks — reinstall them from
-**Settings → Agents** after upgrading. Over a pane reached only through its
+needs a pane on this machine's server with the agent's status hooks installed
+(**Settings → Agents**); the hook command itself is unchanged. Over a pane reached only through its
 terminal (nested ssh), `ask` still works and reads the screen.
 
 ## Answering a prompt
