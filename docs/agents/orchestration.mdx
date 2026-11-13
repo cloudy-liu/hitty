@@ -117,6 +117,37 @@ waiting on can be that quick, poll faster (`--interval 100`) or drop `--changed`
 and let a sentinel file carry the answer. The timeout says as much when it
 happens.
 
+## Asking an agent that is already there
+
+The loop above starts a worker. Often the other agent is already open — a
+Claude Code beside your Codex — and what you want is to tell one of them
+"have the Claude on the right check this". That is `hitty ask`:
+
+```bash
+hitty peers
+# PANE  WHERE  AGENT   STATUS  TITLE
+# %52   right  claude  done    Review notes
+
+hitty ask right "Review the uncommitted diff in this repo. Findings only."
+```
+
+`ask` finds the pane (`right` is relative to the calling pane; `claude` means
+the nearest pane running it), refuses if that agent is mid-turn or waiting on
+you, pastes the message with a line saying who is asking, waits for the turn,
+and prints the answer. For Claude Code and Codex the answer is the agent's own
+final text, reported by its `Stop` hook; other agents fall back to the end of
+their screen, and the JSON says which.
+
+It exits `3` instead of answering when the other agent stops at a permission
+prompt: that decision stays with you. `124` means it is still working after
+`--timeout` (600 s by default); `hitty wait right --until done --json` carries
+the `reply` when it finishes.
+
+The reply travels over the server's socket, not through the terminal, so it
+needs a pane on this machine's server and current hooks — reinstall them from
+**Settings → Agents** after upgrading. Over a pane reached only through its
+terminal (nested ssh), `ask` still works and reads the screen.
+
 ## Answering a prompt
 
 A worker that stops at `waiting` is usually showing something that keystrokes,
@@ -178,6 +209,7 @@ never touches another pane pays nothing for it.
 </Warning>
 
 - **Never `send` into a pane you did not open.** Check `hitty agents` first.
+  `hitty ask` is how an agent talks to one it did not start, when asked to.
 - **Never close a pane, tab, or workspace you did not create.**
 - **Never `server stop` or `server restart`.** Every pane on the machine dies
   with it.

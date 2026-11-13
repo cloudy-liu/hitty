@@ -26,7 +26,24 @@ pub fn run_agent_hook(agent: &str, event: &str) {
     };
     let body = build_hook_body(agent, event, &input);
     if !report_to_daemon(&body) {
-        write_to_controlling_tty(&hook_sequence(&body));
+        write_to_controlling_tty(&hook_sequence(&without_reply(&body)));
+    }
+}
+
+/// The report as it may be written into a terminal: everything but the reply.
+///
+/// The reply is the one field with no bound a terminal can live with. The OSC
+/// tokenizer abandons a payload past 8 KiB instead of truncating it, so an
+/// answer of ordinary length would cost the whole `stop` — the status change
+/// and the turn boundary the outline is built from. Only the socket carries
+/// it; a pane reached through its terminal alone reports the turn and no text.
+pub(crate) fn without_reply(body: &str) -> std::borrow::Cow<'_, str> {
+    let Ok(serde_json::Value::Object(mut fields)) = serde_json::from_str(body) else {
+        return body.into();
+    };
+    match fields.remove("reply") {
+        Some(_) => serde_json::Value::Object(fields).to_string().into(),
+        None => body.into(),
     }
 }
 
@@ -139,6 +156,18 @@ fn build_hook_body(agent: &str, event: &str, stdin_json: &str) -> String {
         .and_then(prompt_label)
     {
         body["prompt"] = serde_json::Value::String(prompt);
+    }
+    // Claude Code and Codex hand a `Stop` hook the turn's final answer. It is
+    // what a peer that asked this agent something is waiting for, and reading
+    // it here beats reading it off a screen that has already scrolled.
+    if event == "stop"
+        && let Some(reply) = payload
+            .get("last_assistant_message")
+            .and_then(|v| v.as_str())
+            .map(str::trim)
+            .filter(|reply| !reply.is_empty())
+    {
+        body["reply"] = serde_json::Value::String(reply.to_string());
     }
     body.to_string()
 }
@@ -1603,6 +1632,51 @@ mod tests {
                 "{name} is not a hitty host process"
             );
         }
+    }
+
+    #[test]
+    fn a_stop_carries_the_final_answer_and_only_a_stop_does() {
+        use crate::core::cli_agent::parse_agent_event_body;
+
+        let payload =
+            r#"{"session_id":"s-1","last_assistant_message":"  Two issues:\n1. off by one  "}"#;
+        let body = build_hook_body("claude", "stop", payload);
+        let ev = parse_agent_event_body(body.as_bytes()).expect("the daemon parses a stop");
+        assert_eq!(ev.reply.as_deref(), Some("Two issues:\n1. off by one"));
+        assert_eq!(ev.message, None, "the answer is not a status label");
+
+        let body = build_hook_body("claude", "notification", payload);
+        let ev = parse_agent_event_body(body.as_bytes()).unwrap();
+        assert_eq!(ev.reply, None, "only the end of a turn has an answer");
+
+        let body = build_hook_body("codex", "stop", r#"{"last_assistant_message":null}"#);
+        assert_eq!(parse_agent_event_body(body.as_bytes()).unwrap().reply, None);
+    }
+
+    #[test]
+    fn the_terminal_fallback_reports_the_stop_without_its_answer() {
+        use crate::core::cli_agent::{AgentEventKind, parse_agent_event};
+
+        // Longer than the tokenizer's 8 KiB: written whole, the terminal
+        // would drop the event, not just the text.
+        let answer = "x".repeat(10_000);
+        let payload = format!(r#"{{"session_id":"s-1","last_assistant_message":"{answer}"}}"#);
+        let body = build_hook_body("claude", "stop", &payload);
+        assert!(body.len() > 10_000);
+
+        let seq = hook_sequence(&without_reply(&body));
+        assert!(seq.len() < 200, "nothing unbounded reaches the terminal");
+        let ev = parse_agent_event(&seq[2..seq.len() - 1]).expect("the stop still parses");
+        assert_eq!(ev.kind, AgentEventKind::Stop);
+        assert_eq!(ev.session_id.as_deref(), Some("s-1"));
+        assert_eq!(ev.reply, None);
+
+        let plain = build_hook_body("claude", "prompt-submit", r#"{"session_id":"s-1"}"#);
+        assert_eq!(
+            without_reply(&plain),
+            plain,
+            "nothing to strip, nothing rewritten"
+        );
     }
 
     #[test]

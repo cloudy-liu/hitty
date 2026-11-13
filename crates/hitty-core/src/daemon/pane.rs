@@ -756,6 +756,11 @@ struct PaneState {
     agent_input_suspended: bool,
     agent_argv: Option<Vec<String>>,
     agent_session: Option<crate::core::cli_agent::AgentSessionState>,
+    /// The final answer of the turn `agent_session` last finished. Cleared
+    /// wherever the session is, and when the next turn begins.
+    agent_reply: Option<String>,
+    /// Turns finished in this pane; see `PaneAgentState::turns`.
+    agent_turns: u64,
     command_input: CommandInput,
     /// Process probes may still see an invocation after its shutdown hook.
     /// Keep it suppressed until a new command/hook or a different process.
@@ -1117,6 +1122,10 @@ pub struct Carried {
     pub foreground_app: Option<crate::core::foreground_app::ForegroundApp>,
     pub agent_argv: Option<Vec<String>>,
     pub agent_session: Option<crate::core::cli_agent::AgentSessionState>,
+    /// A caller may be waiting on this pane's next answer across the exec; a
+    /// turn count that restarted would read to it as a turn that finished.
+    pub agent_reply: Option<String>,
+    pub agent_turns: u64,
     pub ended_agent: Option<(crate::core::cli_agent::CLIAgent, Option<Vec<String>>)>,
 }
 
@@ -1690,6 +1699,8 @@ impl DaemonPane {
                 foreground_app: None,
                 agent_input_suspended: false,
                 agent_session: None,
+                agent_reply: None,
+                agent_turns: 0,
                 agent_argv: None,
                 ended_agent: None,
                 command_input: CommandInput::default(),
@@ -1865,6 +1876,8 @@ impl DaemonPane {
             foreground_app: st.foreground_app,
             agent_argv: st.agent_argv.clone(),
             agent_session: st.agent_session.clone(),
+            agent_reply: st.agent_reply.clone(),
+            agent_turns: st.agent_turns,
             ended_agent: st.ended_agent.clone(),
         })
     }
@@ -1939,6 +1952,8 @@ impl DaemonPane {
                 foreground_app: carried.foreground_app,
                 agent_input_suspended: false,
                 agent_session: carried.agent_session,
+                agent_reply: carried.agent_reply,
+                agent_turns: carried.agent_turns,
                 agent_argv: carried.agent_argv,
                 ended_agent: carried.ended_agent,
                 command_input: CommandInput::default(),
@@ -1995,6 +2010,8 @@ impl DaemonPane {
             foreground_app: None,
             agent_input_suspended: false,
             agent_session: None,
+            agent_reply: None,
+            agent_turns: 0,
             agent_argv: None,
             ended_agent: None,
             command_input: CommandInput::default(),
@@ -3105,6 +3122,8 @@ fn agent_state_snapshot(st: &PaneState) -> Option<crate::daemon::control::PaneAg
             pane_id: st.id,
             agent: st.agent,
             state,
+            reply: st.agent_reply.clone(),
+            turns: st.agent_turns,
         })
 }
 
@@ -3289,6 +3308,7 @@ fn end_agent(st: &mut PaneState) {
         st.ended_agent = Some((agent, argv));
     }
     st.agent_session = None;
+    st.agent_reply = None;
     st.agent_argv = None;
     st.agent = None;
     // Even if process detection stayed at None, a client may have seeded a
@@ -3376,6 +3396,7 @@ fn apply_agent_signals(
             // old session before applying this event so the two agents cannot
             // share an id/status/launch argv.
             st.agent_session = None;
+            st.agent_reply = None;
             st.agent_argv = None;
             st.agent = Some(agent);
             notify(st, DaemonMsg::Agent(Some(agent)));
@@ -3383,6 +3404,17 @@ fn apply_agent_signals(
         st.agent_session
             .get_or_insert_with(AgentSessionState::default)
             .apply_event(event);
+        // An answer belongs to the turn that produced it: a `stop` replaces it
+        // (with nothing, from an agent that reports none), and a new prompt or
+        // session retires it, so it is never read as the next turn's.
+        match event.kind {
+            AgentEventKind::Stop => {
+                st.agent_reply = event.reply.clone();
+                st.agent_turns += 1;
+            }
+            AgentEventKind::PromptSubmit | AgentEventKind::SessionStart => st.agent_reply = None,
+            _ => {}
+        }
     }
 
     if let Some(body) = notification
@@ -3489,8 +3521,11 @@ fn apply_socket_agent_event(
     apply_agent_signals(st, vec![event], None);
     // The GUI's conversation outline scans these markers. Record and deliver
     // the complete sequence under the same lock as PTY output, never by
-    // writing into the agent's console from another process.
-    let marker = crate::core::agent_hooks::hook_sequence(body);
+    // writing into the agent's console from another process. The reply stays
+    // out of it: it is not part of the outline, and a marker past the OSC
+    // tokenizer's limit is dropped whole, taking the turn boundary with it.
+    let marker =
+        crate::core::agent_hooks::hook_sequence(&crate::core::agent_hooks::without_reply(body));
     st.ring.append(&marker);
     fan_out_output(st, &marker, Vec::new(), gate);
     Ok(())
@@ -3556,6 +3591,7 @@ fn apply_agent(
         st.agent_session = None;
         notify(st, DaemonMsg::AgentStatus(None));
     }
+    st.agent_reply = None;
     st.agent_argv = None;
     notify(st, DaemonMsg::Agent(agent));
     st.agent = agent;
@@ -6685,6 +6721,8 @@ mod tests {
             foreground_app: None,
             agent_input_suspended: false,
             agent_session: None,
+            agent_reply: None,
+            agent_turns: 0,
             agent_argv: None,
             ended_agent: None,
             command_input: CommandInput::default(),
@@ -6769,6 +6807,7 @@ mod tests {
                     message: None,
                     prompt: None,
                     source: None,
+                    reply: None,
                 }],
                 None,
             );
@@ -6789,6 +6828,7 @@ mod tests {
                     message: None,
                     prompt: Some("hello".into()),
                     source: None,
+                    reply: None,
                 }],
                 None,
             );
@@ -7626,6 +7666,7 @@ mod tests {
                 cwd: None,
                 prompt: None,
                 source: None,
+                reply: None,
             }],
             None,
         );
@@ -7669,6 +7710,7 @@ mod tests {
             cwd: None,
             prompt: None,
             source: None,
+            reply: None,
         };
         let detect = |id| {
             Some((
@@ -9932,5 +9974,80 @@ mod tests {
         );
         assert!(st.ring.flatten().is_empty());
         assert!(st.agent_session.is_none());
+    }
+
+    #[test]
+    fn a_reported_answer_is_kept_for_its_turn_and_stays_out_of_the_terminal() {
+        use crate::core::cli_agent::AgentStatus;
+
+        let mut st = test_state(true);
+        let gate = OutputGate::new();
+        let report = |st: &mut PaneState, event: serde_json::Value| {
+            apply_socket_agent_event(st, &event.to_string(), &gate).unwrap();
+        };
+        let answer = "y".repeat(10_000);
+
+        report(
+            &mut st,
+            serde_json::json!({"agent":"claude","event":"session-start","session_id":"s-1"}),
+        );
+        report(
+            &mut st,
+            serde_json::json!({"agent":"claude","event":"prompt-submit","session_id":"s-1"}),
+        );
+        report(
+            &mut st,
+            serde_json::json!({"agent":"claude","event":"stop","session_id":"s-1","reply":answer}),
+        );
+        let state = agent_state_snapshot(&st).expect("the agent reported");
+        assert_eq!(state.state.status, AgentStatus::Done);
+        assert_eq!(state.reply.as_deref(), Some(answer.as_str()));
+        assert_eq!(state.turns, 1);
+        assert_eq!(
+            state.state.message, None,
+            "the status label every window receives is not the answer"
+        );
+
+        // The outline marker is written for the stop, and nothing in the
+        // stream is long enough for the OSC tokenizer to abandon.
+        let ring = st.ring.flatten();
+        assert!(
+            ring.windows(br#""event":"stop""#.len())
+                .any(|w| w == br#""event":"stop""#)
+        );
+        assert!(
+            ring.len() < 1_000,
+            "the answer must not be replayed into the pane ({} bytes)",
+            ring.len()
+        );
+
+        // The next turn has no answer until it ends, and one that ends without
+        // reporting any does not inherit the last.
+        report(
+            &mut st,
+            serde_json::json!({"agent":"claude","event":"prompt-submit","session_id":"s-1"}),
+        );
+        assert_eq!(agent_state_snapshot(&st).unwrap().reply, None);
+        report(
+            &mut st,
+            serde_json::json!({"agent":"claude","event":"stop","session_id":"s-1","reply":"done"}),
+        );
+        report(
+            &mut st,
+            serde_json::json!({"agent":"claude","event":"stop","session_id":"s-1"}),
+        );
+        let state = agent_state_snapshot(&st).unwrap();
+        assert_eq!(state.reply, None);
+        assert_eq!(
+            state.turns, 3,
+            "every finished turn counts, answered or not"
+        );
+
+        report(
+            &mut st,
+            serde_json::json!({"agent":"claude","event":"stop","session_id":"s-1","reply":"done"}),
+        );
+        end_agent(&mut st);
+        assert_eq!(st.agent_reply, None, "an answer does not outlive its agent");
     }
 }

@@ -1674,6 +1674,8 @@ mod aggregate_tests {
                     session_id: Some("sess-7".into()),
                     ..Default::default()
                 },
+                reply: None,
+                turns: 0,
             }]
         }
     }
