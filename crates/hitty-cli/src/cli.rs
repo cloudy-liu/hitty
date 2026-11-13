@@ -86,12 +86,35 @@ pub enum Command {
 
     #[command(about = "Processes and listening ports inside a pane")]
     Procs {
-        #[arg(value_name = "%PANE")]
+        #[arg(value_name = "PANE")]
         target: Option<String>,
     },
 
     #[command(about = "Every agent on this machine: running, waiting for a reply, idle")]
     Agents,
+
+    #[command(
+        about = "The panes around this one and the agents on this machine: where each \
+                 is (left, right, …), what runs in it, what it is doing"
+    )]
+    Peers,
+
+    #[command(
+        about = "Ask the agent in another pane something and print its answer — \
+                 `hitty ask right \"review my diff\"`",
+        long_about = "Hands MESSAGE to the agent in another pane and prints what it answers.\n\n\
+                      PANE is %42, a side of the calling pane (left, right, up, down), or the \
+                      name of the agent running there (claude, codex, …) — the nearest one, \
+                      and an error naming the candidates when two are equally near.\n\n\
+                      Nothing is sent to an agent that is mid-turn or stopped at a prompt for \
+                      its own user. The message goes in as one paste, marked with who is \
+                      asking; the answer is the agent's own final text where its hooks report \
+                      it (Claude Code, Codex), else the end of its screen.\n\n\
+                      Exit codes: 0 answered · 3 the agent stopped to ask its user something \
+                      · 124 still working at --timeout (the message was delivered) · 1 the \
+                      agent or its pane ended."
+    )]
+    Ask(AskArgs),
 
     #[command(
         about = "Block until a pane's agent needs input, finishes its turn, or the pane \
@@ -269,8 +292,9 @@ impl WaitState {
 #[derive(Debug, Args)]
 pub struct WaitArgs {
     #[arg(
-        value_name = "%PANE",
-        help = "Pane to watch; defaults to $HITTY_PANE inside a hitty shell"
+        value_name = "PANE",
+        help = "Pane to watch — %42, left/right/up/down, or an agent's name; defaults \
+                to $HITTY_PANE inside a hitty shell"
     )]
     pub target: Option<String>,
 
@@ -326,10 +350,51 @@ pub struct WaitArgs {
 }
 
 #[derive(Debug, Args)]
+pub struct AskArgs {
+    #[arg(
+        value_name = "PANE",
+        help = "%42, a side of this pane (left, right, up, down), or an agent's name \
+                (claude, codex, …)"
+    )]
+    pub target: String,
+
+    #[arg(value_name = "MESSAGE", help = "What to ask; may span several lines")]
+    pub message: String,
+
+    #[arg(
+        long,
+        help = "Deliver the message and return without waiting for the answer"
+    )]
+    pub no_wait: bool,
+
+    // Long enough for a real review, short enough that a caller's own tool
+    // timeout is not what ends the wait: 124 says "still working", and the
+    // answer is still there to collect with `hitty wait`.
+    #[arg(
+        long,
+        value_name = "SECS",
+        default_value_t = 600,
+        help = "Stop waiting after this many seconds, with exit code 124; the agent \
+                keeps working"
+    )]
+    pub timeout: u64,
+
+    #[arg(
+        long,
+        value_name = "MS",
+        default_value_t = 500,
+        value_parser = clap::value_parser!(u64).range(50..=3_600_000),
+        help = "Poll every this many milliseconds"
+    )]
+    pub interval: u64,
+}
+
+#[derive(Debug, Args)]
 pub struct CaptureArgs {
     #[arg(
-        value_name = "%PANE",
-        help = "Pane to read; defaults to $HITTY_PANE inside a hitty shell"
+        value_name = "PANE",
+        help = "Pane to read — %42, left/right/up/down, or an agent's name; defaults \
+                to $HITTY_PANE inside a hitty shell"
     )]
     pub target: Option<String>,
 
@@ -589,6 +654,33 @@ mod tests {
         assert!(matches!(
             parse(&["hitty", "procs", "%3"]).command,
             Some(Command::Procs { target: Some(t) }) if t == "%3"
+        ));
+    }
+
+    #[test]
+    fn ask_takes_a_pane_in_words_and_a_message() {
+        let cli = parse(&["hitty", "ask", "right", "review my diff"]);
+        let Some(Command::Ask(args)) = cli.command else {
+            panic!("ask did not parse");
+        };
+        assert_eq!(args.target, "right");
+        assert_eq!(args.message, "review my diff");
+        assert!(!args.no_wait);
+        assert_eq!(args.timeout, 600);
+
+        let cli = parse(&["hitty", "ask", "%52", "go", "--no-wait", "--json"]);
+        assert!(cli.json);
+        let Some(Command::Ask(args)) = cli.command else {
+            panic!("ask did not parse");
+        };
+        assert!(args.no_wait);
+
+        // A message without a pane is not a message to "whoever is there".
+        let err = Cli::try_parse_from(["hitty", "ask", "review my diff"]).unwrap_err();
+        assert_eq!(err.kind(), ErrorKind::MissingRequiredArgument);
+        assert!(matches!(
+            parse(&["hitty", "peers"]).command,
+            Some(Command::Peers)
         ));
     }
 

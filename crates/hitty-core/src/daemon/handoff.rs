@@ -97,6 +97,10 @@ struct PaneRecord {
     agent_argv: Option<Vec<String>>,
     agent_session: Option<crate::core::cli_agent::AgentSessionState>,
     #[serde(default)]
+    agent_reply: Option<String>,
+    #[serde(default)]
+    agent_turns: u64,
+    #[serde(default)]
     ended_agent: Option<(crate::core::cli_agent::CLIAgent, Option<Vec<String>>)>,
     /// Length of this pane's ring in the data section, which follows the
     /// manifest in pane order.
@@ -247,6 +251,8 @@ fn stage(panes: &[Carried], next_pane_id: u64) -> std::io::Result<std::fs::File>
             foreground_app: pane.foreground_app,
             agent_argv: pane.agent_argv.clone(),
             agent_session: pane.agent_session.clone(),
+            agent_reply: pane.agent_reply.clone(),
+            agent_turns: pane.agent_turns,
             ended_agent: pane.ended_agent.clone(),
             ring_len: encoded.len() as u32,
         });
@@ -383,6 +389,8 @@ pub fn adopt(fd: RawFd) -> Option<Adopted> {
             foreground_app: record.foreground_app,
             agent_argv: record.agent_argv,
             agent_session: record.agent_session,
+            agent_reply: record.agent_reply,
+            agent_turns: record.agent_turns,
             ended_agent: record.ended_agent,
         });
     }
@@ -429,6 +437,8 @@ mod tests {
             foreground_app: None,
             agent_argv: None,
             agent_session: None,
+            agent_reply: None,
+            agent_turns: 0,
             ended_agent: None,
         }
     }

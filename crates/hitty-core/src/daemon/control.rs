@@ -322,6 +322,23 @@ pub struct PaneAgentState {
     #[serde(default)]
     pub agent: Option<crate::core::cli_agent::CLIAgent>,
     pub state: crate::core::cli_agent::AgentSessionState,
+    /// The agent's final answer for the turn it last finished, when its hook
+    /// reported one. Kept beside the session state rather than inside it: the
+    /// state is pushed to every attached window on each status change, and an
+    /// answer is read by the one caller that asked for it.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub reply: Option<String>,
+    /// How many turns this pane's agents have finished since the pane opened.
+    /// The status is a level — `done` stands until the next turn begins — so a
+    /// turn short enough to start and end between two polls leaves it where it
+    /// was. The count moves anyway, which is how a caller that asked a question
+    /// knows the `done` it is looking at is the answer to it.
+    #[serde(default, skip_serializing_if = "is_zero")]
+    pub turns: u64,
+}
+
+fn is_zero(n: &u64) -> bool {
+    *n == 0
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -1569,6 +1586,8 @@ mod tests {
                     activity: 3,
                     unstarted: false,
                 },
+                reply: Some("Two issues:\n1. off by one".into()),
+                turns: 4,
             }])),
             ControlReply::Ok(ReplyOk::AgentStates(Vec::new())),
             ControlReply::Ok(ReplyOk::Routes(vec![RouteInfo {

@@ -5,11 +5,13 @@ use gpui::{App, Bounds, MouseButton, MouseMoveEvent, MouseUpEvent, Pixels, Windo
 use gpui::{Axis, Entity, InteractiveElement as _, prelude::*, px};
 use gpui_component::ActiveTheme as _;
 
+// Where panes sit and which one lies in a direction is decided in one place,
+// so `hitty ask right` reaches the pane this window would move focus to.
+pub use crate::core::layout::Rect;
+use crate::core::layout::{Direction, MAX_RATIO, MIN_RATIO};
 use crate::terminal::view::TerminalView;
 use crate::ui::pending_pane::PendingPane;
 
-const MIN_RATIO: f32 = 0.1;
-const MAX_RATIO: f32 = 0.9;
 const DIVIDER_THICKNESS: f32 = 5.;
 
 /// How opaque a dragged (lifted) pane's terminal paints, blended toward the
@@ -132,18 +134,6 @@ pub(crate) struct PaneChrome {
     /// The pane filling the tab alone, whose toolbar offers restore where
     /// zoom was.
     pub zoomed: Option<gpui::EntityId>,
-}
-
-#[derive(Clone, Copy, Debug, PartialEq)]
-pub struct Rect {
-    pub x: f32,
-    pub y: f32,
-    pub w: f32,
-    pub h: f32,
-}
-
-fn overlap_1d(a0: f32, alen: f32, b0: f32, blen: f32) -> f32 {
-    ((a0 + alen).min(b0 + blen) - a0.max(b0)).max(0.0)
 }
 
 pub enum CloseOutcome {
@@ -789,32 +779,14 @@ impl<L: Clone> Pane<L> {
     }
 
     pub fn neighbor_in_direction(&self, from: usize, dir: Dir) -> Option<usize> {
-        let rects = self.leaf_rects();
-        let f = rects.get(from)?.1;
-        const EPS: f32 = 1e-4;
-        let mut best: Option<(usize, f32, f32)> = None;
-        for (i, (_, c)) in rects.iter().enumerate() {
-            if i == from {
-                continue;
-            }
-            let (dist, overlap) = match dir {
-                Dir::Left => (f.x - (c.x + c.w), overlap_1d(f.y, f.h, c.y, c.h)),
-                Dir::Right => (c.x - (f.x + f.w), overlap_1d(f.y, f.h, c.y, c.h)),
-                Dir::Up => (f.y - (c.y + c.h), overlap_1d(f.x, f.w, c.x, c.w)),
-                Dir::Down => (c.y - (f.y + f.h), overlap_1d(f.x, f.w, c.x, c.w)),
-            };
-            if dist < -EPS || overlap <= EPS {
-                continue;
-            }
-            let better = match best {
-                None => true,
-                Some((_, bd, bo)) => dist < bd - EPS || (dist <= bd + EPS && overlap > bo + EPS),
-            };
-            if better {
-                best = Some((i, dist, overlap));
-            }
-        }
-        best.map(|(i, _, _)| i)
+        let rects: Vec<Rect> = self.leaf_rects().into_iter().map(|(_, r)| r).collect();
+        let dir = match dir {
+            Dir::Left => Direction::Left,
+            Dir::Right => Direction::Right,
+            Dir::Up => Direction::Up,
+            Dir::Down => Direction::Down,
+        };
+        crate::core::layout::neighbor(&rects, from, dir)
     }
 
     pub fn resize_focused(&self, is_focused: &impl Fn(&L) -> bool, dir: Dir, step: f32) -> bool {
