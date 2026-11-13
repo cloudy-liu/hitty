@@ -736,6 +736,16 @@ fn ask_reaches_the_agent_on_the_right_and_returns_its_answer(daemon: &Daemon) {
     let caller = created["pane"].as_u64().expect("new prints the pane id");
 
     let fixture = std::env::current_exe().expect("locate the agent fixture");
+    // On unix the server also asks the pty which process is in front, on every
+    // read, and a pane whose foreground command is not an agent's has its
+    // agent cleared — a hook report alone does not outlast that. So the
+    // stand-in goes by an agent's name there, as the real one does.
+    #[cfg(unix)]
+    let fixture = {
+        let named = daemon.dir.path().join("claude");
+        std::os::unix::fs::symlink(&fixture, &named).expect("name the fixture after an agent");
+        named
+    };
     let shell = ShellSpec {
         program: fixture.display().to_string(),
         args: vec![AGENT_FIXTURE_ARG.into()],
