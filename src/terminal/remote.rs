@@ -2843,27 +2843,10 @@ struct OscNotifyScanner {
 
 fn feed_osc_progress(tok: &mut OscTokenizer, bytes: &[u8], progress: &Mutex<String>) {
     tok.feed(bytes, |payload| {
-        let Some(report) = std::str::from_utf8(payload)
-            .ok()
-            .and_then(|s| s.strip_prefix("9;4;"))
-        else {
-            return;
-        };
-        let mut fields = report.split(';');
-        if !matches!(fields.next(), Some("0" | "1" | "2" | "3" | "4")) {
-            return;
-        }
-        if let Some(value) = fields.next()
-            && !value
-                .parse::<i16>()
-                .is_ok_and(|value| (-1..=100).contains(&value))
-        {
-            return;
-        }
-        if fields.next().is_none()
+        if let Some(report) = crate::core::screen_status::progress_report(payload)
             && let Ok(mut stored) = progress.lock()
         {
-            *stored = format!("4;{report}");
+            *stored = report;
         }
     });
 }

@@ -7,6 +7,9 @@
 //! a set of text matches over one region of the live bottom of the pane, and
 //! the highest-priority rule that matches names the state.
 //!
+//! It lives here, not in the window, so the command line reads a pane the same
+//! way: `hitty ask` must not type into an agent the window shows as busy.
+//!
 //! The manifests in `assets/agent-detection/` are herdr's own, with hitty's
 //! additions kept in `extensions/` (Apache-2.0; see the README there).
 //! The matcher and region functions below follow herdr's
@@ -27,7 +30,7 @@ const MANIFEST_ENGINE_VERSION: u32 = 3;
 /// What one look at the screen says.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "snake_case")]
-pub(crate) enum ScreenState {
+pub enum ScreenState {
     Idle,
     Working,
     Blocked,
@@ -35,27 +38,27 @@ pub(crate) enum ScreenState {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) struct Reading {
-    pub(crate) state: ScreenState,
+pub struct Reading {
+    pub state: ScreenState,
     /// Whether a rule matched. Without one this is herdr's fallback (idle for
     /// a known agent that shows nothing it recognises), which is a default and
     /// not evidence.
-    pub(crate) matched: bool,
+    pub matched: bool,
     /// The idle prompt itself is on screen, not just the absence of work.
-    pub(crate) visible_idle: bool,
+    pub visible_idle: bool,
     /// The matched rule marks a screen that says nothing about the state (a
     /// transcript viewer, say), and the previous reading should stand.
-    pub(crate) skip: bool,
+    pub skip: bool,
 }
 
-pub(crate) struct Input<'a> {
-    pub(crate) screen: &'a str,
-    pub(crate) osc_title: &'a str,
-    pub(crate) osc_progress: &'a str,
+pub struct Input<'a> {
+    pub screen: &'a str,
+    pub osc_title: &'a str,
+    pub osc_progress: &'a str,
 }
 
 /// Classify a screen for `agent`. `None` when herdr has no manifest for it.
-pub(crate) fn read(agent: CLIAgent, input: &Input) -> Option<Reading> {
+pub fn read(agent: CLIAgent, input: &Input) -> Option<Reading> {
     let manifest = compiled(agent)?;
     let mut best: Option<&CompiledRule> = None;
     for rule in &manifest.rules {
@@ -89,24 +92,26 @@ pub(crate) fn read(agent: CLIAgent, input: &Input) -> Option<Reading> {
 
 fn manifest_source(agent: CLIAgent) -> Option<&'static str> {
     Some(match agent {
-        CLIAgent::Claude => include_str!("../../assets/agent-detection/claude.toml"),
-        CLIAgent::Codex => include_str!("../../assets/agent-detection/codex.toml"),
-        CLIAgent::Gemini => include_str!("../../assets/agent-detection/gemini.toml"),
-        CLIAgent::Amp => include_str!("../../assets/agent-detection/amp.toml"),
-        CLIAgent::OpenCode => include_str!("../../assets/agent-detection/opencode.toml"),
-        CLIAgent::Copilot => include_str!("../../assets/agent-detection/copilot.toml"),
-        CLIAgent::Cursor => include_str!("../../assets/agent-detection/cursor.toml"),
-        CLIAgent::Droid => include_str!("../../assets/agent-detection/droid.toml"),
-        CLIAgent::Pi => include_str!("../../assets/agent-detection/pi.toml"),
-        CLIAgent::Hermes => include_str!("../../assets/agent-detection/hermes.toml"),
-        CLIAgent::Antigravity => include_str!("../../assets/agent-detection/antigravity.toml"),
-        CLIAgent::Grok => include_str!("../../assets/agent-detection/grok.toml"),
-        CLIAgent::Qwen => include_str!("../../assets/agent-detection/qwen.toml"),
-        CLIAgent::Kimi => include_str!("../../assets/agent-detection/kimi.toml"),
+        CLIAgent::Claude => include_str!("../../../../assets/agent-detection/claude.toml"),
+        CLIAgent::Codex => include_str!("../../../../assets/agent-detection/codex.toml"),
+        CLIAgent::Gemini => include_str!("../../../../assets/agent-detection/gemini.toml"),
+        CLIAgent::Amp => include_str!("../../../../assets/agent-detection/amp.toml"),
+        CLIAgent::OpenCode => include_str!("../../../../assets/agent-detection/opencode.toml"),
+        CLIAgent::Copilot => include_str!("../../../../assets/agent-detection/copilot.toml"),
+        CLIAgent::Cursor => include_str!("../../../../assets/agent-detection/cursor.toml"),
+        CLIAgent::Droid => include_str!("../../../../assets/agent-detection/droid.toml"),
+        CLIAgent::Pi => include_str!("../../../../assets/agent-detection/pi.toml"),
+        CLIAgent::Hermes => include_str!("../../../../assets/agent-detection/hermes.toml"),
+        CLIAgent::Antigravity => {
+            include_str!("../../../../assets/agent-detection/antigravity.toml")
+        }
+        CLIAgent::Grok => include_str!("../../../../assets/agent-detection/grok.toml"),
+        CLIAgent::Qwen => include_str!("../../../../assets/agent-detection/qwen.toml"),
+        CLIAgent::Kimi => include_str!("../../../../assets/agent-detection/kimi.toml"),
         // Herdr reads the China build with the same manifest: its aliases list
         // `qoderclicn` and `qodercn` beside the global names.
         CLIAgent::QoderCLI | CLIAgent::QoderCLICn => {
-            include_str!("../../assets/agent-detection/qodercli.toml")
+            include_str!("../../../../assets/agent-detection/qodercli.toml")
         }
         CLIAgent::Aider
         | CLIAgent::Goose
@@ -115,6 +120,40 @@ fn manifest_source(agent: CLIAgent) -> Option<&'static str> {
         | CLIAgent::OhMyPi
         | CLIAgent::CodeBuddy => return None,
     })
+}
+
+/// Whether `agent` has a manifest, so a look at its screen can say anything.
+pub fn reads(agent: CLIAgent) -> bool {
+    manifest_source(agent).is_some()
+}
+
+/// A valid OSC 9;4 progress report, in the shape the `osc_progress` rules
+/// match: `4;<state>[;<value>]`. `None` for any other OSC 9 payload.
+pub fn progress_report(payload: &[u8]) -> Option<String> {
+    let report = std::str::from_utf8(payload).ok()?.strip_prefix("9;4;")?;
+    let mut fields = report.split(';');
+    if !matches!(fields.next(), Some("0" | "1" | "2" | "3" | "4")) {
+        return None;
+    }
+    if let Some(value) = fields.next()
+        && !value
+            .parse::<i16>()
+            .is_ok_and(|value| (-1..=100).contains(&value))
+    {
+        return None;
+    }
+    fields.next().is_none().then(|| format!("4;{report}"))
+}
+
+/// The last progress report in a stretch of pane output, or nothing.
+pub fn last_progress(bytes: &[u8]) -> String {
+    let mut last = String::new();
+    crate::core::osc::OscTokenizer::new(&[b"9"]).feed(bytes, |payload| {
+        if let Some(report) = progress_report(payload) {
+            last = report;
+        }
+    });
+    last
 }
 
 /// The agents whose hooks herdr trusts over the screen once they report,
@@ -131,13 +170,13 @@ fn hooks_are_authority(agent: CLIAgent) -> bool {
 /// What the screen says about the agent, once readings have been turned into a
 /// turn's status.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) struct ScreenStatus {
+pub struct ScreenStatus {
     /// `None` is herdr's unknown: the screen is up, but nothing on it names a
     /// state. A Codex screen without a recognizable prompt/footer reads this way.
-    pub(crate) status: Option<AgentStatus>,
+    pub status: Option<AgentStatus>,
     /// A rule backed the reading, rather than herdr's default for a screen
     /// with nothing on it the manifest recognises.
-    pub(crate) evidenced: bool,
+    pub evidenced: bool,
 }
 
 /// The status a pane shows, given what the hooks reported and what the screen
@@ -150,7 +189,7 @@ pub(crate) struct ScreenStatus {
 /// they are installed for, and they can miss an Esc or an approval, so outside
 /// that list the screen keeps herdr's word whenever a rule backs it, and the
 /// hooks fill in where none does.
-pub(crate) fn merge(
+pub fn merge(
     agent: CLIAgent,
     hook: Option<&AgentSessionState>,
     screen: Option<ScreenStatus>,
@@ -187,7 +226,7 @@ const IDLE_CONFIRMATIONS: u8 = 2;
 /// Screen readings for one pane, turned into a turn's status: a reading of
 /// idle after work becomes `Done`, which is what the hooks would have said.
 #[derive(Default)]
-pub(crate) struct Tracker {
+pub struct Tracker {
     agent: Option<CLIAgent>,
     /// What the last reading looked at, so an unchanged screen is not read
     /// again.
@@ -200,7 +239,7 @@ impl Tracker {
     /// Take another look at the screen if it could have changed since the last
     /// one. `seq` moves whenever output arrives; `screen` renders the snapshot
     /// and is only called when a reading is due.
-    pub(crate) fn observe(
+    pub fn observe(
         &mut self,
         agent: Option<CLIAgent>,
         seq: u64,
@@ -214,7 +253,7 @@ impl Tracker {
                 ..Tracker::default()
             };
         }
-        let Some(agent) = agent.filter(|a| manifest_source(*a).is_some()) else {
+        let Some(agent) = agent.filter(|a| reads(*a)) else {
             return;
         };
         let unchanged = self
@@ -274,7 +313,7 @@ impl Tracker {
 
     /// `None` until the screen has said anything, and for agents with no
     /// manifest.
-    pub(crate) fn status(&self) -> Option<ScreenStatus> {
+    pub fn status(&self) -> Option<ScreenStatus> {
         self.status
     }
 }
@@ -284,7 +323,7 @@ impl Tracker {
 /// the window ends at the lower of the cursor and the last row with text, so a
 /// short UI at the top of a tall pane is still in view. Scrolling the viewport
 /// back does not move it.
-pub(crate) fn detection_text<T: EventListener>(term: &Term<T>) -> String {
+pub fn detection_text<T: EventListener>(term: &Term<T>) -> String {
     use alacritty_terminal::grid::Dimensions as _;
     use alacritty_terminal::index::{Column, Line};
     use alacritty_terminal::term::TermMode;
@@ -561,13 +600,13 @@ fn compiled(agent: CLIAgent) -> Option<&'static CompiledManifest> {
                 .ok()?;
             let extension_source = match agent {
                 CLIAgent::Claude => Some(include_str!(
-                    "../../assets/agent-detection/extensions/claude.toml"
+                    "../../../../assets/agent-detection/extensions/claude.toml"
                 )),
                 CLIAgent::Cursor => Some(include_str!(
-                    "../../assets/agent-detection/extensions/cursor.toml"
+                    "../../../../assets/agent-detection/extensions/cursor.toml"
                 )),
                 CLIAgent::Codex => Some(include_str!(
-                    "../../assets/agent-detection/extensions/codex.toml"
+                    "../../../../assets/agent-detection/extensions/codex.toml"
                 )),
                 _ => None,
             };
@@ -924,7 +963,7 @@ mod tests {
 
     #[test]
     fn claude_named_session_question_survives_terminal_padding() {
-        let text = include_str!("../../docs/testing/fixtures/claude-named-question.txt");
+        let text = include_str!("../../../../docs/testing/fixtures/claude-named-question.txt");
         let term = term_with_columns(32, 100, text.replace('\n', "\r\n").as_bytes());
         let reading = screen(CLIAgent::Claude, &detection_text(&term));
         assert_eq!(reading.state, ScreenState::Blocked);

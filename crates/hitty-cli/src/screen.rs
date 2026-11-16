@@ -82,6 +82,16 @@ pub fn render(segments: &[CaptureSegment]) -> String {
     out
 }
 
+/// The live bottom of a captured pane, in the shape the agent screen rules
+/// read — the same text the window hands them.
+pub fn detection_text(segment: &CaptureSegment) -> String {
+    let size = GridSize::of(segment.size);
+    let mut term = Term::new(Config::default(), &size, VoidListener);
+    let mut parser: Processor = Processor::new();
+    parser.advance(&mut term, &segment.bytes);
+    hitty_core::core::screen_status::detection_text(&term)
+}
+
 fn render_segment(size: WinSize, bytes: &[u8]) -> String {
     let size = GridSize::of(size);
     // The scrollback the grid keeps is for output this segment pushed off its

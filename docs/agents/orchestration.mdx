@@ -143,10 +143,17 @@ prompt: that decision stays with you. `124` means it is still working after
 `--timeout` (600 s by default); `hitty wait right --until done --json` carries
 the `reply` when it finishes.
 
-The reply travels over the server's socket, not through the terminal, so it
-needs a pane on this machine's server with the agent's status hooks installed
-(**Settings → Agents**); the hook command itself is unchanged. Over a pane reached only through its
-terminal (nested ssh), `ask` still works and reads the screen.
+Whether the agent is free, busy or stopped at a prompt is judged the way the
+window judges it: its hooks merged with a [reading of its
+screen](/agents/status#reading-the-screen). So an agent with no hooks can be
+asked, and a Codex approval prompt, which its hooks do not announce, is still
+handed back to you.
+
+The answer's text travels over the server's socket, not through the terminal,
+so it needs a pane on this machine's server with the agent's status hooks
+installed (**Settings → Agents**). Without them — an agent with no hooks, or a
+pane reached only through its terminal (nested ssh) — `ask` returns the end of
+the screen instead.
 
 ## Answering a prompt
 

@@ -11193,7 +11193,6 @@ dependencies = [
  "smol",
  "svgtypes 0.16.1",
  "tempfile",
- "toml 0.8.23",
  "tray-icon",
  "tree-sitter",
  "hitty-core",
@@ -11227,6 +11226,7 @@ dependencies = [
 name = "hitty-core"
 version = "0.4.0"
 dependencies = [
+ "alacritty_terminal",
  "anyhow",
  "base64 0.22.1",
  "core-foundation 0.10.0",
@@ -11241,6 +11241,7 @@ dependencies = [
  "objc2 0.6.4",
  "objc2-foundation 0.3.2",
  "portable-pty",
+ "regex",
  "russh",
  "russh-sftp",
  "serde",
@@ -11252,6 +11253,7 @@ dependencies = [
  "system-configuration-sys",
  "tempfile",
  "tokio",
+ "toml 0.8.23",
  "toml_edit 0.25.13+spec-1.1.0",
  "ureq",
  "uuid",

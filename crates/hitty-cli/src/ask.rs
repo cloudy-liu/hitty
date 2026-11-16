@@ -20,9 +20,10 @@ use serde_json::{Value, json};
 use crate::address::Context;
 use crate::backend::Backend;
 use crate::cli::AskArgs;
-use crate::commands::{Outcome, Report, agent_states, pane_is_live};
+use crate::commands::{Outcome, Report, agent_states, fetch_machine};
 use crate::output;
 use crate::screen;
+use crate::status::{self, ScreenReader};
 use crate::target::{self, Scene};
 
 /// The asked agent stopped for its human — a permission prompt, a question —
@@ -33,14 +34,11 @@ pub const EXIT_NEEDS_USER: i32 = 3;
 /// How much of a screen stands in for an answer the agent did not report.
 const SCREEN_TAIL_LINES: usize = 40;
 
-fn status_name(status: AgentStatus) -> &'static str {
-    match status {
-        AgentStatus::Idle => "idle",
-        AgentStatus::Working => "working",
-        AgentStatus::Waiting => "waiting",
-        AgentStatus::Done => "done",
-    }
-}
+/// How long a turn the screen shows as finished may wait for its hook to say
+/// so too. The hook carries the answer as text, and usually lands within a
+/// moment of the screen settling; an agent whose hook never comes is answered
+/// from its screen once this has passed.
+const HOOK_GRACE: Duration = Duration::from_secs(3);
 
 pub fn peers(ctx: &Context, backend: &mut dyn Backend) -> Result<Outcome> {
     let scene = Scene::fetch(ctx, backend)?;
@@ -61,7 +59,18 @@ pub fn peers(ctx: &Context, backend: &mut dyn Backend) -> Result<Outcome> {
                     continue;
                 }
                 let side = scene.side_of_me(pane);
-                let status = scene.state(pane).map(|s| status_name(s.state.status));
+                // The status the window shows, not just the hooks' half of it:
+                // an agent with no hooks still has one, and one stopped at a
+                // prompt its hooks do not announce reads `waiting` here too.
+                let status = ScreenReader::default()
+                    .status(
+                        backend,
+                        pane,
+                        agent,
+                        scene.title(pane),
+                        scene.state(pane).map(|s| &s.state),
+                    )?
+                    .map(status::name);
                 let record = scene.machine.panes.iter().find(|p| p.id == pane);
                 let title = record
                     .and_then(|p| p.osc_title.clone())
@@ -76,8 +85,8 @@ pub fn peers(ctx: &Context, backend: &mut dyn Backend) -> Result<Outcome> {
                     format!("%{pane}"),
                     place,
                     agent.map_or("-", |a| a.slug()).to_string(),
-                    // An agent with no status is one whose hooks are missing:
-                    // it can be read, but `ask` cannot tell when it answers.
+                    // No status: no hooks, and nothing on its screen that the
+                    // rules for this agent recognise. `ask` will refuse it.
                     status.unwrap_or("-").to_string(),
                     title
                         .clone()
@@ -157,8 +166,6 @@ pub fn ask(args: AskArgs, ctx: &Context, backend: &mut dyn Backend) -> Result<Ou
     // The same gap `send` leaves before a key: a raw-mode editor reads a paste
     // and an Enter that arrive together as one paste, and keeps the newline.
     const SUBMIT_GAP: Duration = Duration::from_millis(200);
-    /// See `wait`: a reporting agent can outlive its pane.
-    const LIVENESS_EVERY: u32 = 4;
 
     let message = args.message.trim();
     if message.is_empty() {
@@ -172,18 +179,30 @@ pub fn ask(args: AskArgs, ctx: &Context, backend: &mut dyn Backend) -> Result<Ou
     if !scene.is_live(pane) {
         bail!("no live pane %{pane} on this machine — `hitty peers` lists who is around");
     }
-    // Everything `ask` promises rests on the agent reporting: without a status
-    // there is no telling whether it is safe to type, nor when it has answered.
-    let Some(before) = scene.state(pane).cloned() else {
-        bail!(
-            "nothing in pane %{pane} reports agent status — it is a plain shell, or an agent \
-             whose hooks are not installed (`hitty doctor` says which). `hitty send` types \
-             into a pane like that; `ask` needs an agent that can say when it is done"
-        );
-    };
+    // Everything `ask` promises rests on knowing what the agent is doing:
+    // without that there is no telling whether it is safe to type, nor when it
+    // has answered. Hooks say it, and so does the screen of an agent hitty has
+    // rules for — the two the window itself goes by.
+    let before = scene.state(pane).cloned();
     let agent = scene.agent(pane);
     let name = agent.map_or("the agent", |a| a.display_name());
-    match before.state.status {
+    let mut reader = ScreenReader::default();
+    let standing = reader.status(
+        backend,
+        pane,
+        agent,
+        scene.title(pane),
+        before.as_ref().map(|s| &s.state),
+    )?;
+    let Some(standing) = standing else {
+        bail!(
+            "nothing says what pane %{pane} is doing — it is a plain shell, or an agent with \
+             no status hooks (`hitty doctor`) showing a screen hitty cannot read. `hitty send` \
+             types into a pane like that; `ask` needs to know when the agent is free and \
+             when it is done"
+        );
+    };
+    match standing {
         // Typing into a turn in progress queues behind it at best, and the
         // answer that comes back first belongs to somebody else's question.
         AgentStatus::Working => bail!(
@@ -196,14 +215,14 @@ pub fn ask(args: AskArgs, ctx: &Context, backend: &mut dyn Backend) -> Result<Ou
             "{name} in pane %{pane} is waiting on its user{} — that prompt is theirs to \
              answer, so nothing was sent",
             before
-                .state
-                .message
-                .as_deref()
+                .as_ref()
+                .and_then(|s| s.state.message.as_deref())
                 .map(|m| format!(" ({m})"))
                 .unwrap_or_default()
         ),
         AgentStatus::Idle | AgentStatus::Done => {}
     }
+    let turns_before = before.as_ref().map_or(0, |s| s.turns);
 
     backend.send_input(pane, paste_bytes(&envelope(&scene, message)))?;
     std::thread::sleep(SUBMIT_GAP);
@@ -214,9 +233,13 @@ pub fn ask(args: AskArgs, ctx: &Context, backend: &mut dyn Backend) -> Result<Ou
         "agent": agent.map(|a| a.slug()),
         "sent": message,
     });
-    let finish = |code: i32, human: String, state: Option<&PaneAgentState>, more: Value| {
+    let finish = |code: i32,
+                  human: String,
+                  status: Option<AgentStatus>,
+                  state: Option<&PaneAgentState>,
+                  more: Value| {
         let mut json = base.clone();
-        json["status"] = state.map(|s| status_name(s.state.status)).into();
+        json["status"] = status.map(status::name).into();
         json["session_id"] = state.and_then(|s| s.state.session_id.clone()).into();
         for (key, value) in more.as_object().into_iter().flatten() {
             json[key] = value.clone();
@@ -231,15 +254,17 @@ pub fn ask(args: AskArgs, ctx: &Context, backend: &mut dyn Backend) -> Result<Ou
         return finish(
             0,
             format!("sent to %{pane}"),
-            Some(&before),
+            Some(standing),
+            before.as_ref(),
             json!({ "answered": false }),
         );
     }
 
     let deadline = Instant::now().checked_add(Duration::from_secs(args.timeout));
     let interval = Duration::from_millis(args.interval);
-    let mut seen_working = false;
-    let mut polls: u32 = 0;
+    let mut hook_worked = false;
+    let mut screen_worked = false;
+    let mut settled_at: Option<Instant> = None;
     loop {
         let nap = match deadline {
             Some(d) => interval.min(d.saturating_duration_since(Instant::now())),
@@ -247,30 +272,52 @@ pub fn ask(args: AskArgs, ctx: &Context, backend: &mut dyn Backend) -> Result<Ou
         };
         std::thread::sleep(nap);
 
-        let states = agent_states(backend)?;
-        polls += 1;
-        let now = states.into_iter().find(|s| s.pane_id == pane);
-        let gone = match &now {
-            None => true,
-            Some(_) => polls.is_multiple_of(LIVENESS_EVERY) && !pane_is_live(backend, pane)?,
-        };
-        let Some(now) = now.filter(|_| !gone) else {
+        let now = agent_states(backend)?
+            .into_iter()
+            .find(|s| s.pane_id == pane);
+        // The tree is asked every round: it says whether the pane is still
+        // there — a reporting agent can outlive it — and carries the title
+        // some agents put their state in.
+        let machine = fetch_machine(backend)?;
+        let record = machine.panes.iter().find(|p| p.id == pane && p.live);
+        // A session the hooks reported and then withdrew has ended, however
+        // alive its shell is.
+        let (Some(record), false) = (record, before.is_some() && now.is_none()) else {
             let human = format!("{name} in pane %{pane} ended before answering");
             eprintln!("hitty: {human}");
-            return finish(1, human, None, json!({ "answered": false }));
+            return finish(1, human, None, None, json!({ "answered": false }));
         };
-        seen_working |= now.state.status == AgentStatus::Working;
+        let hook = now.as_ref().map(|s| &s.state);
+        let title = record.osc_title.as_deref().unwrap_or_default();
+        let status = reader.status(backend, pane, agent, title, hook)?;
+        // Each source is held to its own evidence. A screen already showing
+        // work while the hooks' `done` from the last turn still stands — the
+        // prompt hook a moment behind — is not a turn the hooks saw end.
+        hook_worked |= hook.is_some_and(|s| s.status == AgentStatus::Working);
+        screen_worked |= status == Some(AgentStatus::Working);
 
-        // The turn count is the edge; the status is only a level. A short
-        // answer can start and finish between two polls and leave `done`
-        // standing where it stood — indistinguishable from never having
-        // started, except that a turn was counted. A server from before the
-        // count existed never moves it, and is read by the level instead:
-        // seen working, now done.
-        let answered =
-            now.turns > before.turns || (seen_working && now.state.status == AgentStatus::Done);
+        // The turn count is the edge; a status is only a level. A short answer
+        // can start and finish between two polls and leave `done` standing
+        // where it stood — indistinguishable from never having started, except
+        // that a turn was counted. A server from before the count is read by
+        // the hooks' level instead: seen working, now done.
+        let counted = now.as_ref().is_some_and(|s| s.turns > turns_before)
+            || (hook_worked && hook.is_some_and(|s| s.status == AgentStatus::Done));
+        // And the screen can say it alone, which is all there is from an agent
+        // with no hooks. Where hooks do report, the screen settles a moment
+        // before the hook that carries the answer lands: give it that moment.
+        let settled = screen_worked && status == Some(AgentStatus::Done);
+        let since = *settled_at.get_or_insert_with(Instant::now);
+        if !settled {
+            settled_at = None;
+        }
+        let answered = counted || (settled && (now.is_none() || since.elapsed() >= HOOK_GRACE));
         if answered {
-            let (reply, source) = match now.reply.as_deref().filter(|r| !r.trim().is_empty()) {
+            let reported = now
+                .as_ref()
+                .and_then(|s| s.reply.as_deref())
+                .filter(|r| counted && !r.trim().is_empty());
+            let (reply, source) = match reported {
                 Some(reply) => (reply.to_string(), "agent"),
                 None => (screen_tail(backend, pane)?, "screen"),
             };
@@ -284,14 +331,17 @@ pub fn ask(args: AskArgs, ctx: &Context, backend: &mut dyn Backend) -> Result<Ou
             return finish(
                 0,
                 human,
-                Some(&now),
+                Some(AgentStatus::Done),
+                now.as_ref(),
                 json!({ "answered": true, "reply": reply, "reply_source": source }),
             );
         }
         // It was not waiting when the message went in, so this is a stop the
         // message caused — a permission prompt, a question back.
-        if now.state.status == AgentStatus::Waiting {
-            let asks = now.state.message.clone();
+        if status == Some(AgentStatus::Waiting) {
+            let asks = hook
+                .filter(|s| s.status == AgentStatus::Waiting)
+                .and_then(|s| s.message.clone());
             let human = format!(
                 "{name} in pane %{pane} stopped to ask its user{} — that is theirs to answer; \
                  `hitty wait %{pane} --until done --json` picks the reply up afterwards",
@@ -303,7 +353,8 @@ pub fn ask(args: AskArgs, ctx: &Context, backend: &mut dyn Backend) -> Result<Ou
             return finish(
                 EXIT_NEEDS_USER,
                 human,
-                Some(&now),
+                status,
+                now.as_ref(),
                 json!({ "answered": false, "message": asks }),
             );
         }
@@ -311,14 +362,15 @@ pub fn ask(args: AskArgs, ctx: &Context, backend: &mut dyn Backend) -> Result<Ou
             let human = format!(
                 "{name} in pane %{pane} is still {} after {}s — the message was delivered; \
                  `hitty wait %{pane} --until done,waiting --json` waits on and carries the reply",
-                status_name(now.state.status),
+                status.map_or("unreadable", status::name),
                 args.timeout
             );
             eprintln!("hitty: {human}");
             return finish(
                 124,
                 human,
-                Some(&now),
+                status,
+                now.as_ref(),
                 json!({ "answered": false, "timed_out": true }),
             );
         }
@@ -461,10 +513,6 @@ mod tests {
             "Enter is its own write, after the paste has landed"
         );
         assert_eq!(backend.sent.len(), 2);
-        assert!(
-            backend.captured.is_empty(),
-            "an answer the agent reported is not read off the screen"
-        );
 
         let (code, json) = json_of(outcome);
         assert_eq!(code, 0);
@@ -552,7 +600,156 @@ mod tests {
         assert_eq!(code, 0);
         assert_eq!(json["reply"], "looks fine to me");
         assert_eq!(json["reply_source"], "screen");
-        assert_eq!(backend.captured, vec![(52, false)]);
+    }
+
+    /// What a pane shows, as one captured segment.
+    fn shows(text: &str) -> Vec<CaptureSegment> {
+        vec![CaptureSegment {
+            size: WinSize {
+                cols: 80,
+                rows: 24,
+                cell_w: 8,
+                cell_h: 16,
+            },
+            bytes: text.replace('\n', "\r\n").into_bytes(),
+        }]
+    }
+
+    /// Pane 52 runs `agent` as far as the server's process detection can tell;
+    /// no hook has reported from it.
+    fn backend_running(agent: CLIAgent) -> MockBackend {
+        let mut backend = backend();
+        backend.machine.panes[1].agent = Some(hitty_core::core::machine::AgentFacts {
+            agent,
+            session_id: None,
+            launch_argv: None,
+            status: None,
+            restore_pending: false,
+            unstarted: false,
+        });
+        backend
+    }
+
+    const CODEX_READY: &str = "›\n  ? for shortcuts\n";
+    const CODEX_APPROVAL: &str = "›\nallow command?\n";
+
+    fn codex(status: AgentStatus, turns: u64) -> PaneAgentState {
+        PaneAgentState {
+            agent: Some(CLIAgent::Codex),
+            ..claude(status, turns, None)
+        }
+    }
+
+    /// Cursor has no hooks hitty can install. Its screen is the only word
+    /// there is, and it is enough: free, then working, then finished.
+    #[test]
+    fn an_agent_with_no_hooks_is_asked_by_reading_its_screen() {
+        let mut backend = backend_running(CLIAgent::Cursor);
+        let working = "  Reading src/main.rs\n\n  ⬢ Generating\n  ctrl+c to stop\n";
+        let finished = "  The parser is fine.\n\n  → Add a follow-up\n";
+        backend.capture_replies = [shows(""), shows(working)].into();
+        // A quiet screen is held for two more looks before it counts as done.
+        backend.capture_segments = shows(finished);
+        script(&mut backend, vec![vec![]; 5]);
+
+        let (code, json) = json_of(
+            run(
+                &["ask", "cursor", "Is the parser ok?", "--interval", "50"],
+                &mut backend,
+            )
+            .unwrap(),
+        );
+        assert_eq!(code, 0);
+        assert_eq!(json["agent"], "cursor");
+        assert_eq!(json["answered"], true);
+        assert_eq!(json["reply_source"], "screen");
+        assert!(
+            json["reply"]
+                .as_str()
+                .unwrap()
+                .contains("The parser is fine."),
+            "{json}"
+        );
+        assert_eq!(backend.sent.len(), 2);
+    }
+
+    /// Codex's hooks do not announce a permission prompt: they go on saying
+    /// `working`. The prompt is on its screen, where the window reads it.
+    #[test]
+    fn a_prompt_the_hooks_do_not_announce_is_read_off_the_screen() {
+        let mut backend = backend();
+        backend.capture_replies = [shows(CODEX_READY)].into();
+        backend.capture_segments = shows(CODEX_APPROVAL);
+        script(
+            &mut backend,
+            vec![
+                vec![codex(AgentStatus::Done, 3)],
+                vec![codex(AgentStatus::Working, 3)],
+            ],
+        );
+        let (code, json) = json_of(
+            run(
+                &["ask", "right", "run the tests", "--interval", "50"],
+                &mut backend,
+            )
+            .unwrap(),
+        );
+        assert_eq!(code, EXIT_NEEDS_USER, "{json}");
+        assert_eq!(json["status"], "waiting");
+        assert_eq!(json["answered"], false);
+        assert_eq!(backend.sent.len(), 2, "the prompt is not answered for them");
+    }
+
+    #[test]
+    fn nothing_is_typed_over_a_prompt_only_the_screen_shows() {
+        let mut backend = backend();
+        backend.capture_segments = shows(CODEX_APPROVAL);
+        script(&mut backend, vec![vec![codex(AgentStatus::Working, 3)]]);
+        let err = run(&["ask", "right", "hello"], &mut backend)
+            .unwrap_err()
+            .to_string();
+        assert!(err.contains("waiting on its user"), "{err}");
+        assert!(backend.sent.is_empty());
+
+        // And the survey says the same thing the refusal does.
+        script(&mut backend, vec![vec![codex(AgentStatus::Working, 3)]]);
+        let Outcome::Report(report) = run(&["peers"], &mut backend).unwrap() else {
+            panic!("peers reports");
+        };
+        assert_eq!(report.json["peers"][0]["status"], "waiting");
+    }
+
+    /// The screen settles before the hook that carries the answer lands. The
+    /// answer is worth the moment it takes.
+    #[test]
+    fn a_screen_that_settles_first_waits_for_the_hooks_answer() {
+        let mut backend = backend();
+        let working = "• Working (2s • esc to interrupt)\n› \n";
+        backend.capture_replies = [shows(CODEX_READY), shows(working)].into();
+        backend.capture_segments = shows(CODEX_READY);
+        script(
+            &mut backend,
+            vec![
+                vec![codex(AgentStatus::Done, 3)],
+                vec![codex(AgentStatus::Working, 3)],
+                // The prompt is back on screen; the stop hook has not landed.
+                vec![codex(AgentStatus::Working, 3)],
+                vec![PaneAgentState {
+                    reply: Some("All 14 pass.".into()),
+                    ..codex(AgentStatus::Done, 4)
+                }],
+            ],
+        );
+        let (code, json) = json_of(
+            run(
+                &["ask", "right", "run the tests", "--interval", "50"],
+                &mut backend,
+            )
+            .unwrap(),
+        );
+        assert_eq!(code, 0);
+        assert_eq!(json["reply"], "All 14 pass.");
+        assert_eq!(json["reply_source"], "agent");
     }
 
     #[test]
@@ -578,7 +775,7 @@ mod tests {
         let err = run(&["ask", "right", "hello"], &mut backend)
             .unwrap_err()
             .to_string();
-        assert!(err.contains("reports agent status"), "{err}");
+        assert!(err.contains("nothing says what pane %52 is doing"), "{err}");
         assert!(err.contains("hitty send"), "the other tool is named: {err}");
 
         let mut backend = backend_with_self_reporting();

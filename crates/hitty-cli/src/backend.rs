@@ -88,6 +88,9 @@ pub mod mock {
         pub sent: Vec<(u64, Vec<u8>)>,
         pub captured: Vec<(u64, bool)>,
         pub capture_segments: Vec<CaptureSegment>,
+        /// Consumed one per call before falling back to `capture_segments`, so
+        /// a test can script a screen that changes between looks.
+        pub capture_replies: VecDeque<Vec<CaptureSegment>>,
         pub procs_calls: Vec<u64>,
         pub procs_reply: PaneProcs,
         /// Consumed one per call before falling back to `procs_reply`, so a
@@ -116,6 +119,7 @@ pub mod mock {
                 sent: Vec::new(),
                 captured: Vec::new(),
                 capture_segments: Vec::new(),
+                capture_replies: VecDeque::new(),
                 procs_calls: Vec::new(),
                 procs_reply: PaneProcs::default(),
                 procs_replies: VecDeque::new(),
@@ -179,7 +183,10 @@ pub mod mock {
 
         fn capture(&mut self, pane: u64, scrollback: bool) -> Result<Vec<CaptureSegment>> {
             self.captured.push((pane, scrollback));
-            Ok(self.capture_segments.clone())
+            Ok(self
+                .capture_replies
+                .pop_front()
+                .unwrap_or_else(|| self.capture_segments.clone()))
         }
 
         fn procs(&mut self, pane: u64) -> Result<PaneProcs> {

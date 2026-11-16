@@ -88,6 +88,16 @@ impl Scene {
         })
     }
 
+    /// The title the pane's program set, which some agents put their state in.
+    pub fn title(&self, pane: u64) -> &str {
+        self.machine
+            .panes
+            .iter()
+            .find(|p| p.id == pane)
+            .and_then(|p| p.osc_title.as_deref())
+            .unwrap_or_default()
+    }
+
     pub fn is_live(&self, pane: u64) -> bool {
         self.machine.panes.iter().any(|p| p.id == pane && p.live)
     }

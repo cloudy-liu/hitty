@@ -16,15 +16,15 @@ REPOSITORY = "herdrdev/herdr"
 
 
 def manifest_names(root):
-    source = (root / "src/terminal/screen_status.rs").read_text(encoding="utf-8")
-    names = set(re.findall(r'include_str!\(\s*"../../assets/agent-detection/([\w-]+\.toml)"\s*\)', source))
+    source = (root / "crates/hitty-core/src/core/screen_status.rs").read_text(encoding="utf-8")
+    names = set(re.findall(r'include_str!\(\s*"../../../../assets/agent-detection/([\w-]+\.toml)"\s*\)', source))
     if not names:
         raise ValueError("the detection engine must register its bundled manifests")
     return names
 
 
 def engine_version(root):
-    source = (root / "src/terminal/screen_status.rs").read_text(encoding="utf-8")
+    source = (root / "crates/hitty-core/src/core/screen_status.rs").read_text(encoding="utf-8")
     match = re.search(r"const MANIFEST_ENGINE_VERSION: u32 = (\d+);", source)
     if match is None:
         raise ValueError("the detection engine must declare its manifest engine version")

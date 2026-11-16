@@ -9,6 +9,7 @@ mod output;
 mod resolve;
 mod screen;
 mod server;
+mod status;
 mod stdio;
 mod target;
 #[cfg(test)]

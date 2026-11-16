@@ -63,8 +63,10 @@ hooks cover the whole turn: once those report, they are trusted over the screen,
 as herdr trusts them. Codex's ready prompt is recognized as idle. When neither
 the screen nor a hook reports a state, the status stays unknown.
 
-The screen is read by the window showing the pane. `hitty agents` and
-[`hitty wait`](/agents/orchestration) still go by the hooks alone.
+The window showing the pane reads its screen continuously.
+[`hitty ask` and `hitty peers`](/agents/orchestration#asking-an-agent-that-is-already-there)
+take the same reading with the same rules when they run. `hitty agents` and
+`hitty wait` still go by the hooks alone.
 
 ## The status symbol
 
