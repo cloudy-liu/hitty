@@ -1098,17 +1098,23 @@ pub fn shell_command() -> Option<(String, Vec<String>)> {
 }
 
 pub fn working_directory_base() -> Option<PathBuf> {
-    let wd = Config::load().working_directory;
-    let home = || std::env::var_os("HOME").map(PathBuf::from);
-    match wd.strategy {
-        WdStrategy::Inherit => None,
-        WdStrategy::Home => home(),
-        WdStrategy::Custom => {
-            let p = wd.path.trim();
-            if p.is_empty() {
-                home()
-            } else {
-                Some(PathBuf::from(p))
+    Config::load().working_directory_base()
+}
+
+impl Config {
+    pub(crate) fn working_directory_base(&self) -> Option<PathBuf> {
+        let wd = &self.working_directory;
+        let home = || std::env::var_os("HOME").map(PathBuf::from);
+        match wd.strategy {
+            WdStrategy::Inherit => None,
+            WdStrategy::Home => home(),
+            WdStrategy::Custom => {
+                let p = wd.path.trim();
+                if p.is_empty() {
+                    home()
+                } else {
+                    Some(PathBuf::from(p))
+                }
             }
         }
     }

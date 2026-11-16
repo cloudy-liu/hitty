@@ -1,0 +1,98 @@
+{
+  "date": "2026-11-16",
+  "scope": "DaemonPane::spawn to first active prompt report; both variants use the Hitty changes in this PR; no sidebar click or paint timing",
+  "method": "10 alternating-order pairs, one startup per process, no concurrent builds/tests",
+  "conpty": "1.24.260710001",
+  "clink_changelog": "1.2.46",
+  "functional_checks": "Tab-complete DOSKEY alias, execute arithmetic, Up+Enter replay; 20/20 passed",
+  "source_hashes": {
+    "init.bat": {
+      "baseline": "78ea11ada9c761b223667cdcd856be98e4cb835e2ff96223c94b22171c0d4d34",
+      "optimized": "78ea11ada9c761b223667cdcd856be98e4cb835e2ff96223c94b22171c0d4d34"
+    },
+    "lib/lib_base.cmd": {
+      "baseline": "c32536180528b831d0a6be520078d3350a3e118ab9d1bd94451d7fa448efb3ed",
+      "optimized": "c32536180528b831d0a6be520078d3350a3e118ab9d1bd94451d7fa448efb3ed"
+    },
+    "lib/lib_git.cmd": {
+      "baseline": "4dca3bfdd14621d5a808eda9000b16e28122f28a2a951e4e70e11207922d37b3",
+      "optimized": "4dca3bfdd14621d5a808eda9000b16e28122f28a2a951e4e70e11207922d37b3"
+    },
+    "lib/lib_path.cmd": {
+      "baseline": "7e28cb30171c3fc718363fee286eaf45882e44fac366b7cd8d94e9108b711d1f",
+      "optimized": "7e28cb30171c3fc718363fee286eaf45882e44fac366b7cd8d94e9108b711d1f"
+    },
+    "lib/lib_profile.cmd": {
+      "baseline": "7ace24034a56e60abb8906b70a2c525615c7312af9d9534a812e86f3a1fd6db9",
+      "optimized": "5c925309d03bd9cca781da9b7e0a3943fbcac736d9bdc52c26996ec5f3f3550c"
+    }
+  },
+  "summary": {
+    "baseline": {
+      "n": 10,
+      "median_ms": 1409.8132,
+      "p95_ms": 1480.611,
+      "spawn_median_ms": 26.210449999999998
+    },
+    "optimized": {
+      "n": 10,
+      "median_ms": 1366.48795,
+      "p95_ms": 1425.1973,
+      "spawn_median_ms": 26.1798
+    }
+  },
+  "samples": {
+    "baseline": {
+      "prompt_ms": [
+        1480.611,
+        1375.2774,
+        1379.9325000000001,
+        1375.3316,
+        1445.3992,
+        1404.0159999999998,
+        1412.8240999999998,
+        1406.8023,
+        1414.1458,
+        1464.5518
+      ],
+      "spawn_ms": [
+        25.990699999999997,
+        25.821199999999997,
+        28.8395,
+        24.1893,
+        24.9522,
+        23.782999999999998,
+        26.4302,
+        27.042,
+        29.7306,
+        30.0985
+      ]
+    },
+    "optimized": {
+      "prompt_ms": [
+        1415.0035,
+        1351.7336,
+        1369.6108,
+        1363.3651,
+        1356.1258999999998,
+        1362.7819,
+        1415.7765,
+        1356.4629,
+        1402.7103000000002,
+        1425.1973
+      ],
+      "spawn_ms": [
+        22.9808,
+        23.4118,
+        26.483,
+        26.631800000000002,
+        25.8766,
+        28.7438,
+        23.7418,
+        24.8512,
+        30.066,
+        26.636699999999998
+      ]
+    }
+  }
+}
