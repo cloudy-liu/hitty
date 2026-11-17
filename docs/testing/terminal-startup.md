@@ -1,9 +1,9 @@
 # Terminal startup: current optimization and acceptance
 
-Status: the 500 ms goal is **not met**. Native project-sidebar and split entry
-points are now measured. The current Cmder candidate reduces local native-entry
-P50 by about 385?520 ms (23?29%), with complete shell features in the tested
-scenarios. Keep the PR draft. These are dev-build, local-machine measurements.
+Status: Ready for review as an incremental startup-preparation improvement.
+The 500 ms goal is **not met** and remains follow-up work. Native project-sidebar
+and split entry points are measured with dev builds on this machine. The
+maintainer accepted this narrower scope after reviewing the positive results.
 
 ## Production Hitty changes
 
@@ -16,8 +16,34 @@ probing fallback directories.
 The GUI imports and ranks history on a background worker alongside shell
 creation. It joins both results before constructing the terminal view. Entries,
 counts, directories, metadata and rankings remain available at input handoff.
-The measurements below hold Hitty constant and quantify the Cmder candidate;
-they do not quantify the benefit of these two Hitty changes.
+The daemon/shell and native-entry comparisons hold Hitty constant and quantify
+the Cmder candidate. A separate microbenchmark below isolates configuration
+read cost; the full startup and history-overlap benefits remain unquantified.
+
+## Hitty configuration-stage confirmation
+
+A focused microbenchmark uses the actual `Config::load` file-read, parse and
+sanitize path on a generated 2958-byte default configuration. Twenty
+alternating-order pairs each average 100 preparations, with five loads for the
+previous maximum local Windows path and one load for the current snapshot:
+
+| Configuration preparation | P50 | P95 |
+| --- | ---: | ---: |
+| Five reads/parses | 1.0384 ms | 1.1217 ms |
+| One fresh snapshot | 0.2036 ms | 0.2209 ms |
+
+All pairs improved; the P50 reduction is 0.8348 ms (80.4%) for this stage. This
+confirms positive removal of repeated work, not a millisecond estimate for
+end-to-end pane startup. The history-overlap benefit remains unquantified.
+A subsequent file edit was observed by the next `Config::load`. The full source,
+method and raw values are in the `hitty_config_microbenchmark` section of the
+[current evidence](terminal-startup-native-evidence.json).
+
+The preloaded-history regression also sends Ctrl+R and Enter through
+`TerminalView::on_key_down`, verifies search selection and command-buffer
+restoration, and checks ghost suggestions immediately after handoff. These
+assertions complement the shell-only completion/replay checks below. They do
+not claim a full application-before/after performance acceptance.
 
 ## Cmder diagnosis and retained candidate
 
@@ -143,6 +169,8 @@ target/debug/examples/measure-pane-startup.exe .scratch/cmder-current/optimized/
   custom DIR modes, shell-path detection, logging/library variables, Git version
   ordering, legacy aliases and populated/empty profile directories: passed.
 - A custom no-argument library initialization was correctly rejected.
+- The direct pane benchmark clears inherited `HITTY_PANE_ENGINE` so a developer
+  override cannot select Herdr instead of the fixture's native ConPTY engine.
 - No production visual layout change; no image-based visual acceptance claimed.
 
 An executable-directory wildcard fast path became slower in populated tool

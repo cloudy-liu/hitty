@@ -61,6 +61,7 @@ fn main() -> anyhow::Result<()> {
                 "debug_output",
                 "verbose_output",
                 "git_install_root",
+                "hitty_pane_engine",
             ]
             .contains(&name.as_str())
         {

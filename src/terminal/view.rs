@@ -14410,7 +14410,7 @@ mod native_history_gpui_tests {
             gpui_component::init(cx);
             cx.set_global(Config::default());
         });
-        let (mut parts, _daemon) = quiet_test_shell_parts(42);
+        let (mut parts, mut daemon) = quiet_test_shell_parts(42);
         let line = "echo preloaded-history-fixture".to_string();
         let meta = super::super::history::EntryMeta {
             ts: Some(123),
@@ -14433,8 +14433,33 @@ mod native_history_gpui_tests {
                 assert_eq!(view.history_counts[&line], 3);
                 assert!(view.history_cwds[&line].contains("/project"));
                 assert_eq!(view.history_meta[&line], meta);
-                assert_eq!(view.history_ranked, [line]);
+                assert_eq!(view.history_ranked, [line.clone()]);
                 assert_eq!(view.history_frecency, [2.5]);
+            })
+            .unwrap();
+        prompt_ready(&window, cx, &mut daemon);
+        window
+            .update(cx, |view, window, cx| {
+                assert!(view.input_active());
+                view.commit_text("echo preloaded", cx);
+                assert_eq!(view.ghost_suggestion(), Some(line.clone()));
+                let chord = |spec| KeyDownEvent {
+                    keystroke: key(spec),
+                    is_held: false,
+                    prefer_character_input: false,
+                };
+                view.on_key_down(&chord("ctrl-r"), window, cx);
+                view.commit_text("fixture", cx);
+                assert_eq!(
+                    view.reverse_search
+                        .as_ref()
+                        .expect("Ctrl+R opens history search after handoff")
+                        .selected_line(&view.history),
+                    Some(line.as_str())
+                );
+                view.on_key_down(&chord("enter"), window, cx);
+                assert!(view.reverse_search.is_none());
+                assert_eq!(view.cmd.text(), line);
             })
             .unwrap();
     }

@@ -1090,7 +1090,7 @@
     "Dev build; not release-build or company-machine acceptance.",
     "Native GUI variants are run in blocks; ten samples per cell is a small local dataset.",
     "The company custom synchronous Git prompt is not available here.",
-    "Hitty configuration/history preparation benefits remain unquantified; this comparison holds Hitty constant."
+    "The native and shell comparisons hold Hitty constant; the added microbenchmark isolates configuration read cost only. End-to-end Hitty and history-overlap benefits remain unquantified."
   ],
   "exploratory_trials_excluded": [
     "Early native harness runs missed the button due to a misplaced bounds observer or stalled during interactive tab cleanup; neither is included as valid timing acceptance.",
@@ -1109,5 +1109,282 @@
     "cmder_behavior_comparisons": 95,
     "custom_no_argument_include_rejection": "passed",
     "python_syntax": "passed"
+  },
+  "hitty_config_microbenchmark": {
+    "config_bytes": 2958,
+    "disk_reload_check": "passed",
+    "measurements": [
+      {
+        "iterations": 100,
+        "loads": 5,
+        "ms_per_preparation": 0.9494180000000001,
+        "pair": 0
+      },
+      {
+        "iterations": 100,
+        "loads": 1,
+        "ms_per_preparation": 0.185811,
+        "pair": 0
+      },
+      {
+        "iterations": 100,
+        "loads": 1,
+        "ms_per_preparation": 0.185892,
+        "pair": 1
+      },
+      {
+        "iterations": 100,
+        "loads": 5,
+        "ms_per_preparation": 1.004809,
+        "pair": 1
+      },
+      {
+        "iterations": 100,
+        "loads": 5,
+        "ms_per_preparation": 0.997516,
+        "pair": 2
+      },
+      {
+        "iterations": 100,
+        "loads": 1,
+        "ms_per_preparation": 0.19879399999999997,
+        "pair": 2
+      },
+      {
+        "iterations": 100,
+        "loads": 1,
+        "ms_per_preparation": 0.20614400000000002,
+        "pair": 3
+      },
+      {
+        "iterations": 100,
+        "loads": 5,
+        "ms_per_preparation": 1.121731,
+        "pair": 3
+      },
+      {
+        "iterations": 100,
+        "loads": 5,
+        "ms_per_preparation": 1.224991,
+        "pair": 4
+      },
+      {
+        "iterations": 100,
+        "loads": 1,
+        "ms_per_preparation": 0.226537,
+        "pair": 4
+      },
+      {
+        "iterations": 100,
+        "loads": 1,
+        "ms_per_preparation": 0.219766,
+        "pair": 5
+      },
+      {
+        "iterations": 100,
+        "loads": 5,
+        "ms_per_preparation": 1.075207,
+        "pair": 5
+      },
+      {
+        "iterations": 100,
+        "loads": 5,
+        "ms_per_preparation": 1.074778,
+        "pair": 6
+      },
+      {
+        "iterations": 100,
+        "loads": 1,
+        "ms_per_preparation": 0.20566299999999998,
+        "pair": 6
+      },
+      {
+        "iterations": 100,
+        "loads": 1,
+        "ms_per_preparation": 0.192663,
+        "pair": 7
+      },
+      {
+        "iterations": 100,
+        "loads": 5,
+        "ms_per_preparation": 1.0196230000000002,
+        "pair": 7
+      },
+      {
+        "iterations": 100,
+        "loads": 5,
+        "ms_per_preparation": 1.096672,
+        "pair": 8
+      },
+      {
+        "iterations": 100,
+        "loads": 1,
+        "ms_per_preparation": 0.19997700000000002,
+        "pair": 8
+      },
+      {
+        "iterations": 100,
+        "loads": 1,
+        "ms_per_preparation": 0.210562,
+        "pair": 9
+      },
+      {
+        "iterations": 100,
+        "loads": 5,
+        "ms_per_preparation": 1.057256,
+        "pair": 9
+      },
+      {
+        "iterations": 100,
+        "loads": 5,
+        "ms_per_preparation": 1.006993,
+        "pair": 10
+      },
+      {
+        "iterations": 100,
+        "loads": 1,
+        "ms_per_preparation": 0.215422,
+        "pair": 10
+      },
+      {
+        "iterations": 100,
+        "loads": 1,
+        "ms_per_preparation": 0.22090100000000001,
+        "pair": 11
+      },
+      {
+        "iterations": 100,
+        "loads": 5,
+        "ms_per_preparation": 1.069784,
+        "pair": 11
+      },
+      {
+        "iterations": 100,
+        "loads": 5,
+        "ms_per_preparation": 1.012258,
+        "pair": 12
+      },
+      {
+        "iterations": 100,
+        "loads": 1,
+        "ms_per_preparation": 0.19758799999999999,
+        "pair": 12
+      },
+      {
+        "iterations": 100,
+        "loads": 1,
+        "ms_per_preparation": 0.195913,
+        "pair": 13
+      },
+      {
+        "iterations": 100,
+        "loads": 5,
+        "ms_per_preparation": 1.008864,
+        "pair": 13
+      },
+      {
+        "iterations": 100,
+        "loads": 5,
+        "ms_per_preparation": 1.000929,
+        "pair": 14
+      },
+      {
+        "iterations": 100,
+        "loads": 1,
+        "ms_per_preparation": 0.20342300000000002,
+        "pair": 14
+      },
+      {
+        "iterations": 100,
+        "loads": 1,
+        "ms_per_preparation": 0.207321,
+        "pair": 15
+      },
+      {
+        "iterations": 100,
+        "loads": 5,
+        "ms_per_preparation": 1.062128,
+        "pair": 15
+      },
+      {
+        "iterations": 100,
+        "loads": 5,
+        "ms_per_preparation": 1.090183,
+        "pair": 16
+      },
+      {
+        "iterations": 100,
+        "loads": 1,
+        "ms_per_preparation": 0.201438,
+        "pair": 16
+      },
+      {
+        "iterations": 100,
+        "loads": 1,
+        "ms_per_preparation": 0.205543,
+        "pair": 17
+      },
+      {
+        "iterations": 100,
+        "loads": 5,
+        "ms_per_preparation": 1.057138,
+        "pair": 17
+      },
+      {
+        "iterations": 100,
+        "loads": 5,
+        "ms_per_preparation": 0.995288,
+        "pair": 18
+      },
+      {
+        "iterations": 100,
+        "loads": 1,
+        "ms_per_preparation": 0.203727,
+        "pair": 18
+      },
+      {
+        "iterations": 100,
+        "loads": 1,
+        "ms_per_preparation": 0.19878300000000002,
+        "pair": 19
+      },
+      {
+        "iterations": 100,
+        "loads": 5,
+        "ms_per_preparation": 0.978253,
+        "pair": 19
+      }
+    ],
+    "pairs": 20,
+    "profile": "dev",
+    "scope": "Config::load file-read/parse/sanitize cost only; five old reads versus one new snapshot, not total pane or shell startup",
+    "method": "20 alternating-order pairs; 100 preparations per measurement; default 2958-byte config; actual Config::load read/parse/sanitize API; no concurrent builds or tests during executable measurement.",
+    "baseline": "Five Config::load calls, matching the previous maximum local Windows preparation path.",
+    "candidate": "One Config::load call, matching the per-pane snapshot. This isolates configuration cost, not full pane startup or history preparation.",
+    "source": "use hitty_core::core::config::{self, Config};\nuse std::{hint::black_box, path::PathBuf, time::Instant};\nfn main() -> anyhow::Result<()> {\n    let dir = PathBuf::from(std::env::args_os().nth(1).expect(\"isolated output\"));\n    std::fs::create_dir_all(&dir)?;\n    let file = dir.join(\"config.json\");\n    let mut fixture = Config::default();\n    fixture.restore_agent_sessions = false;\n    let bytes = serde_json::to_vec_pretty(&fixture)?;\n    std::fs::write(&file, &bytes)?;\n    config::set_config_dir(dir.clone());\n    for _ in 0..100 { black_box(Config::load()); }\n    let mut rows = Vec::new();\n    for pair in 0..20 {\n        let order = if pair % 2 == 0 { [5, 1] } else { [1, 5] };\n        for loads in order {\n            let start = Instant::now();\n            for _ in 0..100 {\n                for _ in 0..loads { black_box(Config::load()); }\n            }\n            rows.push(serde_json::json!({\"pair\":pair,\"loads\":loads,\n                \"iterations\":100,\"ms_per_preparation\":start.elapsed().as_secs_f64()*10.}));\n        }\n    }\n    fixture.env.insert(\"HITTY_CONFIG_RELOAD_CHECK\".into(), \"new-value\".into());\n    std::fs::write(&file, serde_json::to_vec_pretty(&fixture)?)?;\n    assert_eq!(Config::load().env[\"HITTY_CONFIG_RELOAD_CHECK\"], \"new-value\");\n    let output = serde_json::json!({\"scope\":\"Config::load file-read/parse/sanitize cost only; five old reads versus one new snapshot, not total pane or shell startup\", \"profile\":\"dev\", \"config_bytes\":bytes.len(), \"pairs\":20, \"disk_reload_check\":\"passed\", \"measurements\":rows});\n    std::fs::write(dir.join(\"measurements.json\"), serde_json::to_vec_pretty(&output)?)?;\n    Ok(())\n}\n",
+    "source_sha256": "e6f3a5b28a85503c1dc497fb3f8d0a639bce10e340fc668517d368a2ec1d98ba",
+    "summary": {
+      "5": {
+        "p50_ms": 1.0383805000000002,
+        "p95_ms": 1.121731,
+        "max_ms": 1.224991
+      },
+      "1": {
+        "p50_ms": 0.203575,
+        "p95_ms": 0.22090100000000001,
+        "max_ms": 0.226537
+      }
+    },
+    "all_pairs_improved": true,
+    "source_base": "ceff6b025fd2c3a425edc9ae3384801001b4ac7e"
+  },
+  "readiness_review": {
+    "scope": "Incremental startup-preparation improvement, accepted for Ready for review; 500 ms target remains follow-up. No merge is implied.",
+    "history_handoff_input_check": "Preloaded history supplies ghost completion and Ctrl+R/Enter search selection through TerminalView keyboard handling; passed.",
+    "direct_harness_engine_override": "Inherited HITTY_PANE_ENGINE is now cleared before pane creation.",
+    "limitations": [
+      "The configuration microbenchmark is not an end-to-end before/after Hitty measurement.",
+      "The native shell feature checks remain distinct from Hitty history-editor coverage."
+    ]
   }
 }
