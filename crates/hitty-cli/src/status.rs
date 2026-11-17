@@ -56,8 +56,15 @@ impl ScreenReader {
         let Some(agent) = self.agent.filter(|a| screen_status::has_manifest(*a)) else {
             return hook.map(|s| s.status);
         };
-        self.seen = backend.capture(self.pane, false).unwrap_or_default();
-        if let Some(segment) = self.seen.last() {
+        // A resize starts an empty/delta segment, not an independent screen.
+        // The bounded replay ring is needed to reconstruct the current grid.
+        self.seen = backend.capture(self.pane, true).unwrap_or_default();
+        if !self.seen.is_empty() {
+            let bytes = self
+                .seen
+                .iter()
+                .flat_map(|segment| segment.bytes.iter().copied())
+                .collect::<Vec<_>>();
             self.looks += 1;
             // Every look counts as new output: finding out whether the screen
             // moved costs the capture that reading it does. A capture takes
@@ -67,8 +74,8 @@ impl ScreenReader {
                 Some(agent),
                 self.looks,
                 title,
-                &osc::last_progress(&segment.bytes),
-                || screen::detection_text(segment),
+                &osc::last_progress(&bytes),
+                || screen::detection_text(&self.seen),
             );
         }
         screen_status::merge(agent, hook, self.tracker.status())
@@ -83,8 +90,8 @@ impl ScreenReader {
     /// read the screen.
     pub fn text(&mut self, backend: &mut dyn Backend) -> Result<String> {
         if self.seen.is_empty() {
-            self.seen = backend.capture(self.pane, false)?;
+            self.seen = backend.capture(self.pane, true)?;
         }
-        Ok(screen::render(&self.seen))
+        Ok(screen::current_text(&self.seen))
     }
 }

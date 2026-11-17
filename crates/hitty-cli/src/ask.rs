@@ -283,7 +283,13 @@ pub fn ask(args: AskArgs, ctx: &Context, backend: &mut dyn Backend) -> Result<Ou
                     .as_ref()
                     .and_then(|s| s.agent)
                     .or_else(|| record.agent.as_ref().map(|facts| facts.agent));
-                running == agent && !(before.is_some() && now.is_none())
+                let same_session = before
+                    .as_ref()
+                    .and_then(|s| s.state.session_id.as_ref())
+                    .is_none_or(|id| {
+                        now.as_ref().and_then(|s| s.state.session_id.as_ref()) == Some(id)
+                    });
+                running == agent && same_session && !(before.is_some() && now.is_none())
             });
         let Some(record) = record else {
             let human = format!("{name} in pane %{pane} ended before answering");
@@ -733,6 +739,74 @@ mod tests {
         assert!(backend.sent.is_empty());
     }
 
+    #[test]
+    fn a_resized_permission_screen_is_not_mistaken_for_an_idle_agent() {
+        for bytes in [Vec::new(), b"\x1b[?25h".to_vec()] {
+            let mut backend = backend_running(CLIAgent::Cursor);
+            backend.capture_segments = shows("\x1b[?1049hAllow write? (y) (enter)");
+            backend.capture_segments.push(CaptureSegment {
+                size: WinSize {
+                    cols: 60,
+                    rows: 30,
+                    cell_w: 8,
+                    cell_h: 16,
+                },
+                bytes,
+            });
+            script(&mut backend, vec![vec![]]);
+            let err = run(&["ask", "cursor", "review this", "--no-wait"], &mut backend)
+                .unwrap_err()
+                .to_string();
+            assert!(err.contains("waiting on its user"), "{err}");
+            assert!(backend.sent.is_empty(), "resize must not erase the blocker");
+        }
+    }
+
+    #[test]
+    fn a_full_repaint_after_resize_retires_the_old_permission_screen() {
+        for (mode, clear) in [("\x1b[?1049h", "\x1b[2J"), ("", "\x1b[2J\x1b[3J")] {
+            let mut backend = backend_running(CLIAgent::Cursor);
+            backend.capture_segments = shows(&format!("{mode}Allow write? (y) (enter)"));
+            backend.capture_segments.push(CaptureSegment {
+                size: WinSize {
+                    cols: 60,
+                    rows: 30,
+                    cell_w: 8,
+                    cell_h: 16,
+                },
+                bytes: format!("{clear}\x1b[HReady for the next message\r\n").into_bytes(),
+            });
+            script(&mut backend, vec![vec![]]);
+            let (code, json) =
+                json_of(run(&["ask", "cursor", "review this", "--no-wait"], &mut backend).unwrap());
+            assert_eq!(code, 0, "{json}");
+            assert_eq!(backend.sent.len(), 2);
+        }
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn a_primary_permission_below_the_cursor_survives_conpty_shrinking() {
+        let mut backend = backend_running(CLIAgent::Cursor);
+        backend.capture_segments =
+            shows("\x1b[3;1HPrompt\x1b[4;1HAllow write? (y) (enter)\x1b[3;1H");
+        backend.capture_segments.push(CaptureSegment {
+            size: WinSize {
+                cols: 80,
+                rows: 2,
+                cell_w: 8,
+                cell_h: 16,
+            },
+            bytes: Vec::new(),
+        });
+        script(&mut backend, vec![vec![]]);
+        let err = run(&["ask", "cursor", "review this", "--no-wait"], &mut backend)
+            .unwrap_err()
+            .to_string();
+        assert!(err.contains("waiting on its user"), "{err}");
+        assert!(backend.sent.is_empty());
+    }
+
     /// The survey says what the refusal would.
     #[test]
     fn peers_shows_a_prompt_only_the_screen_shows() {
@@ -912,6 +986,34 @@ mod tests {
             json_of(run(&["ask", "right", "hello", "--interval", "50"], &mut backend).unwrap());
         assert_eq!(code, 1);
         assert_eq!(json["answered"], false);
+    }
+
+    #[test]
+    fn a_replacement_session_cannot_answer_the_asked_turn() {
+        for (agent, session) in [
+            (CLIAgent::Codex, Some("sess-52")),
+            (CLIAgent::Claude, Some("replacement-session")),
+            (CLIAgent::Claude, None),
+        ] {
+            let mut backend = backend();
+            let mut replacement = claude(AgentStatus::Done, 4, Some("unrelated answer"));
+            replacement.agent = Some(agent);
+            replacement.state.session_id = session.map(String::from);
+            script(
+                &mut backend,
+                vec![vec![claude(AgentStatus::Done, 3, None)], vec![replacement]],
+            );
+            let (code, json) = json_of(
+                run(
+                    &["ask", "right", "review my change", "--interval", "50"],
+                    &mut backend,
+                )
+                .unwrap(),
+            );
+            assert_eq!(code, 1, "replacement {agent:?}/{session:?}: {json}");
+            assert_eq!(json["answered"], false);
+            assert!(json.get("reply").is_none(), "{json}");
+        }
     }
 
     #[test]

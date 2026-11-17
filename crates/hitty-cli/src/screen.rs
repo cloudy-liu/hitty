@@ -84,8 +84,35 @@ pub fn render(segments: &[CaptureSegment]) -> String {
 
 /// The live bottom of a captured pane, in the shape the agent screen rules
 /// read — the same text the window hands them.
-pub fn detection_text(segment: &CaptureSegment) -> String {
-    hitty_core::core::screen_status::detection_text(&replay(segment))
+pub fn detection_text(segments: &[CaptureSegment]) -> String {
+    replay_current(segments)
+        .map(|term| hitty_core::core::screen_status::detection_text(&term))
+        .unwrap_or_default()
+}
+
+/// Reconstruct the live grid, retaining cells across resize boundaries until
+/// subsequent output overwrites them, just as the window's terminal does.
+fn replay_current(segments: &[CaptureSegment]) -> Option<Term<VoidListener>> {
+    let first = segments.first()?;
+    let config = Config {
+        // Match the application's primary-grid resize semantics: ConPTY
+        // preserves the last written row, which may be below the cursor.
+        conpty_resize: cfg!(windows),
+        ..Config::default()
+    };
+    let mut term = Term::new(config, &GridSize::of(first.size), VoidListener);
+    let mut parser: Processor = Processor::new();
+    for segment in segments {
+        term.resize(GridSize::of(segment.size));
+        parser.advance(&mut term, &segment.bytes);
+    }
+    Some(term)
+}
+
+pub fn current_text(segments: &[CaptureSegment]) -> String {
+    replay_current(segments)
+        .map(|term| render_term(&term))
+        .unwrap_or_default()
 }
 
 /// The grid a segment's bytes leave behind, at the size they were recorded at.
@@ -106,6 +133,10 @@ fn replay(segment: &CaptureSegment) -> Term<VoidListener> {
 
 fn render_segment(segment: &CaptureSegment) -> String {
     let term = replay(segment);
+    render_term(&term)
+}
+
+fn render_term(term: &Term<VoidListener>) -> String {
     let start = Point::new(term.topmost_line(), Column(0));
     let end = Point::new(term.bottommost_line(), term.last_column());
     let text = term.bounds_to_string(start, end);
