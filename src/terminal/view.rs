@@ -171,6 +171,33 @@ pub struct ShellParts {
     pub(crate) workspace: Option<crate::terminal::PaneWorkspace>,
     pub(crate) restored: bool,
     pub(crate) owner: Option<crate::core::session::WorkspaceId>,
+    pub(crate) initial_history: Option<InitialHistory>,
+}
+
+/// Loaded alongside shell creation, ready before the pane accepts input.
+pub(crate) struct InitialHistory {
+    history: super::history::History,
+    ranked: Vec<String>,
+    frecency: Vec<f64>,
+}
+
+impl InitialHistory {
+    pub(crate) fn load() -> Self {
+        let history = super::history::load(&super::history::Scope::Local);
+        let ranked = super::history::rank_by_frecency(
+            &history.entries,
+            &history.counts,
+            &history.cwds,
+            None,
+        );
+        let frecency =
+            super::history::frecency_scores(&history.entries, &history.counts, &history.cwds, None);
+        Self {
+            history,
+            ranked,
+            frecency,
+        }
+    }
 }
 
 #[derive(Clone, Copy)]
@@ -1081,6 +1108,7 @@ impl TerminalView {
             workspace,
             restored,
             owner,
+            initial_history: None,
         })
     }
 
@@ -1089,7 +1117,13 @@ impl TerminalView {
         window: &mut Window,
         cx: &mut Context<Self>,
     ) -> Self {
-        let mut view = Self::with_terminal(parts.terminal, parts.pane_id, window, cx);
+        let mut view = Self::with_initial_history(
+            parts.terminal,
+            parts.pane_id,
+            parts.initial_history.unwrap_or_else(InitialHistory::load),
+            window,
+            cx,
+        );
         view.shell_spec = parts.shell_spec;
         view.owner_workspace = parts.owner;
         view.restored = parts.restored;
@@ -1172,6 +1206,16 @@ impl TerminalView {
     fn with_terminal(
         terminal: RemoteTerminal,
         pane_id: u64,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) -> Self {
+        Self::with_initial_history(terminal, pane_id, InitialHistory::load(), window, cx)
+    }
+
+    fn with_initial_history(
+        terminal: RemoteTerminal,
+        pane_id: u64,
+        initial_history: InitialHistory,
         window: &mut Window,
         cx: &mut Context<Self>,
     ) -> Self {
@@ -1336,15 +1380,11 @@ impl TerminalView {
 
         window.focus(&focus_handle, cx);
 
-        let history = super::history::load(&super::history::Scope::Local);
-        let history_ranked = super::history::rank_by_frecency(
-            &history.entries,
-            &history.counts,
-            &history.cwds,
-            None,
-        );
-        let history_frecency =
-            super::history::frecency_scores(&history.entries, &history.counts, &history.cwds, None);
+        let InitialHistory {
+            history,
+            ranked: history_ranked,
+            frecency: history_frecency,
+        } = initial_history;
 
         Self {
             terminal,
@@ -9087,6 +9127,7 @@ pub(crate) fn quiet_test_shell_parts(
             workspace: None,
             restored: false,
             owner: None,
+            initial_history: None,
         },
         daemon_side,
     )
@@ -14360,6 +14401,68 @@ mod native_history_gpui_tests {
     use crate::daemon::protocol::{ClientMsg, DaemonMsg};
     use crate::daemon::transport::Stream;
     use gpui::TestAppContext;
+
+    #[gpui::test]
+    fn preloaded_history_is_complete_when_the_pane_is_created(cx: &mut TestAppContext) {
+        crate::core::config::pin_test_config_dir();
+        cx.executor().allow_parking();
+        cx.update(|cx| {
+            gpui_component::init(cx);
+            cx.set_global(Config::default());
+        });
+        let (mut parts, mut daemon) = quiet_test_shell_parts(42);
+        let line = "echo preloaded-history-fixture".to_string();
+        let meta = super::super::history::EntryMeta {
+            ts: Some(123),
+            exit: Some(7),
+        };
+        parts.initial_history = Some(InitialHistory {
+            history: super::super::history::History {
+                entries: vec![line.clone()],
+                counts: [(line.clone(), 3)].into(),
+                cwds: [(line.clone(), ["/project".into()].into())].into(),
+                meta: [(line.clone(), meta)].into(),
+            },
+            ranked: vec![line.clone()],
+            frecency: vec![2.5],
+        });
+        let window = cx.add_window(|window, cx| TerminalView::from_shell_parts(parts, window, cx));
+        window
+            .update(cx, |view, _, _| {
+                assert_eq!(view.history, [line.clone()]);
+                assert_eq!(view.history_counts[&line], 3);
+                assert!(view.history_cwds[&line].contains("/project"));
+                assert_eq!(view.history_meta[&line], meta);
+                assert_eq!(view.history_ranked, [line.clone()]);
+                assert_eq!(view.history_frecency, [2.5]);
+            })
+            .unwrap();
+        prompt_ready(&window, cx, &mut daemon);
+        window
+            .update(cx, |view, window, cx| {
+                assert!(view.input_active());
+                view.commit_text("echo preloaded", cx);
+                assert_eq!(view.ghost_suggestion(), Some(line.clone()));
+                let chord = |spec| KeyDownEvent {
+                    keystroke: key(spec),
+                    is_held: false,
+                    prefer_character_input: false,
+                };
+                view.on_key_down(&chord("ctrl-r"), window, cx);
+                view.commit_text("fixture", cx);
+                assert_eq!(
+                    view.reverse_search
+                        .as_ref()
+                        .expect("Ctrl+R opens history search after handoff")
+                        .selected_line(&view.history),
+                    Some(line.as_str())
+                );
+                view.on_key_down(&chord("enter"), window, cx);
+                assert!(view.reverse_search.is_none());
+                assert_eq!(view.cmd.text(), line);
+            })
+            .unwrap();
+    }
 
     #[cfg(unix)]
     fn stream_pair() -> (Stream, Stream) {

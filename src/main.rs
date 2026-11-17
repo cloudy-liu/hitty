@@ -16,6 +16,8 @@ mod markdown_visual;
 #[cfg(feature = "markdown-visual-tests")]
 mod ssh_tab_visual;
 mod terminal;
+#[cfg(feature = "markdown-visual-tests")]
+mod terminal_startup;
 mod ui;
 
 use crate::core::config::Config;
@@ -533,6 +535,12 @@ fn main() {
     }
 
     apply_config_dir_arg(&args);
+
+    #[cfg(feature = "markdown-visual-tests")]
+    if let Some(index) = args.iter().position(|arg| arg == "--terminal-startup") {
+        terminal_startup::run(args.get(index + 1).expect("terminal startup options path"));
+        return;
+    }
 
     #[cfg(feature = "markdown-visual-tests")]
     if let Some(index) = args.iter().position(|arg| arg == "--agent-pane-visual") {

@@ -90,9 +90,6 @@ pub(super) fn prepare(
     pane: u64,
     integration: &mut Option<PathBuf>,
 ) -> std::io::Result<()> {
-    if !crate::core::config::Config::load().restore_agent_sessions {
-        return Ok(());
-    }
     let shell_program = shell;
     let shell = Path::new(shell)
         .file_stem()

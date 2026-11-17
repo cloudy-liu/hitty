@@ -151,9 +151,16 @@ fn build_spawn_config(
     cwd: Option<PathBuf>,
     shell: Option<ShellSpec>,
     workspace: Option<&str>,
+    config: &crate::core::config::Config,
 ) -> anyhow::Result<SpawnConfig> {
-    let initial_cwd = initial_working_directory(cwd);
-    let configured = choose_shell(shell, crate::core::config::shell_command());
+    let initial_cwd = initial_working_directory(cwd, config);
+    let configured = choose_shell(
+        shell,
+        config
+            .shell
+            .as_ref()
+            .map(|s| (s.program.clone(), s.args.clone())),
+    );
     if let Some(problem) = configured
         .as_ref()
         .and_then(|c| shell_program_problem(&c.program))
@@ -169,7 +176,8 @@ fn build_spawn_config(
         args: c.args.clone(),
         args_are_hitty_defaults: c.args_are_hitty_defaults,
     });
-    let (cmd, integration_dir) = build_shell_command(configured, &initial_cwd, pane, workspace)?;
+    let (cmd, integration_dir) =
+        build_shell_command(configured, &initial_cwd, pane, workspace, config)?;
     Ok(SpawnConfig {
         cmd,
         initial_cwd,
@@ -209,6 +217,7 @@ fn build_shell_command(
     initial_cwd: &Option<PathBuf>,
     pane: u64,
     workspace: Option<&str>,
+    config: &crate::core::config::Config,
 ) -> anyhow::Result<(CommandBuilder, Option<PathBuf>)> {
     let mut cmd = match &configured {
         Some(chosen) => {
@@ -233,28 +242,23 @@ fn build_shell_command(
     }
     let mut integration_dir = integration.as_ref().and_then(|i| i.dir.clone());
     let launched = launched_shell_program(&cmd, &resolved_program);
-    let extra_env = crate::core::config::extra_env();
-    apply_common_command_setup(
-        &mut cmd,
-        initial_cwd,
-        pane,
-        workspace,
-        &launched,
-        &extra_env,
-    );
+    let extra_env = &config.env;
+    apply_common_command_setup(&mut cmd, initial_cwd, pane, workspace, &launched, extra_env);
     // The Windows registry refresh runs after integration setup. Reapply
     // integration-owned values without outranking an explicit hitty `env`
     // override, and merge list-valued additions with the pane's final value.
     if let Some(integration) = &integration {
-        pin_integration_env(&mut cmd, integration, &extra_env);
+        pin_integration_env(&mut cmd, integration, extra_env);
     }
     #[cfg(windows)]
-    if let Err(error) = crate::daemon::codex_launch::prepare(
-        &mut cmd,
-        &resolved_program,
-        pane,
-        &mut integration_dir,
-    ) {
+    if config.restore_agent_sessions
+        && let Err(error) = crate::daemon::codex_launch::prepare(
+            &mut cmd,
+            &resolved_program,
+            pane,
+            &mut integration_dir,
+        )
+    {
         log::warn!("could not prepare pane {pane}'s Codex launcher: {error}");
     }
     Ok((cmd, integration_dir))
@@ -315,12 +319,18 @@ fn launched_shell_program(cmd: &CommandBuilder, resolved_program: &str) -> Strin
         .unwrap_or_else(|| resolved_program.to_string())
 }
 
-fn initial_working_directory(cwd: Option<PathBuf>) -> Option<PathBuf> {
+fn initial_working_directory(
+    cwd: Option<PathBuf>,
+    config: &crate::core::config::Config,
+) -> Option<PathBuf> {
+    if let Some(dir) = cwd.as_ref().filter(|d| d.is_dir()) {
+        return Some(dir.clone());
+    }
     let fallback = std::env::current_dir()
         .ok()
         .filter(|d| d != std::path::Path::new("/"))
         .or_else(|| std::env::var_os("HOME").map(std::path::PathBuf::from));
-    let forced = crate::core::config::working_directory_base();
+    let forced = config.working_directory_base();
     // A configured "Start in" path that is not a directory can never win the
     // pick below, so every new pane silently lands on the fallback and the
     // mistyped path reads as a hitty bug (#601). Settings refuses to save one
@@ -1434,17 +1444,17 @@ enum PaneEngine {
 /// `HITTY_PANE_ENGINE` overrides the configured engine for development and
 /// tests; anything but an explicit `herdr-core`/`herdr` means native.
 pub(crate) fn herdr_selected() -> bool {
-    pane_engine() == PaneEngine::Herdr
+    pane_engine(&crate::core::config::Config::load()) == PaneEngine::Herdr
 }
 
-fn pane_engine() -> PaneEngine {
+fn pane_engine(config: &crate::core::config::Config) -> PaneEngine {
     if let Some(value) = std::env::var_os("HITTY_PANE_ENGINE") {
         return match value.to_str() {
             Some("herdr-core" | "herdr") => PaneEngine::Herdr,
             _ => PaneEngine::Native,
         };
     }
-    match crate::core::config::Config::load().pane_engine.as_deref() {
+    match config.pane_engine.as_deref() {
         Some("herdr-core" | "herdr") => PaneEngine::Herdr,
         _ => PaneEngine::Native,
     }
@@ -1641,12 +1651,15 @@ impl DaemonPane {
         #[cfg(windows)]
         crate::daemon::winproc::allow_ctrl_c_in_children();
 
-        let spawn = build_spawn_config(id, cwd, shell, workspace.as_deref())?;
+        // One fresh snapshot per spawn keeps live settings changes working
+        // without opening and parsing config.json for every preparation step.
+        let config = crate::core::config::Config::load();
+        let spawn = build_spawn_config(id, cwd, shell, workspace.as_deref(), &config)?;
 
         // The engine decides where the PTY lives: opened here, or hosted by a
         // herdr-core terminal (`hc`). Everything downstream of `parts` is
         // engine-blind, which is the point of the spike (#23).
-        let parts = if spawn.remote.is_none() && herdr_selected() {
+        let parts = if spawn.remote.is_none() && pane_engine(&config) == PaneEngine::Herdr {
             match crate::daemon::hc::core() {
                 Ok(_) => herdr_pty_parts(id, &spawn, size, workspace.as_deref())?,
                 Err(err) => {
@@ -4507,12 +4520,49 @@ mod tests {
     }
 
     #[test]
+    fn spawn_preparation_uses_one_supplied_config_without_stale_settings() {
+        let cwd = std::env::temp_dir();
+        let program = if cfg!(windows) { "cmd.exe" } else { "/bin/sh" };
+        let mut config: crate::core::config::Config = serde_json::from_value(serde_json::json!({
+            "shell": {"program": program, "args": ["literal startup argument"]},
+            "env": {"HITTY_SPAWN_SNAPSHOT_TEST": "first"},
+            "restore_agent_sessions": false
+        }))
+        .unwrap();
+        for value in ["first", "second"] {
+            config
+                .env
+                .insert("HITTY_SPAWN_SNAPSHOT_TEST".into(), value.into());
+            let spawn = build_spawn_config(42, Some(cwd.clone()), None, Some("ws-test"), &config)
+                .expect("prepare the configured shell");
+            assert_eq!(spawn.initial_cwd.as_ref(), Some(&cwd));
+            assert_eq!(spawn.shell.as_ref().unwrap().program, program);
+            assert_eq!(
+                spawn.shell.as_ref().unwrap().args,
+                ["literal startup argument"]
+            );
+            assert_eq!(
+                spawn.cmd.get_env("HITTY_SPAWN_SNAPSHOT_TEST"),
+                Some(std::ffi::OsStr::new(value))
+            );
+            assert_eq!(
+                spawn.cmd.get_env("HITTY_CODEX_PROGRAM"),
+                CommandBuilder::new(program).get_env("HITTY_CODEX_PROGRAM"),
+                "disabled restore preserves the inherited environment"
+            );
+            if let Some(dir) = spawn.integration_dir {
+                std::fs::remove_dir_all(dir).unwrap();
+            }
+        }
+    }
+
+    #[test]
     fn initial_working_directory_skips_paths_that_are_not_directories() {
         let real = std::env::temp_dir();
         assert!(real.is_dir(), "temp dir should exist");
 
         assert_eq!(
-            initial_working_directory(Some(real.clone())),
+            initial_working_directory(Some(real.clone()), &crate::core::config::Config::default()),
             Some(real.clone())
         );
 
@@ -4520,7 +4570,10 @@ mod tests {
             "/home/someone/definitely-not-here",
             "/c/Users/definitely-not-here",
         ] {
-            let got = initial_working_directory(Some(PathBuf::from(bogus)));
+            let got = initial_working_directory(
+                Some(PathBuf::from(bogus)),
+                &crate::core::config::Config::default(),
+            );
             assert_ne!(
                 got.as_deref(),
                 Some(Path::new(bogus)),
@@ -4533,7 +4586,8 @@ mod tests {
 
         let file = real.join("hitty-iwd-probe");
         std::fs::write(&file, b"x").expect("write probe file");
-        let got = initial_working_directory(Some(file.clone()));
+        let got =
+            initial_working_directory(Some(file.clone()), &crate::core::config::Config::default());
         assert_ne!(got.as_deref(), Some(file.as_path()));
         let _ = std::fs::remove_file(&file);
     }
@@ -9283,9 +9337,15 @@ mod tests {
     fn an_unconfigured_pane_still_announces_the_shell_it_runs() {
         // No configured shell means the pane runs the login shell, and naming
         // it is both harmless and correct: it is what the pane is running.
-        let cmd = build_shell_command(None, &Some(PathBuf::from("/tmp")), 1, None)
-            .expect("build default shell command")
-            .0;
+        let cmd = build_shell_command(
+            None,
+            &Some(PathBuf::from("/tmp")),
+            1,
+            None,
+            &crate::core::config::Config::default(),
+        )
+        .expect("build default shell command")
+        .0;
         let shell = cmd
             .get_env(SHELL_ENV)
             .and_then(|v| v.to_str())
@@ -9602,9 +9662,15 @@ mod tests {
 
     #[test]
     fn spawned_shell_carries_the_hitty_marker() {
-        let cmd = build_shell_command(None, &Some(PathBuf::from("/tmp")), 42, Some("ws-main"))
-            .expect("build default shell command")
-            .0;
+        let cmd = build_shell_command(
+            None,
+            &Some(PathBuf::from("/tmp")),
+            42,
+            Some("ws-main"),
+            &crate::core::config::Config::default(),
+        )
+        .expect("build default shell command")
+        .0;
         let hitty = cmd
             .get_env(crate::core::agent_hooks::HITTY_ENV_MARKER)
             .and_then(|v| v.to_str());

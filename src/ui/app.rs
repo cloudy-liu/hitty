@@ -8840,6 +8840,12 @@ fn start_pane_spawn(
     let slot_id = pending.entity_id();
     let font_size = spawn.font_size;
     cx.spawn_in(window, async move |this, cx| {
+        // History import and ranking do not need the shell. Start them on
+        // another worker so neither disk I/O nor sorting blocks the UI, and
+        // keep all history features ready when the pane is handed over.
+        let history = cx
+            .background_executor()
+            .spawn(async { crate::terminal::view::InitialHistory::load() });
         let parts = cx
             .background_executor()
             .spawn(async move {
@@ -8853,6 +8859,13 @@ fn start_pane_spawn(
                 .map_err(|e| format!("{e:#}"))
             })
             .await;
+        let parts = match parts {
+            Ok(mut parts) => {
+                parts.initial_history = Some(history.await);
+                Ok(parts)
+            }
+            Err(error) => Err(error),
+        };
         let _ = this.update_in(cx, |app, window, cx| {
             app.land_pane(slot_id, &pending, parts, font_size, window, cx);
         });
