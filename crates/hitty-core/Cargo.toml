@@ -56,6 +56,13 @@ ignore = "0.4"
 # pins no new code.
 toml_edit = "0.25"
 
+# `core::screen_status` only (the `agent-screen` feature): herdr's manifests are
+# TOML, their gates are regexes, and the screen they read is a terminal grid.
+# The same versions the GUI package already pins.
+alacritty_terminal = { workspace = true, optional = true }
+regex = { version = "1", optional = true }
+toml = { version = "0.8", optional = true }
+
 # Lane assignment for the commit graph (`core::git::log`) keeps a couple of
 # parents and a handful of edges per row; a SmallVec keeps those off the heap
 # for the shapes that make up almost all of a real history. Already in the tree
@@ -215,6 +222,10 @@ tokio = { version = "1", features = ["test-util", "macros", "rt"] }
 # vanishes the moment anyone narrows to `-p hitty-core`.
 [features]
 default = []
+# Reading an agent's status off its screen (`core::screen_status`). The window
+# and the CLI turn it on; `hitty-server` never looks at a screen, and stays
+# free of the terminal emulator and regex engine the reading needs.
+agent-screen = ["dep:alacritty_terminal", "dep:regex", "dep:toml"]
 gssapi = ["dep:libgssapi"]
 # Lets this build download a `hitty-server` release asset over HTTPS and push it
 # onto a remote machine. Off by default so `hitty-server` — which is

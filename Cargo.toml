@@ -31,7 +31,7 @@ required-features = ["updater"]
 # client used only to *download* a `hitty-server` onto a remote machine
 # (decision D5). The server binary is the thing being downloaded, so it can
 # never take that path; the GUI, which is the client that pushes it, can.
-hitty-core = { path = "crates/hitty-core", features = ["gssapi", "remote-install"] }
+hitty-core = { path = "crates/hitty-core", features = ["gssapi", "remote-install", "agent-screen"] }
 
 gpui = { workspace = true }
 gpui_platform = { workspace = true }
@@ -100,10 +100,6 @@ keyring = "4"
 serde_yaml = "0.9"
 serde_path_to_error = "0.1"
 plist = "1"
-# herdr's agent screen-detection manifests (`assets/agent-detection/*.toml`,
-# read by `terminal::screen_status`). Already in the tree transitively, so it
-# pins no new code.
-toml = "0.8"
 
 # Clipboard-image paste (`terminal::view`). When the clipboard holds a screenshot
 # and a coding-agent TUI (Claude Code &co.) is in the pane, off macOS we stage the

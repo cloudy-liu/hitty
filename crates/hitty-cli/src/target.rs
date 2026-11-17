@@ -10,7 +10,7 @@
 use anyhow::{Result, anyhow, bail};
 use hitty_core::core::cli_agent::CLIAgent;
 use hitty_core::core::layout::{self, Direction};
-use hitty_core::core::machine::{Machine, Tab, Workspace};
+use hitty_core::core::machine::{Machine, PaneRecord, Tab, Workspace};
 use hitty_core::daemon::control::PaneAgentState;
 
 use crate::address::{self, Context};
@@ -88,8 +88,19 @@ impl Scene {
         })
     }
 
+    /// The title the pane's program set, which some agents put their state in.
+    pub fn title(&self, pane: u64) -> &str {
+        self.record(pane)
+            .and_then(|p| p.osc_title.as_deref())
+            .unwrap_or_default()
+    }
+
+    pub fn record(&self, pane: u64) -> Option<&PaneRecord> {
+        self.machine.panes.iter().find(|p| p.id == pane)
+    }
+
     pub fn is_live(&self, pane: u64) -> bool {
-        self.machine.panes.iter().any(|p| p.id == pane && p.live)
+        self.record(pane).is_some_and(|p| p.live)
     }
 
     pub fn place(&self, pane: u64) -> Option<(&Workspace, &Tab)> {

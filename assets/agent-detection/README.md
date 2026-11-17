@@ -36,11 +36,11 @@ python scripts/sync-agent-detection.py --update <40-character-commit-sha>
 The updater fetches and validates the entire set before writing any file.
 CI checks coverage and content hashes, and tests that partial updates and
 engine incompatibilities fail. Additions must also be registered in
-`manifest_source` in `src/terminal/screen_status.rs`.
+`manifest_source` in `crates/hitty-core/src/core/screen_status.rs`.
 
 Each file lists rules that classify a coding agent's pane as `working`,
 `blocked` or `idle`, based on what the agent's TUI is showing at the bottom of
-the screen. `src/terminal/screen_status.rs` evaluates them the way herdr's
+the screen. `crates/hitty-core/src/core/screen_status.rs` evaluates them the way herdr's
 `src/detect/manifest.rs` does.
 
 The engine supports manifest version 3 semantics. Screen text, the current

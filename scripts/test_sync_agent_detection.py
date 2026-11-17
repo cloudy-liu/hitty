@@ -17,8 +17,8 @@ class ProvenanceChecks(unittest.TestCase):
         self.addCleanup(self.directory.cleanup)
         self.root = Path(self.directory.name)
         shutil.copytree(sync.ROOT / "assets/agent-detection", self.root / "assets/agent-detection")
-        (self.root / "src/terminal").mkdir(parents=True)
-        shutil.copyfile(sync.ROOT / "src/terminal/screen_status.rs", self.root / "src/terminal/screen_status.rs")
+        (self.root / "crates/hitty-core/src/core").mkdir(parents=True)
+        shutil.copyfile(sync.ROOT / "crates/hitty-core/src/core/screen_status.rs", self.root / "crates/hitty-core/src/core/screen_status.rs")
 
     def test_every_pinned_file_passes_offline(self):
         sync.check(self.root)
@@ -35,7 +35,7 @@ class ProvenanceChecks(unittest.TestCase):
             sync.check(self.root)
 
     def test_engine_downgrade_cannot_silently_load_newer_rules(self):
-        path = self.root / "src/terminal/screen_status.rs"
+        path = self.root / "crates/hitty-core/src/core/screen_status.rs"
         path.write_text(path.read_text(encoding="utf-8").replace("const MANIFEST_ENGINE_VERSION: u32 = 3;", "const MANIFEST_ENGINE_VERSION: u32 = 1;"), encoding="utf-8")
         with self.assertRaisesRegex(ValueError, "requires a newer detection engine"):
             sync.check(self.root)

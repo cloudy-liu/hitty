@@ -15,6 +15,8 @@ pub mod logfile;
 pub mod machine;
 pub mod osc;
 pub mod proc;
+#[cfg(feature = "agent-screen")]
+pub mod screen_status;
 pub mod session;
 pub mod shells;
 #[allow(dead_code)]

@@ -44,6 +44,41 @@ enum State {
     IgnoreEsc,
 }
 
+/// A valid OSC 9;4 progress report, as `4;<state>[;<value>]` — the shape the
+/// agent screen rules match. `None` for any other OSC 9 payload.
+pub fn progress_report(payload: &[u8]) -> Option<String> {
+    let report = std::str::from_utf8(payload).ok()?.strip_prefix("9;4;")?;
+    let mut fields = report.split(';');
+    if !matches!(fields.next(), Some("0" | "1" | "2" | "3" | "4")) {
+        return None;
+    }
+    if let Some(value) = fields.next()
+        && !value
+            .parse::<i16>()
+            .is_ok_and(|value| (-1..=100).contains(&value))
+    {
+        return None;
+    }
+    fields.next().is_none().then(|| format!("4;{report}"))
+}
+
+/// The progress report standing at the end of a stretch of pane output.
+///
+/// A shell prompt (OSC 133;A) after a report retires it: the program that
+/// made it has returned, and a report it never withdrew — an agent killed
+/// mid-turn — must not read as work still going on.
+pub fn last_progress(bytes: &[u8]) -> String {
+    let mut last = String::new();
+    OscTokenizer::new(&[b"9", b"133"]).feed(bytes, |payload| {
+        if payload.starts_with(b"133;A") {
+            last.clear();
+        } else if let Some(report) = progress_report(payload) {
+            last = report;
+        }
+    });
+    last
+}
+
 impl OscTokenizer {
     pub fn new(ids: &'static [&'static [u8]]) -> Self {
         Self {
@@ -177,6 +212,22 @@ pub fn parse_notification(payload: &[u8]) -> Option<(Option<String>, String)> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn the_last_progress_report_stands_until_a_shell_prompt_follows_it() {
+        assert_eq!(last_progress(b"\x1b]9;4;1;40\x07work"), "4;1;40");
+        assert_eq!(
+            last_progress(b"\x1b]9;4;1;40\x07\x1b]9;4;3;0\x07"),
+            "4;3;0",
+            "the newest report wins"
+        );
+        assert_eq!(
+            last_progress(b"\x1b]9;4;1;-1\x07^C\r\n\x1b]133;A\x07$ "),
+            "",
+            "a report left by a program that is gone is not work in progress"
+        );
+        assert_eq!(last_progress(b"\x1b]9;hello\x07\x1b]9;4;9;0\x07"), "");
+    }
 
     fn collect(ids: &'static [&'static [u8]], chunks: &[&[u8]]) -> Vec<Vec<u8>> {
         let mut tok = OscTokenizer::new(ids);

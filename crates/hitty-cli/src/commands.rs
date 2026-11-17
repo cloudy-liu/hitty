@@ -1229,7 +1229,7 @@ fn pane_is_free(backend: &mut dyn Backend, pane: u64) -> Result<bool> {
 
 /// Whether the daemon still has a live pane behind this id. Absent from the
 /// tree counts as dead: a closed pane is as gone as an exited one.
-pub(crate) fn pane_is_live(backend: &mut dyn Backend, pane: u64) -> Result<bool> {
+fn pane_is_live(backend: &mut dyn Backend, pane: u64) -> Result<bool> {
     Ok(fetch_machine(backend)?
         .panes
         .iter()

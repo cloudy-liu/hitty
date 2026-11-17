@@ -268,8 +268,10 @@ Rules for this job:
 - **If a message arrives in your own pane starting `[hitty ask — from …]`,**
   answer it in your normal reply and stop. It is returned automatically; do
   not `ask` or `send` back to that pane.
-- For a pane with no agent status (a plain shell, or hooks missing), `ask`
-  refuses; that is `send` territory and the rules under
+- `ask` and `peers` read status the way the window does — hooks plus the
+  agent's screen — so agents without hooks work too, answered from the screen.
+  For a pane where neither says anything (a plain shell, an unrecognised
+  program), `ask` refuses; that is `send` territory and the rules under
   [Don't break the user's session](#dont-break-the-users-session) apply.
 
 ## Handing work to another agent

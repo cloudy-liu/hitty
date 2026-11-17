@@ -16,10 +16,11 @@ name = "hitty"
 path = "src/main.rs"
 
 [dependencies]
-# Protocol types only (ControlRequest/ReplyOk, the machine tree, PaneProcs).
-# Default features: no gssapi, no remote-install — the CLI is a client of a
-# server that already exists, it never links krb5 or an HTTP fetcher.
-hitty-core = { path = "../hitty-core" }
+# Protocol types (ControlRequest/ReplyOk, the machine tree, PaneProcs), plus
+# `agent-screen`: `ask` and `peers` read an agent's screen with the rules the
+# window uses. No gssapi, no remote-install — the CLI is a client of a server
+# that already exists, it never links krb5 or an HTTP fetcher.
+hitty-core = { path = "../hitty-core", features = ["agent-screen"] }
 
 anyhow.workspace = true
 serde_json.workspace = true

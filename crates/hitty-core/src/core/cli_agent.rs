@@ -1049,6 +1049,18 @@ pub enum AgentStatus {
     Done,
 }
 
+impl AgentStatus {
+    /// The wire spelling, as serde writes it.
+    pub fn name(self) -> &'static str {
+        match self {
+            AgentStatus::Idle => "idle",
+            AgentStatus::Working => "working",
+            AgentStatus::Waiting => "waiting",
+            AgentStatus::Done => "done",
+        }
+    }
+}
+
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 pub struct AgentSessionState {
     #[serde(default = "AgentSessionState::default_status")]

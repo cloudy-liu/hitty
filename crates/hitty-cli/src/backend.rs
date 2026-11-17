@@ -81,6 +81,8 @@ pub mod mock {
 
     pub struct MockBackend {
         pub machine: Machine,
+        /// Consumed one per `MachineGet` before falling back to `machine`.
+        pub machine_replies: VecDeque<Machine>,
         pub replies: VecDeque<ReplyOk>,
         pub control_calls: Vec<ControlRequest>,
         pub spawned: Vec<(WorkspaceId, Option<String>)>,
@@ -88,6 +90,9 @@ pub mod mock {
         pub sent: Vec<(u64, Vec<u8>)>,
         pub captured: Vec<(u64, bool)>,
         pub capture_segments: Vec<CaptureSegment>,
+        /// Consumed one per call before falling back to `capture_segments`, so
+        /// a test can script a screen that changes between looks.
+        pub capture_replies: VecDeque<Vec<CaptureSegment>>,
         pub procs_calls: Vec<u64>,
         pub procs_reply: PaneProcs,
         /// Consumed one per call before falling back to `procs_reply`, so a
@@ -109,6 +114,7 @@ pub mod mock {
         fn default() -> MockBackend {
             MockBackend {
                 machine: Machine::default(),
+                machine_replies: VecDeque::new(),
                 replies: VecDeque::new(),
                 control_calls: Vec::new(),
                 spawned: Vec::new(),
@@ -116,6 +122,7 @@ pub mod mock {
                 sent: Vec::new(),
                 captured: Vec::new(),
                 capture_segments: Vec::new(),
+                capture_replies: VecDeque::new(),
                 procs_calls: Vec::new(),
                 procs_reply: PaneProcs::default(),
                 procs_replies: VecDeque::new(),
@@ -145,7 +152,10 @@ pub mod mock {
             let is_machine_get = req == ControlRequest::MachineGet;
             self.control_calls.push(req);
             if is_machine_get {
-                return Ok(ReplyOk::MachineTree(Box::new(self.machine.clone())));
+                let tree = self.machine_replies.pop_front();
+                return Ok(ReplyOk::MachineTree(Box::new(
+                    tree.unwrap_or_else(|| self.machine.clone()),
+                )));
             }
             Ok(self.replies.pop_front().unwrap_or(ReplyOk::Unit))
         }
@@ -179,7 +189,10 @@ pub mod mock {
 
         fn capture(&mut self, pane: u64, scrollback: bool) -> Result<Vec<CaptureSegment>> {
             self.captured.push((pane, scrollback));
-            Ok(self.capture_segments.clone())
+            Ok(self
+                .capture_replies
+                .pop_front()
+                .unwrap_or_else(|| self.capture_segments.clone()))
         }
 
         fn procs(&mut self, pane: u64) -> Result<PaneProcs> {

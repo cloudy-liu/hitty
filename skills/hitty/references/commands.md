@@ -193,8 +193,10 @@ forever. Each diagnostic is
 The panes around the calling pane, and every agent elsewhere on the machine.
 Table: `PANE WHERE AGENT STATUS TITLE`. WHERE is `left` / `right` / `up` /
 `down` for the pane a direction names, `this tab` for one further off in the
-same tab, and `@N` for an agent in another tab. A `-` status on an agent means
-its status hooks are missing.
+same tab, and `@N` for an agent in another tab. STATUS is the one the window shows: the
+agent's hooks merged with a reading of its screen, so an agent with no hooks
+has one and a permission prompt reads `waiting`. `-` means neither says
+anything. Each agent pane costs one screen capture.
 JSON: `{"pane","peers":[{"pane","direction","same_tab","tab","agent","status","title","cwd"}]}`.
 
 ### `hitty ask PANE MESSAGE [--no-wait] [--timeout SECS] [--interval MS]`
@@ -207,6 +209,10 @@ same workspace, then the machine — and is an error listing the candidates when
 two are equally near. Directions use the rule the window moves focus by.
 
 - Nothing is sent to an agent that is `working`, or `waiting` on its own user.
+  Both are judged as the window judges them — hooks and screen together — so
+  agents without hooks (Cursor, Antigravity, Amp, Hermes) can be asked, and a
+  prompt the hooks do not announce (Codex approvals) still stops the send or
+  ends the wait with exit `3`.
 - The message is pasted whole (newlines included), prefixed with one line
   saying which pane asked, then submitted.
 - The answer is the agent's own final text where its hook reports one (Claude
