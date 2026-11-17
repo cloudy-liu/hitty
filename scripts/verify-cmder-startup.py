@@ -2,6 +2,7 @@
 import argparse
 import os
 from pathlib import Path
+import shutil
 import subprocess
 import tempfile
 
@@ -28,7 +29,8 @@ def main():
                                     creationflags=subprocess.CREATE_NO_WINDOW)
             if result.returncode:
                 raise RuntimeError(f"fixture failed with exit {result.returncode}")
-            return [line for line in result.stdout.splitlines() if line.startswith(b"RESULT=")]
+            return [line.replace(str(root).encode(), b"<ROOT>")
+                    for line in result.stdout.splitlines() if line.startswith(b"RESULT=")]
 
         system = str(Path(os.environ["SystemRoot"]) / "System32")
         for placement in ("", "append"):
@@ -42,7 +44,16 @@ def main():
                 before, after = [run(root, body) for root in roots]
                 assert before and before == after, (placement, entries, before, after)
                 checks += 1
-        for comspec in (os.environ["ComSpec"], os.environ["ComSpec"].upper()):
+        # COMSPEC also starts CMD's pipeline workers, so fake nonexistent paths
+        # cannot test detection. Rename copies of the real interpreter instead.
+        shells = temporary / "shells with spaces"
+        shells.mkdir()
+        comspecs = [os.environ["ComSpec"], os.environ["ComSpec"].upper()]
+        for name in ("cmd.exe", "tcc.exe", "tccle.exe", "custom.exe"):
+            path = shells / name
+            shutil.copy2(os.environ["ComSpec"], path)
+            comspecs.append(str(path))
+        for comspec in comspecs:
             body = (f'set "ComSpec={comspec}"\n'
                     'call "%CMDER_ROOT%\\vendor\\lib\\lib_base.cmd" cmder_shell\n'
                     'echo RESULT=%CMDER_SHELL%;%CMDER_CLINK%;%CMDER_ALIASES%\n')
@@ -72,6 +83,55 @@ def main():
                     'echo RESULT=%HITTY_PROFILE_FIXTURE%;%CD%;%ERRORLEVEL%\n')
             before, after = [run(root, body) for root in roots]
             assert before and before == after, "profile script execution changed"
+            checks += 1
+
+        # Directory checks must retain DIR's filtering and its match
+        # semantics, including executable-looking directories and backups.
+        for name, filename, kind in (
+            ("empty", None, None), ("exe", "tool.exe", None),
+            ("backup", "tool.EXE.bak", None), ("directory", "tool.cmd", "directory"),
+            ("hidden", "tool.exe", "hidden"), ("system", "tool.cmd", "system"),
+            ("hidden-directory", "tool.exe", "hidden-directory"),
+            ("system-directory", "tool.exe", "system-directory"),
+            ("empty.COM", None, None), ("spaces", "command with spaces.PS1", None),
+        ):
+            directory = temporary / ("path-" + name)
+            directory.mkdir()
+            if filename:
+                entry = directory / filename
+                if kind and "directory" in kind:
+                    entry.mkdir()
+                else:
+                    entry.touch()
+                if kind and (kind.startswith("hidden") or kind.startswith("system")):
+                    subprocess.run(["attrib", "+h" if kind.startswith("hidden") else "+s", str(entry)],
+                                   check=True, capture_output=True, creationflags=subprocess.CREATE_NO_WINDOW)
+            for fast in (0, 1):
+                for mode in ("", "/A", "/A:D"):
+                    body = (f'set "fast_init={fast}"\nset "DIRCMD={mode}"\n'
+                            'call "%CMDER_ROOT%\\vendor\\lib\\lib_path.cmd"\n'
+                            f'%lib_path% enhance_path "{directory}"\n'
+                            'echo RESULT=%add_to_path%;%PATH%;%ERRORLEVEL%\n')
+                    before, after = [run(root, body) for root in roots]
+                    assert before and before == after, (name, fast, mode, before, after)
+                    checks += 1
+        for library in ("lib_git", "lib_path", "lib_profile", "lib_console"):
+            for debug in (0, 1):
+                body = (f'set "debug_output={debug}"\nset "verbose_output={debug}"\n'
+                        f'call "%CMDER_ROOT%\\vendor\\lib\\{library}.cmd"\n'
+                        'echo RESULT=%lib_base%;%lib_console%;%print_debug%;%print_verbose%;%print_error%\n')
+                before, after = [run(root, body) for root in roots]
+                assert before and before == after, (library, debug, before, after)
+                checks += 1
+        for user, vendored in (("1.2.3.4", "1.2.3.4"), ("2.0.0.0", "1.9.9.9"),
+                               ("1.2.3.4", "1.2.3.5"), ("1.2.4.0", "1.2.3.9")):
+            body = ('call "%CMDER_ROOT%\\vendor\\lib\\lib_git.cmd"\n'
+                    f'%lib_git% validate_version USER {user}\n'
+                    f'%lib_git% validate_version VENDORED {vendored}\n'
+                    '%lib_git% compare_versions USER VENDORED\n'
+                    'echo RESULT=%ERRORLEVEL%;%USER_MAJOR%;%USER_MINOR%;%USER_PATCH%;%USER_BUILD%\n')
+            before, after = [run(root, body) for root in roots]
+            assert before and before == after, (user, vendored, before, after)
             checks += 1
         print(f"{checks} baseline/optimized behavior comparisons passed")
 

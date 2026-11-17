@@ -1359,7 +1359,9 @@ impl HittyApp {
                     .when(!is_ssh_group, |act| {
                         act.child({
                             let new_key = section.key.clone();
-                            Button::new(("sidebar-group-new", group_ix))
+                            #[cfg(feature = "markdown-visual-tests")]
+                            let measured_key = new_key.clone();
+                            let button = Button::new(("sidebar-group-new", group_ix))
                                 .icon(Icon::empty().path("icons/plus.svg"))
                                 .ghost()
                                 .xsmall()
@@ -1367,7 +1369,18 @@ impl HittyApp {
                                 .on_click(cx.listener(move |this, _, window, cx| {
                                     cx.stop_propagation();
                                     this.new_tab_in_group(new_key.clone(), window, cx);
-                                }))
+                                }));
+                            #[cfg(feature = "markdown-visual-tests")]
+                            {
+                                crate::terminal_startup::observe_button(
+                                    button.into_any_element(),
+                                    measured_key,
+                                )
+                            }
+                            #[cfg(not(feature = "markdown-visual-tests"))]
+                            {
+                                button
+                            }
                         })
                     })
                     .child(

@@ -1,0 +1,1113 @@
+{
+  "date": "2026-11-17",
+  "system": "Windows 11 10.0.22000; AMD Ryzen 7 5800H",
+  "source_base": "bae28d06d83b63ad4a3bbfd8b46db732425651e3",
+  "build": "locked dev profile with markdown-visual-tests; dependencies retain Cargo.toml optimization settings",
+  "viewport_logical_pixels": [
+    1100,
+    700
+  ],
+  "display_scale": 1.75,
+  "conpty": "1.24.260710001",
+  "clink": "1.2.46.69fc92",
+  "source_hashes": {
+    "init.bat": {
+      "baseline": "78ea11ada9c761b223667cdcd856be98e4cb835e2ff96223c94b22171c0d4d34",
+      "optimized": "78ea11ada9c761b223667cdcd856be98e4cb835e2ff96223c94b22171c0d4d34"
+    },
+    "lib/lib_base.cmd": {
+      "baseline": "c32536180528b831d0a6be520078d3350a3e118ab9d1bd94451d7fa448efb3ed",
+      "optimized": "5f02cc4e3c034a93955e8c6b05d5793521cb118d5dcca74c96176242707cf3e6"
+    },
+    "lib/lib_console.cmd": {
+      "baseline": "1d9d52542ef2bcaf94871b7c7d4d7bd7df0254c182f2856672cc655bad620372",
+      "optimized": "1793a72ab41e114b8c3023ea022adedded038e326f6b3aae5267ed1ee7902e2b"
+    },
+    "lib/lib_git.cmd": {
+      "baseline": "4dca3bfdd14621d5a808eda9000b16e28122f28a2a951e4e70e11207922d37b3",
+      "optimized": "5ec4435c583d1c4af41f6b35dde237786eb052d344c58625082a07ccd6d0512d"
+    },
+    "lib/lib_path.cmd": {
+      "baseline": "7e28cb30171c3fc718363fee286eaf45882e44fac366b7cd8d94e9108b711d1f",
+      "optimized": "9f5b3466f6955432d1deb880628d805124ca953a89994d5bfb1b092f3f7729e4"
+    },
+    "lib/lib_profile.cmd": {
+      "baseline": "7ace24034a56e60abb8906b70a2c525615c7312af9d9534a812e86f3a1fd6db9",
+      "optimized": "c7ac44b5298b0087d4144fc43f9bb767a4e1ebf5f0f741f2fd1af1d591367681"
+    }
+  },
+  "installed_vendor_sources_unchanged": true,
+  "harness_hashes": {
+    "src/terminal_startup.rs": "2ef6853a2633abd8dfc93fdefd6994a998db194a82d636c37b1a609dd8699928",
+    "scripts/measure-terminal-startup-native.py": "b9a0847d1fab30d87572fbd6635e414a34ff0beed5530e8de0bc53afa08ff641",
+    "scripts/prepare-cmder-startup.py": "fcb9bcf61afb2e8cd860fc762fc975c631cb9380fcffd8dfe93fa99e30b0bcfa",
+    "scripts/verify-cmder-startup.py": "362cab16f874a8c86a39b6b901f06afcc764ed44b6a7078644464afeb78b1810"
+  },
+  "phase_trace": {
+    "scope": "Unmodified isolated Cmder init.bat with seven timestamp probes; three starts; approximately 10 ms clock resolution. Git stage includes Git PATH changes. The shell/Clink stage includes shell detection. This instrumented dataset is separate from final timing comparisons.",
+    "samples": [
+      {
+        "library_load_ms": 110,
+        "shell_detection_and_clink_ms": 100,
+        "git_setup_including_path_ms": 630,
+        "remaining_path_and_profiles_ms": 330,
+        "aliases_and_user_scripts_ms": 70,
+        "total_init_ms": 1240
+      },
+      {
+        "library_load_ms": 120,
+        "shell_detection_and_clink_ms": 90,
+        "git_setup_including_path_ms": 650,
+        "remaining_path_and_profiles_ms": 320,
+        "aliases_and_user_scripts_ms": 70,
+        "total_init_ms": 1250
+      },
+      {
+        "library_load_ms": 100,
+        "shell_detection_and_clink_ms": 100,
+        "git_setup_including_path_ms": 620,
+        "remaining_path_and_profiles_ms": 330,
+        "aliases_and_user_scripts_ms": 70,
+        "total_init_ms": 1220
+      }
+    ]
+  },
+  "daemon_comparison": {
+    "method": "10 alternating-order pairs, one start per process, same Hitty pane engine for both Cmder copies; no concurrent builds/tests",
+    "summary": {
+      "baseline": {
+        "samples": 10,
+        "p50_ms": 1678.54815,
+        "p95_ms": 1941.6366,
+        "max_ms": 1941.6366
+      },
+      "optimized": {
+        "samples": 10,
+        "p50_ms": 1291.74905,
+        "p95_ms": 1473.9877,
+        "max_ms": 1473.9877
+      }
+    },
+    "paired_median_saved_ms": 388.01005,
+    "all_pairs_improved": true,
+    "functional_checks": "20/20 alias completion, arithmetic execution and native history replay passed",
+    "measurements": [
+      {
+        "alias_completion_and_history": "passed",
+        "editable_ms": 1777.9845,
+        "sample": 0,
+        "spawned_ms": 28.3046,
+        "pair": 0,
+        "variant": "baseline"
+      },
+      {
+        "alias_completion_and_history": "passed",
+        "editable_ms": 1370.9012,
+        "sample": 0,
+        "spawned_ms": 28.3744,
+        "pair": 0,
+        "variant": "optimized"
+      },
+      {
+        "alias_completion_and_history": "passed",
+        "editable_ms": 1257.3201000000001,
+        "sample": 0,
+        "spawned_ms": 32.3328,
+        "pair": 1,
+        "variant": "optimized"
+      },
+      {
+        "alias_completion_and_history": "passed",
+        "editable_ms": 1653.9562,
+        "sample": 0,
+        "spawned_ms": 35.2388,
+        "pair": 1,
+        "variant": "baseline"
+      },
+      {
+        "alias_completion_and_history": "passed",
+        "editable_ms": 1693.6978000000001,
+        "sample": 0,
+        "spawned_ms": 30.704800000000002,
+        "pair": 2,
+        "variant": "baseline"
+      },
+      {
+        "alias_completion_and_history": "passed",
+        "editable_ms": 1338.0263000000002,
+        "sample": 0,
+        "spawned_ms": 34.1394,
+        "pair": 2,
+        "variant": "optimized"
+      },
+      {
+        "alias_completion_and_history": "passed",
+        "editable_ms": 1262.2723,
+        "sample": 0,
+        "spawned_ms": 32.235800000000005,
+        "pair": 3,
+        "variant": "optimized"
+      },
+      {
+        "alias_completion_and_history": "passed",
+        "editable_ms": 1640.5708,
+        "sample": 0,
+        "spawned_ms": 29.2148,
+        "pair": 3,
+        "variant": "baseline"
+      },
+      {
+        "alias_completion_and_history": "passed",
+        "editable_ms": 1658.6972,
+        "sample": 0,
+        "spawned_ms": 31.241,
+        "pair": 4,
+        "variant": "baseline"
+      },
+      {
+        "alias_completion_and_history": "passed",
+        "editable_ms": 1280.4965,
+        "sample": 0,
+        "spawned_ms": 34.132999999999996,
+        "pair": 4,
+        "variant": "optimized"
+      },
+      {
+        "alias_completion_and_history": "passed",
+        "editable_ms": 1300.7703999999999,
+        "sample": 0,
+        "spawned_ms": 30.8502,
+        "pair": 5,
+        "variant": "optimized"
+      },
+      {
+        "alias_completion_and_history": "passed",
+        "editable_ms": 1649.5119,
+        "sample": 0,
+        "spawned_ms": 31.5415,
+        "pair": 5,
+        "variant": "baseline"
+      },
+      {
+        "alias_completion_and_history": "passed",
+        "editable_ms": 1663.3985,
+        "sample": 0,
+        "spawned_ms": 32.9088,
+        "pair": 6,
+        "variant": "baseline"
+      },
+      {
+        "alias_completion_and_history": "passed",
+        "editable_ms": 1268.7178999999999,
+        "sample": 0,
+        "spawned_ms": 34.5204,
+        "pair": 6,
+        "variant": "optimized"
+      },
+      {
+        "alias_completion_and_history": "passed",
+        "editable_ms": 1282.7277000000001,
+        "sample": 0,
+        "spawned_ms": 34.010400000000004,
+        "pair": 7,
+        "variant": "optimized"
+      },
+      {
+        "alias_completion_and_history": "passed",
+        "editable_ms": 1798.3858000000002,
+        "sample": 0,
+        "spawned_ms": 32.1818,
+        "pair": 7,
+        "variant": "baseline"
+      },
+      {
+        "alias_completion_and_history": "passed",
+        "editable_ms": 1941.6366,
+        "sample": 0,
+        "spawned_ms": 35.7001,
+        "pair": 8,
+        "variant": "baseline"
+      },
+      {
+        "alias_completion_and_history": "passed",
+        "editable_ms": 1473.9877,
+        "sample": 0,
+        "spawned_ms": 31.2359,
+        "pair": 8,
+        "variant": "optimized"
+      },
+      {
+        "alias_completion_and_history": "passed",
+        "editable_ms": 1387.6390000000001,
+        "sample": 0,
+        "spawned_ms": 36.1177,
+        "pair": 9,
+        "variant": "optimized"
+      },
+      {
+        "alias_completion_and_history": "passed",
+        "editable_ms": 1768.9785,
+        "sample": 0,
+        "spawned_ms": 32.662,
+        "pair": 9,
+        "variant": "baseline"
+      }
+    ]
+  },
+  "native_comparison": {
+    "method": "One run of ten samples per variant/directory; run order baseline Git, optimized Git, optimized non-Git, baseline non-Git; no concurrent builds/tests. Both variants use the same Hitty binary, so the difference measures the Cmder candidate, not the Hitty changes.",
+    "scope": "In-app mouse dispatch to the real sidebar button / production split action through prompt observation and GPUI draw return; excludes OS input delivery and display scanout. Each additional pane immediately receives its first test command. Initial fixture frame and repository detection settle before the warmup command and timed samples.",
+    "functional_checks": "80/80 additional panes passed alias Tab completion, arithmetic execution, Up+Enter replay with new output, Ctrl+C cancellation, empty Enter and prompt refresh.",
+    "performance_gate": "500 ms gate failed for all four runs; all 80 timed samples saved. Run exit 1 is the expected failed performance gate, not a functional failure.",
+    "runs": [
+      {
+        "variant": "baseline",
+        "directory_kind": "git",
+        "exit_code": 1,
+        "summary": {
+          "binary": "D:\\gh-prj\\hitty\\target\\debug\\hitty-app.exe",
+          "binary_sha256": "79bfdab69fc0f3264bea691f42ddd9550ef076799e6726cafd21a459e429ce10",
+          "cwd": "D:\\gh-prj\\hitty",
+          "cmder_variant": "baseline",
+          "scope": "native sidebar mouse dispatch / split action through prompt observation and GPUI draw return; not display scanout",
+          "cold_fixture": {
+            "entry": "cold_fixture",
+            "daemon_ms": 67.33200000000001,
+            "prompt_ms": 2868.7603
+          },
+          "errors": [
+            "sidebar_button P95 1869.86ms exceeds 500.00ms"
+          ],
+          "sidebar_button": {
+            "samples": 10,
+            "p50_ms": 1797.54565,
+            "p95_ms": 1869.8582,
+            "max_ms": 1869.8582,
+            "budget_ms": 500.0,
+            "within_budget": false
+          },
+          "split_action": {
+            "samples": 10,
+            "p50_ms": 1826.029,
+            "p95_ms": 1882.3609999999999,
+            "max_ms": 1882.3609999999999,
+            "budget_ms": 500.0,
+            "within_budget": false
+          }
+        },
+        "measurements": [
+          {
+            "entry": "cold_fixture",
+            "daemon_ms": 67.33200000000001,
+            "prompt_ms": 2868.7603
+          },
+          {
+            "entry": "sidebar_button",
+            "sample": 0,
+            "prompt_ms": 1689.9144000000001,
+            "draw_after_prompt_ms": 1695.3554,
+            "first_command_ms": 227.6291,
+            "completion_history_ctrl_c_prompt_refresh": "passed"
+          },
+          {
+            "entry": "split_action",
+            "sample": 0,
+            "prompt_ms": 1791.6799999999998,
+            "draw_after_prompt_ms": 1797.9829,
+            "first_command_ms": 230.2919,
+            "completion_history_ctrl_c_prompt_refresh": "passed"
+          },
+          {
+            "entry": "sidebar_button",
+            "sample": 1,
+            "prompt_ms": 1863.4043,
+            "draw_after_prompt_ms": 1869.8582,
+            "first_command_ms": 281.302,
+            "completion_history_ctrl_c_prompt_refresh": "passed"
+          },
+          {
+            "entry": "split_action",
+            "sample": 1,
+            "prompt_ms": 1828.8022,
+            "draw_after_prompt_ms": 1836.4527,
+            "first_command_ms": 250.8343,
+            "completion_history_ctrl_c_prompt_refresh": "passed"
+          },
+          {
+            "entry": "sidebar_button",
+            "sample": 2,
+            "prompt_ms": 1780.098,
+            "draw_after_prompt_ms": 1786.3709000000001,
+            "first_command_ms": 244.2635,
+            "completion_history_ctrl_c_prompt_refresh": "passed"
+          },
+          {
+            "entry": "split_action",
+            "sample": 2,
+            "prompt_ms": 1845.021,
+            "draw_after_prompt_ms": 1853.0428,
+            "first_command_ms": 258.5454,
+            "completion_history_ctrl_c_prompt_refresh": "passed"
+          },
+          {
+            "entry": "sidebar_button",
+            "sample": 3,
+            "prompt_ms": 1803.0302,
+            "draw_after_prompt_ms": 1808.7204,
+            "first_command_ms": 245.79139999999998,
+            "completion_history_ctrl_c_prompt_refresh": "passed"
+          },
+          {
+            "entry": "split_action",
+            "sample": 3,
+            "prompt_ms": 1821.2732,
+            "draw_after_prompt_ms": 1828.4284,
+            "first_command_ms": 231.2659,
+            "completion_history_ctrl_c_prompt_refresh": "passed"
+          },
+          {
+            "entry": "sidebar_button",
+            "sample": 4,
+            "prompt_ms": 1779.4841,
+            "draw_after_prompt_ms": 1785.5965999999999,
+            "first_command_ms": 279.38039999999995,
+            "completion_history_ctrl_c_prompt_refresh": "passed"
+          },
+          {
+            "entry": "split_action",
+            "sample": 4,
+            "prompt_ms": 1875.2303000000002,
+            "draw_after_prompt_ms": 1882.3609999999999,
+            "first_command_ms": 262.5332,
+            "completion_history_ctrl_c_prompt_refresh": "passed"
+          },
+          {
+            "entry": "sidebar_button",
+            "sample": 5,
+            "prompt_ms": 1803.0606,
+            "draw_after_prompt_ms": 1809.08,
+            "first_command_ms": 249.6068,
+            "completion_history_ctrl_c_prompt_refresh": "passed"
+          },
+          {
+            "entry": "split_action",
+            "sample": 5,
+            "prompt_ms": 1815.7657,
+            "draw_after_prompt_ms": 1823.6295999999998,
+            "first_command_ms": 243.5592,
+            "completion_history_ctrl_c_prompt_refresh": "passed"
+          },
+          {
+            "entry": "sidebar_button",
+            "sample": 6,
+            "prompt_ms": 1809.9459,
+            "draw_after_prompt_ms": 1815.91,
+            "first_command_ms": 283.8656,
+            "completion_history_ctrl_c_prompt_refresh": "passed"
+          },
+          {
+            "entry": "split_action",
+            "sample": 6,
+            "prompt_ms": 1859.139,
+            "draw_after_prompt_ms": 1865.8363,
+            "first_command_ms": 266.601,
+            "completion_history_ctrl_c_prompt_refresh": "passed"
+          },
+          {
+            "entry": "sidebar_button",
+            "sample": 7,
+            "prompt_ms": 1834.4197,
+            "draw_after_prompt_ms": 1841.5474000000002,
+            "first_command_ms": 285.86499999999995,
+            "completion_history_ctrl_c_prompt_refresh": "passed"
+          },
+          {
+            "entry": "split_action",
+            "sample": 7,
+            "prompt_ms": 1729.6111999999998,
+            "draw_after_prompt_ms": 1736.6698999999999,
+            "first_command_ms": 241.35999999999999,
+            "completion_history_ctrl_c_prompt_refresh": "passed"
+          },
+          {
+            "entry": "sidebar_button",
+            "sample": 8,
+            "prompt_ms": 1639.6617999999999,
+            "draw_after_prompt_ms": 1645.4286,
+            "first_command_ms": 267.1012,
+            "completion_history_ctrl_c_prompt_refresh": "passed"
+          },
+          {
+            "entry": "split_action",
+            "sample": 8,
+            "prompt_ms": 1719.6805,
+            "draw_after_prompt_ms": 1726.5269,
+            "first_command_ms": 241.9863,
+            "completion_history_ctrl_c_prompt_refresh": "passed"
+          },
+          {
+            "entry": "sidebar_button",
+            "sample": 9,
+            "prompt_ms": 1763.2160999999999,
+            "draw_after_prompt_ms": 1769.9029,
+            "first_command_ms": 255.55879999999996,
+            "completion_history_ctrl_c_prompt_refresh": "passed"
+          },
+          {
+            "entry": "split_action",
+            "sample": 9,
+            "prompt_ms": 1794.5964000000001,
+            "draw_after_prompt_ms": 1804.2098,
+            "first_command_ms": 300.5134,
+            "completion_history_ctrl_c_prompt_refresh": "passed"
+          },
+          {
+            "error": "sidebar_button P95 1869.86ms exceeds 500.00ms"
+          }
+        ]
+      },
+      {
+        "variant": "optimized",
+        "directory_kind": "git",
+        "exit_code": 1,
+        "summary": {
+          "binary": "D:\\gh-prj\\hitty\\target\\debug\\hitty-app.exe",
+          "binary_sha256": "79bfdab69fc0f3264bea691f42ddd9550ef076799e6726cafd21a459e429ce10",
+          "cwd": "D:\\gh-prj\\hitty",
+          "cmder_variant": "optimized",
+          "scope": "native sidebar mouse dispatch / split action through prompt observation and GPUI draw return; not display scanout",
+          "cold_fixture": {
+            "entry": "cold_fixture",
+            "daemon_ms": 60.8205,
+            "prompt_ms": 2191.3457
+          },
+          "errors": [
+            "sidebar_button P95 1387.59ms exceeds 500.00ms"
+          ],
+          "sidebar_button": {
+            "samples": 10,
+            "p50_ms": 1277.2692000000002,
+            "p95_ms": 1387.5909,
+            "max_ms": 1387.5909,
+            "budget_ms": 500.0,
+            "within_budget": false
+          },
+          "split_action": {
+            "samples": 10,
+            "p50_ms": 1356.2314000000001,
+            "p95_ms": 1504.3929999999998,
+            "max_ms": 1504.3929999999998,
+            "budget_ms": 500.0,
+            "within_budget": false
+          }
+        },
+        "measurements": [
+          {
+            "entry": "cold_fixture",
+            "daemon_ms": 60.8205,
+            "prompt_ms": 2191.3457
+          },
+          {
+            "entry": "sidebar_button",
+            "sample": 0,
+            "prompt_ms": 1381.9029,
+            "draw_after_prompt_ms": 1387.5909,
+            "first_command_ms": 225.4561,
+            "completion_history_ctrl_c_prompt_refresh": "passed"
+          },
+          {
+            "entry": "split_action",
+            "sample": 0,
+            "prompt_ms": 1353.354,
+            "draw_after_prompt_ms": 1360.271,
+            "first_command_ms": 268.89750000000004,
+            "completion_history_ctrl_c_prompt_refresh": "passed"
+          },
+          {
+            "entry": "sidebar_button",
+            "sample": 1,
+            "prompt_ms": 1277.841,
+            "draw_after_prompt_ms": 1284.2234,
+            "first_command_ms": 284.6006,
+            "completion_history_ctrl_c_prompt_refresh": "passed"
+          },
+          {
+            "entry": "split_action",
+            "sample": 1,
+            "prompt_ms": 1497.1515,
+            "draw_after_prompt_ms": 1504.3929999999998,
+            "first_command_ms": 283.2202,
+            "completion_history_ctrl_c_prompt_refresh": "passed"
+          },
+          {
+            "entry": "sidebar_button",
+            "sample": 2,
+            "prompt_ms": 1350.1029,
+            "draw_after_prompt_ms": 1356.2658999999999,
+            "first_command_ms": 237.3509,
+            "completion_history_ctrl_c_prompt_refresh": "passed"
+          },
+          {
+            "entry": "split_action",
+            "sample": 2,
+            "prompt_ms": 1338.6403,
+            "draw_after_prompt_ms": 1345.4782,
+            "first_command_ms": 288.9675,
+            "completion_history_ctrl_c_prompt_refresh": "passed"
+          },
+          {
+            "entry": "sidebar_button",
+            "sample": 3,
+            "prompt_ms": 1314.3464000000001,
+            "draw_after_prompt_ms": 1320.4806,
+            "first_command_ms": 242.3545,
+            "completion_history_ctrl_c_prompt_refresh": "passed"
+          },
+          {
+            "entry": "split_action",
+            "sample": 3,
+            "prompt_ms": 1314.5241999999998,
+            "draw_after_prompt_ms": 1322.2749000000001,
+            "first_command_ms": 278.7131,
+            "completion_history_ctrl_c_prompt_refresh": "passed"
+          },
+          {
+            "entry": "sidebar_button",
+            "sample": 4,
+            "prompt_ms": 1264.2279,
+            "draw_after_prompt_ms": 1270.315,
+            "first_command_ms": 264.18989999999997,
+            "completion_history_ctrl_c_prompt_refresh": "passed"
+          },
+          {
+            "entry": "split_action",
+            "sample": 4,
+            "prompt_ms": 1357.6913,
+            "draw_after_prompt_ms": 1364.8959,
+            "first_command_ms": 269.8876,
+            "completion_history_ctrl_c_prompt_refresh": "passed"
+          },
+          {
+            "entry": "sidebar_button",
+            "sample": 5,
+            "prompt_ms": 1250.2100999999998,
+            "draw_after_prompt_ms": 1256.3192999999999,
+            "first_command_ms": 308.7629,
+            "completion_history_ctrl_c_prompt_refresh": "passed"
+          },
+          {
+            "entry": "split_action",
+            "sample": 5,
+            "prompt_ms": 1343.3855,
+            "draw_after_prompt_ms": 1350.4418999999998,
+            "first_command_ms": 248.66230000000002,
+            "completion_history_ctrl_c_prompt_refresh": "passed"
+          },
+          {
+            "entry": "sidebar_button",
+            "sample": 6,
+            "prompt_ms": 1246.7029,
+            "draw_after_prompt_ms": 1252.5949,
+            "first_command_ms": 272.6029,
+            "completion_history_ctrl_c_prompt_refresh": "passed"
+          },
+          {
+            "entry": "split_action",
+            "sample": 6,
+            "prompt_ms": 1344.5619,
+            "draw_after_prompt_ms": 1352.1918,
+            "first_command_ms": 279.4624,
+            "completion_history_ctrl_c_prompt_refresh": "passed"
+          },
+          {
+            "entry": "sidebar_button",
+            "sample": 7,
+            "prompt_ms": 1281.8789,
+            "draw_after_prompt_ms": 1287.6764,
+            "first_command_ms": 278.2942,
+            "completion_history_ctrl_c_prompt_refresh": "passed"
+          },
+          {
+            "entry": "split_action",
+            "sample": 7,
+            "prompt_ms": 1364.3282000000002,
+            "draw_after_prompt_ms": 1370.9443,
+            "first_command_ms": 248.275,
+            "completion_history_ctrl_c_prompt_refresh": "passed"
+          },
+          {
+            "entry": "sidebar_button",
+            "sample": 8,
+            "prompt_ms": 1256.9933,
+            "draw_after_prompt_ms": 1263.6851,
+            "first_command_ms": 270.37850000000003,
+            "completion_history_ctrl_c_prompt_refresh": "passed"
+          },
+          {
+            "entry": "split_action",
+            "sample": 8,
+            "prompt_ms": 1336.3306,
+            "draw_after_prompt_ms": 1342.8042,
+            "first_command_ms": 268.1035,
+            "completion_history_ctrl_c_prompt_refresh": "passed"
+          },
+          {
+            "entry": "sidebar_button",
+            "sample": 9,
+            "prompt_ms": 1259.8639999999998,
+            "draw_after_prompt_ms": 1265.7803000000001,
+            "first_command_ms": 279.1862,
+            "completion_history_ctrl_c_prompt_refresh": "passed"
+          },
+          {
+            "entry": "split_action",
+            "sample": 9,
+            "prompt_ms": 1449.1377,
+            "draw_after_prompt_ms": 1456.0066,
+            "first_command_ms": 237.27870000000001,
+            "completion_history_ctrl_c_prompt_refresh": "passed"
+          },
+          {
+            "error": "sidebar_button P95 1387.59ms exceeds 500.00ms"
+          }
+        ]
+      },
+      {
+        "variant": "optimized",
+        "directory_kind": "nongit",
+        "exit_code": 1,
+        "summary": {
+          "binary": "D:\\gh-prj\\hitty\\target\\debug\\hitty-app.exe",
+          "binary_sha256": "79bfdab69fc0f3264bea691f42ddd9550ef076799e6726cafd21a459e429ce10",
+          "cwd": "C:\\Users\\cloudy\\AppData\\Local\\Temp\\hitty-startup-nongit-20261117",
+          "cmder_variant": "optimized",
+          "scope": "native sidebar mouse dispatch / split action through prompt observation and GPUI draw return; not display scanout",
+          "cold_fixture": {
+            "entry": "cold_fixture",
+            "daemon_ms": 61.4018,
+            "prompt_ms": 2156.1396
+          },
+          "errors": [
+            "sidebar_button P95 1426.69ms exceeds 500.00ms"
+          ],
+          "sidebar_button": {
+            "samples": 10,
+            "p50_ms": 1275.4888,
+            "p95_ms": 1426.6874,
+            "max_ms": 1426.6874,
+            "budget_ms": 500.0,
+            "within_budget": false
+          },
+          "split_action": {
+            "samples": 10,
+            "p50_ms": 1293.53965,
+            "p95_ms": 1332.9341000000002,
+            "max_ms": 1332.9341000000002,
+            "budget_ms": 500.0,
+            "within_budget": false
+          }
+        },
+        "measurements": [
+          {
+            "entry": "cold_fixture",
+            "daemon_ms": 61.4018,
+            "prompt_ms": 2156.1396
+          },
+          {
+            "entry": "sidebar_button",
+            "sample": 0,
+            "prompt_ms": 1346.2792000000002,
+            "draw_after_prompt_ms": 1354.5083,
+            "first_command_ms": 239.9948,
+            "completion_history_ctrl_c_prompt_refresh": "passed"
+          },
+          {
+            "entry": "split_action",
+            "sample": 0,
+            "prompt_ms": 1325.9098000000001,
+            "draw_after_prompt_ms": 1332.9341000000002,
+            "first_command_ms": 252.8612,
+            "completion_history_ctrl_c_prompt_refresh": "passed"
+          },
+          {
+            "entry": "sidebar_button",
+            "sample": 1,
+            "prompt_ms": 1269.4686,
+            "draw_after_prompt_ms": 1276.5995,
+            "first_command_ms": 252.1387,
+            "completion_history_ctrl_c_prompt_refresh": "passed"
+          },
+          {
+            "entry": "split_action",
+            "sample": 1,
+            "prompt_ms": 1290.8147999999999,
+            "draw_after_prompt_ms": 1297.9356,
+            "first_command_ms": 254.1542,
+            "completion_history_ctrl_c_prompt_refresh": "passed"
+          },
+          {
+            "entry": "sidebar_button",
+            "sample": 2,
+            "prompt_ms": 1240.4128,
+            "draw_after_prompt_ms": 1248.0415,
+            "first_command_ms": 246.6578,
+            "completion_history_ctrl_c_prompt_refresh": "passed"
+          },
+          {
+            "entry": "split_action",
+            "sample": 2,
+            "prompt_ms": 1282.229,
+            "draw_after_prompt_ms": 1289.1436999999999,
+            "first_command_ms": 250.59730000000002,
+            "completion_history_ctrl_c_prompt_refresh": "passed"
+          },
+          {
+            "entry": "sidebar_button",
+            "sample": 3,
+            "prompt_ms": 1251.6224,
+            "draw_after_prompt_ms": 1258.6523,
+            "first_command_ms": 260.1672,
+            "completion_history_ctrl_c_prompt_refresh": "passed"
+          },
+          {
+            "entry": "split_action",
+            "sample": 3,
+            "prompt_ms": 1261.8278,
+            "draw_after_prompt_ms": 1268.9599,
+            "first_command_ms": 243.3004,
+            "completion_history_ctrl_c_prompt_refresh": "passed"
+          },
+          {
+            "entry": "sidebar_button",
+            "sample": 4,
+            "prompt_ms": 1419.5324,
+            "draw_after_prompt_ms": 1426.6874,
+            "first_command_ms": 272.8235,
+            "completion_history_ctrl_c_prompt_refresh": "passed"
+          },
+          {
+            "entry": "split_action",
+            "sample": 4,
+            "prompt_ms": 1316.6469,
+            "draw_after_prompt_ms": 1324.0819999999999,
+            "first_command_ms": 259.79,
+            "completion_history_ctrl_c_prompt_refresh": "passed"
+          },
+          {
+            "entry": "sidebar_button",
+            "sample": 5,
+            "prompt_ms": 1267.671,
+            "draw_after_prompt_ms": 1274.3781000000001,
+            "first_command_ms": 259.08189999999996,
+            "completion_history_ctrl_c_prompt_refresh": "passed"
+          },
+          {
+            "entry": "split_action",
+            "sample": 5,
+            "prompt_ms": 1298.8792,
+            "draw_after_prompt_ms": 1306.0989,
+            "first_command_ms": 256.4366,
+            "completion_history_ctrl_c_prompt_refresh": "passed"
+          },
+          {
+            "entry": "sidebar_button",
+            "sample": 6,
+            "prompt_ms": 1310.4040000000002,
+            "draw_after_prompt_ms": 1316.8077,
+            "first_command_ms": 254.97959999999998,
+            "completion_history_ctrl_c_prompt_refresh": "passed"
+          },
+          {
+            "entry": "split_action",
+            "sample": 6,
+            "prompt_ms": 1275.8943,
+            "draw_after_prompt_ms": 1282.7450000000001,
+            "first_command_ms": 258.2244,
+            "completion_history_ctrl_c_prompt_refresh": "passed"
+          },
+          {
+            "entry": "sidebar_button",
+            "sample": 7,
+            "prompt_ms": 1260.0754000000002,
+            "draw_after_prompt_ms": 1266.7709,
+            "first_command_ms": 257.93719999999996,
+            "completion_history_ctrl_c_prompt_refresh": "passed"
+          },
+          {
+            "entry": "split_action",
+            "sample": 7,
+            "prompt_ms": 1279.3228000000001,
+            "draw_after_prompt_ms": 1286.5599,
+            "first_command_ms": 251.58960000000002,
+            "completion_history_ctrl_c_prompt_refresh": "passed"
+          },
+          {
+            "entry": "sidebar_button",
+            "sample": 8,
+            "prompt_ms": 1302.0159,
+            "draw_after_prompt_ms": 1307.9225999999999,
+            "first_command_ms": 260.02320000000003,
+            "completion_history_ctrl_c_prompt_refresh": "passed"
+          },
+          {
+            "entry": "split_action",
+            "sample": 8,
+            "prompt_ms": 1294.8255,
+            "draw_after_prompt_ms": 1302.1183,
+            "first_command_ms": 263.8992,
+            "completion_history_ctrl_c_prompt_refresh": "passed"
+          },
+          {
+            "entry": "sidebar_button",
+            "sample": 9,
+            "prompt_ms": 1255.3922,
+            "draw_after_prompt_ms": 1261.7235,
+            "first_command_ms": 264.3814,
+            "completion_history_ctrl_c_prompt_refresh": "passed"
+          },
+          {
+            "entry": "split_action",
+            "sample": 9,
+            "prompt_ms": 1263.9628,
+            "draw_after_prompt_ms": 1271.1429,
+            "first_command_ms": 258.76320000000004,
+            "completion_history_ctrl_c_prompt_refresh": "passed"
+          },
+          {
+            "error": "sidebar_button P95 1426.69ms exceeds 500.00ms"
+          }
+        ]
+      },
+      {
+        "variant": "baseline",
+        "directory_kind": "nongit",
+        "exit_code": 1,
+        "summary": {
+          "binary": "D:\\gh-prj\\hitty\\target\\debug\\hitty-app.exe",
+          "binary_sha256": "79bfdab69fc0f3264bea691f42ddd9550ef076799e6726cafd21a459e429ce10",
+          "cwd": "C:\\Users\\cloudy\\AppData\\Local\\Temp\\hitty-startup-nongit-20261117",
+          "cmder_variant": "baseline",
+          "scope": "native sidebar mouse dispatch / split action through prompt observation and GPUI draw return; not display scanout",
+          "cold_fixture": {
+            "entry": "cold_fixture",
+            "daemon_ms": 61.9283,
+            "prompt_ms": 2634.2099000000003
+          },
+          "errors": [
+            "sidebar_button P95 1794.59ms exceeds 500.00ms"
+          ],
+          "sidebar_button": {
+            "samples": 10,
+            "p50_ms": 1660.37,
+            "p95_ms": 1794.5940999999998,
+            "max_ms": 1794.5940999999998,
+            "budget_ms": 500.0,
+            "within_budget": false
+          },
+          "split_action": {
+            "samples": 10,
+            "p50_ms": 1708.9664,
+            "p95_ms": 1890.2326,
+            "max_ms": 1890.2326,
+            "budget_ms": 500.0,
+            "within_budget": false
+          }
+        },
+        "measurements": [
+          {
+            "entry": "cold_fixture",
+            "daemon_ms": 61.9283,
+            "prompt_ms": 2634.2099000000003
+          },
+          {
+            "entry": "sidebar_button",
+            "sample": 0,
+            "prompt_ms": 1633.0430000000001,
+            "draw_after_prompt_ms": 1639.8485,
+            "first_command_ms": 252.07190000000003,
+            "completion_history_ctrl_c_prompt_refresh": "passed"
+          },
+          {
+            "entry": "split_action",
+            "sample": 0,
+            "prompt_ms": 1677.846,
+            "draw_after_prompt_ms": 1685.2672,
+            "first_command_ms": 230.2254,
+            "completion_history_ctrl_c_prompt_refresh": "passed"
+          },
+          {
+            "entry": "sidebar_button",
+            "sample": 1,
+            "prompt_ms": 1635.1146,
+            "draw_after_prompt_ms": 1641.3428,
+            "first_command_ms": 246.8252,
+            "completion_history_ctrl_c_prompt_refresh": "passed"
+          },
+          {
+            "entry": "split_action",
+            "sample": 1,
+            "prompt_ms": 1706.7635,
+            "draw_after_prompt_ms": 1714.4983,
+            "first_command_ms": 244.4976,
+            "completion_history_ctrl_c_prompt_refresh": "passed"
+          },
+          {
+            "entry": "sidebar_button",
+            "sample": 2,
+            "prompt_ms": 1777.9272,
+            "draw_after_prompt_ms": 1785.7212,
+            "first_command_ms": 308.3723,
+            "completion_history_ctrl_c_prompt_refresh": "passed"
+          },
+          {
+            "entry": "split_action",
+            "sample": 2,
+            "prompt_ms": 1685.8876999999998,
+            "draw_after_prompt_ms": 1693.6636,
+            "first_command_ms": 231.0345,
+            "completion_history_ctrl_c_prompt_refresh": "passed"
+          },
+          {
+            "entry": "sidebar_button",
+            "sample": 3,
+            "prompt_ms": 1643.4697,
+            "draw_after_prompt_ms": 1649.9093999999998,
+            "first_command_ms": 229.9646,
+            "completion_history_ctrl_c_prompt_refresh": "passed"
+          },
+          {
+            "entry": "split_action",
+            "sample": 3,
+            "prompt_ms": 1664.1972,
+            "draw_after_prompt_ms": 1671.1292,
+            "first_command_ms": 227.2838,
+            "completion_history_ctrl_c_prompt_refresh": "passed"
+          },
+          {
+            "entry": "sidebar_button",
+            "sample": 4,
+            "prompt_ms": 1787.4984,
+            "draw_after_prompt_ms": 1794.5940999999998,
+            "first_command_ms": 294.6225,
+            "completion_history_ctrl_c_prompt_refresh": "passed"
+          },
+          {
+            "entry": "split_action",
+            "sample": 4,
+            "prompt_ms": 1882.5344,
+            "draw_after_prompt_ms": 1890.2326,
+            "first_command_ms": 280.1675,
+            "completion_history_ctrl_c_prompt_refresh": "passed"
+          },
+          {
+            "entry": "sidebar_button",
+            "sample": 5,
+            "prompt_ms": 1725.7454,
+            "draw_after_prompt_ms": 1733.7087,
+            "first_command_ms": 235.3358,
+            "completion_history_ctrl_c_prompt_refresh": "passed"
+          },
+          {
+            "entry": "split_action",
+            "sample": 5,
+            "prompt_ms": 1792.6278,
+            "draw_after_prompt_ms": 1801.2002,
+            "first_command_ms": 269.47330000000005,
+            "completion_history_ctrl_c_prompt_refresh": "passed"
+          },
+          {
+            "entry": "sidebar_button",
+            "sample": 6,
+            "prompt_ms": 1765.6105,
+            "draw_after_prompt_ms": 1772.2139000000002,
+            "first_command_ms": 232.852,
+            "completion_history_ctrl_c_prompt_refresh": "passed"
+          },
+          {
+            "entry": "split_action",
+            "sample": 6,
+            "prompt_ms": 1716.2965,
+            "draw_after_prompt_ms": 1723.0622,
+            "first_command_ms": 246.1536,
+            "completion_history_ctrl_c_prompt_refresh": "passed"
+          },
+          {
+            "entry": "sidebar_button",
+            "sample": 7,
+            "prompt_ms": 1639.2302,
+            "draw_after_prompt_ms": 1645.255,
+            "first_command_ms": 234.4188,
+            "completion_history_ctrl_c_prompt_refresh": "passed"
+          },
+          {
+            "entry": "split_action",
+            "sample": 7,
+            "prompt_ms": 1696.2028,
+            "draw_after_prompt_ms": 1703.4345,
+            "first_command_ms": 242.2,
+            "completion_history_ctrl_c_prompt_refresh": "passed"
+          },
+          {
+            "entry": "sidebar_button",
+            "sample": 8,
+            "prompt_ms": 1640.8441,
+            "draw_after_prompt_ms": 1647.4353,
+            "first_command_ms": 222.4389,
+            "completion_history_ctrl_c_prompt_refresh": "passed"
+          },
+          {
+            "entry": "split_action",
+            "sample": 8,
+            "prompt_ms": 1670.2255,
+            "draw_after_prompt_ms": 1682.7087000000001,
+            "first_command_ms": 237.1915,
+            "completion_history_ctrl_c_prompt_refresh": "passed"
+          },
+          {
+            "entry": "sidebar_button",
+            "sample": 9,
+            "prompt_ms": 1664.2866999999999,
+            "draw_after_prompt_ms": 1670.8306,
+            "first_command_ms": 240.8733,
+            "completion_history_ctrl_c_prompt_refresh": "passed"
+          },
+          {
+            "entry": "split_action",
+            "sample": 9,
+            "prompt_ms": 1809.9978,
+            "draw_after_prompt_ms": 1817.9049,
+            "first_command_ms": 242.8238,
+            "completion_history_ctrl_c_prompt_refresh": "passed"
+          },
+          {
+            "error": "sidebar_button P95 1794.59ms exceeds 500.00ms"
+          }
+        ]
+      }
+    ]
+  },
+  "limitations": [
+    "Dev build; not release-build or company-machine acceptance.",
+    "Native GUI variants are run in blocks; ten samples per cell is a small local dataset.",
+    "The company custom synchronous Git prompt is not available here.",
+    "Hitty configuration/history preparation benefits remain unquantified; this comparison holds Hitty constant."
+  ],
+  "exploratory_trials_excluded": [
+    "Early native harness runs missed the button due to a misplaced bounds observer or stalled during interactive tab cleanup; neither is included as valid timing acceptance.",
+    "A separate attempted before/after Hitty run hit one initial-fixture completion timeout and was not used to quantify Hitty. Final fixture initialization settles before the warmup command; all four final native runs completed.",
+    "Native executable-directory wildcard probes disagreed on directory/system-file cases; a later equivalent wildcard fallback was substantially slower and discarded.",
+    "A temporary-file directory probe saved only about 45 ms and was discarded. The final candidate retains the original PATH search implementation."
+  ],
+  "validation": {
+    "workspace_and_updater_tests": {
+      "passed": 3341,
+      "failed": 0,
+      "ignored": 14
+    },
+    "locked_all_target_check": "passed",
+    "rustfmt": "passed",
+    "cmder_behavior_comparisons": 95,
+    "custom_no_argument_include_rejection": "passed",
+    "python_syntax": "passed"
+  }
+}
