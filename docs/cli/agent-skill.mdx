@@ -56,6 +56,20 @@ its job, and exits. A pane is right when:
 - **You are being asked about something you did not start.** "What's running in
   that pane?", "why is port 3000 taken?", "what are my agents doing?"
 
+### Talking to an agent that is already there
+
+"Ask the Claude on the right to review this" is one command for the agent and
+no command for you:
+
+```bash
+hitty peers                            # who is around, and on which side
+hitty ask right "Review the uncommitted diff. Findings only."
+```
+
+The skill tells the agent to resolve `right` / `left` / `claude` itself, relay
+the answer, and hand a permission prompt on the other side back to you rather
+than answering it. [Orchestration →](/agents/orchestration#asking-an-agent-that-is-already-there)
+
 ### The safety rules
 
 <Warning>
@@ -64,7 +78,8 @@ its job, and exits. A pane is right when:
 </Warning>
 
 - **Never `send` into a pane you did not open.** Keystrokes land in the middle
-  of whatever is happening there. Check `hitty agents` first.
+  of whatever is happening there. Check `hitty agents` first. `hitty ask`, on
+  your request, is the exception: it refuses a busy or blocked agent.
 - **Never close a pane, tab, or workspace you did not create.**
 - **Never `server stop` or `server restart`.** Every pane on the machine dies
   with the server, including yours.

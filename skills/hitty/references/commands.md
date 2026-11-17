@@ -6,7 +6,7 @@ you need; the table of contents mirrors the top-level grammar.
 - [Global flags](#global-flags)
 - [Environment](#environment)
 - [Exit codes](#exit-codes)
-- [Top-level verbs](#top-level-verbs)
+- [Top-level verbs](#top-level-verbs) — including `peers` and `ask`
 - [`ws` — workspaces](#ws--workspaces)
 - [`tab` — tabs](#tab--tabs)
 - [`pane` — panes](#pane--panes)
@@ -188,6 +188,43 @@ status hooks are missing or outdated — the reason an agent can sit in one stat
 forever. Each diagnostic is
 `{"kind":"agent_status_hooks_unavailable","agent","hooks_state","action"}`.
 
+### `hitty peers`
+
+The panes around the calling pane, and every agent elsewhere on the machine.
+Table: `PANE WHERE AGENT STATUS TITLE`. WHERE is `left` / `right` / `up` /
+`down` for the pane a direction names, `this tab` for one further off in the
+same tab, and `@N` for an agent in another tab. A `-` status on an agent means
+its status hooks are missing.
+JSON: `{"pane","peers":[{"pane","direction","same_tab","tab","agent","status","title","cwd"}]}`.
+
+### `hitty ask PANE MESSAGE [--no-wait] [--timeout SECS] [--interval MS]`
+
+Hands `MESSAGE` to the agent already running in another pane, waits for the
+turn it starts, and prints the agent's answer. `PANE` is `%42`, a side of the
+calling pane (`left`, `right`, `up`, `down`), or an agent's name (`claude`,
+`codex`, …). A name means the nearest pane running that agent — same tab, then
+same workspace, then the machine — and is an error listing the candidates when
+two are equally near. Directions use the rule the window moves focus by.
+
+- Nothing is sent to an agent that is `working`, or `waiting` on its own user.
+- The message is pasted whole (newlines included), prefixed with one line
+  saying which pane asked, then submitted.
+- The answer is the agent's own final text where its hook reports one (Claude
+  Code and Codex: `"reply_source": "agent"`), otherwise the last 40 lines of
+  its screen (`"reply_source": "screen"`).
+- `--timeout` defaults to 600 seconds. `--no-wait` returns once delivered.
+
+| Exit | Meaning |
+|---|---|
+| `0` | answered (or delivered, with `--no-wait`) |
+| `3` | the agent stopped to ask its user something; nothing was answered for them |
+| `124` | still working at the timeout; the message was delivered |
+| `1` | refused before sending, or the agent or pane ended |
+
+JSON: `{"pane","agent","sent","status","session_id","answered","reply","reply_source"}`;
+`reply` and `reply_source` only when answered, `"timed_out": true` on 124,
+`"message"` on 3.
+
 ### `hitty wait [%PANE] [--until STATE,…] [--changed] [--timeout SECS] [--interval MS]`
 Blocks until the pane reaches one of the named states. The orchestration
 primitive: `hitty wait %3 && hitty capture %3 --plain`.
@@ -206,7 +243,9 @@ primitive: `hitty wait %3 && hitty capture %3 --plain`.
 | `free` | The foreground command has exited; the pane is back to its bare shell |
 | `exit` | The pane is gone. Ends every wait whether asked for or not |
 
-JSON: `{"pane","status","matched","stale","activity","message","session_id"}`.
+JSON: `{"pane","status","matched","stale","activity","message","session_id","reply"}`.
+`reply` is the agent's final answer for the turn it last finished, when its
+hook reports one (Claude Code, Codex); `null` otherwise and while a turn runs.
 `stale: true` means the pane was already in that state when the wait began, so
 the answer may belong to a previous turn — which is what `--changed` refuses.
 

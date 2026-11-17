@@ -79,6 +79,8 @@ pub fn execute(cli: Cli, ctx: &Context, backend: &mut dyn Backend) -> Result<Out
         }
         Some(Command::Send(args)) => send(args, ctx, backend),
         Some(Command::Capture(args)) => capture(args, ctx, backend),
+        Some(Command::Peers) => crate::ask::peers(ctx, backend),
+        Some(Command::Ask(args)) => crate::ask::ask(args, ctx, backend),
         Some(Command::Procs { target }) => procs(target.as_deref(), ctx, backend),
         Some(Command::Tab(TabCmd::Ls { ws })) => tab_ls(ws.as_deref(), ctx, backend),
         Some(Command::Tab(TabCmd::New { ws, cwd })) => tab_new(ws.as_deref(), cwd, ctx, backend),
@@ -232,7 +234,16 @@ fn expand_home(raw: &str) -> Option<std::path::PathBuf> {
     })
 }
 
-fn fetch_machine(backend: &mut dyn Backend) -> Result<Machine> {
+pub(crate) fn agent_states(
+    backend: &mut dyn Backend,
+) -> Result<Vec<hitty_core::daemon::control::PaneAgentState>> {
+    match backend.control(ControlRequest::AgentStates)? {
+        ReplyOk::AgentStates(states) => Ok(states),
+        other => bail!("the server answered AgentStates with {other:?}"),
+    }
+}
+
+pub(crate) fn fetch_machine(backend: &mut dyn Backend) -> Result<Machine> {
     match backend.control(ControlRequest::MachineGet)? {
         ReplyOk::MachineTree(m) => Ok(*m),
         other => bail!("the server answered MachineGet with {other:?}"),
@@ -593,7 +604,7 @@ fn tried_to_write_an_address(s: &str) -> bool {
 }
 
 fn capture(args: CaptureArgs, ctx: &Context, backend: &mut dyn Backend) -> Result<Outcome> {
-    let pane = address::pane_or_context(args.target.as_deref(), ctx)?;
+    let pane = crate::target::pane_or_context(args.target.as_deref(), ctx, backend)?;
     let segments = backend.capture(pane, args.scrollback)?;
     // Raw is the default and stays byte-for-byte what the daemon stored, joined
     // in replay order; `--plain` hands the same bytes to a grid instead. Either
@@ -608,7 +619,7 @@ fn capture(args: CaptureArgs, ctx: &Context, backend: &mut dyn Backend) -> Resul
 }
 
 fn procs(target: Option<&str>, ctx: &Context, backend: &mut dyn Backend) -> Result<Outcome> {
-    let pane = address::pane_or_context(target, ctx)?;
+    let pane = crate::target::pane_or_context(target, ctx, backend)?;
     let procs = backend.procs(pane)?;
     report(output::procs_tables(&procs), serde_json::to_value(&procs)?)
 }
@@ -1014,7 +1025,7 @@ fn wait(args: WaitArgs, ctx: &Context, backend: &mut dyn Backend) -> Result<Outc
     /// at all", which is itself a position: an agent appearing is a change.
     type Cursor = Option<(AgentStatus, u64)>;
 
-    let pane = address::pane_or_context(args.target.as_deref(), ctx)?;
+    let pane = crate::target::pane_or_context(args.target.as_deref(), ctx, backend)?;
     // `checked_add` rather than `+`: an absurd `--timeout` must not panic.
     let deadline = args
         .timeout
@@ -1027,11 +1038,9 @@ fn wait(args: WaitArgs, ctx: &Context, backend: &mut dyn Backend) -> Result<Outc
     let mut seen_busy = false;
     let mut polls: u32 = 0;
     loop {
-        let states = match backend.control(ControlRequest::AgentStates)? {
-            ReplyOk::AgentStates(states) => states,
-            other => bail!("the server answered AgentStates with {other:?}"),
-        };
-        let entry = states.into_iter().find(|s| s.pane_id == pane);
+        let entry = agent_states(backend)?
+            .into_iter()
+            .find(|s| s.pane_id == pane);
         let mut current = match &entry {
             Some(e) => match e.state.status {
                 AgentStatus::Idle => WaitState::Idle,
@@ -1100,6 +1109,10 @@ fn wait(args: WaitArgs, ctx: &Context, backend: &mut dyn Backend) -> Result<Outc
                 "activity": session.map(|s| s.activity),
                 "message": session.and_then(|s| s.message.clone()),
                 "session_id": session.and_then(|s| s.session_id.clone()),
+                // The agent's final answer for the turn it last finished, when
+                // its hooks report one — what a caller that sent it a question
+                // came back for. Null while a turn is running.
+                "reply": entry.as_ref().and_then(|e| e.reply.clone()),
             });
             if !matched {
                 // Structured even here: a script has to tell "my peer died"
@@ -1179,6 +1192,7 @@ fn wait(args: WaitArgs, ctx: &Context, backend: &mut dyn Backend) -> Result<Outc
                             "activity": session.map(|s| s.activity),
                             "message": session.and_then(|s| s.message.clone()),
                             "session_id": session.and_then(|s| s.session_id.clone()),
+                            "reply": entry.as_ref().and_then(|e| e.reply.clone()),
                         })
                     },
                 },
@@ -1215,7 +1229,7 @@ fn pane_is_free(backend: &mut dyn Backend, pane: u64) -> Result<bool> {
 
 /// Whether the daemon still has a live pane behind this id. Absent from the
 /// tree counts as dead: a closed pane is as gone as an exited one.
-fn pane_is_live(backend: &mut dyn Backend, pane: u64) -> Result<bool> {
+pub(crate) fn pane_is_live(backend: &mut dyn Backend, pane: u64) -> Result<bool> {
     Ok(fetch_machine(backend)?
         .panes
         .iter()
@@ -1233,6 +1247,14 @@ fn agents(backend: &mut dyn Backend) -> Result<Outcome> {
                 .map(|machine| agent_hook_diagnostics(&states, &machine, backend))
                 .unwrap_or_default();
             let mut json = json!({ "agents": serde_json::to_value(&states)? });
+            // A survey, not a mailbox: every agent's whole last answer would
+            // bury the statuses a caller ran this to see. `wait` and `ask`
+            // hand over the one answer that was asked for.
+            for agent in json["agents"].as_array_mut().into_iter().flatten() {
+                if let Some(fields) = agent.as_object_mut() {
+                    fields.remove("reply");
+                }
+            }
             if !diagnostics.is_empty() {
                 json["diagnostics"] =
                     Value::Array(diagnostics.iter().map(AgentHookDiagnostic::json).collect());
@@ -2929,6 +2951,8 @@ mod tests {
                 activity,
                 ..Default::default()
             },
+            reply: None,
+            turns: 0,
         }
     }
 

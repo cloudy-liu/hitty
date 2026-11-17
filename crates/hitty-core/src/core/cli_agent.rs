@@ -1156,6 +1156,11 @@ pub struct AgentEvent {
     /// Separate from `message`, which carries what the *agent* said and is
     /// deliberately cleared when a turn starts.
     pub prompt: Option<String>,
+    /// The agent's final answer, on a `Stop` from an agent whose hook payload
+    /// carries one. Separate from `message`, which labels a status and is read
+    /// as one line: this is the whole answer, and is what a peer that asked a
+    /// question gets back.
+    pub reply: Option<String>,
 }
 
 pub fn parse_agent_event(payload: &[u8]) -> Option<AgentEvent> {
@@ -1184,6 +1189,8 @@ pub fn parse_agent_event_body(json: &[u8]) -> Option<AgentEvent> {
         source: Option<String>,
         #[serde(default)]
         prompt: Option<String>,
+        #[serde(default)]
+        reply: Option<String>,
     }
 
     let w: Wire = serde_json::from_slice(json).ok()?;
@@ -1197,6 +1204,7 @@ pub fn parse_agent_event_body(json: &[u8]) -> Option<AgentEvent> {
         cwd: nonempty(w.cwd).map(std::path::PathBuf::from),
         source: nonempty(w.source),
         prompt: nonempty(w.prompt),
+        reply: nonempty(w.reply),
     })
 }
 
@@ -1777,6 +1785,7 @@ mod tests {
             message: msg.map(String::from),
             cwd: None,
             prompt: None,
+            reply: None,
             source: None,
         };
 
@@ -1834,6 +1843,7 @@ mod tests {
             message: None,
             cwd: None,
             prompt: None,
+            reply: None,
             source: None,
         };
 
@@ -1871,6 +1881,7 @@ mod tests {
             message: None,
             cwd: cwd.map(PathBuf::from),
             prompt: None,
+            reply: None,
             source: None,
         };
 

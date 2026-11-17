@@ -11,6 +11,10 @@ const DAEMON_ENV: &str = "HITTY_CLI_E2E_DAEMON";
 const PASTE_AWARE_FIXTURE_ARG: &str = "--hitty-e2e-paste-aware-fixture";
 const PASTE_AWARE_TEXT: &str = "hitty paste aware input";
 const PASTE_BURST_WINDOW: Duration = Duration::from_millis(120);
+const AGENT_FIXTURE_ARG: &str = "--hitty-e2e-agent-fixture";
+/// Longer than the 8 KiB an OSC may carry: an answer of this size reaches the
+/// caller only if it never travels through the terminal.
+const AGENT_ANSWER_PADDING: usize = 9_000;
 const READY_WITHIN: Duration = Duration::from_secs(30);
 const SETTLE_WITHIN: Duration = Duration::from_secs(60);
 const CLOSE_WITHIN: Duration = Duration::from_secs(5);
@@ -18,6 +22,10 @@ const CLOSE_WITHIN: Duration = Duration::from_secs(5);
 fn main() {
     if std::env::args().any(|arg| arg == PASTE_AWARE_FIXTURE_ARG) {
         run_paste_aware_fixture();
+        return;
+    }
+    if std::env::args().any(|arg| arg == AGENT_FIXTURE_ARG) {
+        run_agent_fixture();
         return;
     }
     if std::env::var(DAEMON_ENV).as_deref() == Ok("1") {
@@ -54,6 +62,10 @@ fn main() {
         (
             "send_enter_submits_in_a_paste_aware_raw_mode_tui",
             send_enter_submits_in_a_paste_aware_raw_mode_tui,
+        ),
+        (
+            "ask_reaches_the_agent_on_the_right_and_returns_its_answer",
+            ask_reaches_the_agent_on_the_right_and_returns_its_answer,
         ),
         (
             "status_reports_the_live_server",
@@ -127,6 +139,74 @@ fn run_paste_aware_fixture() {
             input.push(byte);
             last_text_at = Some(read_at);
         }
+    }
+}
+
+/// A stand-in for a coding agent, as far as hitty can tell one from outside:
+/// a raw-mode program that takes a pasted prompt and an Enter, and reports its
+/// turns through the same socket message the real hook command sends.
+///
+/// Each prompt is answered with its own last line, so the test can tell that
+/// what came back is the answer to what it asked.
+fn run_agent_fixture() {
+    let _raw = raw_mode::enable();
+    let pane: u64 = std::env::var("HITTY_PANE")
+        .expect("the fixture runs in a hitty pane")
+        .parse()
+        .expect("HITTY_PANE is a pane id");
+    let report = |event: serde_json::Value| {
+        PaneClient::local()
+            .report_agent_event(pane, std::process::id(), &event.to_string())
+            .expect("report an agent event to the pane's server");
+    };
+    report(serde_json::json!({
+        "v": 1, "agent": "claude", "event": "session-start", "session_id": "e2e-session",
+    }));
+    println!("HITTY_AGENT_READY");
+    std::io::stdout().flush().expect("flush fixture readiness");
+
+    let mut input = Vec::new();
+    let mut chunk = [0_u8; 1024];
+    loop {
+        let read = std::io::stdin()
+            .read(&mut chunk)
+            .expect("read fixture input");
+        if read == 0 {
+            return;
+        }
+        input.extend_from_slice(&chunk[..read]);
+        // Submitted means what it means to an agent's editor: a complete paste
+        // and then an Enter of its own. A newline inside the paste is text.
+        const PASTE_END: &[u8] = b"\x1b[201~";
+        let Some(end) = input
+            .windows(PASTE_END.len())
+            .position(|window| window == PASTE_END)
+        else {
+            continue;
+        };
+        if !input[end + PASTE_END.len()..].contains(&b'\r') {
+            continue;
+        }
+        let pasted = String::from_utf8_lossy(&input[..end]).into_owned();
+        input.clear();
+        let prompt = pasted.trim_start_matches("\x1b[200~");
+        let question = prompt.lines().last().unwrap_or_default();
+        let from_a_peer = prompt.starts_with("[hitty ask — from pane %");
+
+        report(serde_json::json!({
+            "v": 1, "agent": "claude", "event": "prompt-submit", "session_id": "e2e-session",
+        }));
+        // Repaint, as a TUI does: what is on screen is not the answer.
+        println!("thinking about it…");
+        std::io::stdout().flush().expect("flush fixture output");
+        report(serde_json::json!({
+            "v": 1, "agent": "claude", "event": "stop", "session_id": "e2e-session",
+            "reply": format!(
+                "ANSWER[{question}] peer={from_a_peer} lines={} {}",
+                prompt.lines().count(),
+                "x".repeat(AGENT_ANSWER_PADDING),
+            ),
+        }));
     }
 }
 
@@ -641,6 +721,169 @@ fn send_enter_submits_in_a_paste_aware_raw_mode_tui(daemon: &Daemon) {
     daemon.run_ok(&["send", &address, PASTE_AWARE_TEXT, "--enter"]);
 
     collect_pane_output_until(&mut pane, b"HITTY_PASTE_AWARE_SUBMITTED");
+}
+
+/// The whole path a user's "ask the Claude on the right" takes: a direction
+/// resolved against the real layout, a multi-line message pasted into a raw-mode
+/// program and submitted, the turn awaited, and the agent's own answer — longer
+/// than a terminal could have carried — handed back.
+fn ask_reaches_the_agent_on_the_right_and_returns_its_answer(daemon: &Daemon) {
+    use hitty_core::core::machine::{Axis, PaneSeed};
+    use hitty_core::daemon::control::ControlRequest;
+
+    let created = daemon.run_json(&["new", &workdir()]);
+    let workspace = created["id"].as_str().expect("new prints the workspace");
+    let caller = created["pane"].as_u64().expect("new prints the pane id");
+
+    let fixture = std::env::current_exe().expect("locate the agent fixture");
+    // On unix the server also asks the pty which process is in front, on every
+    // read, and a pane whose foreground command is not an agent's has its
+    // agent cleared — a hook report alone does not outlast that. So the
+    // stand-in goes by an agent's name there, as the real one does.
+    #[cfg(unix)]
+    let fixture = {
+        let named = daemon.dir.path().join("claude");
+        std::os::unix::fs::symlink(&fixture, &named).expect("name the fixture after an agent");
+        named
+    };
+    let shell = ShellSpec {
+        program: fixture.display().to_string(),
+        args: vec![AGENT_FIXTURE_ARG.into()],
+        args_are_hitty_defaults: false,
+    };
+    let mut pane = PaneClient::at(daemon.pane_endpoint())
+        .spawn(
+            None,
+            WinSize {
+                cols: 80,
+                rows: 24,
+                cell_w: 8,
+                cell_h: 16,
+            },
+            Some(shell),
+            Some(workspace.to_string()),
+            Some(workspace.to_string()),
+        )
+        .expect("spawn the agent fixture");
+    pane.set_recv_timeout(Some(SETTLE_WITHIN))
+        .expect("bound fixture output reads");
+    collect_pane_output_until(&mut pane, b"HITTY_AGENT_READY");
+    let agent = pane.pane_id();
+
+    // File it to the right of the caller, the way `hitty split --h` would.
+    let hello = ControlHello::host_rpc("e2e-layout", "e2e-layout");
+    ControlClient::connect_at(&daemon.control_endpoint(), &hello)
+        .expect("reach the control endpoint")
+        .request(ControlRequest::PaneSplit {
+            workspace: workspace.parse().expect("a workspace id"),
+            pane: caller,
+            axis: Axis::Horizontal,
+            ratio: 0.5,
+            new: PaneSeed {
+                pane: agent,
+                cwd: None,
+                ssh_spec: None,
+                agent: None,
+                shell: None,
+            },
+            first: false,
+        })
+        .expect("file the agent pane beside the caller");
+
+    let from_caller = |args: &[&str]| -> Output {
+        daemon
+            .cli(args)
+            .env("HITTY_PANE", caller.to_string())
+            .env("HITTY_WS", workspace)
+            .output()
+            .unwrap_or_else(|e| panic!("could not run hitty {args:?}: {e}"))
+    };
+    let json_of = |args: &[&str]| -> serde_json::Value {
+        let out = from_caller(args);
+        assert!(
+            out.status.success(),
+            "hitty {args:?} failed ({}): {}{}",
+            out.status,
+            String::from_utf8_lossy(&out.stdout),
+            String::from_utf8_lossy(&out.stderr),
+        );
+        serde_json::from_slice(&out.stdout)
+            .unwrap_or_else(|e| panic!("hitty {args:?} printed no JSON: {e}"))
+    };
+
+    let peers = json_of(&["peers", "--json"]);
+    assert_eq!(peers["pane"].as_u64(), Some(caller), "{peers}");
+    let peer = &peers["peers"][0];
+    assert_eq!(peer["pane"].as_u64(), Some(agent), "{peers}");
+    assert_eq!(peer["direction"], "right", "{peers}");
+    assert_eq!(peer["agent"], "claude", "{peers}");
+    assert_eq!(peer["status"], "idle", "{peers}");
+
+    let answer = json_of(&[
+        "ask",
+        "right",
+        "Look at the diff.\nFIRST_QUESTION",
+        "--timeout",
+        "60",
+        "--interval",
+        "50",
+        "--json",
+    ]);
+    assert_eq!(answer["pane"].as_u64(), Some(agent), "{answer}");
+    assert_eq!(answer["answered"], true, "{answer}");
+    assert_eq!(answer["reply_source"], "agent", "{answer}");
+    assert_eq!(answer["session_id"], "e2e-session", "{answer}");
+    let reply = answer["reply"].as_str().expect("the answer is text");
+    assert!(
+        reply.starts_with("ANSWER[FIRST_QUESTION] peer=true lines=4 "),
+        "the message arrived whole, in one turn, marked as a peer's: {}",
+        &reply[..reply.len().min(120)]
+    );
+    assert!(
+        reply.len() > AGENT_ANSWER_PADDING,
+        "an answer longer than an OSC may carry comes back complete"
+    );
+
+    // A second question, asked of the agent by name while `done` is still
+    // standing from the first: the answer must be the new one.
+    let answer = json_of(&[
+        "ask",
+        "claude",
+        "SECOND_QUESTION",
+        "--timeout",
+        "60",
+        "--interval",
+        "50",
+        "--json",
+    ]);
+    assert_eq!(answer["pane"].as_u64(), Some(agent), "{answer}");
+    let reply = answer["reply"].as_str().expect("the answer is text");
+    assert!(
+        reply.starts_with("ANSWER[SECOND_QUESTION] "),
+        "{}",
+        &reply[..reply.len().min(120)]
+    );
+
+    // The answer is also where `wait` leaves it, and stays out of the survey.
+    let waited = json_of(&["wait", "right", "--until", "done", "--json"]);
+    assert_eq!(waited["reply"].as_str(), Some(reply), "{waited}");
+    let agents = json_of(&["agents", "--json"]);
+    assert!(agents["agents"][0].get("reply").is_none(), "{agents}");
+
+    // And the pane itself still reads as a terminal: the stop was recorded as a
+    // turn boundary without the answer being replayed into the screen.
+    let screen = json_of(&["capture", "right", "--plain", "--json"]);
+    let text = screen["text"].as_str().expect("capture prints text");
+    assert!(text.contains("thinking about it"), "{text}");
+    assert!(!text.contains("ANSWER["), "{text}");
+
+    let nobody = from_caller(&["ask", "left", "anyone?"]);
+    assert_eq!(nobody.status.code(), Some(1));
+    assert!(
+        String::from_utf8_lossy(&nobody.stderr).contains("no pane left of"),
+        "{}",
+        String::from_utf8_lossy(&nobody.stderr)
+    );
 }
 
 fn collect_pane_output_until(session: &mut hitty_core::client::PaneSession, marker: &[u8]) {

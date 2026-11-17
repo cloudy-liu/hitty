@@ -1,4 +1,5 @@
 mod address;
+mod ask;
 mod backend;
 mod cli;
 mod commands;
@@ -9,6 +10,7 @@ mod resolve;
 mod screen;
 mod server;
 mod stdio;
+mod target;
 #[cfg(test)]
 mod testbed;
 
