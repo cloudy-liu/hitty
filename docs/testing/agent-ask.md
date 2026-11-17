@@ -66,3 +66,19 @@ hitty: there is no pane left of %47 — `hitty peers` shows what is around it
 - Against a server older than this change, `ask` detects the end of a turn
   only if it sees the agent `working` between polls, and returns the screen
   tail rather than the agent's text.
+
+## Review regression fixes (2026-11-17)
+
+- `a_replacement_session_cannot_answer_the_asked_turn` first failed by returning
+  `unrelated answer` with exit 0. It now covers a different agent, another
+  session of the same agent, and withdrawal of a known session ID. Each ends
+  the wait with exit 1 and no answer from the replacement.
+- The daemon answer regression first failed because a repeated Stop advanced
+  the completion count from 1 to 2. A completion is now counted once until a
+  new prompt/session changes the state. Duplicate reports retain answer text;
+  a later full-text report can fill an answer the first report lacked.
+- Another PromptSubmit followed by Stop still increments the count, including
+  turns with no reply text. The 10 KB answer stays out of terminal replay.
+- `cargo test --locked --workspace --features updater`: **3364 passed,
+  0 failed, 14 ignored**. The existing isolated CLI e2e suite also passed;
+  no live agent session was messaged or restarted.

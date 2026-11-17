@@ -3401,16 +3401,27 @@ fn apply_agent_signals(
             st.agent = Some(agent);
             notify(st, DaemonMsg::Agent(Some(agent)));
         }
+        let duplicate_stop = event.kind == AgentEventKind::Stop
+            && st
+                .agent_session
+                .as_ref()
+                .is_some_and(|session| session.status == crate::core::cli_agent::AgentStatus::Done);
         st.agent_session
             .get_or_insert_with(AgentSessionState::default)
             .apply_event(event);
-        // An answer belongs to the turn that produced it: a `stop` replaces it
-        // (with nothing, from an agent that reports none), and a new prompt or
-        // session retires it, so it is never read as the next turn's.
+        // A new prompt/session retires the previous answer. The next completed
+        // turn replaces it, even when that turn reports no text.
         match event.kind {
             AgentEventKind::Stop => {
-                st.agent_reply = event.reply.clone();
-                st.agent_turns += 1;
+                // Socket/OSC reports and some hook adapters can repeat the
+                // same completion. Count its edge once, but allow a later
+                // full-text report to fill an answer the first lacked.
+                if !duplicate_stop {
+                    st.agent_reply = event.reply.clone();
+                    st.agent_turns += 1;
+                } else if st.agent_reply.is_none() {
+                    st.agent_reply = event.reply.clone();
+                }
             }
             AgentEventKind::PromptSubmit | AgentEventKind::SessionStart => st.agent_reply = None,
             _ => {}
@@ -10021,6 +10032,14 @@ mod tests {
             ring.len()
         );
 
+        report(
+            &mut st,
+            serde_json::json!({"agent":"claude","event":"stop","session_id":"s-1"}),
+        );
+        let duplicate = agent_state_snapshot(&st).unwrap();
+        assert_eq!(duplicate.turns, 1, "a repeated Stop is not another turn");
+        assert_eq!(duplicate.reply.as_deref(), Some(answer.as_str()));
+
         // The next turn has no answer until it ends, and one that ends without
         // reporting any does not inherit the last.
         report(
@@ -10037,11 +10056,30 @@ mod tests {
             serde_json::json!({"agent":"claude","event":"stop","session_id":"s-1"}),
         );
         let state = agent_state_snapshot(&st).unwrap();
-        assert_eq!(state.reply, None);
+        assert_eq!(state.reply.as_deref(), Some("done"));
         assert_eq!(
-            state.turns, 3,
-            "every finished turn counts, answered or not"
+            state.turns, 2,
+            "the duplicate Stop must not finish the pending ask"
         );
+
+        report(
+            &mut st,
+            serde_json::json!({"agent":"claude","event":"prompt-submit","session_id":"s-1"}),
+        );
+        report(
+            &mut st,
+            serde_json::json!({"agent":"claude","event":"stop","session_id":"s-1"}),
+        );
+        let state = agent_state_snapshot(&st).unwrap();
+        assert_eq!(state.turns, 3, "a new unanswered turn still counts");
+        assert_eq!(state.reply, None);
+        report(
+            &mut st,
+            serde_json::json!({"agent":"claude","event":"stop","session_id":"s-1","reply":"late full reply"}),
+        );
+        let state = agent_state_snapshot(&st).unwrap();
+        assert_eq!(state.turns, 3, "late answer text does not add a turn");
+        assert_eq!(state.reply.as_deref(), Some("late full reply"));
 
         report(
             &mut st,

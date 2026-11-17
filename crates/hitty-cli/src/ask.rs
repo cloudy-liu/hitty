@@ -252,7 +252,15 @@ pub fn ask(args: AskArgs, ctx: &Context, backend: &mut dyn Backend) -> Result<Ou
         let now = states.into_iter().find(|s| s.pane_id == pane);
         let gone = match &now {
             None => true,
-            Some(_) => polls.is_multiple_of(LIVENESS_EVERY) && !pane_is_live(backend, pane)?,
+            Some(now) => {
+                now.agent != before.agent
+                    || before
+                        .state
+                        .session_id
+                        .as_ref()
+                        .is_some_and(|id| now.state.session_id.as_ref() != Some(id))
+                    || (polls.is_multiple_of(LIVENESS_EVERY) && !pane_is_live(backend, pane)?)
+            }
         };
         let Some(now) = now.filter(|_| !gone) else {
             let human = format!("{name} in pane %{pane} ended before answering");
@@ -633,6 +641,34 @@ mod tests {
             json_of(run(&["ask", "right", "hello", "--interval", "50"], &mut backend).unwrap());
         assert_eq!(code, 1);
         assert_eq!(json["answered"], false);
+    }
+
+    #[test]
+    fn a_replacement_session_cannot_answer_the_asked_turn() {
+        for (agent, session) in [
+            (CLIAgent::Codex, Some("sess-52")),
+            (CLIAgent::Claude, Some("replacement-session")),
+            (CLIAgent::Claude, None),
+        ] {
+            let mut backend = backend();
+            let mut replacement = claude(AgentStatus::Done, 4, Some("unrelated answer"));
+            replacement.agent = Some(agent);
+            replacement.state.session_id = session.map(String::from);
+            script(
+                &mut backend,
+                vec![vec![claude(AgentStatus::Done, 3, None)], vec![replacement]],
+            );
+            let (code, json) = json_of(
+                run(
+                    &["ask", "right", "review my change", "--interval", "50"],
+                    &mut backend,
+                )
+                .unwrap(),
+            );
+            assert_eq!(code, 1, "replacement {agent:?}/{session:?}: {json}");
+            assert_eq!(json["answered"], false);
+            assert!(json.get("reply").is_none(), "{json}");
+        }
     }
 
     #[test]
