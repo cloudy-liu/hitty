@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.4.1 - 2026-11-17
+
+- Read one fresh configuration snapshot for each pane and prepare complete
+  command history alongside shell creation, reducing repeated startup work
+  and moving history preparation off the UI thread (cloudy-liu/hitty#47).
+- Add reproducible startup measurements and isolated Cmder comparison tools;
+  the tools apply candidate changes only to generated copies
+  (cloudy-liu/hitty#47).
+
+See the [release notes](docs/releases/hitty-v0.4.1.md) for measurement scope and
+distribution limitations.
+
 ## v0.4.0 - 2026-11-12
 
 - Open Windows sessions and splits without the three-second pause before the
