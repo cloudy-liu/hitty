@@ -81,6 +81,8 @@ pub mod mock {
 
     pub struct MockBackend {
         pub machine: Machine,
+        /// Consumed one per `MachineGet` before falling back to `machine`.
+        pub machine_replies: VecDeque<Machine>,
         pub replies: VecDeque<ReplyOk>,
         pub control_calls: Vec<ControlRequest>,
         pub spawned: Vec<(WorkspaceId, Option<String>)>,
@@ -112,6 +114,7 @@ pub mod mock {
         fn default() -> MockBackend {
             MockBackend {
                 machine: Machine::default(),
+                machine_replies: VecDeque::new(),
                 replies: VecDeque::new(),
                 control_calls: Vec::new(),
                 spawned: Vec::new(),
@@ -149,7 +152,10 @@ pub mod mock {
             let is_machine_get = req == ControlRequest::MachineGet;
             self.control_calls.push(req);
             if is_machine_get {
-                return Ok(ReplyOk::MachineTree(Box::new(self.machine.clone())));
+                let tree = self.machine_replies.pop_front();
+                return Ok(ReplyOk::MachineTree(Box::new(
+                    tree.unwrap_or_else(|| self.machine.clone()),
+                )));
             }
             Ok(self.replies.pop_front().unwrap_or(ReplyOk::Unit))
         }

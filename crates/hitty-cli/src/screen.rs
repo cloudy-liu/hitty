@@ -70,7 +70,7 @@ impl alacritty_terminal::grid::Dimensions for GridSize {
 pub fn render(segments: &[CaptureSegment]) -> String {
     let mut out = String::new();
     for segment in segments {
-        let text = render_segment(segment.size, &segment.bytes);
+        let text = render_segment(segment);
         if text.is_empty() {
             continue;
         }
@@ -85,15 +85,12 @@ pub fn render(segments: &[CaptureSegment]) -> String {
 /// The live bottom of a captured pane, in the shape the agent screen rules
 /// read — the same text the window hands them.
 pub fn detection_text(segment: &CaptureSegment) -> String {
-    let size = GridSize::of(segment.size);
-    let mut term = Term::new(Config::default(), &size, VoidListener);
-    let mut parser: Processor = Processor::new();
-    parser.advance(&mut term, &segment.bytes);
-    hitty_core::core::screen_status::detection_text(&term)
+    hitty_core::core::screen_status::detection_text(&replay(segment))
 }
 
-fn render_segment(size: WinSize, bytes: &[u8]) -> String {
-    let size = GridSize::of(size);
+/// The grid a segment's bytes leave behind, at the size they were recorded at.
+fn replay(segment: &CaptureSegment) -> Term<VoidListener> {
+    let size = GridSize::of(segment.size);
     // The scrollback the grid keeps is for output this segment pushed off its
     // own screen: a segment can be far longer than one screenful, and dropping
     // what scrolled away would answer a different question than the raw form
@@ -103,8 +100,12 @@ fn render_segment(size: WinSize, bytes: &[u8]) -> String {
     // Spelled out because `Processor` is generic over its sync-timeout policy
     // and nothing here pins it; the default is the one the GUI parses with.
     let mut parser: Processor = Processor::new();
-    parser.advance(&mut term, bytes);
+    parser.advance(&mut term, &segment.bytes);
+    term
+}
 
+fn render_segment(segment: &CaptureSegment) -> String {
+    let term = replay(segment);
     let start = Point::new(term.topmost_line(), Column(0));
     let end = Point::new(term.bottommost_line(), term.last_column());
     let text = term.bounds_to_string(start, end);

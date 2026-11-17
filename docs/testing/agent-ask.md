@@ -66,3 +66,27 @@ hitty: there is no pane left of %47 — `hitty peers` shows what is around it
 - Against a server older than this change, `ask` detects the end of a turn
   only if it sees the agent `working` between polls, and returns the screen
   tail rather than the agent's text.
+
+## Status from hooks and screen (follow-up)
+
+Validated on Windows 11, 2026-11-17, branch `feat/ask-screen-status`.
+
+| Command | Result |
+| --- | --- |
+| `cargo fmt --all -- --check` | passed |
+| `python scripts/sync-agent-detection.py --check` | all 15 manifests verified |
+| `bash .github/scripts/check-host-boundary.sh` | clean |
+| `cargo test --locked --workspace --features updater --no-fail-fast -- --test-threads=4` | 3,371 passed, 0 failed, 14 ignored |
+
+The CLI unit tests drive `ask` and `peers` with scripted screens taken from
+the detection engine's own fixtures: a Cursor pane with no hooks is asked and
+answered from its screen; a Codex approval prompt its hooks report as
+`working` stops a send and ends a wait with exit 3; a hookless agent quit
+mid-turn exits 1 instead of returning the shell prompt as an answer; a wait
+that runs out as the screen settles returns the screen.
+
+Against the running 0.4.0 server (read-only), the built CLI listed a Codex
+pane as `done` in 0.9 s, agreeing with `hitty agents`.
+
+Not verified: no message was sent to a live agent, and no live Cursor or
+blocked Codex session was read; those paths rest on the scripted screens.

@@ -10,58 +10,81 @@
 
 use anyhow::Result;
 use hitty_core::core::cli_agent::{AgentSessionState, AgentStatus, CLIAgent};
+use hitty_core::core::osc;
 use hitty_core::core::screen_status::{self, Tracker};
 
-use crate::backend::Backend;
+use crate::backend::{Backend, CaptureSegment};
 use crate::screen;
 
 /// One pane's screen, watched over successive looks. Kept across the polls of
 /// a wait, because "idle after working" is a finished turn and a single look
 /// cannot tell that from an agent that never started.
-#[derive(Default)]
 pub struct ScreenReader {
+    pane: u64,
+    agent: Option<CLIAgent>,
     tracker: Tracker,
     looks: u64,
+    /// What the last look captured, so its text can be had without a second
+    /// capture. Empty when that look did not read the screen.
+    seen: Vec<CaptureSegment>,
 }
 
 impl ScreenReader {
+    pub fn new(pane: u64, agent: Option<CLIAgent>) -> ScreenReader {
+        ScreenReader {
+            pane,
+            agent,
+            tracker: Tracker::default(),
+            looks: 0,
+            seen: Vec::new(),
+        }
+    }
+
     /// Look at the pane and say what its agent is doing: the hooks' report and
     /// the screen's reading, merged as the window merges them.
     ///
     /// The hooks' word alone for an agent with no screen rules, and when the
-    /// pane has nothing to show yet. `None` when neither source says anything.
+    /// pane cannot be read — a look that fails must not fail the caller, who
+    /// still has the hooks. `None` when neither source says anything.
     pub fn status(
         &mut self,
         backend: &mut dyn Backend,
-        pane: u64,
-        agent: Option<CLIAgent>,
         title: &str,
         hook: Option<&AgentSessionState>,
-    ) -> Result<Option<AgentStatus>> {
-        let Some(agent) = agent.filter(|a| screen_status::reads(*a)) else {
-            return Ok(hook.map(|s| s.status));
+    ) -> Option<AgentStatus> {
+        self.seen.clear();
+        let Some(agent) = self.agent.filter(|a| screen_status::has_manifest(*a)) else {
+            return hook.map(|s| s.status);
         };
-        if let Some(segment) = backend.capture(pane, false)?.last() {
+        self.seen = backend.capture(self.pane, false).unwrap_or_default();
+        if let Some(segment) = self.seen.last() {
             self.looks += 1;
             // Every look counts as new output: finding out whether the screen
-            // moved costs the capture that reading it does.
+            // moved costs the capture that reading it does. A capture takes
+            // some 300 ms to settle, which is the pace the tracker's idle
+            // hold was tuned for.
             self.tracker.observe(
                 Some(agent),
                 self.looks,
                 title,
-                &screen_status::last_progress(&segment.bytes),
+                &osc::last_progress(&segment.bytes),
                 || screen::detection_text(segment),
             );
         }
-        Ok(screen_status::merge(agent, hook, self.tracker.status()))
+        screen_status::merge(agent, hook, self.tracker.status())
     }
-}
 
-pub fn name(status: AgentStatus) -> &'static str {
-    match status {
-        AgentStatus::Idle => "idle",
-        AgentStatus::Working => "working",
-        AgentStatus::Waiting => "waiting",
-        AgentStatus::Done => "done",
+    /// What the screen alone has shown, the hooks left out of it.
+    pub fn screen(&self) -> Option<AgentStatus> {
+        self.tracker.status().and_then(|s| s.status)
+    }
+
+    /// The pane's text as of the last look, captured now if that look did not
+    /// read the screen.
+    pub fn text(&mut self, backend: &mut dyn Backend) -> Result<String> {
+        if self.seen.is_empty() {
+            self.seen = backend.capture(self.pane, false)?;
+        }
+        Ok(screen::render(&self.seen))
     }
 }

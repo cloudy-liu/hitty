@@ -123,37 +123,8 @@ fn manifest_source(agent: CLIAgent) -> Option<&'static str> {
 }
 
 /// Whether `agent` has a manifest, so a look at its screen can say anything.
-pub fn reads(agent: CLIAgent) -> bool {
+pub fn has_manifest(agent: CLIAgent) -> bool {
     manifest_source(agent).is_some()
-}
-
-/// A valid OSC 9;4 progress report, in the shape the `osc_progress` rules
-/// match: `4;<state>[;<value>]`. `None` for any other OSC 9 payload.
-pub fn progress_report(payload: &[u8]) -> Option<String> {
-    let report = std::str::from_utf8(payload).ok()?.strip_prefix("9;4;")?;
-    let mut fields = report.split(';');
-    if !matches!(fields.next(), Some("0" | "1" | "2" | "3" | "4")) {
-        return None;
-    }
-    if let Some(value) = fields.next()
-        && !value
-            .parse::<i16>()
-            .is_ok_and(|value| (-1..=100).contains(&value))
-    {
-        return None;
-    }
-    fields.next().is_none().then(|| format!("4;{report}"))
-}
-
-/// The last progress report in a stretch of pane output, or nothing.
-pub fn last_progress(bytes: &[u8]) -> String {
-    let mut last = String::new();
-    crate::core::osc::OscTokenizer::new(&[b"9"]).feed(bytes, |payload| {
-        if let Some(report) = progress_report(payload) {
-            last = report;
-        }
-    });
-    last
 }
 
 /// The agents whose hooks herdr trusts over the screen once they report,
@@ -253,7 +224,7 @@ impl Tracker {
                 ..Tracker::default()
             };
         }
-        let Some(agent) = agent.filter(|a| reads(*a)) else {
+        let Some(agent) = agent.filter(|a| has_manifest(*a)) else {
             return;
         };
         let unchanged = self

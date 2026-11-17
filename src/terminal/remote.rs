@@ -2843,7 +2843,7 @@ struct OscNotifyScanner {
 
 fn feed_osc_progress(tok: &mut OscTokenizer, bytes: &[u8], progress: &Mutex<String>) {
     tok.feed(bytes, |payload| {
-        if let Some(report) = crate::core::screen_status::progress_report(payload)
+        if let Some(report) = crate::core::osc::progress_report(payload)
             && let Ok(mut stored) = progress.lock()
         {
             *stored = report;
