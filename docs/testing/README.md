@@ -46,6 +46,7 @@ limitations. Verify all release assets and checksums using the
 
 ## Current records
 
+- [Terminal startup preparation and isolated Cmder measurements](terminal-startup.md).
 - [Herdr-core pane engine acceptance](herdr-pane-engine.md) and
   [two-axis pre-PR review](herdr-pane-engine-review.md).
 - [README presentation](readme-product-presentation.md).
