@@ -1,0 +1,254 @@
+{
+  "revision": "c552bbe",
+  "platform": "Windows x86_64",
+  "shell": "cmd.exe",
+  "pane_engine": "native",
+  "codex": "0.169.0",
+  "codex_provider": "local fixture",
+  "capture": "scripts/capture-native-window.ps1 (PrintWindow)",
+  "logical_viewport": [
+    1200,
+    800
+  ],
+  "dpi_scale": 1.75,
+  "physical_frame": [
+    2104,
+    1402
+  ],
+  "themes": [
+    "light",
+    "dark"
+  ],
+  "theme_legible_palette": true,
+  "sample_x": 1850,
+  "palette_source": "https://github.com/openai/codex/blob/rust-v0.169.0/codex-rs/tui/src/style.rs",
+  "scenario": "Submit a /plan prompt to the local fixture, dismiss the implementation confirmation, and leave a draft. Switch Light to Dark and back in that tab. Create a new Codex tab in Dark with the same prompt, plan, and draft, then switch that tab to Light. Five captures for each build.",
+  "before": {
+    "binary_sha256": "a2ad5ce9cc568464a498dc96a95d8bb56f23e7cce2607fd72274040292ac913d",
+    "captures": {
+      "open-light": {
+        "prompt_history": {
+          "color": "#F9F9F9",
+          "from_y": 516,
+          "to_y": 625
+        },
+        "proposed_plan": {
+          "color": "#F4F4F4",
+          "from_y": 737,
+          "to_y": 919
+        },
+        "composer": {
+          "color": "#F4F4F4",
+          "from_y": 1031,
+          "to_y": 1140
+        },
+        "png_sha256": "128e2109a1fa388b28f1038ed1feb65555d956646c3d12977f5d39857b30fd2f"
+      },
+      "switched-dark": {
+        "prompt_history": {
+          "color": "#060606",
+          "from_y": 516,
+          "to_y": 625
+        },
+        "proposed_plan": {
+          "color": "#0B0B0B",
+          "from_y": 737,
+          "to_y": 919
+        },
+        "composer": {
+          "color": "#0B0B0B",
+          "from_y": 1031,
+          "to_y": 1140
+        },
+        "png_sha256": "ed3ce4fe32ead2c6f1cb94eb387c027ea1fc8b55aa54ee071c9ce6e16e51d9ad"
+      },
+      "roundtrip-light": {
+        "prompt_history": {
+          "color": "#F9F9F9",
+          "from_y": 516,
+          "to_y": 625
+        },
+        "proposed_plan": {
+          "color": "#F4F4F4",
+          "from_y": 737,
+          "to_y": 919
+        },
+        "composer": {
+          "color": "#F4F4F4",
+          "from_y": 1031,
+          "to_y": 1140
+        },
+        "png_sha256": "128e2109a1fa388b28f1038ed1feb65555d956646c3d12977f5d39857b30fd2f"
+      },
+      "fresh-dark": {
+        "prompt_history": {
+          "color": "#282828",
+          "from_y": 516,
+          "to_y": 625
+        },
+        "proposed_plan": {
+          "color": "#1E1E1E",
+          "from_y": 737,
+          "to_y": 919
+        },
+        "composer": {
+          "color": "#1E1E1E",
+          "from_y": 1031,
+          "to_y": 1140
+        },
+        "png_sha256": "ea70af56b25051b843f04bca159bc9e3da4351a65b9f69d427a465516ab4373f"
+      },
+      "switched-light": {
+        "prompt_history": {
+          "color": "#EBEBEB",
+          "from_y": 516,
+          "to_y": 625
+        },
+        "proposed_plan": {
+          "color": "#EBEBEB",
+          "from_y": 737,
+          "to_y": 919
+        },
+        "composer": {
+          "color": "#EBEBEB",
+          "from_y": 1031,
+          "to_y": 1140
+        },
+        "png_sha256": "26f0e6ff65bc575f12ea39e3802864f3b4f398de31d8ef01462d1aa0a35e8b78"
+      }
+    }
+  },
+  "after": {
+    "binary_sha256": "d0fdefb8e8989f3e20242e5962dd05fcafc86ab618ecf4faf910cc088c95a269",
+    "captures": {
+      "open-light": {
+        "prompt_history": {
+          "color": "#F9F9F9",
+          "from_y": 516,
+          "to_y": 625
+        },
+        "proposed_plan": {
+          "color": "#F4F4F4",
+          "from_y": 737,
+          "to_y": 919
+        },
+        "composer": {
+          "color": "#F4F4F4",
+          "from_y": 1031,
+          "to_y": 1140
+        },
+        "png_sha256": "46a37df63de94e26f7a54dd6875ad479f48c888f83274017e5d0fdd1034e1139"
+      },
+      "switched-dark": {
+        "prompt_history": {
+          "color": "#282828",
+          "from_y": 516,
+          "to_y": 625
+        },
+        "proposed_plan": {
+          "color": "#1E1E1E",
+          "from_y": 737,
+          "to_y": 919
+        },
+        "composer": {
+          "color": "#1E1E1E",
+          "from_y": 1031,
+          "to_y": 1140
+        },
+        "png_sha256": "61dbb0cf8069b48bbd0e40033d1ac298d81c8bb9395de8fa4391c3ce3ea8ca9c"
+      },
+      "roundtrip-light": {
+        "prompt_history": {
+          "color": "#F9F9F9",
+          "from_y": 516,
+          "to_y": 625
+        },
+        "proposed_plan": {
+          "color": "#F4F4F4",
+          "from_y": 737,
+          "to_y": 919
+        },
+        "composer": {
+          "color": "#F4F4F4",
+          "from_y": 1031,
+          "to_y": 1140
+        },
+        "png_sha256": "46a37df63de94e26f7a54dd6875ad479f48c888f83274017e5d0fdd1034e1139"
+      },
+      "fresh-dark": {
+        "prompt_history": {
+          "color": "#282828",
+          "from_y": 516,
+          "to_y": 625
+        },
+        "proposed_plan": {
+          "color": "#1E1E1E",
+          "from_y": 737,
+          "to_y": 919
+        },
+        "composer": {
+          "color": "#1E1E1E",
+          "from_y": 1031,
+          "to_y": 1140
+        },
+        "png_sha256": "15713bfef42bc0921f9e2a1e909b93df3c8fc68b6f1395fb0e978511834d9567"
+      },
+      "switched-light": {
+        "prompt_history": {
+          "color": "#F9F9F9",
+          "from_y": 516,
+          "to_y": 625
+        },
+        "proposed_plan": {
+          "color": "#F4F4F4",
+          "from_y": 737,
+          "to_y": 919
+        },
+        "composer": {
+          "color": "#F4F4F4",
+          "from_y": 1031,
+          "to_y": 1140
+        },
+        "png_sha256": "a54a296c01293a788c1fd21e60bafdc41ac43af88a13cde573a99d4fc2df3a6b"
+      }
+    }
+  },
+  "validation": {
+    "cargo build --locked --workspace": "passed",
+    "cargo test --locked --workspace --features updater -- --test-threads=4": {
+      "passed": 3342,
+      "failed": 0,
+      "ignored": 14
+    },
+    "cargo test --locked --features updater --bin hitty-app a_later_background_query_keeps_the_answer_codex_started_with": {
+      "passed": 1,
+      "failed": 0
+    }
+  },
+  "other_agent_checks": [
+    {
+      "agent": "Claude Code",
+      "version": "2.1.310",
+      "composer_background_matches_fresh_session": true
+    },
+    {
+      "agent": "Qwen Code",
+      "version": "0.28.0",
+      "composer_background_matches_fresh_session": true
+    },
+    {
+      "agent": "Qoder CLI",
+      "version": "1.1.90",
+      "composer_background_matches_fresh_session": true
+    },
+    {
+      "agent": "Antigravity CLI",
+      "version": "1.5.3",
+      "observed": "onboarding theme preview",
+      "composer_blocker": "workspace trust prompt"
+    }
+  ],
+  "reproduce": "python scripts/codex-theme-native.py --bin-dir <before-or-after-bin> --codex-bin <codex-0.169.0.exe> --output <capture-directory> --scratch-dir <short-writable-path>",
+  "pr_roundtrip": "The opening and round-trip Light images are byte-identical within each build.",
+  "codex_force_color": 3
+}

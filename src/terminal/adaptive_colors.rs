@@ -1,13 +1,16 @@
-//! Theme-relative terminal colors, independent of the program producing them.
+//! Theme-relative terminal colors.
 //!
 //! An RGB/indexed fill can outlive the theme under which it was chosen. In
 //! legible-color mode, move opposite-polarity fills toward the current canvas
-//! and resolve text against the resulting background. No application identity,
-//! known RGB list or startup-palette guess is involved. Literal mode bypasses
-//! this adapter entirely.
+//! and resolve text against the resulting background. For Codex surfaces with
+//! a known palette, use the exact fill a newly opened session would draw.
+//! Literal mode bypasses this adapter entirely.
 
 use std::cell::RefCell;
 use std::collections::HashMap;
+
+use alacritty_terminal::vte::ansi::Rgb;
+use smallvec::SmallVec;
 
 use crate::ui::presets::{contrast, mix};
 
@@ -15,25 +18,55 @@ use crate::ui::presets::{contrast, mix};
 /// a run. They are discarded with the paint colors, including on theme changes.
 pub(crate) struct AdaptiveColors {
     canvas: u32,
-    backgrounds: RefCell<HashMap<u32, u32>>,
+    codex_fills: SmallVec<[(u32, u32); 4]>,
+    backgrounds: RefCell<HashMap<(u32, bool), u32>>,
     foregrounds: RefCell<HashMap<(u32, u32, bool), u32>>,
 }
 
 impl AdaptiveColors {
-    pub(crate) fn new(canvas: u32) -> Self {
+    pub(crate) fn new(canvas: u32, codex_backgrounds: &[Rgb]) -> Self {
+        let codex_fills = if codex_backgrounds.is_empty() {
+            SmallVec::new()
+        } else {
+            let live = codex_fills(canvas);
+            codex_backgrounds
+                .iter()
+                .flat_map(|&Rgb { r, g, b }| {
+                    codex_fills(u32::from_be_bytes([0, r, g, b]))
+                        .into_iter()
+                        .zip(live)
+                })
+                // A fresh fill can coincide with an old fill for a different surface.
+                .filter(|(old, _)| !live.contains(old))
+                .collect()
+        };
         Self {
             canvas,
+            codex_fills,
             backgrounds: RefCell::new(HashMap::new()),
             foregrounds: RefCell::new(HashMap::new()),
         }
     }
 
-    pub(crate) fn background(&self, source: u32) -> u32 {
+    pub(crate) fn background(&self, source: u32, truecolor: bool) -> u32 {
         *self
             .backgrounds
             .borrow_mut()
-            .entry(source)
-            .or_insert_with(|| theme_background(source, self.canvas))
+            .entry((source, truecolor))
+            .or_insert_with(|| {
+                let source = if truecolor {
+                    self.codex_fill(source).unwrap_or(source)
+                } else {
+                    source
+                };
+                theme_background(source, self.canvas)
+            })
+    }
+
+    fn codex_fill(&self, source: u32) -> Option<u32> {
+        let mut matches = self.codex_fills.iter().filter(|&&(old, _)| old == source);
+        let &(_, fill) = matches.next()?;
+        matches.all(|&(_, other)| fill == other).then_some(fill)
     }
 
     pub(crate) fn foreground(&self, source: u32, background: u32, dim: bool) -> u32 {
@@ -53,6 +86,24 @@ impl AdaptiveColors {
                 )
             })
     }
+}
+
+/// Codex CLI caches its OSC 11 answer and derives the composer/plan and
+/// submitted-prompt fills from it. Match those two fills against the actual
+/// answer from this pane, then recompute them against the current background.
+/// See `codex-rs/tui/src/{style,color}.rs` at `openai/codex` `rust-v0.169.0`.
+fn codex_fills(background: u32) -> [u32; 2] {
+    let [r, g, b] = [16, 8, 0].map(|shift| ((background >> shift) & 255) as f32);
+    let (shade, amounts) = if 0.299 * r + 0.587 * g + 0.114 * b > 128.0 {
+        (0.0, [0.04, 0.02])
+    } else {
+        (255.0, [0.12, 0.16])
+    };
+    amounts.map(|amount| {
+        [r, g, b].into_iter().fold(0, |rgb, channel| {
+            (rgb << 8) | (shade * amount + channel * (1.0 - amount)) as u32
+        })
+    })
 }
 
 fn light_background(rgb: u32) -> bool {

@@ -174,7 +174,9 @@ fn snapshot_cell(
     let (mut bgc, bg_default) = resolve(cell.bg, palette, colors.fg_rgb, colors.bg_rgb);
     if let Some(adapter) = &colors.adaptive {
         if !bg_default {
-            bgc = unpack_rgb(adapter.background(pack_rgb(bgc)));
+            bgc = unpack_rgb(
+                adapter.background(pack_rgb(bgc), matches!(cell.bg, AnsiColor::Spec(_))),
+            );
         }
         if !flags.contains(Flags::HIDDEN) {
             // TUIs use explicitly colored block elements as background fills.
@@ -183,7 +185,7 @@ fn snapshot_cell(
             // text. Default-foreground blocks still use readable text ink.
             fgc = unpack_rgb(
                 if !fg_default && ('\u{2580}'..='\u{259f}').contains(&cell.c) {
-                    adapter.background(pack_rgb(fgc))
+                    adapter.background(pack_rgb(fgc), matches!(cell.fg, AnsiColor::Spec(_)))
                 } else {
                     adapter.foreground(pack_rgb(fgc), pack_rgb(bgc), flags.contains(Flags::DIM))
                 },
@@ -392,7 +394,7 @@ fn blend_toward(c: Hsla, dim: f32, under: Rgba) -> Hsla {
 }
 
 impl PaintColors {
-    fn resolve(theme: &gpui_component::Theme, cx: &gpui::App) -> Self {
+    fn resolve(theme: &gpui_component::Theme, codex_backgrounds: &[Rgb], cx: &gpui::App) -> Self {
         let default_fg = theme.foreground;
         let default_bg = theme.background;
         let caret = theme.caret;
@@ -422,10 +424,12 @@ impl PaintColors {
             current_target,
         )));
         Self {
-            adaptive: cx
-                .global::<Config>()
-                .theme_legible_palette
-                .then(|| std::rc::Rc::new(super::adaptive_colors::AdaptiveColors::new(bg_packed))),
+            adaptive: cx.global::<Config>().theme_legible_palette.then(|| {
+                std::rc::Rc::new(super::adaptive_colors::AdaptiveColors::new(
+                    bg_packed,
+                    codex_backgrounds,
+                ))
+            }),
             default_fg,
             default_bg,
             caret,
@@ -1823,8 +1827,9 @@ impl Element for TerminalElement {
     ) {
         let fps_start = super::fps::enabled().then(std::time::Instant::now);
 
-        let frac = self.view.read(cx).scroll_frac.clamp(0., 1.);
-        let input_shift = self.view.read(cx).input_scroll_rows();
+        let view = self.view.read(cx);
+        let frac = view.scroll_frac.clamp(0., 1.);
+        let input_shift = view.input_scroll_rows();
         let geom = CellGeom {
             origin: point(
                 bounds.origin.x,
@@ -1835,23 +1840,23 @@ impl Element for TerminalElement {
             cols: prepaint.cols,
             rows: prepaint.rows,
         };
-        let colors = PaintColors::resolve(cx.theme(), cx);
+        let colors = PaintColors::resolve(cx.theme(), view.codex_reported_backgrounds(), cx);
 
-        let font_size = self.view.read(cx).font_size;
-        let base_font = self.view.read(cx).font.clone();
-        let bold_font = self.view.read(cx).font_bold.clone();
-        let italic_font = self.view.read(cx).font_italic.clone();
-        let focused = self.view.read(cx).focus_handle.is_focused(window);
-        let cursor_visible = self.view.read(cx).cursor_visible;
-        let bell_flash = self.view.read(cx).bell_flash;
-        let editor_active = self.view.read(cx).input_active();
+        let font_size = view.font_size;
+        let base_font = view.font.clone();
+        let bold_font = view.font_bold.clone();
+        let italic_font = view.font_italic.clone();
+        let focused = view.focus_handle.is_focused(window);
+        let cursor_visible = view.cursor_visible;
+        let bell_flash = view.bell_flash;
+        let editor_active = view.input_active();
         // The pane leaf stores its per-frame dim here (see `TerminalView::dim`).
         // Blending the palette and paint colours toward the window background is
         // what actually dims the pane; the pane no longer wraps the terminal in
         // an element-opacity style, whose per-primitive alpha multiplication
         // would leave stacked decorations with a seam against the segments
         // below them.
-        let dim = self.view.read(cx).dim.clamp(0., 1.);
+        let dim = view.dim.clamp(0., 1.);
         let (colors, dim, under) = if dim < 1. {
             let under = dim_under(cx);
             (colors.dimmed(dim, under), dim, under)
@@ -3127,7 +3132,7 @@ mod tests {
             for id in ["one_dark_pro", "light", "one_dark_pro"] {
                 cx.global_mut::<Config>().theme_preset = id.into();
                 crate::ui::theme::apply_theme(None, cx);
-                let colors = PaintColors::resolve(cx.theme(), cx);
+                let colors = PaintColors::resolve(cx.theme(), &[], cx);
                 let rendered: Vec<_> = (0..3)
                     .map(|row| {
                         let point = AlacPoint::new(AlacLine(row), AlacColumn(0));
@@ -3141,6 +3146,45 @@ mod tests {
                     );
                 }
             }
+        });
+    }
+
+    #[gpui::test]
+    fn codex_fills_match_a_new_session_after_a_theme_switch(cx: &mut gpui::TestAppContext) {
+        crate::core::config::pin_test_config_dir();
+        cx.update(|cx| {
+            gpui_component::init(cx);
+            cx.set_global(Config::default());
+            let palette = super::super::palette::build();
+            let point = AlacPoint::new(AlacLine(0), AlacColumn(0));
+            // Real Codex truecolor output, in composer/plan then prompt-history order.
+            let light_fills = [0xf4f4f4, 0xf9f9f9];
+            let dark_fills = [0x1e1e1e, 0x282828];
+            for (id, previous, current, stale, fresh) in [
+                ("dark", 0xffffff, 0x000000, light_fills, dark_fills),
+                ("light", 0x000000, 0xffffff, dark_fills, light_fills),
+            ] {
+                cx.global_mut::<Config>().theme_preset = id.into();
+                crate::ui::theme::apply_theme(None, cx);
+                let backgrounds = [unpack_rgb(previous), unpack_rgb(current)];
+                let with_codex = PaintColors::resolve(cx.theme(), &backgrounds, cx);
+                let new_session = PaintColors::resolve(cx.theme(), &[], cx);
+                let paint = |bg, colors| {
+                    let cell = Cell {
+                        bg: AnsiColor::Spec(unpack_rgb(bg)),
+                        ..Cell::default()
+                    };
+                    snapshot_cell(&cell, point, &palette, colors, None).bg
+                };
+                for (old, new) in stale.into_iter().zip(fresh) {
+                    assert_eq!(paint(old, &with_codex), paint(new, &new_session), "{id}");
+                    assert_eq!(paint(new, &with_codex), paint(new, &new_session), "{id}");
+                }
+                assert_eq!(paint(0x405060, &with_codex), paint(0x405060, &new_session));
+            }
+            cx.global_mut::<Config>().theme_legible_palette = false;
+            let literal = PaintColors::resolve(cx.theme(), &[unpack_rgb(0x000000)], cx);
+            assert!(literal.adaptive.is_none());
         });
     }
 
@@ -3159,7 +3203,7 @@ mod tests {
                     cx.global_mut::<Config>().theme_preset = id.into();
                     cx.global_mut::<Config>().theme_legible_palette = enabled;
                     crate::ui::theme::apply_theme(None, cx);
-                    let colors = PaintColors::resolve(cx.theme(), cx);
+                    let colors = PaintColors::resolve(cx.theme(), &[], cx);
                     for source in [
                         AnsiColor::Spec(unpack_rgb(0x2f3239)),
                         AnsiColor::Spec(unpack_rgb(0xf2f2f2)),
@@ -3222,7 +3266,7 @@ mod tests {
             cx.set_global(config);
             crate::ui::theme::apply_theme(None, cx);
             let palette = super::super::palette::build();
-            let colors = PaintColors::resolve(cx.theme(), cx);
+            let colors = PaintColors::resolve(cx.theme(), &[], cx);
             for col in 0..4 {
                 let point = AlacPoint::new(AlacLine(0), AlacColumn(col));
                 let rc = snapshot_cell(&term.grid()[point], point, &palette, &colors, None);
@@ -3259,7 +3303,7 @@ mod tests {
             for id in ["one_dark_pro", "light", "one_dark_pro"] {
                 cx.global_mut::<Config>().theme_preset = id.into();
                 crate::ui::theme::apply_theme(None, cx);
-                let colors = PaintColors::resolve(cx.theme(), cx);
+                let colors = PaintColors::resolve(cx.theme(), &[], cx);
                 let dark = id == "one_dark_pro";
                 let mut snapshot = Vec::new();
                 for row in 0..3 {
@@ -3329,7 +3373,7 @@ mod tests {
             crate::ui::theme::apply_theme(None, cx);
             let palette = super::super::palette::build();
             let point = AlacPoint::new(AlacLine(0), AlacColumn(0));
-            let literal = PaintColors::resolve(cx.theme(), cx);
+            let literal = PaintColors::resolve(cx.theme(), &[], cx);
             for bg in [
                 AnsiColor::Spec(unpack_rgb(0xf2f2f2)),
                 AnsiColor::Spec(unpack_rgb(0x123456)),
@@ -3361,7 +3405,7 @@ mod tests {
             }
             cx.global_mut::<Config>().theme_legible_palette = true;
             crate::ui::theme::apply_theme(None, cx);
-            let colors = PaintColors::resolve(cx.theme(), cx);
+            let colors = PaintColors::resolve(cx.theme(), &[], cx);
             let mut cell = Cell {
                 c: 'x',
                 bg: AnsiColor::Spec(unpack_rgb(0xf2f2f2)),
