@@ -2,8 +2,8 @@
 //!
 //! An RGB/indexed fill can outlive the theme under which it was chosen. In
 //! legible-color mode, move opposite-polarity fills toward the current canvas
-//! and resolve text against the resulting background. Known Codex surfaces
-//! follow the current palette, with a shared input/history fill in light themes.
+//! and resolve text against the resulting background. For Codex surfaces with
+//! a known palette, use the exact fill a newly opened session would draw.
 //! Literal mode bypasses this adapter entirely.
 
 use std::cell::RefCell;
@@ -28,12 +28,7 @@ impl AdaptiveColors {
         let codex_fills = if codex_backgrounds.is_empty() {
             SmallVec::new()
         } else {
-            let native = codex_fills(canvas);
-            let live = if light_background(canvas) {
-                [native[0]; 2]
-            } else {
-                native
-            };
+            let live = codex_fills(canvas);
             codex_backgrounds
                 .iter()
                 .flat_map(|&Rgb { r, g, b }| {
@@ -42,10 +37,7 @@ impl AdaptiveColors {
                         .zip(live)
                 })
                 // A fresh fill can coincide with an old fill for a different surface.
-                .filter(|(old, _)| !native.contains(old))
-                // Current fills take precedence over a coinciding old surface.
-                // Include them so fresh light sessions also share one fill.
-                .chain(native.into_iter().zip(live))
+                .filter(|(old, _)| !live.contains(old))
                 .collect()
         };
         Self {

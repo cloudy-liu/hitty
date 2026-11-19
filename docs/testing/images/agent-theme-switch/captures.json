@@ -1,5 +1,5 @@
 {
-  "verified_on": "2026-11-19",
+  "verified_on": "2026-11-20",
   "baseline_commit": "c552bbec607f3243a29f4c5c0f4ef8e0713f1bee",
   "after_source": "same revision as this verification record",
   "environment": {
@@ -172,10 +172,10 @@
         "image": "before/roundtrip-dark.png"
       }
     },
-    "light_surfaces_uniform": false
+    "light_matches_new_session": false
   },
   "after": {
-    "binary_sha256": "c8218a34c5c0fcb6413d2f62079d799c60c0b7ada3a744f89da47bd3e6cd79cc",
+    "binary_sha256": "a64eb4316242e6b6b782b8c2d07eb27c6629cb39ff506ec0b2e224ffcc35d738",
     "codex": "codex-cli 0.169.0",
     "themes": [
       "one_light",
@@ -187,13 +187,14 @@
     ],
     "forced_color": false,
     "dark_matches_new_session": true,
-    "light_surfaces_uniform": true,
+    "light_matches_new_session": true,
+    "native_fills_preserved": true,
     "roundtrip_pixels_unchanged": true,
     "captures": {
       "open-light": {
         "surfaces": {
           "prompt_history": {
-            "color": "#F0F0F0",
+            "color": "#F5F5F5",
             "from_y": 516,
             "to_y": 625
           },
@@ -208,8 +209,8 @@
             "to_y": 1140
           }
         },
-        "png_sha256": "a3082a44690bcdbcfc2cf6fa02258abd1d1df720b6b86b3de7b2bd6040cc4376",
-        "capture": "hwnd=788596 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=105333",
+        "png_sha256": "221586537c6cf11c67529c1d062ad0cb8054b6b896f20e871cf219fe17cfe660",
+        "capture": "hwnd=526640 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=105497",
         "image": "after/open-light.png"
       },
       "switched-dark": {
@@ -230,14 +231,14 @@
             "to_y": 1140
           }
         },
-        "png_sha256": "bc8af32fa2985e307551298f6426f59e448d7199770e7f458bb55f78294f7797",
-        "capture": "hwnd=788596 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=105173",
+        "png_sha256": "06efb4308b1ff9eeec09a33322e3d3de2dc11d70abba973ab85e6b4461bd79c7",
+        "capture": "hwnd=526640 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=105321",
         "image": "after/switched-dark.png"
       },
       "roundtrip-light": {
         "surfaces": {
           "prompt_history": {
-            "color": "#F0F0F0",
+            "color": "#F5F5F5",
             "from_y": 516,
             "to_y": 625
           },
@@ -252,8 +253,8 @@
             "to_y": 1140
           }
         },
-        "png_sha256": "a3082a44690bcdbcfc2cf6fa02258abd1d1df720b6b86b3de7b2bd6040cc4376",
-        "capture": "hwnd=788596 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=105333",
+        "png_sha256": "221586537c6cf11c67529c1d062ad0cb8054b6b896f20e871cf219fe17cfe660",
+        "capture": "hwnd=526640 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=105497",
         "image": "after/roundtrip-light.png"
       },
       "fresh-dark": {
@@ -274,14 +275,14 @@
             "to_y": 1140
           }
         },
-        "png_sha256": "e1ae0a845bd544eb1a4584759944a2b514d50c67ca4459cf8ab409a8183398a0",
-        "capture": "hwnd=788596 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=109049",
+        "png_sha256": "a6293761c0cf36dc1cf94d181efdf19d3574bb5b4f1a12efd84420ea190948cc",
+        "capture": "hwnd=526640 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=109240",
         "image": "after/fresh-dark.png"
       },
       "switched-light": {
         "surfaces": {
           "prompt_history": {
-            "color": "#F0F0F0",
+            "color": "#F5F5F5",
             "from_y": 516,
             "to_y": 625
           },
@@ -296,8 +297,8 @@
             "to_y": 1140
           }
         },
-        "png_sha256": "83f5ed256b0aa98fbb4bbacf6090db4e48d60ebc595f440e623704967b943d51",
-        "capture": "hwnd=788596 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=109300",
+        "png_sha256": "bb2a11e5341196d8aa613b4e8e7e5ab6eac7aa1db7bbd9517c37cd07ba91723d",
+        "capture": "hwnd=526640 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=109502",
         "image": "after/switched-light.png"
       },
       "roundtrip-dark": {
@@ -318,40 +319,40 @@
             "to_y": 1140
           }
         },
-        "png_sha256": "e1ae0a845bd544eb1a4584759944a2b514d50c67ca4459cf8ab409a8183398a0",
-        "capture": "hwnd=788596 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=109049",
+        "png_sha256": "a6293761c0cf36dc1cf94d181efdf19d3574bb5b4f1a12efd84420ea190948cc",
+        "capture": "hwnd=526640 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=109240",
         "image": "after/roundtrip-dark.png"
       }
     }
   },
   "assertions": {
     "switched_dark_matches_fresh_dark": true,
-    "all_light_surfaces_match_current_composer": true,
-    "baseline_fresh_light_composer_preserved": true,
+    "switched_light_matches_fresh_light": true,
+    "baseline_fresh_light_fills_preserved": true,
     "baseline_fresh_dark_fills_preserved": true,
     "both_roundtrips_byte_identical": true,
     "all_eight_unique_images_visually_inspected": true
   },
   "reproduction": "See ../../codex-theme-switch.md for commands and limitations.",
   "source_lf_sha256": {
-    "src/terminal/adaptive_colors.rs": "f0e1c7d1a921d0b2db91a68b3e7058a3b1870c869e5872f424395ffbb09dbe1c",
-    "src/terminal/element.rs": "c1383f07c91fe1cccb5b6d4d056277db9c81c303442d451524ab35f802454718",
+    "src/terminal/adaptive_colors.rs": "e0be9558f523134de3982aeb062cc270ad5a461ec17648c68c2d0aeac20e2fce",
+    "src/terminal/element.rs": "b290372725553d7721321965cd91aa7dac5f82d783e7f4d4bc980af73a8d5d15",
     "src/terminal/view.rs": "83d625341d6ed5bd1f53cbb2448c09b225be521c014eb1ec8dd5d692b46a3c2f",
-    "scripts/codex-theme-native.py": "fd3c446004775dfced2b9cb2eae3dd0770e777ec87635f883a4f01adaf16eb3c"
+    "scripts/codex-theme-native.py": "8759c7652bfc352040cca4cd0e2f9467f7de062b3a56eba19f6eb555d1fb10ad"
   },
   "validation": {
     "completed_on": "2026-11-20",
     "build": {
       "command": "cargo build --locked --workspace --bins --features updater",
       "exit_code": 0,
-      "local_path": "D:\\tmp\\hitty-theme-roundtrip\\build.log",
-      "sha256": "9e37d78a158b811c5c13b7e1c62cf6a896a5886e47b1c1fe42dee2e12cda3264"
+      "local_path": "D:\\tmp\\hitty-theme-roundtrip\\native-build.log",
+      "sha256": "0a523e01b1d1e8e9fd0d8e7832015192d2e1dbfdb8126ba481e5b267a9aec0f5"
     },
     "check": {
       "command": "cargo check --locked --workspace --all-targets --features updater",
       "exit_code": 0,
-      "local_path": "D:\\tmp\\hitty-theme-roundtrip\\workspace-final-check.log",
-      "sha256": "51ffcda99c9d0396a58ed29001bd65d3d6036d37c96446b57c9ed1ff3d3cd6c0"
+      "local_path": "D:\\tmp\\hitty-theme-roundtrip\\native-workspace-check.log",
+      "sha256": "4e09a880ddd33fa8dff5950b18b5c05acd72ee8c489ebb48c7dbd83bb73f3a30"
     },
     "workspace_tests": {
       "command": "cargo test --locked --workspace --features updater -- --test-threads=4",
@@ -360,8 +361,8 @@
       "passed": 3343,
       "failed": 0,
       "ignored": 14,
-      "local_path": "D:\\tmp\\hitty-theme-roundtrip\\workspace-final-tests.log",
-      "sha256": "04805b210b87288407dda13d9ca88edf055f7e2bf8026e86de7c2a3a402d3c5d"
+      "local_path": "D:\\tmp\\hitty-theme-roundtrip\\native-workspace-tests.log",
+      "sha256": "b5cdbfeb66f37f1ee873ef77d13c70766777d5eeb8d551a2384bed98f4fc525c"
     },
     "build_environment": {
       "CARGO_PROFILE_DEV_DEBUG": "0",
@@ -390,13 +391,14 @@
     "native_acceptance": {
       "command": "python scripts/codex-theme-native.py --bin-dir <after-bin> --codex-bin <codex.exe> --output <after-images> --assert-colors --baseline-dir <before-images>",
       "exit_code": 0,
-      "local_path": "D:\\tmp\\hitty-theme-roundtrip\\captures-after.log",
-      "sha256": "e2f25eab3259e2e02b337ed98e034cb25db3e99c48ae409db1df266835b22db9"
+      "local_path": "D:\\tmp\\hitty-theme-roundtrip\\native-captures-verified.log",
+      "sha256": "1b3626d75cfd365f2fea1b0547b2f2fc437277972e5ff8c8d0252ed787de271a"
     },
-    "light_regression_before_fix": {
-      "outcome": "failed: one_light background f5f5f5 differs from the composer fill",
-      "local_path": "D:\\tmp\\hitty-theme-roundtrip\\light-regression-red.log",
-      "sha256": "128f9e7251afdf148e4eace5bc04941042148384f1ac6bd4eba3eb9f3f13dff3"
+    "native_preservation_regression_before_fix": {
+      "outcome": "failed: fresh Codex fills differ from the native light/dark baseline",
+      "exit_code": 1,
+      "local_path": "D:\\tmp\\hitty-theme-roundtrip\\native-regression-red.log",
+      "sha256": "5d0330aefd66406bd35835c603a9fee189523a3aa49c40a7d5130f91f3a9d5e2"
     }
   }
 }

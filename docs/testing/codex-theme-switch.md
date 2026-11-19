@@ -1,12 +1,13 @@
 # Codex surfaces across theme changes
 
-Verified on Windows on 2026-11-19 against Codex CLI 0.169.0. The Before build
+Verified on Windows on 2026-11-20 against Codex CLI 0.169.0. The Before build
 is `c552bbe`; After is the revision containing this record.
 
 Codex caches its OSC 11 terminal-background reply. Its composer and Proposed
 Plan use a different blend from submitted prompts. Hitty now matches these
-known truecolor fills against observed replies, restores native dark fills,
-and uses the current composer's fill for all three surfaces in light themes.
+known truecolor fills against observed replies and restores the current
+theme's native fills. The distinction between submitted prompts and the
+editable input remains intact in both light and dark themes.
 
 ## Measured results
 
@@ -15,21 +16,21 @@ from the full native captures, not calculated target colors.
 
 | Scene | Before | After |
 | --- | --- | --- |
-| Open in One Light | `#F5F5F5 / #F0F0F0` | `#F0F0F0 / #F0F0F0` |
+| Open in One Light | `#F5F5F5 / #F0F0F0` | `#F5F5F5 / #F0F0F0` |
 | One Light to One Dark Pro | `#383838 / #3D3D3D` | `#4A4D54 / #41454C` |
 | Fresh One Dark Pro session | `#4A4D54 / #41454C` | `#4A4D54 / #41454C` |
-| One Dark Pro to One Light | `#E1E4EB / #E0E4EB` | `#F0F0F0 / #F0F0F0` |
+| One Dark Pro to One Light | `#E1E4EB / #E0E4EB` | `#F5F5F5 / #F0F0F0` |
 
 Both One Light → One Dark Pro → One Light and One Dark Pro → One Light →
 One Dark Pro restore byte-identical frames within each run. The fixture keeps
 the submitted prompt, Proposed Plan, and unsent draft throughout the switches.
-Fresh dark fills and the fresh light input fill preserve the baseline colors.
+All fresh dark and light fills preserve the native baseline colors.
 
 | Scene | Before | After |
 | --- | --- | --- |
-| Light history compared with the current input | ![Lighter historical prompt before](images/agent-theme-switch/before/open-light.png) | ![Uniform light surfaces after](images/agent-theme-switch/after/open-light.png) |
+| Native light history and current input | ![Native light fills before](images/agent-theme-switch/before/open-light.png) | ![Native light fill distinction preserved after](images/agent-theme-switch/after/open-light.png) |
 | Open session switched to One Dark Pro | ![Stale neutral gray before](images/agent-theme-switch/before/switched-dark.png) | ![Native dark fills after](images/agent-theme-switch/after/switched-dark.png) |
-| Dark session switched to One Light | ![Blue-gray stale fills before](images/agent-theme-switch/before/switched-light.png) | ![Uniform light surfaces after switching](images/agent-theme-switch/after/switched-light.png) |
+| Dark session switched to One Light | ![Blue-gray stale fills before](images/agent-theme-switch/before/switched-light.png) | ![Native light fills restored after switching](images/agent-theme-switch/after/switched-light.png) |
 
 All eight unique images were inspected; the four return images match the
 corresponding initial images by SHA-256. [Capture records](images/agent-theme-switch/captures.json)
@@ -63,9 +64,11 @@ move or include the real pointer.
 
 ## Regression checks
 
-The native baseline reproduces the dark mismatch. Before light normalization,
-`codex_surfaces_follow_the_theme_with_uniform_light_fills` failed on One Light
-history `#F5F5F5` instead of the expected composer fill `#F0F0F0`.
+The native baseline reproduces the dark mismatch. `--assert-colors` rejects
+switched fills that differ from a fresh session. `--baseline-dir` also rejects
+changes to any fresh light or dark fill, including flattened light history.
+The renderer regression `codex_surfaces_preserve_native_fills_across_theme_switches`
+checks fresh and cached fills against native colors in all four presets below.
 
 ```powershell
 cargo fmt --all -- --check

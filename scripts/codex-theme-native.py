@@ -211,7 +211,7 @@ def main():
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--scratch-dir", type=Path, default=Path(tempfile.gettempdir()))
     parser.add_argument("--assert-colors", action="store_true")
-    parser.add_argument("--baseline-dir", type=Path, help="also preserve fresh light input and dark fills")
+    parser.add_argument("--baseline-dir", type=Path, help="also preserve all fresh light and dark fills")
     args = parser.parse_args()
     args.output.mkdir(parents=True, exist_ok=True)
     with http.server.ThreadingHTTPServer(("127.0.0.1", 0), Responses) as server:
@@ -224,25 +224,27 @@ def main():
             server.shutdown()
     for first, returned in [("open-light", "roundtrip-light"), ("fresh-dark", "roundtrip-dark")]:
         assert records[first]["png_sha256"] == records[returned]["png_sha256"], (first, returned)
-    matched = fills(records["switched-dark"]) == fills(records["fresh-dark"])
-    light_fill = records["open-light"]["surfaces"]["composer"]["color"]
-    light_uniform = all(set(fills(records[scene]).values()) == {light_fill}
-                        for scene in ("open-light", "roundtrip-light", "switched-light"))
+    dark_matched = fills(records["switched-dark"]) == fills(records["fresh-dark"])
+    light_matched = fills(records["switched-light"]) == fills(records["open-light"])
+    native_preserved = None
+    if args.baseline_dir:
+        baseline = json.loads((args.baseline_dir / "captures.json").read_text(encoding="utf-8"))
+        native_preserved = all(fills(records[scene]) == fills(baseline["captures"][scene])
+                               for scene in ("open-light", "fresh-dark"))
     report = dict(binary_sha256=hashlib.sha256((args.bin_dir / "hitty-app.exe").read_bytes()).hexdigest(),
                   codex=subprocess.check_output([str(args.codex_bin), "--version"], text=True).strip(),
                   themes=list(THEMES), logical_viewport=[1200, 800], forced_color=False,
-                  dark_matches_new_session=matched, light_surfaces_uniform=light_uniform,
+                  dark_matches_new_session=dark_matched, light_matches_new_session=light_matched,
+                  native_fills_preserved=native_preserved,
                   roundtrip_pixels_unchanged=True, captures=records)
     (args.output / "captures.json").write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
     if args.baseline_dir:
-        baseline = json.loads((args.baseline_dir / "captures.json").read_text(encoding="utf-8"))
-        assert light_fill == baseline["captures"]["open-light"]["surfaces"]["composer"]["color"]
-        assert fills(records["fresh-dark"]) == fills(baseline["captures"]["fresh-dark"])
-        print("PASS: fresh light input and dark fills preserve the baseline", flush=True)
+        assert native_preserved, "fresh Codex fills differ from the native light/dark baseline"
+        print("PASS: all fresh light and dark fills preserve the native baseline", flush=True)
     if args.assert_colors:
-        assert matched, "switched Codex dark fills differ from a new session"
-        assert light_uniform, "light Codex history/plan/input fills differ"
-    print(f"Dark matches new session: {matched}; uniform light fills: {light_uniform}; "
+        assert dark_matched, "switched Codex dark fills differ from a new session"
+        assert light_matched, "switched Codex light fills differ from a new session"
+    print(f"Dark matches new session: {dark_matched}; light matches new session: {light_matched}; "
           "both round trips preserve every pixel", flush=True)
 
 
