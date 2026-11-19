@@ -531,6 +531,7 @@ impl CommitSplit {
 
 #[cfg(test)]
 mod tests {
+    use super::super::test_support::{draw, file};
     use super::*;
     use gpui::{Entity, TestAppContext, VisualTestContext, point, size};
 
@@ -546,28 +547,6 @@ mod tests {
                 ))
             })
         }
-    }
-
-    fn draw(vcx: &mut VisualTestContext) {
-        vcx.run_until_parked();
-        for _ in 0..2 {
-            vcx.update(|window, cx| {
-                window.refresh();
-                let _ = window.draw(cx);
-            });
-            vcx.run_until_parked();
-        }
-    }
-
-    fn file(path: &str, lines: usize) -> FileDiff {
-        git_diff::synthesize_added(
-            path,
-            (0..lines)
-                .map(|line| format!("{path} line {line}\n"))
-                .collect::<String>()
-                .as_bytes(),
-            &git_diff::DiffBudget::SINGLE_FILE,
-        )
     }
 
     fn install(app: &Entity<HittyApp>, vcx: &mut VisualTestContext, files: Vec<FileDiff>) {

@@ -9,6 +9,10 @@ use std::sync::{Arc, Weak};
 #[path = "diff_bulk_tests.rs"]
 mod bulk_fold_gpui_tests;
 
+#[cfg(test)]
+#[path = "diff_test_support.rs"]
+mod test_support;
+
 #[path = "diff_commit.rs"]
 mod commit;
 pub(crate) use commit::CommitSplit;
@@ -196,6 +200,7 @@ pub(crate) struct DiffAnchor {
 #[derive(Default)]
 pub(crate) struct DiffFileScroll {
     cards: Vec<(String, gpui::Bounds<Pixels>)>,
+    mode: DiffViewMode,
     anchor: Option<(String, Pixels)>,
     /// Keep the reader's file through a clamp while the user has not scrolled
     /// again. A collapsed list can fit entirely in the viewport.
@@ -1657,6 +1662,12 @@ impl HittyApp {
             let scroll = scroll.clone();
             list = list.on_children_prepainted(move |bounds, window, cx| {
                 let mut position = overlay_file_scroll.borrow_mut();
+                if position.mode != mode {
+                    // Replacement hunks can move a different file into view
+                    // without changing the numeric scroll offset.
+                    position.mode = mode;
+                    position.reading = None;
+                }
                 position.cards = cards
                     .iter()
                     .filter_map(|(path, index)| {
