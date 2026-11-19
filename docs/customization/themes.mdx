@@ -105,10 +105,11 @@ their hue and chroma. Saturated colours are constrained by the RGB gamut. Dim
 text is included in the contrast calculation. Already readable text retains its
 colour.
 
-For a detected Codex session using truecolor, Hitty can also match the input box,
-Proposed Plan and submitted-prompt fills to a fresh session in the current theme.
-This uses the terminal background replies observed by the view while it was
-attached to the pane.
+For a detected Codex session using truecolor, Hitty matches the input box,
+Proposed Plan and submitted-prompt fills to the current theme. Dark themes keep
+the fills of a fresh Codex session. Light themes use the input box's fill for
+all three surfaces, including newly opened sessions. This uses the terminal
+background replies observed by the view while it was attached to the pane.
 
 Explicit terminal colours carry no indication of whether they are cached UI
 colours or deliberate artwork. Turn this off with `theme_legible_palette: false`

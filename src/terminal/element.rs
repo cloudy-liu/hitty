@@ -3150,7 +3150,7 @@ mod tests {
     }
 
     #[gpui::test]
-    fn codex_fills_match_a_new_session_after_a_theme_switch(cx: &mut gpui::TestAppContext) {
+    fn codex_surfaces_follow_the_theme_with_uniform_light_fills(cx: &mut gpui::TestAppContext) {
         crate::core::config::pin_test_config_dir();
         cx.update(|cx| {
             gpui_component::init(cx);
@@ -3158,11 +3158,21 @@ mod tests {
             let palette = super::super::palette::build();
             let point = AlacPoint::new(AlacLine(0), AlacColumn(0));
             // Real Codex truecolor output, in composer/plan then prompt-history order.
-            let light_fills = [0xf4f4f4, 0xf9f9f9];
-            let dark_fills = [0x1e1e1e, 0x282828];
             for (id, previous, current, stale, fresh) in [
-                ("dark", 0xffffff, 0x000000, light_fills, dark_fills),
-                ("light", 0x000000, 0xffffff, dark_fills, light_fills),
+                (
+                    "one_dark_pro",
+                    0xfafafa,
+                    0x282c34,
+                    [0xf0f0f0, 0xf5f5f5],
+                    [0x41454c, 0x4a4d54],
+                ),
+                (
+                    "dark",
+                    0xffffff,
+                    0x000000,
+                    [0xf4f4f4, 0xf9f9f9],
+                    [0x1e1e1e, 0x282828],
+                ),
             ] {
                 cx.global_mut::<Config>().theme_preset = id.into();
                 crate::ui::theme::apply_theme(None, cx);
@@ -3181,6 +3191,32 @@ mod tests {
                     assert_eq!(paint(new, &with_codex), paint(new, &new_session), "{id}");
                 }
                 assert_eq!(paint(0x405060, &with_codex), paint(0x405060, &new_session));
+            }
+            // In light themes, history uses the composer's fill, including
+            // fresh sessions and sessions started under a different theme.
+            for (id, fill) in [("one_light", 0xf0f0f0), ("light", 0xf4f4f4)] {
+                cx.global_mut::<Config>().theme_preset = id.into();
+                crate::ui::theme::apply_theme(None, cx);
+                let backgrounds = [0xfafafa, 0x282c34, 0xffffff, 0x000000].map(unpack_rgb);
+                let with_codex = PaintColors::resolve(cx.theme(), &backgrounds, cx);
+                let original = PaintColors::resolve(cx.theme(), &[], cx);
+                for source in [
+                    0xf0f0f0, 0xf5f5f5, 0x41454c, 0x4a4d54, 0xf4f4f4, 0xf9f9f9, 0x1e1e1e, 0x282828,
+                ] {
+                    let cell = Cell {
+                        c: 'x',
+                        bg: AnsiColor::Spec(unpack_rgb(source)),
+                        ..Cell::default()
+                    };
+                    let actual = snapshot_cell(&cell, point, &palette, &with_codex, None);
+                    let expected_cell = Cell {
+                        bg: AnsiColor::Spec(unpack_rgb(fill)),
+                        ..cell
+                    };
+                    let expected = snapshot_cell(&expected_cell, point, &palette, &original, None);
+                    assert_eq!(actual.bg, expected.bg, "{id} background {source:06x}");
+                    assert_eq!(actual.fg, expected.fg, "{id} foreground {source:06x}");
+                }
             }
             cx.global_mut::<Config>().theme_legible_palette = false;
             let literal = PaintColors::resolve(cx.theme(), &[unpack_rgb(0x000000)], cx);

@@ -1,254 +1,402 @@
 {
-  "revision": "c552bbe",
-  "platform": "Windows x86_64",
-  "shell": "cmd.exe",
-  "pane_engine": "native",
-  "codex": "0.169.0",
-  "codex_provider": "local fixture",
-  "capture": "scripts/capture-native-window.ps1 (PrintWindow)",
-  "logical_viewport": [
-    1200,
-    800
-  ],
-  "dpi_scale": 1.75,
-  "physical_frame": [
-    2104,
-    1402
-  ],
-  "themes": [
-    "light",
-    "dark"
-  ],
-  "theme_legible_palette": true,
-  "sample_x": 1850,
-  "palette_source": "https://github.com/openai/codex/blob/rust-v0.169.0/codex-rs/tui/src/style.rs",
-  "scenario": "Submit a /plan prompt to the local fixture, dismiss the implementation confirmation, and leave a draft. Switch Light to Dark and back in that tab. Create a new Codex tab in Dark with the same prompt, plan, and draft, then switch that tab to Light. Five captures for each build.",
+  "verified_on": "2026-11-19",
+  "baseline_commit": "c552bbec607f3243a29f4c5c0f4ef8e0713f1bee",
+  "after_source": "same revision as this verification record",
+  "environment": {
+    "platform": "Windows x86_64",
+    "display_scale_percent": 175,
+    "logical_viewport": [
+      1200,
+      800
+    ],
+    "physical_frame": [
+      2104,
+      1402
+    ],
+    "font": "Hack",
+    "font_size": 15,
+    "line_height": 1.4,
+    "ui_font_size": 14,
+    "theme_legible_palette": true,
+    "dim_inactive_panes": false,
+    "capture": "PrintWindow via scripts/capture-native-window.ps1",
+    "pointer": "none; real pointer is not moved"
+  },
+  "scenario": "Real Codex CLI with an isolated local Responses fixture, a proposed plan, and an unsent draft; both theme round trips.",
+  "theme_switch": "Public config.json hot reload, waiting for appearance.json to reflect One Light or One Dark Pro.",
   "before": {
     "binary_sha256": "a2ad5ce9cc568464a498dc96a95d8bb56f23e7cce2607fd72274040292ac913d",
+    "codex": "codex-cli 0.169.0",
+    "themes": [
+      "one_light",
+      "one_dark_pro"
+    ],
+    "logical_viewport": [
+      1200,
+      800
+    ],
+    "forced_color": false,
+    "dark_matches_new_session": false,
+    "roundtrip_pixels_unchanged": true,
     "captures": {
       "open-light": {
-        "prompt_history": {
-          "color": "#F9F9F9",
-          "from_y": 516,
-          "to_y": 625
+        "surfaces": {
+          "prompt_history": {
+            "color": "#F5F5F5",
+            "from_y": 516,
+            "to_y": 625
+          },
+          "proposed_plan": {
+            "color": "#F0F0F0",
+            "from_y": 737,
+            "to_y": 919
+          },
+          "composer": {
+            "color": "#F0F0F0",
+            "from_y": 1031,
+            "to_y": 1140
+          }
         },
-        "proposed_plan": {
-          "color": "#F4F4F4",
-          "from_y": 737,
-          "to_y": 919
-        },
-        "composer": {
-          "color": "#F4F4F4",
-          "from_y": 1031,
-          "to_y": 1140
-        },
-        "png_sha256": "128e2109a1fa388b28f1038ed1feb65555d956646c3d12977f5d39857b30fd2f"
+        "png_sha256": "bf07765c0183a413288176910b925e4b1e3e70960c39f31fbb5b668e0a135b16",
+        "capture": "hwnd=11405262 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=105588",
+        "image": "before/open-light.png"
       },
       "switched-dark": {
-        "prompt_history": {
-          "color": "#060606",
-          "from_y": 516,
-          "to_y": 625
+        "surfaces": {
+          "prompt_history": {
+            "color": "#383838",
+            "from_y": 516,
+            "to_y": 625
+          },
+          "proposed_plan": {
+            "color": "#3D3D3D",
+            "from_y": 737,
+            "to_y": 919
+          },
+          "composer": {
+            "color": "#3D3D3D",
+            "from_y": 1031,
+            "to_y": 1140
+          }
         },
-        "proposed_plan": {
-          "color": "#0B0B0B",
-          "from_y": 737,
-          "to_y": 919
-        },
-        "composer": {
-          "color": "#0B0B0B",
-          "from_y": 1031,
-          "to_y": 1140
-        },
-        "png_sha256": "ed3ce4fe32ead2c6f1cb94eb387c027ea1fc8b55aa54ee071c9ce6e16e51d9ad"
+        "png_sha256": "dd6456e0e25f3a8bfbac4165085f0ede76e7ac7bbe8b2dc93050494d5a62065e",
+        "capture": "hwnd=11405262 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=105393",
+        "image": "before/switched-dark.png"
       },
       "roundtrip-light": {
-        "prompt_history": {
-          "color": "#F9F9F9",
-          "from_y": 516,
-          "to_y": 625
+        "surfaces": {
+          "prompt_history": {
+            "color": "#F5F5F5",
+            "from_y": 516,
+            "to_y": 625
+          },
+          "proposed_plan": {
+            "color": "#F0F0F0",
+            "from_y": 737,
+            "to_y": 919
+          },
+          "composer": {
+            "color": "#F0F0F0",
+            "from_y": 1031,
+            "to_y": 1140
+          }
         },
-        "proposed_plan": {
-          "color": "#F4F4F4",
-          "from_y": 737,
-          "to_y": 919
-        },
-        "composer": {
-          "color": "#F4F4F4",
-          "from_y": 1031,
-          "to_y": 1140
-        },
-        "png_sha256": "128e2109a1fa388b28f1038ed1feb65555d956646c3d12977f5d39857b30fd2f"
+        "png_sha256": "bf07765c0183a413288176910b925e4b1e3e70960c39f31fbb5b668e0a135b16",
+        "capture": "hwnd=11405262 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=105588",
+        "image": "before/roundtrip-light.png"
       },
       "fresh-dark": {
-        "prompt_history": {
-          "color": "#282828",
-          "from_y": 516,
-          "to_y": 625
+        "surfaces": {
+          "prompt_history": {
+            "color": "#4A4D54",
+            "from_y": 516,
+            "to_y": 625
+          },
+          "proposed_plan": {
+            "color": "#41454C",
+            "from_y": 737,
+            "to_y": 919
+          },
+          "composer": {
+            "color": "#41454C",
+            "from_y": 1031,
+            "to_y": 1140
+          }
         },
-        "proposed_plan": {
-          "color": "#1E1E1E",
-          "from_y": 737,
-          "to_y": 919
-        },
-        "composer": {
-          "color": "#1E1E1E",
-          "from_y": 1031,
-          "to_y": 1140
-        },
-        "png_sha256": "ea70af56b25051b843f04bca159bc9e3da4351a65b9f69d427a465516ab4373f"
+        "png_sha256": "7cb6a5fac619c4057668fa2c4876f82c9e24eab7051295faa0e1fa9b677f7f91",
+        "capture": "hwnd=11405262 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=109337",
+        "image": "before/fresh-dark.png"
       },
       "switched-light": {
-        "prompt_history": {
-          "color": "#EBEBEB",
-          "from_y": 516,
-          "to_y": 625
+        "surfaces": {
+          "prompt_history": {
+            "color": "#E1E4EB",
+            "from_y": 516,
+            "to_y": 625
+          },
+          "proposed_plan": {
+            "color": "#E0E4EB",
+            "from_y": 737,
+            "to_y": 919
+          },
+          "composer": {
+            "color": "#E0E4EB",
+            "from_y": 1031,
+            "to_y": 1140
+          }
         },
-        "proposed_plan": {
-          "color": "#EBEBEB",
-          "from_y": 737,
-          "to_y": 919
+        "png_sha256": "4e0e7df2b336865f085b9999912fdae67435e9368eaf0934e5c37352b3ce8b39",
+        "capture": "hwnd=11405262 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=109601",
+        "image": "before/switched-light.png"
+      },
+      "roundtrip-dark": {
+        "surfaces": {
+          "prompt_history": {
+            "color": "#4A4D54",
+            "from_y": 516,
+            "to_y": 625
+          },
+          "proposed_plan": {
+            "color": "#41454C",
+            "from_y": 737,
+            "to_y": 919
+          },
+          "composer": {
+            "color": "#41454C",
+            "from_y": 1031,
+            "to_y": 1140
+          }
         },
-        "composer": {
-          "color": "#EBEBEB",
-          "from_y": 1031,
-          "to_y": 1140
-        },
-        "png_sha256": "26f0e6ff65bc575f12ea39e3802864f3b4f398de31d8ef01462d1aa0a35e8b78"
+        "png_sha256": "7cb6a5fac619c4057668fa2c4876f82c9e24eab7051295faa0e1fa9b677f7f91",
+        "capture": "hwnd=11405262 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=109337",
+        "image": "before/roundtrip-dark.png"
       }
-    }
+    },
+    "light_surfaces_uniform": false
   },
   "after": {
-    "binary_sha256": "d0fdefb8e8989f3e20242e5962dd05fcafc86ab618ecf4faf910cc088c95a269",
+    "binary_sha256": "c8218a34c5c0fcb6413d2f62079d799c60c0b7ada3a744f89da47bd3e6cd79cc",
+    "codex": "codex-cli 0.169.0",
+    "themes": [
+      "one_light",
+      "one_dark_pro"
+    ],
+    "logical_viewport": [
+      1200,
+      800
+    ],
+    "forced_color": false,
+    "dark_matches_new_session": true,
+    "light_surfaces_uniform": true,
+    "roundtrip_pixels_unchanged": true,
     "captures": {
       "open-light": {
-        "prompt_history": {
-          "color": "#F9F9F9",
-          "from_y": 516,
-          "to_y": 625
+        "surfaces": {
+          "prompt_history": {
+            "color": "#F0F0F0",
+            "from_y": 516,
+            "to_y": 625
+          },
+          "proposed_plan": {
+            "color": "#F0F0F0",
+            "from_y": 737,
+            "to_y": 919
+          },
+          "composer": {
+            "color": "#F0F0F0",
+            "from_y": 1031,
+            "to_y": 1140
+          }
         },
-        "proposed_plan": {
-          "color": "#F4F4F4",
-          "from_y": 737,
-          "to_y": 919
-        },
-        "composer": {
-          "color": "#F4F4F4",
-          "from_y": 1031,
-          "to_y": 1140
-        },
-        "png_sha256": "46a37df63de94e26f7a54dd6875ad479f48c888f83274017e5d0fdd1034e1139"
+        "png_sha256": "a3082a44690bcdbcfc2cf6fa02258abd1d1df720b6b86b3de7b2bd6040cc4376",
+        "capture": "hwnd=788596 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=105333",
+        "image": "after/open-light.png"
       },
       "switched-dark": {
-        "prompt_history": {
-          "color": "#282828",
-          "from_y": 516,
-          "to_y": 625
+        "surfaces": {
+          "prompt_history": {
+            "color": "#4A4D54",
+            "from_y": 516,
+            "to_y": 625
+          },
+          "proposed_plan": {
+            "color": "#41454C",
+            "from_y": 737,
+            "to_y": 919
+          },
+          "composer": {
+            "color": "#41454C",
+            "from_y": 1031,
+            "to_y": 1140
+          }
         },
-        "proposed_plan": {
-          "color": "#1E1E1E",
-          "from_y": 737,
-          "to_y": 919
-        },
-        "composer": {
-          "color": "#1E1E1E",
-          "from_y": 1031,
-          "to_y": 1140
-        },
-        "png_sha256": "61dbb0cf8069b48bbd0e40033d1ac298d81c8bb9395de8fa4391c3ce3ea8ca9c"
+        "png_sha256": "bc8af32fa2985e307551298f6426f59e448d7199770e7f458bb55f78294f7797",
+        "capture": "hwnd=788596 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=105173",
+        "image": "after/switched-dark.png"
       },
       "roundtrip-light": {
-        "prompt_history": {
-          "color": "#F9F9F9",
-          "from_y": 516,
-          "to_y": 625
+        "surfaces": {
+          "prompt_history": {
+            "color": "#F0F0F0",
+            "from_y": 516,
+            "to_y": 625
+          },
+          "proposed_plan": {
+            "color": "#F0F0F0",
+            "from_y": 737,
+            "to_y": 919
+          },
+          "composer": {
+            "color": "#F0F0F0",
+            "from_y": 1031,
+            "to_y": 1140
+          }
         },
-        "proposed_plan": {
-          "color": "#F4F4F4",
-          "from_y": 737,
-          "to_y": 919
-        },
-        "composer": {
-          "color": "#F4F4F4",
-          "from_y": 1031,
-          "to_y": 1140
-        },
-        "png_sha256": "46a37df63de94e26f7a54dd6875ad479f48c888f83274017e5d0fdd1034e1139"
+        "png_sha256": "a3082a44690bcdbcfc2cf6fa02258abd1d1df720b6b86b3de7b2bd6040cc4376",
+        "capture": "hwnd=788596 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=105333",
+        "image": "after/roundtrip-light.png"
       },
       "fresh-dark": {
-        "prompt_history": {
-          "color": "#282828",
-          "from_y": 516,
-          "to_y": 625
+        "surfaces": {
+          "prompt_history": {
+            "color": "#4A4D54",
+            "from_y": 516,
+            "to_y": 625
+          },
+          "proposed_plan": {
+            "color": "#41454C",
+            "from_y": 737,
+            "to_y": 919
+          },
+          "composer": {
+            "color": "#41454C",
+            "from_y": 1031,
+            "to_y": 1140
+          }
         },
-        "proposed_plan": {
-          "color": "#1E1E1E",
-          "from_y": 737,
-          "to_y": 919
-        },
-        "composer": {
-          "color": "#1E1E1E",
-          "from_y": 1031,
-          "to_y": 1140
-        },
-        "png_sha256": "15713bfef42bc0921f9e2a1e909b93df3c8fc68b6f1395fb0e978511834d9567"
+        "png_sha256": "e1ae0a845bd544eb1a4584759944a2b514d50c67ca4459cf8ab409a8183398a0",
+        "capture": "hwnd=788596 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=109049",
+        "image": "after/fresh-dark.png"
       },
       "switched-light": {
-        "prompt_history": {
-          "color": "#F9F9F9",
-          "from_y": 516,
-          "to_y": 625
+        "surfaces": {
+          "prompt_history": {
+            "color": "#F0F0F0",
+            "from_y": 516,
+            "to_y": 625
+          },
+          "proposed_plan": {
+            "color": "#F0F0F0",
+            "from_y": 737,
+            "to_y": 919
+          },
+          "composer": {
+            "color": "#F0F0F0",
+            "from_y": 1031,
+            "to_y": 1140
+          }
         },
-        "proposed_plan": {
-          "color": "#F4F4F4",
-          "from_y": 737,
-          "to_y": 919
+        "png_sha256": "83f5ed256b0aa98fbb4bbacf6090db4e48d60ebc595f440e623704967b943d51",
+        "capture": "hwnd=788596 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=109300",
+        "image": "after/switched-light.png"
+      },
+      "roundtrip-dark": {
+        "surfaces": {
+          "prompt_history": {
+            "color": "#4A4D54",
+            "from_y": 516,
+            "to_y": 625
+          },
+          "proposed_plan": {
+            "color": "#41454C",
+            "from_y": 737,
+            "to_y": 919
+          },
+          "composer": {
+            "color": "#41454C",
+            "from_y": 1031,
+            "to_y": 1140
+          }
         },
-        "composer": {
-          "color": "#F4F4F4",
-          "from_y": 1031,
-          "to_y": 1140
-        },
-        "png_sha256": "a54a296c01293a788c1fd21e60bafdc41ac43af88a13cde573a99d4fc2df3a6b"
+        "png_sha256": "e1ae0a845bd544eb1a4584759944a2b514d50c67ca4459cf8ab409a8183398a0",
+        "capture": "hwnd=788596 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=109049",
+        "image": "after/roundtrip-dark.png"
       }
     }
   },
-  "validation": {
-    "cargo build --locked --workspace": "passed",
-    "cargo test --locked --workspace --features updater -- --test-threads=4": {
-      "passed": 3342,
-      "failed": 0,
-      "ignored": 14
-    },
-    "cargo test --locked --features updater --bin hitty-app a_later_background_query_keeps_the_answer_codex_started_with": {
-      "passed": 1,
-      "failed": 0
-    }
+  "assertions": {
+    "switched_dark_matches_fresh_dark": true,
+    "all_light_surfaces_match_current_composer": true,
+    "baseline_fresh_light_composer_preserved": true,
+    "baseline_fresh_dark_fills_preserved": true,
+    "both_roundtrips_byte_identical": true,
+    "all_eight_unique_images_visually_inspected": true
   },
-  "other_agent_checks": [
-    {
-      "agent": "Claude Code",
-      "version": "2.1.310",
-      "composer_background_matches_fresh_session": true
+  "reproduction": "See ../../codex-theme-switch.md for commands and limitations.",
+  "source_lf_sha256": {
+    "src/terminal/adaptive_colors.rs": "f0e1c7d1a921d0b2db91a68b3e7058a3b1870c869e5872f424395ffbb09dbe1c",
+    "src/terminal/element.rs": "c1383f07c91fe1cccb5b6d4d056277db9c81c303442d451524ab35f802454718",
+    "src/terminal/view.rs": "83d625341d6ed5bd1f53cbb2448c09b225be521c014eb1ec8dd5d692b46a3c2f",
+    "scripts/codex-theme-native.py": "fd3c446004775dfced2b9cb2eae3dd0770e777ec87635f883a4f01adaf16eb3c"
+  },
+  "validation": {
+    "completed_on": "2026-11-20",
+    "build": {
+      "command": "cargo build --locked --workspace --bins --features updater",
+      "exit_code": 0,
+      "local_path": "D:\\tmp\\hitty-theme-roundtrip\\build.log",
+      "sha256": "9e37d78a158b811c5c13b7e1c62cf6a896a5886e47b1c1fe42dee2e12cda3264"
     },
-    {
-      "agent": "Qwen Code",
-      "version": "0.28.0",
-      "composer_background_matches_fresh_session": true
+    "check": {
+      "command": "cargo check --locked --workspace --all-targets --features updater",
+      "exit_code": 0,
+      "local_path": "D:\\tmp\\hitty-theme-roundtrip\\workspace-final-check.log",
+      "sha256": "51ffcda99c9d0396a58ed29001bd65d3d6036d37c96446b57c9ed1ff3d3cd6c0"
     },
-    {
-      "agent": "Qoder CLI",
-      "version": "1.1.90",
-      "composer_background_matches_fresh_session": true
+    "workspace_tests": {
+      "command": "cargo test --locked --workspace --features updater -- --test-threads=4",
+      "exit_code": 0,
+      "suites": 19,
+      "passed": 3343,
+      "failed": 0,
+      "ignored": 14,
+      "local_path": "D:\\tmp\\hitty-theme-roundtrip\\workspace-final-tests.log",
+      "sha256": "04805b210b87288407dda13d9ca88edf055f7e2bf8026e86de7c2a3a402d3c5d"
     },
-    {
-      "agent": "Antigravity CLI",
-      "version": "1.5.3",
-      "observed": "onboarding theme preview",
-      "composer_blocker": "workspace trust prompt"
+    "build_environment": {
+      "CARGO_PROFILE_DEV_DEBUG": "0",
+      "CARGO_PROFILE_TEST_DEBUG": "0",
+      "target_dir": "D:\\tmp\\hitty-agent-theme-isolated-target"
+    },
+    "rustfmt": {
+      "command": "cargo fmt --all -- --check",
+      "exit_code": 0
+    },
+    "agent_manifests": {
+      "command": "python scripts/sync-agent-detection.py --check",
+      "exit_code": 0,
+      "manifests": 15
+    },
+    "agent_manifest_tests": {
+      "command": "python -m unittest discover -s scripts -p 'test_sync_agent_detection.py'",
+      "exit_code": 0,
+      "passed": 4
+    },
+    "host_boundary": {
+      "command": "bash .github/scripts/check-host-boundary.sh",
+      "exit_code": 0,
+      "checked_files": 116
+    },
+    "native_acceptance": {
+      "command": "python scripts/codex-theme-native.py --bin-dir <after-bin> --codex-bin <codex.exe> --output <after-images> --assert-colors --baseline-dir <before-images>",
+      "exit_code": 0,
+      "local_path": "D:\\tmp\\hitty-theme-roundtrip\\captures-after.log",
+      "sha256": "e2f25eab3259e2e02b337ed98e034cb25db3e99c48ae409db1df266835b22db9"
+    },
+    "light_regression_before_fix": {
+      "outcome": "failed: one_light background f5f5f5 differs from the composer fill",
+      "local_path": "D:\\tmp\\hitty-theme-roundtrip\\light-regression-red.log",
+      "sha256": "128f9e7251afdf148e4eace5bc04941042148384f1ac6bd4eba3eb9f3f13dff3"
     }
-  ],
-  "reproduce": "python scripts/codex-theme-native.py --bin-dir <before-or-after-bin> --codex-bin <codex-0.169.0.exe> --output <capture-directory> --scratch-dir <short-writable-path>",
-  "pr_roundtrip": "The opening and round-trip Light images are byte-identical within each build.",
-  "codex_force_color": 3
+  }
 }
