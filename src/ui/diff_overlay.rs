@@ -591,6 +591,13 @@ impl HittyApp {
                 o.focus.as_deref() == Some(f.path.as_str()) && (f.added > 0 || f.removed > 0)))
             });
         div()
+            .debug_selector(move || {
+                if forward {
+                    "diff-next-change".into()
+                } else {
+                    "diff-previous-change".into()
+                }
+            })
             .occlude()
             .flex_shrink_0()
             .child(
@@ -1133,13 +1140,15 @@ impl HittyApp {
             .text_color(palette.foreground)
             .children(self.diff_commit_details(overlay, cx))
             .when(self.has_commit_document(), |body| {
-                body.child(overlay.commit_split.backing()).child(
-                    div()
-                        .relative()
-                        .flex_none()
-                        .h(px(1.))
-                        .child(overlay.commit_split.divider(cx)),
-                )
+                body.child(overlay.commit_split.backing())
+                    .child(
+                        div()
+                            .relative()
+                            .flex_none()
+                            .h(px(1.))
+                            .child(overlay.commit_split.divider(cx)),
+                    )
+                    .child(self.diff_commit_toolbar(overlay, cx))
             })
             .child(content);
 
@@ -1454,17 +1463,20 @@ impl HittyApp {
             .flex_none()
             .items_center()
             .gap_2()
-            .when(!self.has_commit_document(), |bar| {
-                bar.children(self.diff_bulk_fold_button(overlay, cx))
-            })
+            .children(self.diff_bulk_fold_button(overlay, cx))
             .when(
                 !self.has_commit_document() || commit_has_text_diff(overlay),
                 |bar| bar.child(self.diff_view_button(cx)),
             )
             .when_some(diff_context_path(overlay), |bar, path| {
-                bar.child(self.diff_context_button(&path, cx))
-                    .child(self.diff_change_button(false, cx))
-                    .child(self.diff_change_button(true, cx))
+                bar.child(
+                    div()
+                        .debug_selector(|| "diff-toolbar-context".into())
+                        .flex_none()
+                        .child(self.diff_context_button(&path, cx)),
+                )
+                .child(self.diff_change_button(false, cx))
+                .child(self.diff_change_button(true, cx))
             })
             .when(!self.has_commit_document(), |bar| {
                 bar.child(self.document_fill_button(cx))
@@ -1746,8 +1758,7 @@ impl HittyApp {
         cx: &mut Context<Self>,
     ) -> gpui::Div {
         let palette = diff_palette(cx);
-        let expandable =
-            !file.binary && (!file.hunks.is_empty() || file.truncated == Some(Truncation::Budget));
+        let expandable = file_expandable(file);
         let deco = deco_status(file.status);
         let glyph = status_glyph(deco);
         let glyph_color = match file.status {

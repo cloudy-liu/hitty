@@ -1,4 +1,4 @@
-//! The selected commit's message and metadata above the existing diff content.
+//! Commit details, split resizing, and the fixed toolbar above the diff.
 use super::*;
 use gpui::{Bounds, MouseButton, MouseMoveEvent, MouseUpEvent};
 use gpui_component::InteractiveElementExt as _;
@@ -63,6 +63,7 @@ impl HittyApp {
                             {
                                 overlay.focus = None;
                                 *overlay.anchor.borrow_mut() = None;
+                                *overlay.file_scroll.borrow_mut() = DiffFileScroll::default();
                                 cx.notify();
                             }
                         }))
@@ -289,35 +290,6 @@ impl HittyApp {
                     )
                 });
         }
-        if let DiffLoad::Ready(snapshot) = &overlay.load {
-            let (added, removed) = snapshot.stats().totals;
-            details = details.child(
-                h_flex()
-                    .flex_wrap()
-                    .items_center()
-                    .gap_3()
-                    .debug_selector(|| "diff-commit-stats".into())
-                    .text_xs()
-                    .child(Icon::new(IconName::Folder).small().text_color(muted))
-                    .child(div().text_color(muted).child(t_plural(
-                        L10nKey::DiffChangedFiles,
-                        snapshot.files.len(),
-                        &[],
-                    )))
-                    .child(
-                        div()
-                            .font_family(mono.clone())
-                            .text_color(cx.theme().success)
-                            .child(format!("+{added}")),
-                    )
-                    .child(
-                        div()
-                            .font_family(mono)
-                            .text_color(cx.theme().danger)
-                            .child(format!("\u{2212}{removed}")),
-                    ),
-            );
-        }
         Some(
             v_flex()
                 .id("diff-commit-details")
@@ -331,6 +303,73 @@ impl HittyApp {
                 .child(details)
                 .into_any_element(),
         )
+    }
+
+    pub(super) fn diff_commit_toolbar(
+        &self,
+        overlay: &DiffOverlayState,
+        cx: &mut Context<Self>,
+    ) -> AnyElement {
+        let stats = match &overlay.load {
+            DiffLoad::Ready(snapshot) => {
+                let (added, removed) = snapshot.stats().totals;
+                Some(
+                    h_flex()
+                        .debug_selector(|| "diff-commit-stats".into())
+                        .min_w_0()
+                        .overflow_hidden()
+                        .items_center()
+                        .gap_2()
+                        .text_xs()
+                        .child(
+                            Icon::new(IconName::Folder)
+                                .small()
+                                .text_color(cx.theme().muted_foreground),
+                        )
+                        .child(
+                            div()
+                                .min_w_0()
+                                .truncate()
+                                .text_color(cx.theme().muted_foreground)
+                                .child(t_plural(
+                                    L10nKey::DiffChangedFiles,
+                                    snapshot.files.len(),
+                                    &[],
+                                )),
+                        )
+                        .child(
+                            div()
+                                .flex_none()
+                                .font_family(cx.theme().mono_font_family.clone())
+                                .text_color(cx.theme().success)
+                                .child(format!("+{added}")),
+                        )
+                        .child(
+                            div()
+                                .flex_none()
+                                .font_family(cx.theme().mono_font_family.clone())
+                                .text_color(cx.theme().danger)
+                                .child(format!("\u{2212}{removed}")),
+                        ),
+                )
+            }
+            _ => None,
+        };
+        h_flex()
+            .id("commit-diff-toolbar")
+            .debug_selector(|| "commit-diff-toolbar".into())
+            .flex_none()
+            .h(px(34.))
+            .w_full()
+            .min_w_0()
+            .px_4()
+            .gap_3()
+            .items_center()
+            .border_b_1()
+            .border_color(cx.theme().border)
+            .child(div().flex_1().min_w_0().children(stats))
+            .child(self.diff_document_actions(overlay, cx))
+            .into_any_element()
     }
 }
 
@@ -487,5 +526,279 @@ impl CommitSplit {
                 cx.stop_propagation();
             })
             .into_any_element()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use gpui::{Entity, TestAppContext, VisualTestContext, point, size};
+
+    struct CommitDocument(Entity<HittyApp>);
+
+    impl Render for CommitDocument {
+        fn render(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
+            self.0.update(cx, |app, cx| {
+                v_flex().size_full().children(app.render_diff_overlay(
+                    DocumentChrome::Fill,
+                    window,
+                    cx,
+                ))
+            })
+        }
+    }
+
+    fn draw(vcx: &mut VisualTestContext) {
+        vcx.run_until_parked();
+        for _ in 0..2 {
+            vcx.update(|window, cx| {
+                window.refresh();
+                let _ = window.draw(cx);
+            });
+            vcx.run_until_parked();
+        }
+    }
+
+    fn file(path: &str, lines: usize) -> FileDiff {
+        git_diff::synthesize_added(
+            path,
+            (0..lines)
+                .map(|line| format!("{path} line {line}\n"))
+                .collect::<String>()
+                .as_bytes(),
+            &git_diff::DiffBudget::SINGLE_FILE,
+        )
+    }
+
+    fn install(app: &Entity<HittyApp>, vcx: &mut VisualTestContext, files: Vec<FileDiff>) {
+        app.update_in(vcx, |app, window, cx| {
+            app.tabs = vec![crate::ui::app::Tab::new(crate::ui::pane::Pane::Empty)];
+            app.active = 0;
+            app.open_diff_overlay(
+                crate::ui::host_ops::HostId::from_connection_key("commit-toolbar-fixture"),
+                "/fixture".into(),
+                DiffSource::Commit {
+                    rev: "0123456789abcdef".into(),
+                    label: Some(git_diff::CommitLabel {
+                        subject: "Review the commit changes".into(),
+                        author: "Ada".into(),
+                        at: 0,
+                    }),
+                },
+                None,
+                window,
+                cx,
+            );
+            let overlay = app.tabs[0].diff_overlay.as_mut().unwrap();
+            overlay.loading = false;
+            overlay.load = DiffLoad::Ready(Arc::new(DiffSnapshot {
+                files,
+                source: overlay.source.clone(),
+                ..Default::default()
+            }));
+            cx.notify();
+        });
+        draw(vcx);
+    }
+
+    #[gpui::test]
+    fn commit_toolbar_stays_fixed_and_bulk_folding_keeps_the_reader(cx: &mut TestAppContext) {
+        let (app, mut initial_window) = crate::ui::app::test_window::harness(cx);
+        initial_window.update(|window, _| window.remove_window());
+        for mode in [DiffViewMode::Split, DiffViewMode::Unified] {
+            let text_selector = match mode {
+                DiffViewMode::Split => "diff-new-text",
+                DiffViewMode::Unified => "diff-unified-text",
+            };
+            let (_, vcx) = cx.add_window_view(|_, _| CommitDocument(app.clone()));
+            vcx.simulate_resize(size(px(1000.), px(700.)));
+            vcx.update(|_, cx| cx.global_mut::<Config>().diff_view = mode);
+            install(
+                &app,
+                vcx,
+                (0..24)
+                    .map(|index| file(&format!("file-{index}.rs"), 15))
+                    .collect(),
+            );
+            let toolbar = vcx.debug_bounds("commit-diff-toolbar").unwrap();
+            let totals = vcx.debug_bounds("diff-commit-stats").unwrap();
+            let viewport = vcx.debug_bounds("diff-scroll").unwrap();
+            let reading = vcx.debug_bounds("diff-card-9").unwrap();
+            vcx.simulate_event(gpui::ScrollWheelEvent {
+                position: viewport.center(),
+                delta: gpui::ScrollDelta::Pixels(point(
+                    px(0.),
+                    viewport.top() - reading.top() - px(120.),
+                )),
+                ..Default::default()
+            });
+            draw(vcx);
+            let reading = vcx.debug_bounds("diff-card-9").unwrap();
+            assert!(reading.top() < viewport.top() && reading.bottom() > viewport.top());
+            assert_eq!(vcx.debug_bounds("commit-diff-toolbar"), Some(toolbar));
+            assert_eq!(vcx.debug_bounds("diff-commit-stats"), Some(totals));
+
+            let toggle = vcx
+                .debug_bounds("diff-bulk-fold-toggle")
+                .expect("the commit strip exposes bulk file folding");
+            assert!(toggle.top() >= toolbar.top() && toggle.bottom() <= toolbar.bottom());
+            vcx.simulate_click(toggle.center(), gpui::Modifiers::none());
+            draw(vcx);
+            let header = vcx.debug_bounds("diff-file-header:9").unwrap();
+            assert!(
+                header.top() >= viewport.top() && header.bottom() <= viewport.bottom(),
+                "collapsing a commit keeps the reader's file visible in {mode:?}"
+            );
+            assert!(vcx.debug_bounds(text_selector).is_none());
+            assert_eq!(vcx.debug_bounds("commit-diff-toolbar"), Some(toolbar));
+            assert_eq!(vcx.debug_bounds("diff-commit-stats"), Some(totals));
+
+            vcx.simulate_click(toggle.center(), gpui::Modifiers::none());
+            draw(vcx);
+            let reading = vcx.debug_bounds("diff-card-9").unwrap();
+            assert!(
+                reading.top() < viewport.bottom() && reading.bottom() > viewport.top(),
+                "expanding a commit keeps the reader's file visible in {mode:?}"
+            );
+            assert!(vcx.debug_bounds(text_selector).is_some());
+            assert_eq!(vcx.debug_bounds("commit-diff-toolbar"), Some(toolbar));
+            vcx.update(|window, _| window.remove_window());
+        }
+    }
+
+    #[gpui::test]
+    fn focused_commit_controls_work_in_narrow_windows(cx: &mut TestAppContext) {
+        let (app, mut initial_window) = crate::ui::app::test_window::harness(cx);
+        initial_window.update(|window, _| window.remove_window());
+        let (_, vcx) = cx.add_window_view(|_, _| CommitDocument(app.clone()));
+        vcx.simulate_resize(size(px(560.), px(700.)));
+        vcx.update(|_, cx| cx.global_mut::<Config>().diff_view = DiffViewMode::Split);
+
+        let mut full = file("focused.rs", 100);
+        full.status = FileStatus::Modified;
+        full.added = 2;
+        for line in &mut full.hunks[0].lines {
+            if matches!(line.new_no, Some(25 | 65)) {
+                continue;
+            }
+            line.kind = LineKind::Context;
+            line.old_no = line.new_no;
+        }
+        let full = Arc::new(full);
+        install(
+            &app,
+            vcx,
+            vec![
+                file("other.rs", 2),
+                crate::ui::diff_context::with_context(&full, &[]),
+            ],
+        );
+        app.update_in(vcx, |app, window, cx| {
+            let overlay = app.tabs[0].diff_overlay.as_ref().unwrap();
+            app.open_diff_overlay(
+                overlay.host_id,
+                overlay.cwd.clone(),
+                overlay.source.clone(),
+                Some("focused.rs".into()),
+                window,
+                cx,
+            );
+            app.tabs[0]
+                .diff_overlay
+                .as_mut()
+                .unwrap()
+                .file_views
+                .insert(
+                    "focused.rs".into(),
+                    DiffFileView {
+                        whole: false,
+                        revealed: vec![],
+                        full: Some(full),
+                        shown: None,
+                        loading: false,
+                        failed: false,
+                        token: Rc::new(()),
+                    },
+                );
+            cx.notify();
+        });
+        draw(vcx);
+        assert!(vcx.debug_bounds("diff-bulk-fold-toggle").is_none());
+        assert!(vcx.debug_bounds("diff-card-0").is_none());
+
+        for width in [560., 360.] {
+            vcx.simulate_resize(size(px(width), px(700.)));
+            draw(vcx);
+            let toolbar = vcx.debug_bounds("commit-diff-toolbar").unwrap();
+            let totals = vcx.debug_bounds("diff-commit-stats").unwrap();
+            let mut previous_right = totals.right();
+            for selector in [
+                "diff-view-toggle",
+                "diff-toolbar-context",
+                "diff-previous-change",
+                "diff-next-change",
+            ] {
+                let control = vcx
+                    .debug_bounds(selector)
+                    .expect("focused action stays visible");
+                assert!(
+                    control.left() >= previous_right
+                        && control.right() <= toolbar.right()
+                        && control.top() >= toolbar.top()
+                        && control.bottom() <= toolbar.bottom(),
+                    "{selector} must fit without overlap at {width}px: {control:?} / {toolbar:?}"
+                );
+                previous_right = control.right();
+            }
+            for selector in ["diff-unified-text", "diff-new-text"] {
+                let toggle = vcx.debug_bounds("diff-view-toggle").unwrap();
+                vcx.simulate_click(toggle.center(), gpui::Modifiers::none());
+                draw(vcx);
+                assert!(
+                    vcx.debug_bounds(selector).is_some(),
+                    "layout switches at {width}px"
+                );
+                assert!(vcx.debug_bounds("diff-card-0").is_none());
+            }
+        }
+
+        let compact = vcx.debug_bounds("diff-card-1").unwrap();
+        let context = vcx.debug_bounds("diff-toolbar-context").unwrap();
+        vcx.simulate_click(context.center(), gpui::Modifiers::none());
+        draw(vcx);
+        let expanded = vcx.debug_bounds("diff-card-1").unwrap();
+        assert!(expanded.size.height > compact.size.height + px(500.));
+        let next = vcx.debug_bounds("diff-next-change").unwrap();
+        vcx.simulate_click(next.center(), gpui::Modifiers::none());
+        draw(vcx);
+        let first_change = vcx.debug_bounds("diff-card-1").unwrap();
+        vcx.simulate_click(next.center(), gpui::Modifiers::none());
+        draw(vcx);
+        let second_change = vcx.debug_bounds("diff-card-1").unwrap();
+        assert!(second_change.top() < first_change.top() - px(500.));
+        let previous = vcx.debug_bounds("diff-previous-change").unwrap();
+        vcx.simulate_click(previous.center(), gpui::Modifiers::none());
+        draw(vcx);
+        let returned = vcx.debug_bounds("diff-card-1").unwrap();
+        assert!((returned.top() - first_change.top()).abs() <= px(1.));
+
+        let back = vcx.debug_bounds("commit-document-unfocus").unwrap();
+        vcx.simulate_click(back.center(), gpui::Modifiers::none());
+        draw(vcx);
+        assert!(vcx.debug_bounds("diff-card-0").is_some());
+        assert!(vcx.debug_bounds("diff-card-1").is_some());
+        assert!(vcx.debug_bounds("diff-toolbar-context").is_none());
+        assert!(vcx.debug_bounds("diff-previous-change").is_none());
+        assert!(vcx.debug_bounds("diff-next-change").is_none());
+        let bulk = vcx.debug_bounds("diff-bulk-fold-toggle").unwrap();
+        vcx.simulate_click(bulk.center(), gpui::Modifiers::none());
+        draw(vcx);
+        assert!(vcx.debug_bounds("diff-new-text").is_none());
+        vcx.simulate_click(bulk.center(), gpui::Modifiers::none());
+        draw(vcx);
+        assert!(vcx.debug_bounds("diff-new-text").is_some());
+        let viewport = vcx.debug_bounds("diff-scroll").unwrap();
+        let reading = vcx.debug_bounds("diff-card-1").unwrap();
+        assert!(reading.top() < viewport.bottom() && reading.bottom() > viewport.top());
     }
 }

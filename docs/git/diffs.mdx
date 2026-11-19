@@ -17,9 +17,11 @@ context use its existing SSH connection. Changes made outside the app refresh
 while the tab is active; disconnecting clears stale remote results. This path
 is read-only. A manually nested `ssh` command does not supply remote Git routing.
 
-Commit documents keep diff actions beside fill/restore in the top document strip.
-Drag the separator between the message and diff to resize their independent
-scroll regions. Diff-only controls hide when an ordinary file is active.
+Commit documents keep file totals and diff actions in a fixed strip directly
+above the diff, below the commit details and resize separator. The strip stays
+visible while files scroll. Drag the separator to resize the message and diff's
+independent scroll regions. Fill/restore and close stay in the document tab bar.
+Diff-only controls hide when an ordinary file is active.
 
 A diff docks beside the terminal, in the same column an open file uses, so the
 pane you were reading stays on screen. <kbd>Esc</kbd> closes it, and its header
@@ -32,6 +34,21 @@ right-clicks to a menu that fills the window with it if you prefer that —
 the two. The choice is global — one setting for every diff, the same call VS
 Code's `diffEditor.renderSideBySide` makes — and persists as `diff_view` in
 `config.json`.
+
+## Folding file cards
+
+The double-chevron button beside the layout control folds all open file cards.
+When every eligible card is folded, the same button expands them all. Its
+tooltip changes between **Collapse all files** and **Expand all files**; the
+button is also reachable with the keyboard. Worktree diffs keep it in their
+title bar, and commit diffs keep it in the fixed strip above the files.
+
+Folding and expanding keep the file you are reading visible. They change file
+cards without fetching full-file context. Large files and oversized diffs still
+start folded automatically; **Expand all files** opens eligible cards within
+the existing rendering limits. Binary and empty cards have nothing to fold.
+Single-file focus hides this bulk action and keeps its context, change
+navigation, and layout controls.
 
 ## Full-file context
 
