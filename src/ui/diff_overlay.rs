@@ -5,6 +5,10 @@ use std::path::{Path, PathBuf};
 use std::rc::Rc;
 use std::sync::{Arc, Weak};
 
+#[cfg(test)]
+#[path = "diff_bulk_tests.rs"]
+mod bulk_fold_gpui_tests;
+
 #[path = "diff_commit.rs"]
 mod commit;
 pub(crate) use commit::CommitSplit;
@@ -151,6 +155,7 @@ pub(crate) struct DiffOverlayState {
     pub(crate) file_views: HashMap<String, DiffFileView>,
     pub(crate) geometry: Rc<RefCell<HashMap<String, DiffGeometry>>>,
     pub(crate) anchor: Rc<RefCell<Option<DiffAnchor>>>,
+    pub(crate) file_scroll: Rc<RefCell<DiffFileScroll>>,
 }
 
 pub(crate) struct DiffFileView {
@@ -186,6 +191,17 @@ pub(crate) struct DiffAnchor {
     screen_y: f32,
 }
 
+/// Card geometry survives folding, unlike the text-row geometry used by the
+/// full-context controls. Bounds exclude the outer list's scroll offset.
+#[derive(Default)]
+pub(crate) struct DiffFileScroll {
+    cards: Vec<(String, gpui::Bounds<Pixels>)>,
+    anchor: Option<(String, Pixels)>,
+    /// Keep the reader's file through a clamp while the user has not scrolled
+    /// again. A collapsed list can fit entirely in the viewport.
+    reading: Option<(String, Pixels)>,
+}
+
 fn anchor_row(
     rows: &[(DiffLineKey, f32, bool)],
     line: DiffLineKey,
@@ -214,7 +230,42 @@ impl DiffOverlayState {
             .is_some_and(|host| host.upgrade().is_none_or(|host| !host.is_connected()))
     }
 
+    fn bulk_fold_files(&self) -> impl Iterator<Item = &FileDiff> {
+        let files: &[_] = match &self.load {
+            DiffLoad::Ready(snapshot) => &snapshot.files,
+            _ => &[],
+        };
+        files
+            .iter()
+            .take(MAX_RENDERED_FILES)
+            .map(|file| {
+                self.file_views
+                    .get(&file.path)
+                    .and_then(|view| view.shown.as_deref())
+                    .unwrap_or(file)
+            })
+            .filter(|file| file_expandable(file))
+    }
+
+    /// An explicit choice overrides automatic folding, within the same displayed
+    /// file budget as the list. No eligible cards means there is no bulk action.
+    fn bulk_fold_target(&self) -> Option<bool> {
+        if self.focus.is_some() {
+            return None;
+        }
+        let DiffLoad::Ready(snapshot) = &self.load else {
+            return None;
+        };
+        let oversized = snapshot.stats().oversized;
+        self.bulk_fold_files()
+            .fold(None, |any_open, file| {
+                Some(any_open.unwrap_or(false) || file_expanded(file, &self.expanded, oversized))
+            })
+            .map(|any_open| !any_open)
+    }
+
     fn remember_diff_position(&self, path: &str) {
+        self.file_scroll.borrow_mut().reading = None;
         let geometry = self.geometry.borrow();
         let Some(g) = geometry.get(path) else {
             return;
@@ -228,6 +279,26 @@ impl DiffOverlayState {
                 screen_y: screen_top + y,
             });
         }
+    }
+
+    fn remember_file_position(&self) {
+        let top = self.scroll.bounds().top();
+        let offset = self.scroll.offset().y;
+        let mut position = self.file_scroll.borrow_mut();
+        let reading = position
+            .reading
+            .as_ref()
+            .filter(|(_, previous)| (*previous - offset).abs() < px(1.))
+            .and_then(|(path, _)| position.cards.iter().find(|(held, _)| held == path));
+        position.anchor = reading
+            .or_else(|| {
+                position
+                    .cards
+                    .iter()
+                    .find(|(_, bounds)| bounds.bottom() + offset > top)
+            })
+            .map(|(path, bounds)| (path.clone(), (bounds.top() + offset - top).max(px(0.))));
+        *self.anchor.borrow_mut() = None;
     }
 }
 
@@ -668,6 +739,7 @@ impl HittyApp {
                 o.file_views.clear();
                 o.focus = focus;
                 *o.anchor.borrow_mut() = None;
+                *o.file_scroll.borrow_mut() = DiffFileScroll::default();
                 let handle = o.focus_handle.clone();
                 window.focus(&handle, cx);
                 if commit_document {
@@ -716,6 +788,7 @@ impl HittyApp {
             file_views: HashMap::new(),
             geometry: Rc::default(),
             anchor: Rc::default(),
+            file_scroll: Rc::default(),
         });
         window.focus(&focus_handle, cx);
         if commit_document {
@@ -791,6 +864,7 @@ impl HittyApp {
         overlay.loading = true;
         overlay.file_views.clear();
         *overlay.anchor.borrow_mut() = None;
+        *overlay.file_scroll.borrow_mut() = DiffFileScroll::default();
         overlay.epoch = epoch;
         self.spawn_diff_probe_for(host, cwd, source, cx);
     }
@@ -903,6 +977,7 @@ impl HittyApp {
             overlay.preview = None;
             overlay.file_views.clear();
             *overlay.anchor.borrow_mut() = None;
+            *overlay.file_scroll.borrow_mut() = DiffFileScroll::default();
             landed = true;
         }
         if reveal_commit_tab {
@@ -1270,6 +1345,8 @@ impl HittyApp {
                                         {
                                             overlay.focus = None;
                                             *overlay.anchor.borrow_mut() = None;
+                                            *overlay.file_scroll.borrow_mut() =
+                                                DiffFileScroll::default();
                                             cx.notify();
                                         }
                                     }))
@@ -1377,6 +1454,9 @@ impl HittyApp {
             .flex_none()
             .items_center()
             .gap_2()
+            .when(!self.has_commit_document(), |bar| {
+                bar.children(self.diff_bulk_fold_button(overlay, cx))
+            })
             .when(
                 !self.has_commit_document() || commit_has_text_diff(overlay),
                 |bar| bar.child(self.diff_view_button(cx)),
@@ -1529,6 +1609,7 @@ impl HittyApp {
         let mode = view_mode(cx);
         let oversized = focused.is_none() && stats.oversized;
         let mut list = v_flex().gap_3().p_4().w_full();
+        let mut cards = Vec::new();
         if oversized {
             list = list.child(self.diff_oversized_notice(snap, &stats, cx));
         }
@@ -1552,7 +1633,50 @@ impl HittyApp {
             } else {
                 file_expanded(file, expanded, oversized)
             };
+            cards.push((file.path.clone(), cards.len() + usize::from(oversized)));
             list = list.child(self.diff_file_card(idx, file, is_expanded, mode, window, cx));
+        }
+        if let Some(overlay) = self
+            .tabs
+            .get(self.active)
+            .and_then(|tab| tab.diff_overlay.as_ref())
+        {
+            let overlay_file_scroll = overlay.file_scroll.clone();
+            let scroll = scroll.clone();
+            list = list.on_children_prepainted(move |bounds, window, cx| {
+                let mut position = overlay_file_scroll.borrow_mut();
+                position.cards = cards
+                    .iter()
+                    .filter_map(|(path, index)| {
+                        let mut bounds = *bounds.get(*index)?;
+                        bounds.origin.y -= scroll.offset().y;
+                        Some((path.clone(), bounds))
+                    })
+                    .collect();
+                let Some((path, screen_y)) = position.anchor.take() else {
+                    return;
+                };
+                let Some((_, bounds)) = position.cards.iter().find(|(held, _)| held == &path)
+                else {
+                    return;
+                };
+                let target = scroll.bounds().top() + screen_y - bounds.top();
+                drop(position);
+                let position = overlay_file_scroll.clone();
+                let scroll = scroll.clone();
+                let handle = window.window_handle();
+                // The next layout owns the new scroll range. Apply an absolute
+                // clamped target so shrinking the list cannot jump past this file.
+                cx.defer(move |cx| {
+                    let _ = handle.update(cx, |_, window, _| {
+                        let mut offset = scroll.offset();
+                        offset.y = target.clamp(-scroll.max_offset().y, px(0.));
+                        scroll.set_offset(offset);
+                        position.borrow_mut().reading = Some((path, offset.y));
+                        window.refresh();
+                    });
+                });
+            });
         }
         if focused.is_none() && snap.files.len() > shown {
             let rest = snap.files.len() - shown;
@@ -1671,6 +1795,7 @@ impl HittyApp {
                             .get_mut(active)
                             .and_then(|t| t.diff_overlay.as_mut())
                         {
+                            overlay.file_scroll.borrow_mut().reading = None;
                             overlay.expanded.insert(path.clone(), !expanded);
                             cx.notify();
                         }
@@ -2301,6 +2426,63 @@ impl HittyApp {
         card
     }
 
+    fn toggle_all_diff_files(&mut self, cx: &mut Context<Self>) {
+        let Some(overlay) = self
+            .tabs
+            .get_mut(self.active)
+            .and_then(|tab| tab.diff_overlay.as_mut())
+        else {
+            return;
+        };
+        let Some(expand) = overlay.bulk_fold_target() else {
+            return;
+        };
+        overlay.remember_file_position();
+        let paths: Vec<_> = overlay
+            .bulk_fold_files()
+            .map(|file| file.path.clone())
+            .collect();
+        for path in paths {
+            overlay.expanded.insert(path, expand);
+        }
+        cx.notify();
+    }
+
+    pub(crate) fn diff_bulk_fold_button(
+        &self,
+        overlay: &DiffOverlayState,
+        cx: &mut Context<Self>,
+    ) -> Option<AnyElement> {
+        let expand = overlay.bulk_fold_target()?;
+        Some(
+            div()
+                .debug_selector(|| "diff-bulk-fold-toggle".into())
+                .occlude()
+                .flex_shrink_0()
+                .child(
+                    crate::ui::tab_strip::chrome_tile_sized(
+                        Button::new("diff-bulk-fold-toggle").icon(Icon::empty().path(if expand {
+                            "icons/chevrons-up-down.svg"
+                        } else {
+                            "icons/chevrons-down-up.svg"
+                        })),
+                        crate::ui::app::TILE_SIZE,
+                        crate::ui::app::TILE_GLYPH_LINE,
+                        false,
+                        cx,
+                    )
+                    .rounded_lg()
+                    .tooltip(t(if expand {
+                        L10nKey::DiffExpandAllFiles
+                    } else {
+                        L10nKey::DiffCollapseAllFiles
+                    }))
+                    .on_click(cx.listener(|this, _, _, cx| this.toggle_all_diff_files(cx))),
+                )
+                .into_any_element(),
+        )
+    }
+
     /// Show the current arrangement and name the destination in the tooltip.
     /// Switching reuses the existing preference without replacing the overlay.
     fn diff_view_button(&self, cx: &mut Context<Self>) -> AnyElement {
@@ -2813,6 +2995,10 @@ fn file_expanded(file: &FileDiff, expanded: &HashMap<String, bool>, collapse_all
         return want;
     }
     !collapse_all && file.added + file.removed <= AUTO_COLLAPSE_LINES
+}
+
+fn file_expandable(file: &FileDiff) -> bool {
+    !file.binary && (!file.hunks.is_empty() || file.truncated == Some(Truncation::Budget))
 }
 
 fn oversized_summary(snap: &DiffSnapshot, stats: &DiffStats) -> String {
@@ -4010,6 +4196,7 @@ mod github_theme_gpui_tests {
                 ]),
                 geometry: Rc::default(),
                 anchor: Rc::default(),
+                file_scroll: Rc::default(),
             });
             cx.notify();
         });
@@ -4094,6 +4281,7 @@ mod github_theme_gpui_tests {
                     file_views: HashMap::new(),
                     geometry: Rc::default(),
                     anchor: Rc::default(),
+                    file_scroll: Rc::default(),
                 });
                 let o = app.tabs[0].diff_overlay.as_mut().unwrap();
                 o.loading = false;
@@ -4415,6 +4603,7 @@ mod github_theme_gpui_tests {
                 file_views: HashMap::new(),
                 geometry: Rc::default(),
                 anchor: Rc::default(),
+                file_scroll: Rc::default(),
             });
             cx.notify();
         });

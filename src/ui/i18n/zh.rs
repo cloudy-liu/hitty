@@ -1251,6 +1251,8 @@ pub fn translate_zh(key: L10nKey) -> Option<&'static str> {
         L10nKey::DiffViewUnified => "统一",
         L10nKey::DiffViewSplitTooltip => "切换到并排差异视图",
         L10nKey::DiffViewUnifiedTooltip => "切换到统一差异视图",
+        L10nKey::DiffCollapseAllFiles => "折叠全部文件",
+        L10nKey::DiffExpandAllFiles => "展开全部文件",
         L10nKey::DiffExpandFile => "展开全文",
         L10nKey::DiffCollapseContext => "折叠未修改行",
         L10nKey::DiffNextChange => "下一处修改",
