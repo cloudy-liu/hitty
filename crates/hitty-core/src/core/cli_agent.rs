@@ -532,6 +532,29 @@ impl CLIAgent {
         )
     }
 
+    pub(crate) fn qoder_observed_argv(
+        self,
+        argv: Option<&[String]>,
+        config_dir: &std::path::Path,
+    ) -> Option<Vec<String>> {
+        let path = qoder_path(config_dir.to_str()?);
+        quoted_qoder_path(&path)?;
+        let mut launch = vec![self.aliases()[0].into()];
+        if let Some(flags) = argv.and_then(|argv| self.replay_flags(argv)) {
+            let args = command_argv(&flags.join(" "));
+            let mut iter = args.into_iter();
+            while let Some(arg) = iter.next() {
+                if arg == "--config-dir" {
+                    iter.next();
+                } else if !arg.starts_with("--config-dir=") {
+                    launch.push(arg);
+                }
+            }
+        }
+        launch.extend(["--config-dir".into(), path]);
+        Some(launch)
+    }
+
     fn replay_flags(self, argv: &[String]) -> Option<Vec<String>> {
         let names_self = |token: &str| {
             token.split(['/', '\\']).any(|seg| {
@@ -672,21 +695,6 @@ impl CLIAgent {
                 "--worktree-ref",
                 "--ref",
             ],
-            // `--resume`/`-r` restores a past session and `--continue`/`-c` the
-            // most recent one; `--session-id` is a third spelling of the same
-            // thing. All three clash with the `--resume {id}` this command
-            // appends, and `--fork-session` is the flag the fork variant
-            // appends itself. `--worktree` would create or switch trees again;
-            // Qoder's `-w` means `--cwd` and must survive.
-            CLIAgent::QoderCLI | CLIAgent::QoderCLICn => &[
-                "--resume",
-                "-r",
-                "--continue",
-                "-c",
-                "--session-id",
-                "--fork-session",
-                "--worktree",
-            ],
             // CodeBuddy keeps Claude Code's session flags. `--resume-session-at`
             // cuts a resumed conversation short and only makes sense next to
             // the resume it came with. Unlike Qoder, `-w` *is* `--worktree`
@@ -705,8 +713,17 @@ impl CLIAgent {
             ],
             _ => &[],
         };
+        let qoder = matches!(self, Self::QoderCLI | Self::QoderCLICn);
+        let qoder_args = if qoder {
+            Some(qoder_replay_args(&tail)?)
+        } else {
+            None
+        };
+        if let Some(args) = &qoder_args {
+            tail = args.iter().map(String::as_str).collect();
+        }
         let mut i = 0;
-        while i < tail.len() {
+        while !qoder && i < tail.len() {
             let t = tail[i];
             if stale.contains(&t)
                 || stale
@@ -727,18 +744,29 @@ impl CLIAgent {
                 && t.bytes()
                     .all(|b| b.is_ascii_alphanumeric() || b"-_=./,:@+~".contains(&b))
         };
-        if !tail.iter().all(|t| safe(t)) {
-            return None;
-        }
-        let mut prev_was_flag = false;
+        let is_path_option = |flag| qoder && matches!(flag, "--config-dir" | "--cwd" | "-w");
+        let mut flags = Vec::with_capacity(tail.len());
+        let mut previous = "";
         for t in &tail {
             let is_flag = t.starts_with('-');
-            if !is_flag && !prev_was_flag {
+            if !qoder && !is_flag && !previous.starts_with('-') {
                 return None;
             }
-            prev_was_flag = is_flag;
+            if !is_flag && is_path_option(previous) && !safe(t) {
+                flags.push(quoted_qoder_path(t)?);
+            } else if let Some((flag, path)) = t.split_once('=')
+                && is_path_option(flag)
+                && !safe(t)
+            {
+                flags.push(format!("{flag}={}", quoted_qoder_path(path)?));
+            } else if safe(t) {
+                flags.push((*t).into());
+            } else {
+                return None;
+            }
+            previous = t;
         }
-        Some(tail.into_iter().map(String::from).collect())
+        Some(flags)
     }
 
     pub fn accent_rgb(self) -> u32 {
@@ -957,6 +985,138 @@ fn quoted_history_path(path: &str) -> Option<String> {
     Some(format!("\"{path}\""))
 }
 
+fn qoder_replay_args(args: &[&str]) -> Option<Vec<String>> {
+    let mut args = args.iter().copied().peekable();
+    let mut replay = Vec::new();
+    while let Some(arg) = args.next() {
+        if arg == "--" {
+            break;
+        }
+        if !arg.starts_with('-') || arg == "-" {
+            // Qoder accepts an initial query before or after its options.
+            continue;
+        }
+        let mut options = Vec::new();
+        if arg.starts_with("--") {
+            let (flag, value) = arg
+                .split_once('=')
+                .map_or((arg, None), |(f, v)| (f, Some(v)));
+            options.push((flag.to_owned(), value));
+        } else {
+            // Short flags can be clustered, and value options accept -ihello.
+            for (offset, flag) in arg[1..].char_indices() {
+                let name = format!("-{flag}");
+                if matches!(flag, 'm' | 'i' | 'w' | 'r' | 'n' | 'o') {
+                    let value = &arg[1 + offset + flag.len_utf8()..];
+                    options.push((name, (!value.is_empty()).then_some(value)));
+                    break;
+                }
+                options.push((name, None));
+            }
+        }
+        for (flag, inline) in options {
+            let required = matches!(
+                flag.as_str(),
+                "-m" | "--model"
+                    | "--reasoning-effort"
+                    | "--thinking"
+                    | "--thinking-budget"
+                    | "--context-window"
+                    | "-i"
+                    | "--prompt-interactive"
+                    | "-w"
+                    | "--cwd"
+                    | "--config-dir"
+                    | "--permission-mode"
+                    | "--allowed-mcp-server-names"
+                    | "--allowed-tools"
+                    | "--disallowed-tools"
+                    | "--attachment"
+                    | "--plugin-dir"
+                    | "-n"
+                    | "--name"
+                    | "--session-id"
+                    | "--delete-session"
+                    | "--add-dir"
+                    | "-o"
+                    | "--output-format"
+                    | "--input-format"
+                    | "--max-output-tokens"
+                    | "--agent"
+                    | "--agents"
+                    | "--append-system-prompt"
+                    | "--system-prompt"
+                    | "--output-style"
+                    | "--max-model-request-retries"
+                    | "--mcp-config"
+                    | "--setting-sources"
+                    | "--settings"
+                    | "--remote-session"
+                    | "--remote-control"
+            );
+            let optional = matches!(flag.as_str(), "-r" | "--resume" | "--worktree" | "--remote");
+            let value = if inline.is_some() {
+                inline
+            } else if required {
+                Some(args.next()?)
+            } else if optional && args.peek().is_some_and(|value| !value.starts_with('-')) {
+                args.next()
+            } else {
+                None
+            };
+            if matches!(
+                flag.as_str(),
+                "-i" | "--prompt-interactive"
+                    | "--attachment"
+                    | "-r"
+                    | "--resume"
+                    | "-c"
+                    | "--continue"
+                    | "--session-id"
+                    | "--fork-session"
+                    | "--worktree"
+            ) {
+                continue;
+            }
+            if let Some(value) = inline.filter(|_| flag.starts_with("--")) {
+                replay.push(format!("{flag}={value}"));
+            } else {
+                replay.push(flag.clone());
+                replay.extend(value.map(String::from));
+            }
+            if flag == "--tools" {
+                while args.peek().is_some_and(|value| !value.starts_with('-')) {
+                    replay.push(args.next()?.into());
+                }
+            }
+        }
+    }
+    Some(replay)
+}
+
+fn qoder_path(path: &str) -> String {
+    #[cfg(windows)]
+    {
+        if let Some(unc) = path.strip_prefix(r"\\?\UNC\") {
+            return format!("//{}", unc.replace('\\', "/"));
+        }
+        path.strip_prefix(r"\\?\")
+            .unwrap_or(path)
+            .replace('\\', "/")
+    }
+    #[cfg(not(windows))]
+    {
+        path.into()
+    }
+}
+
+fn quoted_qoder_path(path: &str) -> Option<String> {
+    let path = qoder_path(path);
+    // Backslashes in POSIX double quotes are interpreted by some shells.
+    (!path.contains('\\')).then_some(())?;
+    quoted_history_path(&path)
+}
+
 fn unambiguous_resume_options(options: &[String]) -> bool {
     let mut args = options.iter().map(String::as_str);
     while let Some(arg) = args.next() {
@@ -973,8 +1133,8 @@ fn unambiguous_resume_options(options: &[String]) -> bool {
             | "--approve-mcps"
                 if value.is_none() => {}
             "--model" | "-m" | "--weak-model" | "--editor-model" | "--effort" | "--mode"
-            | "--permission-mode" | "--session-dir" | "--cwd" | "--project" | "--agent"
-            | "--add-dir" => {
+            | "--permission-mode" | "--session-dir" | "--config-dir" | "--cwd" | "-w"
+            | "--project" | "--agent" | "--add-dir" => {
                 if value.is_none() && args.next().is_none() {
                     return false;
                 }
@@ -2535,6 +2695,117 @@ mod tests {
                 .as_deref(),
             Some("qodercli --model qoder-1 --resume q-1 --fork-session")
         );
+    }
+
+    #[test]
+    fn qoder_restores_launch_options_without_replaying_any_initial_query() {
+        let cases: &[(&[&str], &str)] = &[
+            (
+                &["--dangerously-skip-permissions", "hello"],
+                " --dangerously-skip-permissions",
+            ),
+            (
+                &["fix this", "--model", "efficient", "please"],
+                " --model efficient",
+            ),
+            (&["--", "--dangerously-skip-permissions", "hello"], ""),
+            (&["--model=efficient", "hello"], " --model=efficient"),
+            (&["-ihello", "--model", "efficient"], " --model efficient"),
+            (
+                &["-dihello", "--model", "efficient"],
+                " -d --model efficient",
+            ),
+            (&["-mefficient", "hello"], " -m efficient"),
+            (
+                &[
+                    "--model",
+                    "efficient",
+                    "--cwd",
+                    "/repo with spaces",
+                    "hello",
+                ],
+                " --model efficient --cwd \"/repo with spaces\"",
+            ),
+            (
+                &["--attachment", "image.png", "hello", "--model", "efficient"],
+                " --model efficient",
+            ),
+            (
+                &["--tools", "read", "write", "--", "hello"],
+                " --tools read write",
+            ),
+            (
+                &["--system-prompt", "--continue", "hello"],
+                " --system-prompt --continue",
+            ),
+        ];
+        for agent in [CLIAgent::QoderCLI, CLIAgent::QoderCLICn] {
+            let program = agent.aliases()[0];
+            for (args, flags) in cases {
+                let mut original = argv(&[program]);
+                original.extend(argv(args));
+                let id = "0199c3f2-1b0e-7c3a-9f21-6d4b8e2a5c17";
+                assert_eq!(
+                    agent.resume_command(id, Some(&original)),
+                    Some(format!("{program}{flags} --resume {id}")),
+                    "launch argv: {original:?}"
+                );
+                assert_eq!(
+                    agent.fork_command(id, Some(&original)),
+                    Some(format!("{program}{flags} --resume {id} --fork-session")),
+                    "launch argv: {original:?}"
+                );
+                let observed = agent
+                    .qoder_observed_argv(Some(&original), std::path::Path::new("/profile"))
+                    .unwrap();
+                assert_eq!(
+                    agent.resume_command(id, Some(&observed)),
+                    Some(format!(
+                        "{program}{flags} --config-dir /profile --resume {id}"
+                    )),
+                    "observed argv: {observed:?}"
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn qoder_resumes_in_its_observed_profile_without_resubmitting_a_prompt() {
+        let agent = CLIAgent::QoderCLI;
+        let profile = if cfg!(windows) {
+            r"\\?\D:\Agent Profiles\qoder"
+        } else {
+            "/tmp/Agent Profiles/qoder"
+        };
+        let expected_profile = if cfg!(windows) {
+            "D:/Agent Profiles/qoder"
+        } else {
+            "/tmp/Agent Profiles/qoder"
+        };
+        for prompt in [
+            &["-i", "--dangerously-skip-permissions"][..],
+            &["--prompt-interactive=explain this"][..],
+        ] {
+            let mut original = argv(&[
+                "qodercli",
+                "--model",
+                "efficient",
+                "--config-dir=/incorrect",
+            ]);
+            original.extend(prompt.iter().map(|arg| (*arg).to_owned()));
+            let observed = agent
+                .qoder_observed_argv(Some(&original), std::path::Path::new(profile))
+                .unwrap();
+            let id = "0199c3f2-1b0e-7c3a-9f21-6d4b8e2a5c17";
+            let command = agent.resume_command(id, Some(&observed)).unwrap();
+            assert_eq!(
+                command,
+                format!(
+                    "qodercli --model efficient --config-dir \"{expected_profile}\" --resume {id}"
+                )
+            );
+            assert_eq!(agent.resumed_session_id(&command_argv(&command)), Some(id));
+        }
     }
 
     #[test]

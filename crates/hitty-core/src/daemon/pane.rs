@@ -2424,6 +2424,8 @@ impl DaemonPane {
     }
 
     pub(crate) fn refresh_agent_session(&self) {
+        use crate::daemon::agent_session::{LiveSession, probe};
+
         let Some(pty) = self.pty() else { return };
         let Some(shell_pid) = pty.shell_pid else {
             return;
@@ -2439,10 +2441,27 @@ impl DaemonPane {
             let Some(agent) = state.agent else { return };
             (agent, state.agent_session.clone(), state.agent_argv.clone())
         };
-        let Some(id) =
-            crate::daemon::agent_session::probe(agent, shell_pid, pty_foreground_pgid(&pty.master))
-        else {
+        if argv
+            .as_deref()
+            .is_some_and(|argv| agent.opts_out_of_sessions(argv))
+        {
             return;
+        }
+        let Some(observed) = probe(agent, shell_pid, pty_foreground_pgid(&pty.master)) else {
+            return;
+        };
+        let (id, config_dir) = match observed {
+            LiveSession::Saved { id, config_dir } => (Some(id), config_dir),
+            LiveSession::Unsaved(id) => {
+                if before
+                    .as_ref()
+                    .and_then(|session| session.session_id.as_deref())
+                    .is_none_or(|saved| saved == id)
+                {
+                    return;
+                }
+                (None, None)
+            }
         };
         let mut state = self.state.lock().unwrap();
         if !state.alive
@@ -2452,13 +2471,33 @@ impl DaemonPane {
         {
             return;
         }
-        let session = state.agent_session.get_or_insert_with(Default::default);
-        if session.session_id.as_deref() == Some(&id) {
+        let detected_argv = config_dir.as_deref().and_then(|dir| {
+            let saved = before
+                .as_ref()
+                .and_then(|session| session.launch_argv.as_deref());
+            agent.qoder_observed_argv(argv.as_deref().or(saved), dir)
+        });
+        if config_dir.is_some() && detected_argv.is_none() {
             return;
         }
-        session.session_id = Some(id);
+        let session = state.agent_session.get_or_insert_with(Default::default);
+        if session.session_id == id
+            && detected_argv
+                .as_ref()
+                .is_none_or(|args| session.launch_argv.as_ref() == Some(args))
+        {
+            return;
+        }
+        session.session_id = id;
         session.unstarted = false;
-        if session.launch_argv.is_none() {
+        if session.session_id.is_none() {
+            // An in-app switch to an empty conversation invalidates an older
+            // resume selector. Keep the original argv separately for when
+            // the new conversation has history of its own.
+            session.launch_argv = Some(Vec::new());
+        } else if detected_argv.is_some() {
+            session.launch_argv = detected_argv;
+        } else if session.launch_argv.as_ref().is_none_or(Vec::is_empty) {
             session.launch_argv = argv;
         }
         let facts = observed_facts(&state).agent;
@@ -3410,7 +3449,8 @@ fn apply_agent_signals(
     }
 
     if let (Some(sess), Some(argv)) = (&mut st.agent_session, &st.agent_argv)
-        && sess.launch_argv.is_none()
+        && (sess.launch_argv.is_none()
+            || (sess.session_id.is_some() && sess.launch_argv.as_ref().is_some_and(Vec::is_empty)))
     {
         sess.launch_argv = Some(argv.clone());
     }
@@ -8142,6 +8182,37 @@ mod tests {
             rx.try_recv(),
             Ok(DaemonMsg::Agent(Some(CLIAgent::Cursor)))
         ));
+    }
+
+    #[test]
+    fn a_qoder_hook_after_clear_keeps_the_original_launch_options() {
+        use crate::core::cli_agent::{
+            AgentSessionState, CLIAgent, command_argv, parse_agent_event_body,
+        };
+
+        let mut st = test_state(true);
+        st.agent = Some(CLIAgent::QoderCLI);
+        st.agent_argv = Some(command_argv("qodercli --model efficient --resume old"));
+        st.agent_session = Some(AgentSessionState {
+            launch_argv: Some(Vec::new()),
+            ..Default::default()
+        });
+        let event = parse_agent_event_body(
+            br#"{"agent":"qodercli","event":"session-start","session_id":"new"}"#,
+        )
+        .unwrap();
+
+        apply_agent_signals(&mut st, vec![event], None);
+
+        let facts = observed_facts(&st).agent.unwrap();
+        assert_eq!(facts.session_id.as_deref(), Some("new"));
+        assert_eq!(
+            facts
+                .agent
+                .resume_command("new", facts.launch_argv.as_deref())
+                .as_deref(),
+            Some("qodercli --model efficient --resume new")
+        );
     }
 
     #[cfg(windows)]
