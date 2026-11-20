@@ -751,6 +751,7 @@ mod gpui_tests {
                         file_views: Default::default(),
                         geometry: Default::default(),
                         anchor: Default::default(),
+                        file_scroll: Default::default(),
                     });
                     cx.notify();
                 });
@@ -981,6 +982,7 @@ mod gpui_tests {
                         file_views: Default::default(),
                         geometry: Default::default(),
                         anchor: Default::default(),
+                        file_scroll: Default::default(),
                     });
                     cx.notify();
                 });

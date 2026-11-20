@@ -1318,6 +1318,8 @@ pub fn translate_en(key: L10nKey) -> &'static str {
         L10nKey::DiffViewUnified => "Unified",
         L10nKey::DiffViewSplitTooltip => "Switch to side-by-side diff",
         L10nKey::DiffViewUnifiedTooltip => "Switch to unified diff",
+        L10nKey::DiffCollapseAllFiles => "Collapse all files",
+        L10nKey::DiffExpandAllFiles => "Expand all files",
         L10nKey::DiffExpandFile => "Expand entire file",
         L10nKey::DiffCollapseContext => "Collapse unchanged lines",
         L10nKey::DiffNextChange => "Next change",

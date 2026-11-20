@@ -1387,6 +1387,8 @@ pub fn translate_ja(key: L10nKey) -> Option<&'static str> {
         L10nKey::DiffViewUnified => "統合",
         L10nKey::DiffViewSplitTooltip => "左右分割の差分表示に切り替え",
         L10nKey::DiffViewUnifiedTooltip => "統合差分表示に切り替え",
+        L10nKey::DiffCollapseAllFiles => "すべてのファイルを折りたたむ",
+        L10nKey::DiffExpandAllFiles => "すべてのファイルを展開",
         L10nKey::DiffExpandFile => "ファイル全体を展開",
         L10nKey::DiffCollapseContext => "未変更行を折りたたむ",
         L10nKey::DiffNextChange => "次の変更",

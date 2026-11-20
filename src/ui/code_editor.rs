@@ -2316,19 +2316,6 @@ impl HittyApp {
                     // a right-edge tab never clips its right side.
                     .child(div().flex_none().w(px(FILE_TAB_LEAD))),
             )
-            .when(
-                commit_front
-                    && self.tabs[self.active]
-                        .diff_overlay
-                        .as_ref()
-                        .is_some_and(crate::ui::diff_overlay::commit_has_diff_actions),
-                |row| {
-                    row.child(self.diff_document_actions(
-                        self.tabs[self.active].diff_overlay.as_ref().unwrap(),
-                        cx,
-                    ))
-                },
-            )
             .child(self.document_fill_button(cx))
             .child(
                 div().occlude().flex_shrink_0().child(
@@ -2780,10 +2767,11 @@ mod tests {
             fill.bottom() <= breadcrumb.top(),
             "layout controls belong to the tab strip"
         );
-        assert!(
-            vcx.debug_bounds("commit-diff-toolbar").is_none(),
-            "diff controls must not take a row"
-        );
+        let toolbar = vcx
+            .debug_bounds("commit-diff-toolbar")
+            .expect("commit diff controls have a fixed strip below the details");
+        let divider = vcx.debug_bounds("commit-details-resize").unwrap();
+        assert!(details.bottom() <= toolbar.top() && divider.center().y <= toolbar.top());
         app.update(&mut vcx, |app, cx| {
             let overlay = app.tabs[app.active].diff_overlay.as_mut().unwrap();
             overlay.load = crate::ui::diff_overlay::DiffLoad::Ready(std::sync::Arc::new(
@@ -2823,9 +2811,19 @@ mod tests {
         let toggle = vcx
             .debug_bounds("diff-view-toggle")
             .expect("text diff has a view toggle");
+        let toolbar = vcx.debug_bounds("commit-diff-toolbar").unwrap();
+        let stats = vcx.debug_bounds("diff-commit-stats").unwrap();
+        let viewport = vcx.debug_bounds("diff-scroll").unwrap();
         assert!(
-            toggle.bottom() <= breadcrumb.top() && toggle.right() <= fill.left(),
-            "diff toggle is in the tab strip before layout actions"
+            toggle.top() >= toolbar.top() && toggle.bottom() <= toolbar.bottom(),
+            "diff controls belong to the fixed strip above the diff"
+        );
+        assert!(
+            stats.top() >= toolbar.top()
+                && stats.bottom() <= toolbar.bottom()
+                && stats.right() <= toggle.left()
+                && toolbar.bottom() <= viewport.top(),
+            "file totals share the fixed strip before its actions"
         );
         app.update(&mut vcx, |app, cx| {
             let overlay = app.tabs[app.active].diff_overlay.as_mut().unwrap();
@@ -2907,6 +2905,10 @@ mod tests {
         assert!(
             divider.bottom() + px(100.) <= vcx.update(|window, _| window.viewport_size().height),
             "divider leaves room for the diff"
+        );
+        assert!(
+            vcx.debug_bounds("diff-scroll").unwrap().size.height >= px(100.),
+            "the fixed strip leaves a usable diff viewport at the largest details size"
         );
         let viewport = vcx.update(|window, _| window.viewport_size());
         vcx.simulate_resize(gpui::size(viewport.width, px(400.)));

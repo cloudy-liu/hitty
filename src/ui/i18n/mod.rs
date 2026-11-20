@@ -967,6 +967,8 @@ l10n_keys! {
     DiffViewUnified,
     DiffViewSplitTooltip,
     DiffViewUnifiedTooltip,
+    DiffCollapseAllFiles,
+    DiffExpandAllFiles,
     DiffExpandFile,
     DiffCollapseContext,
     DiffNextChange,

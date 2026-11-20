@@ -56,6 +56,7 @@ limitations. Verify all release assets and checksums using the
   [notification task titles](agent-notification-task-title.md) and
   [session resume after restart](agent-resume-after-restart.md).
 - [Original Hitty themes](theme-removal.md).
+- [Fixed Diff toolbar and bulk folding](diff-toolbar.md).
 
 Superseded prototypes, early release acceptance bundles and old README images
 are available in Git history. Published release notes remain in `docs/releases/`.
