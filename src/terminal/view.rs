@@ -3,6 +3,7 @@ use alacritty_terminal::grid::{Dimensions, Scroll};
 use alacritty_terminal::index::{Column, Direction, Line, Point, Side};
 use alacritty_terminal::selection::{Selection, SelectionType};
 use alacritty_terminal::term::TermMode;
+use alacritty_terminal::vte::ansi::Rgb;
 use gpui::{
     App, ClipboardEntry, ClipboardItem, Context, EntityId, ExternalPaths, FocusHandle, Focusable,
     Font, KeyDownEvent, Modifiers, MouseButton, MouseDownEvent, Pixels, ScrollDelta,
@@ -352,6 +353,7 @@ pub struct TerminalView {
     running_since: Option<std::time::Instant>,
     running_title: String,
     running_agent: Option<crate::core::cli_agent::CLIAgent>,
+    reported_terminal_backgrounds: smallvec::SmallVec<[Rgb; 2]>,
     last_agent_status: Option<crate::core::cli_agent::AgentStatus>,
     last_agent_session: (Option<String>, Option<Vec<String>>),
     agent_turn_started: Option<std::time::Instant>,
@@ -1448,6 +1450,7 @@ impl TerminalView {
             running_since: None,
             running_title: String::new(),
             running_agent: None,
+            reported_terminal_backgrounds: Default::default(),
             last_agent_status: None,
             last_agent_session: (None, None),
             agent_turn_started: None,
@@ -1718,6 +1721,14 @@ impl TerminalView {
     fn input_agent(&self) -> Option<crate::core::cli_agent::CLIAgent> {
         self.agent()
             .filter(|_| !self.terminal.agent_input_suspended())
+    }
+
+    pub(super) fn codex_reported_backgrounds(&self) -> &[Rgb] {
+        if self.input_agent() == Some(crate::core::cli_agent::CLIAgent::Codex) {
+            &self.reported_terminal_backgrounds
+        } else {
+            &[]
+        }
     }
 
     pub(crate) fn foreground_app(&self) -> Option<crate::core::foreground_app::ForegroundApp> {
@@ -2126,7 +2137,15 @@ impl TerminalView {
                 let theme = cx.theme();
                 let rgb = match idx {
                     256 => super::palette::hsla_to_rgb(theme.foreground),
-                    257 => super::palette::hsla_to_rgb(theme.background),
+                    257 => {
+                        let background = super::palette::hsla_to_rgb(theme.background);
+                        // Codex may ask before detection and keep that answer after
+                        // other programs ask for their own colors in the same pane.
+                        if !self.reported_terminal_backgrounds.contains(&background) {
+                            self.reported_terminal_backgrounds.push(background);
+                        }
+                        background
+                    }
                     258 => super::palette::hsla_to_rgb(theme.caret),
                     i => self.terminal.palette[i.min(255)],
                 };
@@ -14532,6 +14551,51 @@ mod native_history_gpui_tests {
 
     fn key(spec: &str) -> gpui::Keystroke {
         gpui::Keystroke::parse(spec).expect("valid keystroke spec")
+    }
+
+    #[gpui::test]
+    fn a_later_background_query_keeps_the_answer_codex_started_with(cx: &mut TestAppContext) {
+        use crate::core::cli_agent::CLIAgent;
+
+        let (window, mut daemon) = harness(cx);
+        daemon
+            .set_read_timeout(Some(std::time::Duration::from_secs(2)))
+            .unwrap();
+        window
+            .update(cx, |view, window, cx| {
+                let query = || {
+                    AlacEvent::ColorRequest(
+                        257,
+                        std::sync::Arc::new(|rgb| format!("{};{};{}", rgb.r, rgb.g, rgb.b)),
+                    )
+                };
+                cx.global_mut::<Config>().theme_preset = "light".into();
+                crate::ui::theme::apply_theme(Some(window), cx);
+                view.handle_event(query(), cx);
+                assert!(view.codex_reported_backgrounds().is_empty());
+
+                view.terminal
+                    .seed_unstarted_agent(CLIAgent::Codex, vec!["codex".into()]);
+                cx.global_mut::<Config>().theme_preset = "dark".into();
+                crate::ui::theme::apply_theme(Some(window), cx);
+                view.handle_event(query(), cx);
+                view.handle_event(query(), cx);
+                assert_eq!(
+                    view.codex_reported_backgrounds(),
+                    &[
+                        Rgb {
+                            r: 255,
+                            g: 255,
+                            b: 255
+                        },
+                        Rgb { r: 0, g: 0, b: 0 }
+                    ]
+                );
+            })
+            .unwrap();
+        assert_eq!(next_input(&mut daemon), b"255;255;255");
+        assert_eq!(next_input(&mut daemon), b"0;0;0");
+        assert_eq!(next_input(&mut daemon), b"0;0;0");
     }
 
     #[gpui::test]

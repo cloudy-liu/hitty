@@ -1,0 +1,404 @@
+{
+  "verified_on": "2026-11-20",
+  "baseline_commit": "c552bbec607f3243a29f4c5c0f4ef8e0713f1bee",
+  "after_source": "same revision as this verification record",
+  "environment": {
+    "platform": "Windows x86_64",
+    "display_scale_percent": 175,
+    "logical_viewport": [
+      1200,
+      800
+    ],
+    "physical_frame": [
+      2104,
+      1402
+    ],
+    "font": "Hack",
+    "font_size": 15,
+    "line_height": 1.4,
+    "ui_font_size": 14,
+    "theme_legible_palette": true,
+    "dim_inactive_panes": false,
+    "capture": "PrintWindow via scripts/capture-native-window.ps1",
+    "pointer": "none; real pointer is not moved"
+  },
+  "scenario": "Real Codex CLI with an isolated local Responses fixture, a proposed plan, and an unsent draft; both theme round trips.",
+  "theme_switch": "Public config.json hot reload, waiting for appearance.json to reflect One Light or One Dark Pro.",
+  "before": {
+    "binary_sha256": "a2ad5ce9cc568464a498dc96a95d8bb56f23e7cce2607fd72274040292ac913d",
+    "codex": "codex-cli 0.169.0",
+    "themes": [
+      "one_light",
+      "one_dark_pro"
+    ],
+    "logical_viewport": [
+      1200,
+      800
+    ],
+    "forced_color": false,
+    "dark_matches_new_session": false,
+    "roundtrip_pixels_unchanged": true,
+    "captures": {
+      "open-light": {
+        "surfaces": {
+          "prompt_history": {
+            "color": "#F5F5F5",
+            "from_y": 516,
+            "to_y": 625
+          },
+          "proposed_plan": {
+            "color": "#F0F0F0",
+            "from_y": 737,
+            "to_y": 919
+          },
+          "composer": {
+            "color": "#F0F0F0",
+            "from_y": 1031,
+            "to_y": 1140
+          }
+        },
+        "png_sha256": "bf07765c0183a413288176910b925e4b1e3e70960c39f31fbb5b668e0a135b16",
+        "capture": "hwnd=11405262 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=105588",
+        "image": "before/open-light.png"
+      },
+      "switched-dark": {
+        "surfaces": {
+          "prompt_history": {
+            "color": "#383838",
+            "from_y": 516,
+            "to_y": 625
+          },
+          "proposed_plan": {
+            "color": "#3D3D3D",
+            "from_y": 737,
+            "to_y": 919
+          },
+          "composer": {
+            "color": "#3D3D3D",
+            "from_y": 1031,
+            "to_y": 1140
+          }
+        },
+        "png_sha256": "dd6456e0e25f3a8bfbac4165085f0ede76e7ac7bbe8b2dc93050494d5a62065e",
+        "capture": "hwnd=11405262 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=105393",
+        "image": "before/switched-dark.png"
+      },
+      "roundtrip-light": {
+        "surfaces": {
+          "prompt_history": {
+            "color": "#F5F5F5",
+            "from_y": 516,
+            "to_y": 625
+          },
+          "proposed_plan": {
+            "color": "#F0F0F0",
+            "from_y": 737,
+            "to_y": 919
+          },
+          "composer": {
+            "color": "#F0F0F0",
+            "from_y": 1031,
+            "to_y": 1140
+          }
+        },
+        "png_sha256": "bf07765c0183a413288176910b925e4b1e3e70960c39f31fbb5b668e0a135b16",
+        "capture": "hwnd=11405262 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=105588",
+        "image": "before/roundtrip-light.png"
+      },
+      "fresh-dark": {
+        "surfaces": {
+          "prompt_history": {
+            "color": "#4A4D54",
+            "from_y": 516,
+            "to_y": 625
+          },
+          "proposed_plan": {
+            "color": "#41454C",
+            "from_y": 737,
+            "to_y": 919
+          },
+          "composer": {
+            "color": "#41454C",
+            "from_y": 1031,
+            "to_y": 1140
+          }
+        },
+        "png_sha256": "7cb6a5fac619c4057668fa2c4876f82c9e24eab7051295faa0e1fa9b677f7f91",
+        "capture": "hwnd=11405262 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=109337",
+        "image": "before/fresh-dark.png"
+      },
+      "switched-light": {
+        "surfaces": {
+          "prompt_history": {
+            "color": "#E1E4EB",
+            "from_y": 516,
+            "to_y": 625
+          },
+          "proposed_plan": {
+            "color": "#E0E4EB",
+            "from_y": 737,
+            "to_y": 919
+          },
+          "composer": {
+            "color": "#E0E4EB",
+            "from_y": 1031,
+            "to_y": 1140
+          }
+        },
+        "png_sha256": "4e0e7df2b336865f085b9999912fdae67435e9368eaf0934e5c37352b3ce8b39",
+        "capture": "hwnd=11405262 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=109601",
+        "image": "before/switched-light.png"
+      },
+      "roundtrip-dark": {
+        "surfaces": {
+          "prompt_history": {
+            "color": "#4A4D54",
+            "from_y": 516,
+            "to_y": 625
+          },
+          "proposed_plan": {
+            "color": "#41454C",
+            "from_y": 737,
+            "to_y": 919
+          },
+          "composer": {
+            "color": "#41454C",
+            "from_y": 1031,
+            "to_y": 1140
+          }
+        },
+        "png_sha256": "7cb6a5fac619c4057668fa2c4876f82c9e24eab7051295faa0e1fa9b677f7f91",
+        "capture": "hwnd=11405262 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=109337",
+        "image": "before/roundtrip-dark.png"
+      }
+    },
+    "light_matches_new_session": false
+  },
+  "after": {
+    "binary_sha256": "a64eb4316242e6b6b782b8c2d07eb27c6629cb39ff506ec0b2e224ffcc35d738",
+    "codex": "codex-cli 0.169.0",
+    "themes": [
+      "one_light",
+      "one_dark_pro"
+    ],
+    "logical_viewport": [
+      1200,
+      800
+    ],
+    "forced_color": false,
+    "dark_matches_new_session": true,
+    "light_matches_new_session": true,
+    "native_fills_preserved": true,
+    "roundtrip_pixels_unchanged": true,
+    "captures": {
+      "open-light": {
+        "surfaces": {
+          "prompt_history": {
+            "color": "#F5F5F5",
+            "from_y": 516,
+            "to_y": 625
+          },
+          "proposed_plan": {
+            "color": "#F0F0F0",
+            "from_y": 737,
+            "to_y": 919
+          },
+          "composer": {
+            "color": "#F0F0F0",
+            "from_y": 1031,
+            "to_y": 1140
+          }
+        },
+        "png_sha256": "221586537c6cf11c67529c1d062ad0cb8054b6b896f20e871cf219fe17cfe660",
+        "capture": "hwnd=526640 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=105497",
+        "image": "after/open-light.png"
+      },
+      "switched-dark": {
+        "surfaces": {
+          "prompt_history": {
+            "color": "#4A4D54",
+            "from_y": 516,
+            "to_y": 625
+          },
+          "proposed_plan": {
+            "color": "#41454C",
+            "from_y": 737,
+            "to_y": 919
+          },
+          "composer": {
+            "color": "#41454C",
+            "from_y": 1031,
+            "to_y": 1140
+          }
+        },
+        "png_sha256": "06efb4308b1ff9eeec09a33322e3d3de2dc11d70abba973ab85e6b4461bd79c7",
+        "capture": "hwnd=526640 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=105321",
+        "image": "after/switched-dark.png"
+      },
+      "roundtrip-light": {
+        "surfaces": {
+          "prompt_history": {
+            "color": "#F5F5F5",
+            "from_y": 516,
+            "to_y": 625
+          },
+          "proposed_plan": {
+            "color": "#F0F0F0",
+            "from_y": 737,
+            "to_y": 919
+          },
+          "composer": {
+            "color": "#F0F0F0",
+            "from_y": 1031,
+            "to_y": 1140
+          }
+        },
+        "png_sha256": "221586537c6cf11c67529c1d062ad0cb8054b6b896f20e871cf219fe17cfe660",
+        "capture": "hwnd=526640 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=105497",
+        "image": "after/roundtrip-light.png"
+      },
+      "fresh-dark": {
+        "surfaces": {
+          "prompt_history": {
+            "color": "#4A4D54",
+            "from_y": 516,
+            "to_y": 625
+          },
+          "proposed_plan": {
+            "color": "#41454C",
+            "from_y": 737,
+            "to_y": 919
+          },
+          "composer": {
+            "color": "#41454C",
+            "from_y": 1031,
+            "to_y": 1140
+          }
+        },
+        "png_sha256": "a6293761c0cf36dc1cf94d181efdf19d3574bb5b4f1a12efd84420ea190948cc",
+        "capture": "hwnd=526640 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=109240",
+        "image": "after/fresh-dark.png"
+      },
+      "switched-light": {
+        "surfaces": {
+          "prompt_history": {
+            "color": "#F5F5F5",
+            "from_y": 516,
+            "to_y": 625
+          },
+          "proposed_plan": {
+            "color": "#F0F0F0",
+            "from_y": 737,
+            "to_y": 919
+          },
+          "composer": {
+            "color": "#F0F0F0",
+            "from_y": 1031,
+            "to_y": 1140
+          }
+        },
+        "png_sha256": "bb2a11e5341196d8aa613b4e8e7e5ab6eac7aa1db7bbd9517c37cd07ba91723d",
+        "capture": "hwnd=526640 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=109502",
+        "image": "after/switched-light.png"
+      },
+      "roundtrip-dark": {
+        "surfaces": {
+          "prompt_history": {
+            "color": "#4A4D54",
+            "from_y": 516,
+            "to_y": 625
+          },
+          "proposed_plan": {
+            "color": "#41454C",
+            "from_y": 737,
+            "to_y": 919
+          },
+          "composer": {
+            "color": "#41454C",
+            "from_y": 1031,
+            "to_y": 1140
+          }
+        },
+        "png_sha256": "a6293761c0cf36dc1cf94d181efdf19d3574bb5b4f1a12efd84420ea190948cc",
+        "capture": "hwnd=526640 client=2100x1400 frame=2104x1402 printwindow=True pointer=none size=109240",
+        "image": "after/roundtrip-dark.png"
+      }
+    }
+  },
+  "assertions": {
+    "switched_dark_matches_fresh_dark": true,
+    "switched_light_matches_fresh_light": true,
+    "baseline_fresh_light_fills_preserved": true,
+    "baseline_fresh_dark_fills_preserved": true,
+    "both_roundtrips_byte_identical": true,
+    "all_eight_unique_images_visually_inspected": true
+  },
+  "reproduction": "See ../../codex-theme-switch.md for commands and limitations.",
+  "source_lf_sha256": {
+    "src/terminal/adaptive_colors.rs": "e0be9558f523134de3982aeb062cc270ad5a461ec17648c68c2d0aeac20e2fce",
+    "src/terminal/element.rs": "b290372725553d7721321965cd91aa7dac5f82d783e7f4d4bc980af73a8d5d15",
+    "src/terminal/view.rs": "83d625341d6ed5bd1f53cbb2448c09b225be521c014eb1ec8dd5d692b46a3c2f",
+    "scripts/codex-theme-native.py": "8759c7652bfc352040cca4cd0e2f9467f7de062b3a56eba19f6eb555d1fb10ad"
+  },
+  "validation": {
+    "completed_on": "2026-11-20",
+    "build": {
+      "command": "cargo build --locked --workspace --bins --features updater",
+      "exit_code": 0,
+      "local_path": "D:\\tmp\\hitty-theme-roundtrip\\native-build.log",
+      "sha256": "0a523e01b1d1e8e9fd0d8e7832015192d2e1dbfdb8126ba481e5b267a9aec0f5"
+    },
+    "check": {
+      "command": "cargo check --locked --workspace --all-targets --features updater",
+      "exit_code": 0,
+      "local_path": "D:\\tmp\\hitty-theme-roundtrip\\native-workspace-check.log",
+      "sha256": "4e09a880ddd33fa8dff5950b18b5c05acd72ee8c489ebb48c7dbd83bb73f3a30"
+    },
+    "workspace_tests": {
+      "command": "cargo test --locked --workspace --features updater -- --test-threads=4",
+      "exit_code": 0,
+      "suites": 19,
+      "passed": 3343,
+      "failed": 0,
+      "ignored": 14,
+      "local_path": "D:\\tmp\\hitty-theme-roundtrip\\native-workspace-tests.log",
+      "sha256": "b5cdbfeb66f37f1ee873ef77d13c70766777d5eeb8d551a2384bed98f4fc525c"
+    },
+    "build_environment": {
+      "CARGO_PROFILE_DEV_DEBUG": "0",
+      "CARGO_PROFILE_TEST_DEBUG": "0",
+      "target_dir": "D:\\tmp\\hitty-agent-theme-isolated-target"
+    },
+    "rustfmt": {
+      "command": "cargo fmt --all -- --check",
+      "exit_code": 0
+    },
+    "agent_manifests": {
+      "command": "python scripts/sync-agent-detection.py --check",
+      "exit_code": 0,
+      "manifests": 15
+    },
+    "agent_manifest_tests": {
+      "command": "python -m unittest discover -s scripts -p 'test_sync_agent_detection.py'",
+      "exit_code": 0,
+      "passed": 4
+    },
+    "host_boundary": {
+      "command": "bash .github/scripts/check-host-boundary.sh",
+      "exit_code": 0,
+      "checked_files": 116
+    },
+    "native_acceptance": {
+      "command": "python scripts/codex-theme-native.py --bin-dir <after-bin> --codex-bin <codex.exe> --output <after-images> --assert-colors --baseline-dir <before-images>",
+      "exit_code": 0,
+      "local_path": "D:\\tmp\\hitty-theme-roundtrip\\native-captures-verified.log",
+      "sha256": "1b3626d75cfd365f2fea1b0547b2f2fc437277972e5ff8c8d0252ed787de271a"
+    },
+    "native_preservation_regression_before_fix": {
+      "outcome": "failed: fresh Codex fills differ from the native light/dark baseline",
+      "exit_code": 1,
+      "local_path": "D:\\tmp\\hitty-theme-roundtrip\\native-regression-red.log",
+      "sha256": "5d0330aefd66406bd35835c603a9fee189523a3aa49c40a7d5130f91f3a9d5e2"
+    }
+  }
+}

@@ -95,14 +95,21 @@ the OS live — no restart, no reload.
 
 **Readable terminal colors** is on by default. It keeps text readable on its
 painted background and adapts terminal fills whose light/dark appearance
-conflicts with the current theme. This also handles applications that cache
-RGB or indexed colours when they start, including programs inside a host
-application. It does not depend on agent detection.
+conflicts with the current theme. This general correction also handles
+applications that cache RGB or indexed colours when they start, including
+programs inside a host application.
 
-Same-appearance fills retain their colour. Opposite-appearance soft fills move
-near the theme background while retaining their hue and chroma; saturated
-colours are constrained by the RGB gamut. Dim text is included in the contrast
-calculation. Already readable text retains its colour.
+In the general correction, same-appearance fills retain their colour.
+Opposite-appearance soft fills move near the theme background while retaining
+their hue and chroma. Saturated colours are constrained by the RGB gamut. Dim
+text is included in the contrast calculation. Already readable text retains its
+colour.
+
+For a detected Codex session using truecolor, Hitty matches the input box,
+Proposed Plan and submitted-prompt fills to a fresh session in the current
+theme. Codex's native distinction between input and history fills is preserved
+in both light and dark themes. This uses the terminal background replies
+observed by the view while it was attached to the pane.
 
 Explicit terminal colours carry no indication of whether they are cached UI
 colours or deliberate artwork. Turn this off with `theme_legible_palette: false`
