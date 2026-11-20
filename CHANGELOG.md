@@ -1,5 +1,20 @@
 # Changelog
 
+## v0.5.0 - 2026-11-20
+
+- Keep Git Diff review controls fixed beside the file list and add one-button
+  collapse/expand for file cards while preserving the reading position
+  (cloudy-liu/hitty#55).
+- Preserve Codex's native prompt-history and input colors when switching
+  application themes, including One Light and One Dark Pro
+  (cloudy-liu/hitty#50).
+- Restore saved local Qoder and Qoder CN conversations without hooks, retaining
+  each pane's exact conversation and configuration directory
+  (cloudy-liu/hitty#51).
+
+See the [release notes](docs/releases/hitty-v0.5.0.md) for scope and
+limitations.
+
 ## v0.4.1 - 2026-11-17
 
 - Read one fresh configuration snapshot for each pane and prepare complete

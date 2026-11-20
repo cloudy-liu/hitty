@@ -1,7 +1,7 @@
 # Hitty release procedure
 
 Use `cloudy-liu/hitty` and Hitty tags.
-For `v0.4.1`, compare against `v0.4.0`, published on November 12, 2026.
+For `v0.5.0`, compare against `v0.4.1`, published on November 17, 2026.
 Always compare a later release against the immediately preceding published
 Hitty tag.
 
