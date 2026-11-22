@@ -10,6 +10,7 @@ asks for hover.
 import argparse
 import json
 import pathlib
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -54,6 +55,8 @@ SCENES = [  # (name, titles, dark, hover pane, zoom, settings page, layout)
     ("task-titles-hover-dark", True, True, 0, False, False, "grid"),
     ("task-titles-column-dark", True, True, None, False, False, "column"),
     ("task-titles-settings-light", True, False, None, False, True, "grid"),
+    ("session-activity-light", False, False, None, False, False, "sidebar-activity"),
+    ("session-activity-hover-light", False, False, None, False, False, "sidebar-activity"),
 ]
 # Scenes whose agent panes title themselves with a task, and whether the
 # task-title setting is on: scene name -> (tasks, task_titles).
@@ -64,6 +67,8 @@ TASKS = {
     "task-titles-hover-dark": (True, True),
     "task-titles-column-dark": (True, True),
     "task-titles-settings-light": (False, True),
+    "session-activity-light": (True, False),
+    "session-activity-hover-light": (True, False),
 }
 SETTINGS_HEIGHT = 1400  # the Window & Tabs page is taller than the pane scenes
 
@@ -95,6 +100,12 @@ def capture_scene(binary, output, phase, scene, scale):
     log = output / f"{phase}-{name}.log"
     with tempfile.TemporaryDirectory(prefix="hitty-agent-pane-visual-") as temporary:
         options = pathlib.Path(temporary) / "options.json"
+        if layout == "sidebar-activity":
+            options.with_name("config.json").write_text(json.dumps({
+                "sidebar_width": 206, "sidebar_grouping": "none",
+                "theme_follow_system": False, "theme_preset": "light",
+                "install_cli_on_path": False,
+            }), encoding="utf-8")
         options.write_text(json.dumps({"output": str(png), "titles": titles, "dark": dark,
                                        "tasks": tasks, "task_titles": task_titles,
                                        "zoom": zoom, "settings": settings, "layout": layout, "hold_seconds": 90,
@@ -126,6 +137,9 @@ def capture_scene(binary, output, phase, scene, scale):
                 if hover is not None:
                     x, y = EDGES[hover]
                     command += ["-MoveTo", f"{int(x * scale)},{int(y * scale)}"]
+                elif layout == "sidebar-activity":
+                    x, y = (100, 132) if "hover" in name else (700, 80)
+                    command += ["-MoveTo", f"{int(x * scale)},{int(y * scale)}"]
                 result = subprocess.run(command, check=True, capture_output=True, text=True)
                 print(f"  {name}: {result.stdout.strip()}", flush=True)
             finally:
@@ -138,12 +152,36 @@ def capture_scene(binary, output, phase, scene, scale):
     return png
 
 
+def capture_sidebar_activity(binary, output, phase, scene, scale):
+    with tempfile.TemporaryDirectory(prefix="hitty-sidebar-activity-") as temporary:
+        fixture = pathlib.Path(temporary)
+        for index in range(4):
+            repo = fixture / f"fixture-repo-{index}"
+            repo.mkdir()
+            branch = "feature/sidebar-activity-and-recover-after-restart" if index == 0 else "main"
+            git = ["git", "-C", str(repo), "-c", "core.autocrlf=false"]
+            subprocess.run([*git, "init", "-q", "-b", branch], check=True)
+            if index == 0:
+                notes = repo / "notes.txt"
+                notes.write_text("Keep\n" + "Remove\n" * 4, encoding="utf-8")
+                subprocess.run([*git, "add", "notes.txt"], check=True)
+                subprocess.run([*git, "-c", "user.name=Hitty Fixture", "-c", "user.email=fixture@example.invalid",
+                                "-c", "commit.gpgsign=false", "commit", "-qm", "Initial notes"], check=True)
+                notes.write_text("Keep\n" + "Add\n" * 18, encoding="utf-8")
+        png = capture_scene(binary, fixture, phase, scene, scale)
+        for evidence in (png, png.with_suffix(".log")):
+            shutil.copyfile(evidence, output / evidence.name)
+
+
 def capture(binary, output, phase, repository, scale, only=None):
     output.mkdir(parents=True, exist_ok=True)
     for scene in SCENES:
         if only and scene[0] not in only:
             continue
-        capture_scene(binary, output, phase, scene, scale)
+        if scene[-1] == "sidebar-activity":
+            capture_sidebar_activity(binary, output, phase, scene, scale)
+        else:
+            capture_scene(binary, output, phase, scene, scale)
     revision = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=repository, text=True).strip()
     (output / f"{phase}-metadata.json").write_text(json.dumps({
         "revision": revision, "platform": "Windows / GPUI / PrintWindow",

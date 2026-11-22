@@ -102,9 +102,22 @@ impl MachineMirrors {
         let mirrors = cx.default_global::<Self>();
         mirrors.pulling.retain(|h| *h != host);
         let since = mirrors.since_pull.remove(&host).unwrap_or_default();
-        let Some(machine) = pulled else {
+        let Some(mut machine) = pulled else {
             return;
         };
+        if let Some(previous) = mirrors.machines.get(&host) {
+            // A live delta can arrive before an older MachineGet reply.
+            let observed: HashMap<_, _> = previous
+                .panes
+                .iter()
+                .filter_map(|pane| pane.last_agent_activity.map(|activity| (pane.id, activity)))
+                .collect();
+            for pane in &mut machine.panes {
+                if let Some(&activity) = observed.get(&pane.id) {
+                    pane.note_agent_activity(activity);
+                }
+            }
+        }
         mirrors.machines.insert(host, machine);
         let machine = mirrors.machines.get_mut(&host).expect("just inserted");
         for write in since {
@@ -187,6 +200,26 @@ impl MachineMirrors {
             for record in &records {
                 if !machine.panes.iter().any(|p| p.id == record.id) {
                     machine.panes.push(record.clone());
+                }
+            }
+        });
+    }
+
+    pub(super) fn carry_pane_activity(cx: &mut App, host: HostId, replacements: Vec<(u64, u64)>) {
+        if replacements.is_empty() {
+            return;
+        }
+        Self::write(cx, host, move |machine| {
+            for &(old, new) in &replacements {
+                let activity = machine
+                    .panes
+                    .iter()
+                    .find(|p| p.id == old)
+                    .and_then(|p| p.last_agent_activity);
+                if let Some(activity) = activity
+                    && let Some(pane) = machine.panes.iter_mut().find(|p| p.id == new)
+                {
+                    pane.note_agent_activity(activity);
                 }
             }
         });

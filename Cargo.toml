@@ -39,6 +39,7 @@ gpui-component = { workspace = true }
 gpui-component-assets = { workspace = true }
 
 anyhow.workspace = true
+chrono = "=0.4.45"
 log.workspace = true
 # Smart double-click selection patterns (URL/email/path). Already in the tree
 # transitively, so pinning it here adds no new native code.

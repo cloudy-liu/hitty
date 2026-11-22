@@ -10,6 +10,7 @@ use std::time::Duration;
 use portable_pty::{Child, CommandBuilder, MasterPty, PtySize, native_pty_system};
 
 use crate::core::kitty_graphics::{GraphicsSniffer, Segment, Sniffed};
+use crate::core::machine::{AgentActivity, AgentActivityKind};
 use crate::core::osc::{OscTokenizer, percent_decode};
 use crate::daemon::protocol::{
     AuthResponse, DaemonMsg, MAX_FRAME, NativeSshSpec, PaneInfo, RemoteContext, RemoteKind,
@@ -766,6 +767,7 @@ struct PaneState {
     agent_input_suspended: bool,
     agent_argv: Option<Vec<String>>,
     agent_session: Option<crate::core::cli_agent::AgentSessionState>,
+    last_agent_activity: Option<AgentActivity>,
     command_input: CommandInput,
     /// Process probes may still see an invocation after its shutdown hook.
     /// Keep it suppressed until a new command/hook or a different process.
@@ -1703,6 +1705,7 @@ impl DaemonPane {
                 foreground_app: None,
                 agent_input_suspended: false,
                 agent_session: None,
+                last_agent_activity: None,
                 agent_argv: None,
                 ended_agent: None,
                 command_input: CommandInput::default(),
@@ -1952,6 +1955,7 @@ impl DaemonPane {
                 foreground_app: carried.foreground_app,
                 agent_input_suspended: false,
                 agent_session: carried.agent_session,
+                last_agent_activity: None,
                 agent_argv: carried.agent_argv,
                 ended_agent: carried.ended_agent,
                 command_input: CommandInput::default(),
@@ -2008,6 +2012,7 @@ impl DaemonPane {
             foreground_app: None,
             agent_input_suspended: false,
             agent_session: None,
+            last_agent_activity: None,
             agent_argv: None,
             ended_agent: None,
             command_input: CommandInput::default(),
@@ -2421,6 +2426,21 @@ impl DaemonPane {
 
     pub fn agent_state(&self) -> Option<crate::daemon::control::PaneAgentState> {
         agent_state_snapshot(&self.state.lock().unwrap())
+    }
+
+    pub(super) fn last_agent_activity(&self) -> Option<AgentActivity> {
+        self.state.lock().ok()?.last_agent_activity
+    }
+
+    pub(super) fn remember_screen_activity(&self, activity: AgentActivity) {
+        let mut state = self.state.lock().unwrap();
+        if state.alive
+            && state
+                .last_agent_activity
+                .is_none_or(|old| old.unix_ms < activity.unix_ms)
+        {
+            state.last_agent_activity = Some(activity);
+        }
     }
 
     pub(crate) fn refresh_agent_session(&self) {
@@ -3168,6 +3188,7 @@ struct ObservedFacts {
     cwd: Option<String>,
     osc_title: Option<String>,
     agent: Option<crate::core::machine::AgentFacts>,
+    last_agent_activity: Option<AgentActivity>,
     shell: Option<ShellSpec>,
 }
 
@@ -3189,6 +3210,7 @@ fn observed_facts(st: &PaneState) -> ObservedFacts {
         cwd,
         osc_title: st.osc_title.clone(),
         agent,
+        last_agent_activity: st.last_agent_activity,
         shell: st.shell_spec.clone(),
     }
 }
@@ -3238,6 +3260,9 @@ fn publish_facts(
         } else if command_started && p.agent.as_ref().is_some_and(|a| a.restore_pending) {
             p.agent = None;
         }
+        if let Some(activity) = after.last_agent_activity {
+            p.note_agent_activity(activity);
+        }
         if after.shell.is_some() {
             p.shell = after.shell;
         }
@@ -3251,6 +3276,7 @@ fn facts_changed(before: &ObservedFacts, after: &ObservedFacts) -> bool {
     before.cwd != after.cwd
         || before.osc_title != after.osc_title
         || agent_facts_changed(before.agent.as_ref(), after.agent.as_ref())
+        || before.last_agent_activity != after.last_agent_activity
         || before.shell != after.shell
 }
 
@@ -3375,6 +3401,7 @@ fn apply_agent_signals(
     }
     let before = st.agent_session.clone();
     let mut session_ended = false;
+    let mut activity = None;
 
     for event in &events {
         let same_session = match (
@@ -3432,9 +3459,22 @@ fn apply_agent_signals(
             st.agent = Some(agent);
             notify(st, DaemonMsg::Agent(Some(agent)));
         }
-        st.agent_session
-            .get_or_insert_with(AgentSessionState::default)
-            .apply_event(event);
+        let session = st
+            .agent_session
+            .get_or_insert_with(AgentSessionState::default);
+        let kind = match event.kind {
+            AgentEventKind::PromptSubmit => Some(AgentActivityKind::PromptSubmitted),
+            AgentEventKind::PermissionRequest | AgentEventKind::QuestionAsked => {
+                Some(AgentActivityKind::InputNeeded)
+            }
+            AgentEventKind::Notification if session.status == AgentStatus::Working => {
+                Some(AgentActivityKind::InputNeeded)
+            }
+            AgentEventKind::Stop => Some(AgentActivityKind::TurnFinished),
+            _ => None,
+        };
+        activity = kind.or(activity);
+        session.apply_event(event);
     }
 
     if let Some(body) = notification
@@ -3446,6 +3486,10 @@ fn apply_agent_signals(
             .get_or_insert_with(AgentSessionState::default);
         sess.status = AgentStatus::Waiting;
         sess.message = Some(body);
+    }
+
+    if let Some(activity) = activity.and_then(AgentActivity::now) {
+        st.last_agent_activity = Some(activity);
     }
 
     if let (Some(sess), Some(argv)) = (&mut st.agent_session, &st.agent_argv)
@@ -6779,6 +6823,7 @@ mod tests {
             foreground_app: None,
             agent_input_suspended: false,
             agent_session: None,
+            last_agent_activity: None,
             agent_argv: None,
             ended_agent: None,
             command_input: CommandInput::default(),
@@ -6931,6 +6976,7 @@ mod tests {
                 cwd: None,
                 osc_title: None,
                 agent: None,
+                last_agent_activity: None,
                 shell: None,
             }
         );
@@ -7460,6 +7506,28 @@ mod tests {
                 .all(|message| !matches!(message, DaemonMsg::Agent(Some(CLIAgent::Claude)))),
             "subscribers must never receive a Claude identity"
         );
+    }
+
+    #[test]
+    fn accepted_agent_hooks_record_only_conversation_activity() {
+        let mut state = test_state(true);
+        let gate = OutputGate::new();
+        for (event, expected) in [
+            ("session-start", None),
+            ("prompt-submit", Some(AgentActivityKind::PromptSubmitted)),
+            ("tool-complete", Some(AgentActivityKind::PromptSubmitted)),
+            ("permission-request", Some(AgentActivityKind::InputNeeded)),
+            ("stop", Some(AgentActivityKind::TurnFinished)),
+            ("session-end", Some(AgentActivityKind::TurnFinished)),
+        ] {
+            let body = format!(r#"{{"agent":"codex","event":"{event}","session_id":"test"}}"#);
+            apply_socket_agent_event(&mut state, &body, &gate).unwrap();
+            assert_eq!(
+                state.last_agent_activity.map(|a| a.kind),
+                expected,
+                "{event}"
+            );
+        }
     }
 
     #[test]

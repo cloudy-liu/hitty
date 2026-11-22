@@ -36,6 +36,29 @@ pub(crate) fn tree_control_for(cx: &mut App, host: HostId) -> TreeLink {
     classify_tree_link(control_for(cx, host))
 }
 
+pub(crate) fn record_screen_activity(
+    cx: &mut App,
+    host: HostId,
+    pane: u64,
+    activity: hitty_core::core::machine::AgentActivity,
+) {
+    if let TreeLink::Ready(client) = tree_control_for(cx, host)
+        && client
+            .hello()
+            .has_feature(hitty_core::daemon::control::feature::PANE_ACTIVITY)
+    {
+        cx.background_executor()
+            .spawn(async move {
+                if let Err(error) =
+                    client.call(ControlRequest::RecordPaneActivity { pane, activity })
+                {
+                    log::debug!("could not record screen activity for pane {pane}: {error}");
+                }
+            })
+            .detach();
+    }
+}
+
 fn classify_tree_link(client: Option<Arc<ControlClient>>) -> TreeLink {
     match client {
         Some(client)
@@ -1044,6 +1067,13 @@ pub(crate) fn sync_window(app: &HittyApp, cx: &mut App) {
             let ops = diff(machine_ws, mirror, &desired, desired_active, scope, &held);
             if !ops.is_empty() {
                 let (tabs, active) = (mirror.tabs.clone(), mirror.active);
+                let replacements: Vec<_> = ops
+                    .iter()
+                    .filter_map(|op| match op {
+                        ControlRequest::PaneReplace { old, new, .. } => Some((*old, new.pane)),
+                        _ => None,
+                    })
+                    .collect();
                 state.queue.extend(ops);
                 let host = WorkspaceStore::host_of(cx, client_ws);
                 crate::ui::machine_mirror::MachineMirrors::note_synced_workspace(
@@ -1059,6 +1089,11 @@ pub(crate) fn sync_window(app: &HittyApp, cx: &mut App) {
                     cx,
                     host,
                     seeded_records(&desired, |pane| open.contains(&pane)),
+                );
+                crate::ui::machine_mirror::MachineMirrors::carry_pane_activity(
+                    cx,
+                    host,
+                    replacements,
                 );
                 pump(cx, client_ws);
             }

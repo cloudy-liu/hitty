@@ -15,12 +15,12 @@ use super::protocol::{MAX_FRAME, read_frame, write_frame};
 /// makes a client install the server that matches instead of trusting the one
 /// already sitting at that path.
 ///
-/// Move it whenever a variant is added to or removed from [`ControlRequest`],
-/// [`ReplyOk`] or [`ControlEvent`]. The [`feature`] strings cover only what a
-/// peer can safely ignore — a field added to a message it already decodes. A
-/// request it has never heard of is not ignorable: the frame fails to decode
-/// and the read loop that failed on it takes the whole link down, which is how
-/// a remote workspace opens with no tabs and a git detail pane never fills.
+/// Move it when an existing variant changes or when an unconditional variant
+/// is added to [`ControlRequest`], [`ReplyOk`] or [`ControlEvent`]. An additive
+/// request can keep the version if every sender checks a dedicated feature
+/// first and the response uses the existing dialect. For example, a v8 GUI
+/// reports screen activity only to servers advertising [`feature::PANE_ACTIVITY`].
+/// A peer cannot ignore an unknown frame and would close the link on decode.
 ///
 /// v6 pays off the drift since v5, which was most of the dialect: the machine
 /// tree replaced `WorkspaceList`/`Get`/`Put`/`Delete` with `WorkspaceTree`,
@@ -120,6 +120,7 @@ pub mod feature {
     pub const HOST_RPC: &str = "host-rpc";
     pub const HOST_TRASH: &str = "host-trash";
     pub const MACHINE_TREE: &str = "machine-tree";
+    pub const PANE_ACTIVITY: &str = "pane-activity";
     pub const STDIO_BRIDGE: &str = "stdio-bridge";
 }
 
@@ -311,6 +312,10 @@ pub enum ControlRequest {
         new: PaneSeed,
     },
 
+    RecordPaneActivity {
+        pane: u64,
+        activity: crate::core::machine::AgentActivity,
+    },
     AgentStates,
     Routes,
     Status,
@@ -385,7 +390,7 @@ impl ControlRequest {
             | PaneSetRatio { .. }
             | PaneMove { .. }
             | PaneReplace { .. } => Duration::from_secs(10),
-            AgentStates | Routes | Status => Duration::from_secs(5),
+            RecordPaneActivity { .. } | AgentStates | Routes | Status => Duration::from_secs(5),
         }
     }
 

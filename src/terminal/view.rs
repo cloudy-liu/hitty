@@ -3909,6 +3909,39 @@ impl TerminalView {
             return false;
         }
         let prev = std::mem::replace(&mut self.last_agent_status, status);
+        if !baseline
+            && self.screen_status.status().is_some_and(|screen| {
+                screen.status == status && (screen.evidenced || status == Some(AgentStatus::Done))
+            })
+            && session
+                .as_ref()
+                .is_none_or(|s| !s.rich || Some(s.status) != status)
+        {
+            use hitty_core::core::machine::{AgentActivity, AgentActivityKind};
+
+            let kind = match status {
+                Some(AgentStatus::Working)
+                    if matches!(prev, Some(AgentStatus::Idle | AgentStatus::Done)) =>
+                {
+                    Some(AgentActivityKind::TurnStarted)
+                }
+                Some(AgentStatus::Waiting) => Some(AgentActivityKind::InputNeeded),
+                Some(AgentStatus::Done)
+                    if matches!(prev, Some(AgentStatus::Working | AgentStatus::Waiting)) =>
+                {
+                    Some(AgentActivityKind::TurnFinished)
+                }
+                _ => None,
+            };
+            if let Some(activity) = kind.and_then(AgentActivity::now) {
+                crate::ui::tree_sync::record_screen_activity(
+                    cx,
+                    self.host_id(),
+                    self.pane_id,
+                    activity,
+                );
+            }
+        }
         let turn_finished = status == Some(AgentStatus::Done) && prev != Some(AgentStatus::Done);
 
         match status {

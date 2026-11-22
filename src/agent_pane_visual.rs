@@ -5,6 +5,7 @@
 
 use gpui::{prelude::*, *};
 use gpui_component::Root;
+use hitty_core::{core::machine::PaneRecord, host::HostId};
 use serde::Deserialize;
 use std::{path::PathBuf, time::Duration};
 
@@ -108,11 +109,15 @@ pub(crate) fn run(path: &std::ffi::OsStr) {
             gpui_component::init(cx);
             crate::register_bundled_fonts(cx);
             let mut config = Config::default();
+            let sidebar_activity = options.layout == "sidebar-activity";
             config.theme_follow_system = false;
             config.theme_preset = if options.dark { "dark" } else { "light" }.into();
             config.install_cli_on_path = false;
             config.cursor_blink = false;
-            config.sidebar_width = 240.;
+            config.sidebar_width = if sidebar_activity { 206. } else { 240. };
+            if sidebar_activity {
+                config.sidebar_grouping = crate::core::config::SidebarGrouping::None;
+            }
             config.tab_bar_position = TabBarPosition::Left;
             // Named as JSON, not as a field: the baseline this fixture is also
             // built against does not know the setting and ignores the key.
@@ -160,6 +165,9 @@ pub(crate) fn run(path: &std::ffi::OsStr) {
                                 let name = pane_title(case, options.tasks);
                                 let (view, mut stream) =
                                     quiet_test_pane(index as u64 + 1, window, cx);
+                                if sidebar_activity {
+                                    seed_sidebar_repo(index, &options.output, &mut stream, cx);
+                                }
                                 DaemonMsg::Agent(*agent).encode(&mut stream).unwrap();
                                 if agent.is_some() {
                                     DaemonMsg::AgentStatus(Some(AgentSessionState {
@@ -180,6 +188,13 @@ pub(crate) fn run(path: &std::ffi::OsStr) {
                             }
                             let leaf =
                                 |v: &Entity<TerminalView>| Pane::leaf(PaneSlot::Ready(v.clone()));
+                            if sidebar_activity {
+                                app.tabs
+                                    .extend(views.iter().map(|view| Tab::new(leaf(view))));
+                                app.focus_active(window, cx);
+                                cx.notify();
+                                return;
+                            }
                             let tree = if options.layout == "column" {
                                 // One wide pane beside a column of three: the
                                 // shape in which review found agent names cut
@@ -281,6 +296,9 @@ pub(crate) fn run(path: &std::ffi::OsStr) {
                 .unwrap();
                 cx.background_executor().timer(Duration::from_secs(2)).await;
                 cx.update_window(handle.into(), |_, window, cx| {
+                    if sidebar_activity {
+                        seed_sidebar_activity(cx);
+                    }
                     window.refresh();
                     let _ = window.draw(cx);
                     window.set_window_title("Agent pane visual acceptance");
@@ -313,4 +331,49 @@ pub(crate) fn run(path: &std::ffi::OsStr) {
             })
             .detach();
         });
+}
+
+fn seed_sidebar_repo(index: usize, output: &std::path::Path, stream: &mut Stream, cx: &mut App) {
+    use crate::terminal::git_status::{GitStatusCache, RepoSnapshot};
+
+    let cwd = output.with_file_name(format!("fixture-repo-{index}"));
+    DaemonMsg::Cwd(cwd.clone()).encode(stream).unwrap();
+    cx.default_global::<GitStatusCache>();
+    cx.update_global::<GitStatusCache, _>(|cache, _| {
+        let (branch, counts) = if index == 0 {
+            (
+                "feature/sidebar-activity-and-recover-after-restart",
+                (18, 4),
+            )
+        } else {
+            ("main", (0, 0))
+        };
+        cache.finish_probe(
+            HostId::LOCAL,
+            &cwd,
+            Some(RepoSnapshot {
+                root: cwd.clone(),
+                home: cwd.clone(),
+                branch: branch.into(),
+                counts: Some(counts),
+            }),
+        );
+    });
+}
+
+fn seed_sidebar_activity(cx: &mut App) {
+    let mut machine = hitty_core::core::machine::Machine::default();
+    let now = crate::ui::home::now_secs();
+    for (index, age) in [180, 3600, 172_800].into_iter().enumerate() {
+        let pane = PaneRecord::new(index as u64 + 1);
+        let mut value = serde_json::to_value(pane).unwrap();
+        // The baseline ignores this field, while the fixture renders the
+        // same workspace and pane facts through the production sidebar.
+        value["last_agent_activity"] = serde_json::json!({
+            "unix_ms": (now - age) * 1000,
+            "kind": "turn_finished",
+        });
+        machine.panes.push(serde_json::from_value(value).unwrap());
+    }
+    crate::ui::machine_mirror::MachineMirrors::install(cx, HostId::LOCAL, machine);
 }

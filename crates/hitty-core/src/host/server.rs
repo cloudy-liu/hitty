@@ -28,6 +28,10 @@ pub trait PaneDirectory: Send + Sync {
     fn pane_count(&self) -> u64;
     fn panes(&self) -> Vec<PaneInfo>;
     fn agent_states(&self) -> Vec<PaneAgentState>;
+    fn last_agent_activity(&self, _pane: u64) -> Option<machine::AgentActivity> {
+        None
+    }
+    fn remember_screen_activity(&self, _pane: u64, _activity: machine::AgentActivity) {}
 }
 
 #[derive(Clone, Default)]
@@ -371,6 +375,7 @@ fn handshake<R: Read>(
     ];
     if services.machine.is_some() {
         features.push(feature::MACHINE_TREE.to_string());
+        features.push(feature::PANE_ACTIVITY.to_string());
     }
     // The pane daemon's features ride along, same as `protocol_version` above:
     // a pane connection answers exactly one message, so a client that wanted
@@ -736,16 +741,18 @@ fn run_request(
             at,
             pane,
             tab,
-        } => (
-            ReplyOk::TabTree(Box::new(conn.machine()?.tab_create(
+        } => {
+            let id = pane.pane;
+            let tab = conn.machine()?.tab_create(
                 workspace,
                 at.map(clamp_usize),
                 pane,
                 tab,
                 conn.machine_origin,
-            )?)),
-            Vec::new(),
-        ),
+            )?;
+            conn.catch_up_pane_activity(id)?;
+            (ReplyOk::TabTree(Box::new(tab)), Vec::new())
+        }
         ControlRequest::TabClose { workspace, tab } => (
             ReplyOk::Panes(
                 conn.machine()?
@@ -793,6 +800,7 @@ fn run_request(
             new,
             first,
         } => {
+            let id = new.pane;
             conn.machine()?.pane_split(
                 workspace,
                 pane,
@@ -802,6 +810,7 @@ fn run_request(
                 first,
                 conn.machine_origin,
             )?;
+            conn.catch_up_pane_activity(id)?;
             (ReplyOk::Unit, Vec::new())
         }
         ControlRequest::PaneClose { workspace, pane } => (
@@ -837,8 +846,31 @@ fn run_request(
             old,
             new,
         } => {
+            let id = new.pane;
             conn.machine()?
                 .pane_replace(workspace, old, new, conn.machine_origin)?;
+            conn.catch_up_pane_activity(id)?;
+            (ReplyOk::Unit, Vec::new())
+        }
+
+        ControlRequest::RecordPaneActivity { pane, mut activity } => {
+            // The GUI reports transitions it reads from the live screen.
+            // An older observation must not supersede a newer hook.
+            if let Some(now) = machine::AgentActivity::now(activity.kind) {
+                activity.unix_ms = activity.unix_ms.min(now.unix_ms);
+                let store = conn.machine()?;
+                if let Some(panes) = &conn.panes {
+                    panes.remember_screen_activity(pane, activity);
+                }
+                store.note_pane_facts(pane, |p| {
+                    if p.live
+                        && p.last_agent_activity
+                            .is_none_or(|old| old.unix_ms < activity.unix_ms)
+                    {
+                        p.note_agent_activity(activity);
+                    }
+                });
+            }
             (ReplyOk::Unit, Vec::new())
         }
 
@@ -919,6 +951,19 @@ impl Conn {
         self.machine
             .as_ref()
             .ok_or_else(|| io::Error::other("this server does not serve the machine tree"))
+    }
+
+    fn catch_up_pane_activity(&self, pane: u64) -> io::Result<()> {
+        // Agent hooks may arrive before the pane enters the machine tree.
+        if let Some(activity) = self
+            .panes
+            .as_ref()
+            .and_then(|p| p.last_agent_activity(pane))
+        {
+            self.machine()?
+                .note_pane_facts(pane, |p| p.note_agent_activity(activity));
+        }
+        Ok(())
     }
 
     fn release_all_workspaces(&self) {
@@ -1737,6 +1782,41 @@ mod aggregate_tests {
         assert_eq!(states[0].agent, Some(CLIAgent::Claude));
         assert_eq!(states[0].state.status, AgentStatus::Working);
         assert_eq!(states[0].state.session_id.as_deref(), Some("sess-7"));
+    }
+
+    #[test]
+    fn pane_activity_observations_cannot_overwrite_newer_activity() {
+        use machine::{AgentActivity, AgentActivityKind, PaneSeed};
+
+        let dir = tempfile::TempDir::new().unwrap();
+        let store = MachineStore::open(dir.path().join(machine::MACHINE_FILE));
+        let ws = store.workspace_create(None, None, None).unwrap();
+        store
+            .tab_create(ws.id, None, PaneSeed::bare(7), None, None)
+            .unwrap();
+        let client = client_with(Services::with_machine(store.clone()));
+        assert!(client.hello().has_feature(feature::PANE_ACTIVITY));
+
+        let input = AgentActivity {
+            unix_ms: 1_700_000_000_000,
+            kind: AgentActivityKind::InputNeeded,
+        };
+        let finished = AgentActivity {
+            unix_ms: input.unix_ms + 1,
+            kind: AgentActivityKind::TurnFinished,
+        };
+        for activity in [input, finished, input] {
+            assert_eq!(
+                client
+                    .call(ControlRequest::RecordPaneActivity { pane: 7, activity })
+                    .unwrap(),
+                ReplyOk::Unit
+            );
+        }
+        let ReplyOk::MachineTree(tree) = client.call(ControlRequest::MachineGet).unwrap() else {
+            panic!("expected a machine tree");
+        };
+        assert_eq!(tree.panes[0].last_agent_activity, Some(finished));
     }
 
     #[test]

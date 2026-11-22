@@ -989,6 +989,7 @@ pub struct HittyApp {
     /// the sidebar — and takes no part in the reading.
     pub(crate) strip_slots: Rc<RefCell<Vec<Bounds<Pixels>>>>,
     pub(crate) sidebar_slots: Rc<RefCell<Vec<Bounds<Pixels>>>>,
+    pub(crate) sidebar_activity_refresh: RefCell<Option<(i64, gpui::Task<()>)>>,
     /// Off-thread `stat` results for empty pinned sidebar groups so render
     /// never touches the filesystem on the UI thread.
     pub(crate) pinned_dir_cache: RefCell<std::collections::HashMap<std::path::PathBuf, bool>>,
@@ -1600,6 +1601,7 @@ impl HittyApp {
             pane_detach: Cell::new(None),
             strip_slots: Rc::new(RefCell::new(Vec::new())),
             sidebar_slots: Rc::new(RefCell::new(Vec::new())),
+            sidebar_activity_refresh: RefCell::new(None),
             pinned_dir_cache: RefCell::new(std::collections::HashMap::new()),
             pinned_dir_probes: RefCell::new(Default::default()),
             pane_area: Rc::new(Cell::new(None)),
