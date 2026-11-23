@@ -1,3 +1,4 @@
+use chrono::{DateTime, Datelike as _, FixedOffset, Local};
 use gpui::{
     Animation, AnimationExt as _, AnyElement, Axis, Bounds, ClickEvent, Context, Div, FontWeight,
     MouseButton, MouseDownEvent, MouseMoveEvent, MouseUpEvent, Pixels, SharedString, Stateful,
@@ -10,12 +11,15 @@ use gpui_component::menu::{
     ContextMenu, ContextMenuExt as _, DropdownMenu as _, PopupMenu, PopupMenuItem,
 };
 use gpui_component::{ActiveTheme as _, Icon, IconName, Sizable as _, h_flex, v_flex};
+use hitty_core::core::machine::{AgentActivity, AgentActivityKind};
 use std::cell::{Cell, RefCell};
+use std::collections::HashMap;
 use std::rc::Rc;
 
 use std::path::{Path, PathBuf};
 
 use crate::core::config::{Config, SidebarGrouping};
+use crate::core::session::WorkspaceStore;
 use crate::daemon::protocol::RemoteKind;
 use crate::terminal::git_status::GitStatusCache;
 use crate::ui::app::{HittyApp, TITLE_BAR_HEIGHT};
@@ -33,6 +37,51 @@ pub(crate) const MIN_SIDEBAR_WIDTH: f32 = 180.;
 const GRAB_HANDLE_W: f32 = 48.;
 
 const ROW_GAP: f32 = 2.;
+const MINUTE_MS: i64 = 60_000;
+const HOUR_MS: i64 = 60 * MINUTE_MS;
+const DAY_MS: i64 = 24 * HOUR_MS;
+
+fn activity_label(
+    now: &DateTime<FixedOffset>,
+    at: &DateTime<FixedOffset>,
+) -> (String, Option<i64>) {
+    let age = (now.timestamp_millis() - at.timestamp_millis()).max(0);
+    let (label, interval) = if age < MINUTE_MS {
+        (t(L10nKey::ScmTimeNow).to_string(), MINUTE_MS)
+    } else if age < HOUR_MS {
+        (format!("{}m", age / MINUTE_MS), MINUTE_MS)
+    } else if age < DAY_MS {
+        (format!("{}h", age / HOUR_MS), HOUR_MS)
+    } else if age < 7 * DAY_MS {
+        (format!("{}d", age / DAY_MS), DAY_MS)
+    } else {
+        let pattern = if now.year() == at.year() {
+            "%-m/%-d"
+        } else {
+            "%Y-%m-%d"
+        };
+        return (at.format(pattern).to_string(), None);
+    };
+    (
+        label,
+        Some(at.timestamp_millis() + (age / interval + 1) * interval),
+    )
+}
+
+fn activity_detail(at: &DateTime<FixedOffset>, kind: AgentActivityKind) -> SharedString {
+    let event = t(match kind {
+        AgentActivityKind::PromptSubmitted => L10nKey::SidebarPromptSubmitted,
+        AgentActivityKind::TurnStarted => L10nKey::SidebarTurnStarted,
+        AgentActivityKind::InputNeeded => L10nKey::SidebarInputNeeded,
+        AgentActivityKind::TurnFinished => L10nKey::SidebarTurnFinished,
+    });
+    let time = at.format("%Y-%m-%d %H:%M:%S %:z").to_string();
+    t_fmt(
+        L10nKey::SidebarLastActivity,
+        &[("time", &time), ("event", event)],
+    )
+    .into()
+}
 
 // Match workspace_head: 5px outer inset + 6px button padding + half its 20px avatar.
 const LEADING_ICON_CENTER: f32 = 21.;
@@ -108,6 +157,7 @@ struct SidebarInfo {
     cwd: Option<SharedString>,
     /// Remote host, which the row itself never names.
     host: Option<SharedString>,
+    activity: Option<SharedString>,
 }
 
 impl HittyApp {
@@ -155,6 +205,15 @@ impl HittyApp {
         let sf = cx.global::<crate::ui::presets::Surfaces>().sidebar;
         let show_badges = self.mod_hint_badges;
         let width = self.sidebar_px(window, cx);
+        let host = WorkspaceStore::host_of(cx, self.workspace);
+        let activities: HashMap<u64, AgentActivity> =
+            crate::ui::machine_mirror::MachineMirrors::machine(cx, host)
+                .into_iter()
+                .flat_map(|machine| &machine.panes)
+                .filter_map(|pane| pane.last_agent_activity.map(|activity| (pane.id, activity)))
+                .collect();
+        let now = Local::now().fixed_offset();
+        let mut next_activity_refresh: Option<i64> = None;
         let query = self.sidebar_search.read(cx).value().trim().to_lowercase();
         // Blanked here, written again from paint: a row filtered out by the
         // search — or hidden with its collapsed group — must leave no rectangle
@@ -426,6 +485,7 @@ impl HittyApp {
                 let badge_pos = badge_pos[i];
                 let tab = &self.tabs[i];
                 let is_active = i == active;
+                let row_group = SharedString::from(format!("tab-row-{i}"));
                 let agent_badge = tab.focused_agent_badge(Some(window), cx);
                 let agent = agent_badge.agent;
                 let avatar = TabAvatar::choose(agent, tab.foreground_app(Some(window), cx));
@@ -452,6 +512,49 @@ impl HittyApp {
                 let title_size = row_metrics::TITLE_REM * rem;
                 let meta_size = 0.75 * rem;
                 let title_font = if is_active { &title_font_active } else { &font };
+                let activity = if activities.is_empty() {
+                    None
+                } else {
+                    tab.pane
+                        .leaves()
+                        .into_iter()
+                        .filter_map(|leaf| {
+                            let id = match leaf {
+                                crate::ui::pane::PaneSlot::Ready(view) => {
+                                    let view = view.read(cx);
+                                    if view.host_id() != host {
+                                        return None;
+                                    }
+                                    view.pane_id
+                                }
+                                crate::ui::pane::PaneSlot::Connecting(view) => {
+                                    view.read(cx).spawn.restore_pane?
+                                }
+                            };
+                            activities.get(&id)
+                        })
+                        .max_by_key(|activity| activity.unix_ms)
+                };
+                let activity = activity.and_then(|activity| {
+                    let at = DateTime::from_timestamp_millis(activity.unix_ms.try_into().ok()?)?
+                        .with_timezone(&Local)
+                        .fixed_offset();
+                    Some((at, activity.kind))
+                });
+                let activity_slot = activity.as_ref().and_then(|(at, _)| {
+                    let (label, refresh) = activity_label(&now, at);
+                    let slot_width = measure_text(&window.text_system(), &font, meta_size, &label)
+                        .max(crate::ui::tab_strip::MIN_TARGET);
+                    next_activity_refresh = next_activity_refresh.into_iter().chain(refresh).min();
+                    // Keep enough room for a short title even with an older date.
+                    if label_avail - slot_width - row_metrics::GAP < 28. {
+                        return None;
+                    }
+                    Some((label, slot_width))
+                });
+                let title_avail = activity_slot.as_ref().map_or(label_avail, |(_, slot)| {
+                    label_avail - slot - row_metrics::GAP
+                });
                 // An agent row opens its second line with a status tag, in the
                 // badge's colour, when enabled by configuration. The tag never
                 // elides; whatever follows it gives up the room.
@@ -517,7 +620,7 @@ impl HittyApp {
                             title_font,
                             title_size,
                             &full,
-                            label_avail,
+                            title_avail,
                         )
                     } else {
                         elide_label(
@@ -525,7 +628,7 @@ impl HittyApp {
                             title_font,
                             title_size,
                             &full,
-                            label_avail,
+                            title_avail,
                         )
                     };
                     (shown, Some(full))
@@ -748,7 +851,15 @@ impl HittyApp {
                     branch: branch_shown.clone(),
                     cwd: cwd_shown.clone(),
                 };
-                let info = self.sidebar_info(tab, window, cx, &shown);
+                let info = self.sidebar_info(
+                    tab,
+                    window,
+                    cx,
+                    &shown,
+                    activity
+                        .as_ref()
+                        .map(|(at, kind)| activity_detail(at, *kind)),
+                );
                 // Colors are captured by value so the tooltip builder (which
                 // borrows no app state) can style the card on its own.
                 let muted = cx.theme().muted_foreground;
@@ -854,6 +965,15 @@ impl HittyApp {
                                                     )
                                                     .child(div().truncate().child(host)),
                                             )
+                                        })
+                                        .when_some(info.activity.clone(), |c, activity| {
+                                            c.child(
+                                                div()
+                                                    .max_w(px(420.))
+                                                    .text_xs()
+                                                    .text_color(muted)
+                                                    .child(activity),
+                                            )
                                         });
                                     card
                                 })
@@ -861,12 +981,35 @@ impl HittyApp {
                             })
                         })
                         .child(
-                            div()
+                            h_flex()
                                 .w_full()
-                                .truncate()
-                                .text_size(px(title_size))
-                                .when(is_active, |d| d.font_weight(FontWeight::MEDIUM))
-                                .child(shown_title),
+                                .items_baseline()
+                                .gap_2()
+                                .child(
+                                    div()
+                                        .flex_1()
+                                        .min_w_0()
+                                        .truncate()
+                                        .text_size(px(title_size))
+                                        .when(is_active, |d| d.font_weight(FontWeight::MEDIUM))
+                                        .child(shown_title),
+                                )
+                                .when_some(activity_slot.clone(), |line, (label, slot_width)| {
+                                    line.child(
+                                        div()
+                                            .w(px(slot_width))
+                                            .flex_shrink_0()
+                                            .text_right()
+                                            .text_size(px(meta_size))
+                                            .text_color(muted)
+                                            .when(badge_extra == 0., |stamp| {
+                                                stamp.group_hover(row_group.clone(), |s| {
+                                                    s.invisible()
+                                                })
+                                            })
+                                            .child(label),
+                                    )
+                                }),
                         )
                         .children(git_line)
                         .children(cwd_line)
@@ -876,7 +1019,7 @@ impl HittyApp {
                 let row = h_flex()
                     .id(("tab-row", i))
                     .debug_selector(move || format!("sidebar-tab-row-{i}"))
-                    .group(SharedString::from(format!("tab-row-{i}")))
+                    .group(row_group.clone())
                     .cursor_pointer()
                     .on_drag(DragTab, {
                         let state = self.reorder.clone();
@@ -995,17 +1138,20 @@ impl HittyApp {
                                 .absolute()
                                 .top(px(4.))
                                 .right(px(6.))
-                                .opacity(0.)
-                                .group_hover(SharedString::from(format!("tab-row-{i}")), |s| {
-                                    s.opacity(1.)
+                                .invisible()
+                                .group_hover(row_group, |s| s.visible())
+                                .when(activity_slot.is_none(), |overlay| {
+                                    overlay.child(
+                                        div()
+                                            .w(px(10.))
+                                            .h(px(crate::ui::tab_strip::MIN_TARGET))
+                                            .bg(linear_gradient(
+                                                90.,
+                                                linear_color_stop(fade_from, 0.),
+                                                linear_color_stop(backing, 1.),
+                                            )),
+                                    )
                                 })
-                                .child(div().w(px(10.)).h(px(crate::ui::tab_strip::MIN_TARGET)).bg(
-                                    linear_gradient(
-                                        90.,
-                                        linear_color_stop(fade_from, 0.),
-                                        linear_color_stop(backing, 1.),
-                                    ),
-                                ))
                                 .child(
                                     div().bg(backing).child(
                                         crate::ui::tab_strip::hit_target(
@@ -1835,6 +1981,7 @@ impl HittyApp {
                 }
             });
 
+        self.schedule_sidebar_activity_refresh(now.timestamp_millis(), next_activity_refresh, cx);
         div()
             .debug_selector(|| "session-sidebar".into())
             .relative()
@@ -1874,6 +2021,32 @@ impl HittyApp {
             .child(handle)
     }
 
+    fn schedule_sidebar_activity_refresh(
+        &self,
+        now: i64,
+        next: Option<i64>,
+        cx: &mut Context<Self>,
+    ) {
+        let mut refresh = self.sidebar_activity_refresh.borrow_mut();
+        if refresh.as_ref().map(|(deadline, _)| *deadline) == next {
+            return;
+        }
+        *refresh = next.map(|deadline| {
+            let task = cx.spawn(async move |this, cx| {
+                cx.background_executor()
+                    .timer(std::time::Duration::from_millis(
+                        (deadline - now).max(1) as u64
+                    ))
+                    .await;
+                let _ = this.update(cx, |this, cx| {
+                    this.sidebar_activity_refresh.borrow_mut().take();
+                    cx.notify();
+                });
+            });
+            (deadline, task)
+        });
+    }
+
     /// What the sidebar row hid: the full title, the full branch and diff
     /// counts, the working directory, and the target behind the SSH marker.
     /// `None` when the row showed everything — a card would add noise,
@@ -1891,6 +2064,7 @@ impl HittyApp {
         window: &mut Window,
         cx: &gpui::App,
         shown: &SidebarRowShown,
+        activity: Option<SharedString>,
     ) -> Option<SidebarInfo> {
         let elided = |pair: &Option<(SharedString, SharedString)>| {
             pair.as_ref()
@@ -1909,6 +2083,7 @@ impl HittyApp {
             // repeating the cwd under it would be noise, not information.
             cwd: elided(&shown.cwd),
             host: None,
+            activity,
         };
         // The host is read off the same leaf the title and cwd came from; a
         // split tab whose panes sit on different machines would otherwise
@@ -1921,8 +2096,12 @@ impl HittyApp {
         {
             info.host = Some(target);
         }
-        (info.title.is_some() || info.branch.is_some() || info.cwd.is_some() || info.host.is_some())
-            .then_some(info)
+        (info.title.is_some()
+            || info.branch.is_some()
+            || info.cwd.is_some()
+            || info.host.is_some()
+            || info.activity.is_some())
+        .then_some(info)
     }
 
     fn sidebar_group_keys(&self, cx: &gpui::App) -> Vec<Option<PathBuf>> {
@@ -2567,6 +2746,26 @@ pub(crate) fn diff_click_cwd<T>(cfg: &Config, target: Option<T>) -> Option<T> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn sidebar_activity_steps_through_compact_labels_and_calendar_dates() {
+        let at = DateTime::parse_from_rfc3339("2026-11-16T14:30:00+08:00").unwrap();
+        let now = |age| at + chrono::TimeDelta::milliseconds(age);
+        assert_eq!(
+            activity_label(&now(MINUTE_MS - 1), &at),
+            (
+                t(L10nKey::ScmTimeNow).into(),
+                Some(at.timestamp_millis() + MINUTE_MS)
+            )
+        );
+        for (age, label) in [(3 * MINUTE_MS, "3m"), (HOUR_MS, "1h"), (2 * DAY_MS, "2d")] {
+            assert_eq!(activity_label(&now(age), &at).0, label);
+        }
+        assert_eq!(
+            activity_label(&now(7 * DAY_MS), &at),
+            ("11/16".into(), None)
+        );
+    }
 
     fn p(s: &str) -> PathBuf {
         PathBuf::from(s)

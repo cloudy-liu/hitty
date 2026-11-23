@@ -107,6 +107,16 @@ impl crate::host::server::PaneDirectory for Registry {
         states.sort_by_key(|s| s.pane_id);
         states
     }
+
+    fn last_agent_activity(&self, pane: u64) -> Option<crate::core::machine::AgentActivity> {
+        self.get(pane)?.last_agent_activity()
+    }
+
+    fn remember_screen_activity(&self, pane: u64, activity: crate::core::machine::AgentActivity) {
+        if let Some(pane) = self.get(pane) {
+            pane.remember_screen_activity(activity);
+        }
+    }
 }
 
 /// Local hooks have a process owner. A shared Codex server needs session routing.

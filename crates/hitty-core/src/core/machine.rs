@@ -293,6 +293,8 @@ pub struct PaneRecord {
     pub ssh_spec: Option<Box<NativeSshSpec>>,
     #[serde(default)]
     pub agent: Option<AgentFacts>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub last_agent_activity: Option<AgentActivity>,
     #[serde(default)]
     pub foreground_app: Option<ForegroundApp>,
     /// What the pane is actually running, resolved: the spawn's override if it
@@ -317,11 +319,48 @@ impl PaneRecord {
             osc_title: None,
             ssh_spec: None,
             agent: None,
+            last_agent_activity: None,
             foreground_app: None,
             shell: None,
             live: false,
         }
     }
+
+    pub fn note_agent_activity(&mut self, activity: AgentActivity) {
+        if self
+            .last_agent_activity
+            .is_none_or(|old| old.unix_ms <= activity.unix_ms)
+        {
+            self.last_agent_activity = Some(activity);
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub struct AgentActivity {
+    pub unix_ms: u64,
+    pub kind: AgentActivityKind,
+}
+
+impl AgentActivity {
+    pub fn now(kind: AgentActivityKind) -> Option<Self> {
+        let elapsed = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .ok()?;
+        Some(Self {
+            unix_ms: elapsed.as_millis() as u64,
+            kind,
+        })
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum AgentActivityKind {
+    PromptSubmitted,
+    TurnStarted,
+    InputNeeded,
+    TurnFinished,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -384,6 +423,7 @@ impl PaneSeed {
             osc_title: None,
             ssh_spec: self.ssh_spec.map(|s| Box::new(s.without_secrets())),
             agent: self.agent,
+            last_agent_activity: None,
             foreground_app: None,
             shell: self.shell,
             live,
@@ -959,12 +999,18 @@ impl MachineStore {
         let live = self.seed_is_live(new.pane);
         self.mutate(origin, |m| {
             register_pane(m, new.clone(), live)?;
-            let record = m
+            let activity = m
                 .panes
                 .iter()
+                .find(|p| p.id == old)
+                .and_then(|p| p.last_agent_activity);
+            let record = m
+                .panes
+                .iter_mut()
                 .find(|p| p.id == new.pane)
-                .cloned()
                 .expect("registered above");
+            record.last_agent_activity = activity;
+            let record = record.clone();
             let ws = find_workspace(m, workspace)?;
             let tab = ws
                 .tabs
@@ -1668,6 +1714,12 @@ mod tests {
         store
             .tab_create(ws.id, None, seed(7, "/work"), None, None)
             .unwrap();
+        let activity = AgentActivity {
+            unix_ms: 1_700_000_000_000,
+            kind: AgentActivityKind::TurnFinished,
+        };
+        store.note_pane_facts(7, |pane| pane.last_agent_activity = Some(activity));
+        store.flush();
 
         let restarted = MachineStore::open(dir.path().join(MACHINE_FILE));
         let (_sub, heard) = recorded(&restarted);
@@ -1687,6 +1739,11 @@ mod tests {
             LayoutDelta::TabRestructured { tab, pane } => {
                 assert_eq!(tab.root.pane_ids(), vec![42]);
                 assert_eq!(pane.as_ref().map(|p| p.id), Some(42));
+                assert_eq!(
+                    pane.as_ref().and_then(|p| p.last_agent_activity),
+                    Some(activity),
+                    "reviving a pane preserves recorded activity"
+                );
             }
             other => panic!("expected TabRestructured, got {other:?}"),
         }
