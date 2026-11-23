@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.5.1 - 2026-11-23
+
+- Show recent agent activity beside session titles. Hover to see the exact
+  local time, the activity type, and the full branch name when it was shortened.
+  Recorded activity survives a restart (cloudy-liu/hitty#57).
+
+See the [release notes](docs/releases/hitty-v0.5.1.md) for scope and
+limitations.
+
 ## v0.5.0 - 2026-11-20
 
 - Keep Git Diff review controls fixed beside the file list and add one-button
