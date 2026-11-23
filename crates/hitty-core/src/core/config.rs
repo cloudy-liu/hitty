@@ -248,6 +248,9 @@ pub struct Config {
     pub sidebar_diff_preview: bool,
     #[serde(default = "default_true")]
     pub sidebar_agent_status_text: bool,
+    /// Prefer product artwork and show the agent name in sidebar rows.
+    #[serde(default)]
+    pub sidebar_agent_product_icons: bool,
     /// Draw a recognized agent pane's icon and name in a row above its
     /// terminal. On by default; the hover toolbar on agent panes does not
     /// depend on it.
@@ -690,6 +693,7 @@ impl Default for Config {
             sidebar_group_folders: false,
             sidebar_diff_preview: true,
             sidebar_agent_status_text: true,
+            sidebar_agent_product_icons: false,
             show_agent_pane_titles: true,
             show_agent_pane_task_titles: false,
             sidebar_group_names: BTreeMap::new(),
@@ -1545,6 +1549,17 @@ mod tests {
         );
         let back: Config = serde_json::from_str(&json).unwrap();
         assert!(!back.sidebar_agent_status_text);
+    }
+
+    #[test]
+    fn sidebar_agent_product_icons_defaults_off_and_round_trips() {
+        assert!(!Config::default().sidebar_agent_product_icons);
+        let old: Config = serde_json::from_str("{}").unwrap();
+        assert!(!old.sidebar_agent_product_icons);
+
+        let on: Config = serde_json::from_str(r#"{"sidebar_agent_product_icons":true}"#).unwrap();
+        let back: Config = serde_json::from_str(&serde_json::to_string(&on).unwrap()).unwrap();
+        assert!(back.sidebar_agent_product_icons);
     }
 
     #[test]

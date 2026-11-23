@@ -3260,6 +3260,10 @@ impl HittyApp {
         self.update_config(cx, |cfg| cfg.sidebar_agent_status_text = on);
     }
 
+    pub(crate) fn set_sidebar_agent_product_icons(&mut self, on: bool, cx: &mut Context<Self>) {
+        self.update_config(cx, |cfg| cfg.sidebar_agent_product_icons = on);
+    }
+
     pub(crate) fn set_show_agent_pane_titles(&mut self, on: bool, cx: &mut Context<Self>) {
         self.update_config(cx, |cfg| cfg.show_agent_pane_titles = on);
     }

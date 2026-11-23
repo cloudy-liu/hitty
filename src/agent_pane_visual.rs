@@ -36,6 +36,8 @@ struct Options {
     #[serde(default)]
     task_titles: bool,
     #[serde(default)]
+    sidebar_product_icons: bool,
+    #[serde(default)]
     dark: bool,
     #[serde(default)]
     zoom: bool,
@@ -124,6 +126,8 @@ pub(crate) fn run(path: &std::ffi::OsStr) {
             let mut value = serde_json::to_value(&config.0).unwrap();
             value["show_agent_pane_titles"] = serde_json::Value::Bool(options.titles);
             value["show_agent_pane_task_titles"] = serde_json::Value::Bool(options.task_titles);
+            value["sidebar_agent_product_icons"] =
+                serde_json::Value::Bool(options.sidebar_product_icons);
             let config = Config(serde_json::from_value(value).unwrap());
             cx.set_global(config);
             crate::core::session::WorkspaceStore::init(cx);
@@ -171,7 +175,15 @@ pub(crate) fn run(path: &std::ffi::OsStr) {
                                 DaemonMsg::Agent(*agent).encode(&mut stream).unwrap();
                                 if agent.is_some() {
                                     DaemonMsg::AgentStatus(Some(AgentSessionState {
-                                        status: AgentStatus::Working,
+                                        status: if options.sidebar_product_icons {
+                                            [
+                                                AgentStatus::Waiting,
+                                                AgentStatus::Idle,
+                                                AgentStatus::Done,
+                                            ][index]
+                                        } else {
+                                            AgentStatus::Working
+                                        },
                                         rich: true,
                                         ..Default::default()
                                     }))

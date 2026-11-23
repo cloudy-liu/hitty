@@ -1,7 +1,7 @@
 use gpui::{
     Animation, AnimationExt as _, AnyElement, App, Axis, Bounds, Context, FontWeight, MouseButton,
-    Pixels, SharedString, Window, canvas, deferred, div, ease_out_quint, linear_color_stop,
-    linear_gradient, prelude::*, px, relative,
+    Pixels, SharedString, StyledImage as _, Window, canvas, deferred, div, ease_out_quint,
+    linear_color_stop, linear_gradient, prelude::*, px, relative,
 };
 use gpui_component::button::{Button, ButtonCustomVariant, ButtonVariants as _};
 use gpui_component::input::Input;
@@ -1320,6 +1320,7 @@ impl HittyApp {
         indicator: Option<crate::ui::status_indicator::StatusIndicator>,
         size: f32,
         ssh: bool,
+        product_icon: Option<gpui::ImageSource>,
         cx: &App,
     ) -> gpui::AnyElement {
         let base = div()
@@ -1350,16 +1351,27 @@ impl HittyApp {
             (tip, false) => tip,
         };
         let avatar = match avatar {
-            TabAvatar::Agent(agent) => base
-                .child(
+            TabAvatar::Agent(agent) => {
+                let ink = gpui::rgb(cx.global::<crate::ui::presets::AgentIcons>().ink(agent));
+                let fallback = move || {
                     gpui::svg()
                         .path(agent.icon_path())
                         .size(px(size * 0.78))
-                        .text_color(gpui::rgb(
-                            cx.global::<crate::ui::presets::AgentIcons>().ink(agent),
-                        )),
-                )
-                .when_some(badge, |b, badge| b.child(badge)),
+                        .text_color(ink)
+                        .into_any_element()
+                };
+                let icon = match product_icon {
+                    Some(source) => gpui::img(source)
+                        .size(px(size - 2.))
+                        .flex()
+                        .items_center()
+                        .justify_center()
+                        .with_fallback(fallback)
+                        .into_any_element(),
+                    None => fallback(),
+                };
+                base.child(icon).when_some(badge, |b, badge| b.child(badge))
+            }
             TabAvatar::App(crate::core::foreground_app::ForegroundApp::Herdr) => base
                 .child(gpui::img("icons/herdr.svg").size(px(size)).rounded_full())
                 .when_some(badge, |b, badge| b.child(badge)),
@@ -1934,6 +1946,7 @@ impl HittyApp {
                         agent_indicator,
                         18.,
                         ssh,
+                        None,
                         cx,
                     ))
                 })

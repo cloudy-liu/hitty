@@ -506,6 +506,8 @@ l10n_keys! {
     SettingsDiffPreviewFromCountsDesc,
     SettingsSidebarAgentStatusText,
     SettingsSidebarAgentStatusTextDesc,
+    SettingsSidebarAgentProductIcons,
+    SettingsSidebarAgentProductIconsDesc,
     SettingsShowAgentPaneTitles,
     SettingsShowAgentPaneTitlesDesc,
     SettingsShowAgentPaneTaskTitles,

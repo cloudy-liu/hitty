@@ -642,6 +642,10 @@ pub fn translate_ja(key: L10nKey) -> Option<&'static str> {
         L10nKey::SettingsSidebarAgentStatusTextDesc => {
             "タブの2行目に IDLE、RUN、INPUT、DONE の状態タグを表示します。オフにするとアバターのバッジのみで表示されます。"
         }
+        L10nKey::SettingsSidebarAgentProductIcons => "エージェントの製品アイコンを使う",
+        L10nKey::SettingsSidebarAgentProductIconsDesc => {
+            "サイドバーのタブに利用可能な製品アイコンを使い、2行目にエージェント名を表示します。"
+        }
         L10nKey::SettingsShowAgentPaneTitles => "エージェントペインのタイトルを表示",
         L10nKey::SettingsShowAgentPaneTitlesDesc => {
             "エージェントのアイコンと名前をターミナルの上の行に表示します。通常のターミナルには表示されません。ホバー操作（分割・拡大・閉じる）はどのペインでも使えます。"

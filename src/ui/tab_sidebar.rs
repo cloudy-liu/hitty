@@ -18,6 +18,7 @@ use std::rc::Rc;
 
 use std::path::{Path, PathBuf};
 
+use crate::core::cli_agent::CLIAgent;
 use crate::core::config::{Config, SidebarGrouping};
 use crate::core::session::WorkspaceStore;
 use crate::daemon::protocol::RemoteKind;
@@ -204,6 +205,13 @@ impl HittyApp {
         let active = self.active;
         let sf = cx.global::<crate::ui::presets::Surfaces>().sidebar;
         let show_badges = self.mod_hint_badges;
+        let show_product_icons = cx.global::<Config>().sidebar_agent_product_icons;
+        let show_status_text = cx.global::<Config>().sidebar_agent_status_text;
+        let claude_product_icon = show_product_icons
+            .then(|| crate::core::config::config_path("agent-icons/claude.png"))
+            .flatten()
+            .filter(|path| path.is_file())
+            .map(gpui::ImageSource::from);
         let width = self.sidebar_px(window, cx);
         let host = WorkspaceStore::host_of(cx, self.workspace);
         let activities: HashMap<u64, AgentActivity> =
@@ -558,7 +566,6 @@ impl HittyApp {
                 // An agent row opens its second line with a status tag, in the
                 // badge's colour, when enabled by configuration. The tag never
                 // elides; whatever follows it gives up the room.
-                let show_status_text = cx.global::<Config>().sidebar_agent_status_text;
                 let status_tag = if show_status_text {
                     agent_indicator.and_then(|s| {
                         s.sidebar_tag()
@@ -568,10 +575,11 @@ impl HittyApp {
                     None
                 };
                 let status_size = row_metrics::STATUS_REM * rem;
+                let meta_gap = 0.375 * rem; // gap_1p5
                 let status_w = status_tag.map_or(0., |(tag, _)| {
                     measure_text(&window.text_system(), &status_font, status_size, tag)
                         + 2. * row_metrics::STATUS_PAD
-                        + 0.375 * rem // The following gap_1p5 scales with the UI font size.
+                        + meta_gap
                 });
                 let status_lead = || {
                     status_tag.map(|(tag, colour)| {
@@ -592,6 +600,60 @@ impl HittyApp {
                             .text_color(ink)
                             .bg(colour.opacity(0.24))
                             .child(tag)
+                    })
+                };
+                let sidebar_agent = match avatar {
+                    TabAvatar::Agent(agent) if show_product_icons => Some(agent),
+                    _ => None,
+                };
+                let product_icon = match sidebar_agent {
+                    Some(CLIAgent::Codex) => Some("icons/agents/codex-product.png".into()),
+                    Some(CLIAgent::Claude) => claude_product_icon.clone(),
+                    _ => None,
+                };
+                let git_status = tab.git_status(Some(window), cx);
+                // Diff counts are fixed-width children of the metadata line.
+                // Reserve their actual glyphs and gaps before fitting a name.
+                let counts_w = git_status.as_ref().map_or(0., |g| {
+                    [(g.added, '+'), (g.removed, '−')]
+                        .into_iter()
+                        .filter(|(count, _)| *count > 0)
+                        .map(|(count, sign)| {
+                            measure_text(
+                                &window.text_system(),
+                                &font,
+                                meta_size,
+                                &format!("{sign}{count}"),
+                            ) + meta_gap
+                        })
+                        .sum::<f32>()
+                });
+                let name_avail =
+                    ((label_avail - status_w) * 0.65).min(label_avail - status_w - counts_w);
+                let agent_name = sidebar_agent
+                    .map(|agent| {
+                        elide_label(
+                            &window.text_system(),
+                            &status_font,
+                            status_size,
+                            agent.display_name(),
+                            name_avail,
+                        )
+                    })
+                    .filter(|name| name.as_ref() != "…");
+                let meta_lead_w = status_w
+                    + agent_name.as_ref().map_or(0., |name| {
+                        measure_text(&window.text_system(), &status_font, status_size, name)
+                            + meta_gap
+                    });
+                let agent_lead = || {
+                    agent_name.as_ref().map(|name| {
+                        div()
+                            .id(("sidebar-agent-name", i))
+                            .flex_shrink_0()
+                            .text_size(px(status_size))
+                            .font_weight(FontWeight::SEMIBOLD)
+                            .child(name.clone())
                     })
                 };
                 // Title: elide the *full* label against the row budget, so a
@@ -633,23 +695,31 @@ impl HittyApp {
                     };
                     (shown, Some(full))
                 };
-                let git_context = title.context.as_ref().map(|context| {
-                    let shown = elide_keep_edges(
-                        &window.text_system(),
-                        &font,
-                        meta_size,
-                        context,
-                        (label_avail - status_w).max(0.) * 0.6,
-                    );
-                    (shown, SharedString::from(context.clone()))
-                });
+                let context_avail =
+                    (label_avail - meta_lead_w - if agent_name.is_some() { counts_w } else { 0. })
+                        .max(0.)
+                        * 0.6;
+                let git_context = title
+                    .context
+                    .as_ref()
+                    .map(|context| {
+                        let shown = elide_keep_edges(
+                            &window.text_system(),
+                            &font,
+                            meta_size,
+                            context,
+                            context_avail,
+                        );
+                        (shown, SharedString::from(context.clone()))
+                    })
+                    .filter(|(shown, _)| agent_name.is_none() || shown.as_ref() != "…");
                 let git_context_w = git_context.as_ref().map_or(0., |(context, _)| {
                     measure_text(&window.text_system(), &font, meta_size, context)
                         + row_metrics::META_GAP
                 });
                 let mut branch_shown: Option<(SharedString, SharedString, u32, u32)> = None;
                 let mut cwd_shown = git_context.clone();
-                let git_line = tab.git_status(Some(window), cx).map(|g| {
+                let git_line = git_status.map(|g| {
                     let mut line = h_flex()
                         .id(("sidebar-git", i))
                         .w_full()
@@ -658,71 +728,52 @@ impl HittyApp {
                         .text_xs()
                         .text_color(cx.theme().muted_foreground)
                         .children(status_lead())
+                        .children(agent_lead())
                         .children(
                             git_context
                                 .as_ref()
                                 .map(|(context, _)| div().flex_shrink_0().child(context.clone())),
-                        )
-                        .child(
-                            gpui::svg()
-                                .path("icons/git-branch.svg")
-                                .flex_shrink_0()
-                                .size(px(row_metrics::BRANCH_ICON))
-                                .text_color(cx.theme().muted_foreground),
                         );
-                    // The diff counts are measured against real glyphs so the
-                    // branch can be elided to exactly the space they leave;
-                    // the counts themselves never wrap or shrink. They render
-                    // as two children of a `gap_1p5` row, so the gap between
-                    // them is measured rather than a space that stands in for
-                    // it.
-                    let mut counts_w = 0.;
-                    if g.added > 0 {
-                        counts_w += measure_text(
-                            &window.text_system(),
-                            &font,
-                            meta_size,
-                            &format!("+{}", g.added),
-                        );
-                    }
-                    if g.removed > 0 {
-                        counts_w += measure_text(
-                            &window.text_system(),
-                            &font,
-                            meta_size,
-                            &format!("−{}", g.removed),
-                        );
-                    }
-                    if g.added > 0 && g.removed > 0 {
-                        counts_w += row_metrics::META_GAP;
-                    }
-                    if counts_w > 0. {
-                        // The gap between the branch and the counts.
-                        counts_w += row_metrics::META_GAP;
-                    }
                     // Branch: keep both ends (`window-…backdrop`) so its
                     // identifying tail survives a narrow sidebar.
                     let branch_avail = (label_avail
-                        - status_w
+                        - meta_lead_w
                         - git_context_w
                         - row_metrics::BRANCH_ICON
                         - row_metrics::META_GAP
                         - counts_w)
                         .max(0.);
-                    let shown = elide_keep_edges(
-                        &window.text_system(),
-                        &font,
-                        meta_size,
-                        &g.branch,
-                        branch_avail,
-                    );
+                    // At very narrow widths the hover card still shows the
+                    // branch. Skip its glyph when only an ellipsis would fit.
+                    let show_branch = agent_name.is_none() || branch_avail >= meta_size;
+                    let shown = if show_branch {
+                        elide_keep_edges(
+                            &window.text_system(),
+                            &font,
+                            meta_size,
+                            &g.branch,
+                            branch_avail,
+                        )
+                    } else {
+                        SharedString::default()
+                    };
                     branch_shown = Some((
                         shown.clone(),
                         SharedString::from(g.branch.clone()),
                         g.added,
                         g.removed,
                     ));
-                    line = line.child(div().flex_1().min_w_0().truncate().child(shown));
+                    if show_branch {
+                        line = line
+                            .child(
+                                gpui::svg()
+                                    .path("icons/git-branch.svg")
+                                    .flex_shrink_0()
+                                    .size(px(row_metrics::BRANCH_ICON))
+                                    .text_color(cx.theme().muted_foreground),
+                            )
+                            .child(div().flex_1().min_w_0().truncate().child(shown));
+                    }
                     if g.added > 0 || g.removed > 0 {
                         let mut counts = h_flex()
                             .id(("sidebar-diff", i))
@@ -730,6 +781,7 @@ impl HittyApp {
                             .flex_shrink_0()
                             .items_center()
                             .gap_1p5()
+                            .when(!show_branch, |counts| counts.ml(gpui::auto()))
                             .when_some(git_cwd, |counts, (host, cwd)| {
                                 // A click target inside a click target: the row
                                 // highlights as a whole, which says nothing
@@ -784,7 +836,7 @@ impl HittyApp {
                                 &font,
                                 meta_size,
                                 &full,
-                                (label_avail - status_w).max(0.),
+                                (label_avail - meta_lead_w).max(0.),
                             );
                             (shown, full)
                         })
@@ -805,7 +857,7 @@ impl HittyApp {
                                     &font,
                                     meta_size,
                                     &full,
-                                    (label_avail - status_w).max(0.),
+                                    (label_avail - meta_lead_w).max(0.),
                                 );
                                 (shown, full)
                             })
@@ -825,7 +877,7 @@ impl HittyApp {
                     .is_none()
                     .then(|| {
                         let cwd = cwd_shown.as_ref().map(|(cwd, _)| cwd.clone());
-                        (status_tag.is_some() || cwd.is_some()).then(|| {
+                        (status_tag.is_some() || agent_name.is_some() || cwd.is_some()).then(|| {
                             h_flex()
                                 .id(("sidebar-cwd", i))
                                 .w_full()
@@ -834,6 +886,7 @@ impl HittyApp {
                                 .text_xs()
                                 .text_color(cx.theme().muted_foreground.opacity(0.8))
                                 .children(status_lead())
+                                .children(agent_lead())
                                 .children(
                                     cwd.map(|cwd| div().flex_1().min_w_0().truncate().child(cwd)),
                                 )
@@ -1103,6 +1156,7 @@ impl HittyApp {
                                 agent_indicator,
                                 22.,
                                 ssh,
+                                product_icon,
                                 cx,
                             )),
                     )

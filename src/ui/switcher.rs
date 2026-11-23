@@ -2869,6 +2869,7 @@ impl HittyApp {
                         tab.indicator,
                         ROW_AVATAR,
                         false,
+                        None,
                         cx,
                     ))
                     .child(
