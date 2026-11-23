@@ -102,6 +102,9 @@ fn agent_icon(path: &str) -> Option<&'static [u8]> {
         "icons/status/unknown.svg" => include_bytes!("../../assets/icons/status/unknown.svg"),
         "icons/agents/claude.svg" => include_bytes!("../../assets/icons/agents/claude.svg"),
         "icons/agents/codex.svg" => include_bytes!("../../assets/icons/agents/codex.svg"),
+        "icons/agents/codex-product.png" => {
+            include_bytes!("../../assets/icons/agents/codex-product.png")
+        }
         "icons/agents/gemini.svg" => include_bytes!("../../assets/icons/agents/gemini.svg"),
         "icons/agents/antigravity.svg" => {
             include_bytes!("../../assets/icons/agents/antigravity.svg")

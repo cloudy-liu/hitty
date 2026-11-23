@@ -726,6 +726,11 @@ fn settings_search_entries() -> &'static [SearchEntry] {
         },
         SearchEntry {
             section: WindowTabs,
+            title: SettingsSidebarAgentProductIcons,
+            keywords: SettingsSidebarAgentProductIconsDesc,
+        },
+        SearchEntry {
+            section: WindowTabs,
             title: SettingsShowAgentPaneTitles,
             keywords: SettingsSearchShowAgentPaneTitlesKeywords,
         },
@@ -5941,6 +5946,7 @@ impl HittyApp {
         };
         let sidebar_diff_preview = cfg.sidebar_diff_preview;
         let sidebar_agent_status_text = cfg.sidebar_agent_status_text;
+        let sidebar_agent_product_icons = cfg.sidebar_agent_product_icons;
         let show_agent_pane_titles = cfg.show_agent_pane_titles;
         let show_agent_pane_task_titles = cfg.show_agent_pane_task_titles;
         let sidebar_group_arrows = cfg.sidebar_group_arrows;
@@ -6164,6 +6170,13 @@ impl HittyApp {
                     this.set_sidebar_agent_status_text(*on, cx)
                 }))
                 .into_any_element();
+        let sidebar_agent_product_icons_switch =
+            crate::ui::theme::switch("wt-sidebar-agent-product-icons", cx)
+                .checked(sidebar_agent_product_icons)
+                .on_click(cx.listener(|this, on: &bool, _w, cx| {
+                    this.set_sidebar_agent_product_icons(*on, cx)
+                }))
+                .into_any_element();
         let agent_pane_titles_switch = crate::ui::theme::switch("wt-agent-pane-titles", cx)
             .checked(show_agent_pane_titles)
             .on_click(
@@ -6264,6 +6277,12 @@ impl HittyApp {
                 t(L10nKey::SettingsSidebarAgentStatusText),
                 t(L10nKey::SettingsSidebarAgentStatusTextDesc),
                 sidebar_agent_status_switch,
+                cx,
+            ))
+            .child(self.settings_row(
+                t(L10nKey::SettingsSidebarAgentProductIcons),
+                t(L10nKey::SettingsSidebarAgentProductIconsDesc),
+                sidebar_agent_product_icons_switch,
                 cx,
             ))
             .child(self.settings_row(

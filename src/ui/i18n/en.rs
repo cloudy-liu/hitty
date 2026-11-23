@@ -632,6 +632,10 @@ pub fn translate_en(key: L10nKey) -> &'static str {
         L10nKey::SettingsSidebarAgentStatusTextDesc => {
             "Display IDLE, RUN, INPUT, and DONE tags in tab rows. Off shows status only through the avatar badge."
         }
+        L10nKey::SettingsSidebarAgentProductIcons => "Use agent product icons",
+        L10nKey::SettingsSidebarAgentProductIconsDesc => {
+            "Show product icons where available and agent names on the second line of sidebar tabs."
+        }
         L10nKey::SettingsShowAgentPaneTitles => "Show agent pane titles",
         L10nKey::SettingsShowAgentPaneTitlesDesc => {
             "Draw the agent's icon and name in a row above its terminal. Ordinary terminals get no row; the hover actions (split, zoom, close) are on every pane either way."

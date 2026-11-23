@@ -57,6 +57,9 @@ SCENES = [  # (name, titles, dark, hover pane, zoom, settings page, layout)
     ("task-titles-settings-light", True, False, None, False, True, "grid"),
     ("session-activity-light", False, False, None, False, False, "sidebar-activity"),
     ("session-activity-hover-light", False, False, None, False, False, "sidebar-activity"),
+    ("sidebar-product-icons-light", False, False, None, False, False, "sidebar-activity"),
+    ("sidebar-product-icons-dark", False, True, None, False, False, "sidebar-activity"),
+    ("sidebar-product-icons-settings", False, False, None, False, True, "grid"),
 ]
 # Scenes whose agent panes title themselves with a task, and whether the
 # task-title setting is on: scene name -> (tasks, task_titles).
@@ -69,6 +72,8 @@ TASKS = {
     "task-titles-settings-light": (False, True),
     "session-activity-light": (True, False),
     "session-activity-hover-light": (True, False),
+    "sidebar-product-icons-light": (True, False),
+    "sidebar-product-icons-dark": (True, False),
 }
 SETTINGS_HEIGHT = 1400  # the Window & Tabs page is taller than the pane scenes
 
@@ -90,7 +95,8 @@ def prepare_before(destination):
     replace_once(main, b'#[cfg(feature = "markdown-visual-tests")]\nmod agent_attention_visual;\n',
                  b'#[cfg(feature = "markdown-visual-tests")]\nmod agent_attention_visual;\n'
                  b'#[cfg(feature = "markdown-visual-tests")]\nmod agent_pane_visual;\n')
-    replace_once(main, b"    apply_config_dir_arg(&args);\n\n", b"    apply_config_dir_arg(&args);\n\n" + ENTRY)
+    if b'"--agent-pane-visual"' not in main.read_bytes():
+        replace_once(main, b"    apply_config_dir_arg(&args);\n\n", b"    apply_config_dir_arg(&args);\n\n" + ENTRY)
 
 
 def capture_scene(binary, output, phase, scene, scale):
@@ -103,11 +109,12 @@ def capture_scene(binary, output, phase, scene, scale):
         if layout == "sidebar-activity":
             options.with_name("config.json").write_text(json.dumps({
                 "sidebar_width": 206, "sidebar_grouping": "none",
-                "theme_follow_system": False, "theme_preset": "light",
+                "theme_follow_system": False, "theme_preset": "dark" if dark else "light",
                 "install_cli_on_path": False,
             }), encoding="utf-8")
         options.write_text(json.dumps({"output": str(png), "titles": titles, "dark": dark,
                                        "tasks": tasks, "task_titles": task_titles,
+                                       "sidebar_product_icons": name.startswith("sidebar-product-icons"),
                                        "zoom": zoom, "settings": settings, "layout": layout, "hold_seconds": 90,
                                        "height": SETTINGS_HEIGHT if settings else None}), encoding="utf-8")
         with log.open("w", encoding="utf-8") as log_stream:

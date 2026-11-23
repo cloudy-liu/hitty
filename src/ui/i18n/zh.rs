@@ -567,6 +567,10 @@ pub fn translate_zh(key: L10nKey) -> Option<&'static str> {
         L10nKey::SettingsSidebarAgentStatusTextDesc => {
             "在侧栏标签页第二行显示 IDLE、RUN、INPUT、DONE 状态标签。关闭时仅通过头像角标指示状态。"
         }
+        L10nKey::SettingsSidebarAgentProductIcons => "使用 Agent 产品图标",
+        L10nKey::SettingsSidebarAgentProductIconsDesc => {
+            "在侧栏标签页使用可用的产品图标，并在第二行显示 Agent 名称。"
+        }
         L10nKey::SettingsShowAgentPaneTitles => "显示 Agent 窗格标题",
         L10nKey::SettingsShowAgentPaneTitlesDesc => {
             "在 Agent 窗格的终端上方显示一行图标和名称。普通终端不显示这一行；无论开关如何，悬浮操作（分屏、放大、关闭）每个窗格都有。"
