@@ -55,11 +55,18 @@ tabs whose shell has not reported a directory yet.
   </Card>
 </CardGroup>
 
-Turn on **Settings → Window & Tabs → Use agent product icons** to show the
-agent name between its status and branch or directory. Hitty uses the product
-artwork when available, including the Codex app icon. The option starts off.
-For Claude Code, Hitty can read a local `agent-icons/claude.png` in the Hitty
+Open **Settings → Window & Tabs → Sidebar agent icons → Customize** to choose
+icons for individual agents. Search by name or command, such as `agy` for
+Antigravity or `cbc` for CodeBuddy. Each choice is saved when selected and
+the icon menu includes the default choice. The list shows the built-in icon
+for agents with a single option.
+
+Codex defaults to its app icon and Qoder to its green CLI startup mark.
+Claude Code uses Clawd if it can read `agent-icons/claude.png` in the Hitty
 configuration directory. The Claude starburst is the fallback.
+
+Use **Show agent names in the sidebar** to show the agent name alongside
+its status and branch or directory.
 
 If you would rather the counts not be clickable, turn off **Settings → Window &
 Tabs → Open diff preview from sidebar counts**. The branch and the numbers stay;

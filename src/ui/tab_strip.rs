@@ -1,7 +1,7 @@
 use gpui::{
     Animation, AnimationExt as _, AnyElement, App, Axis, Bounds, Context, FontWeight, MouseButton,
-    Pixels, SharedString, StyledImage as _, Window, canvas, deferred, div, ease_out_quint,
-    linear_color_stop, linear_gradient, prelude::*, px, relative,
+    Pixels, SharedString, Window, canvas, deferred, div, ease_out_quint, linear_color_stop,
+    linear_gradient, prelude::*, px, relative,
 };
 use gpui_component::button::{Button, ButtonCustomVariant, ButtonVariants as _};
 use gpui_component::input::Input;
@@ -1352,23 +1352,20 @@ impl HittyApp {
         };
         let avatar = match avatar {
             TabAvatar::Agent(agent) => {
-                let ink = gpui::rgb(cx.global::<crate::ui::presets::AgentIcons>().ink(agent));
-                let fallback = move || {
-                    gpui::svg()
-                        .path(agent.icon_path())
-                        .size(px(size * 0.78))
-                        .text_color(ink)
+                let offset_qoder = agent == crate::core::cli_agent::CLIAgent::QoderCLI
+                    && product_icon.is_some()
+                    && badge.is_some();
+                let icon = super::sidebar_agent_icons::agent_icon(agent, product_icon, size, cx);
+                let icon = if offset_qoder {
+                    // Keep the bottom-right pixel of the Q clear of its badge.
+                    div()
+                        .relative()
+                        .left(px(-2.))
+                        .top(px(-2.))
+                        .child(icon)
                         .into_any_element()
-                };
-                let icon = match product_icon {
-                    Some(source) => gpui::img(source)
-                        .size(px(size - 2.))
-                        .flex()
-                        .items_center()
-                        .justify_center()
-                        .with_fallback(fallback)
-                        .into_any_element(),
-                    None => fallback(),
+                } else {
+                    icon
                 };
                 base.child(icon).when_some(badge, |b, badge| b.child(badge))
             }

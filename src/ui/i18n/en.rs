@@ -632,10 +632,26 @@ pub fn translate_en(key: L10nKey) -> &'static str {
         L10nKey::SettingsSidebarAgentStatusTextDesc => {
             "Display IDLE, RUN, INPUT, and DONE tags in tab rows. Off shows status only through the avatar badge."
         }
-        L10nKey::SettingsSidebarAgentProductIcons => "Use agent product icons",
-        L10nKey::SettingsSidebarAgentProductIconsDesc => {
-            "Show product icons where available and agent names on the second line of sidebar tabs."
+        L10nKey::SettingsSidebarAgentNames => "Show agent names in the sidebar",
+        L10nKey::SettingsSidebarAgentNamesDesc => {
+            "Show the agent name on the second line of sidebar tabs."
         }
+        L10nKey::SettingsSidebarAgentIcons => "Sidebar agent icons",
+        L10nKey::SettingsSidebarAgentIconsDesc => "Choose an icon for each agent in sidebar tabs.",
+        L10nKey::SettingsSidebarIconsCustomize => "Customize",
+        L10nKey::SettingsSidebarIconsCollapse => "Hide choices",
+        L10nKey::SettingsSidebarIconsSearch => "Search names or commands",
+        L10nKey::SettingsSidebarIconsCount => "{count} shown",
+        L10nKey::SettingsSidebarIconsNoMatches => "No matching agents",
+        L10nKey::SettingsSidebarIconsPreview => "Icon preview",
+        L10nKey::SettingsSidebarIconDefault => "Default",
+        L10nKey::SettingsSidebarIconDefaultChoice => "Default · {icon}",
+        L10nKey::SettingsSidebarIconClawd => "Clawd (when available)",
+        L10nKey::SettingsSidebarIconStarburst => "Starburst",
+        L10nKey::SettingsSidebarIconApp => "App icon",
+        L10nKey::SettingsSidebarIconOpenAI => "OpenAI knot",
+        L10nKey::SettingsSidebarIconPixelQ => "Green pixel Q",
+        L10nKey::SettingsSidebarIconOutline => "Monochrome outline",
         L10nKey::SettingsShowAgentPaneTitles => "Show agent pane titles",
         L10nKey::SettingsShowAgentPaneTitlesDesc => {
             "Draw the agent's icon and name in a row above its terminal. Ordinary terminals get no row; the hover actions (split, zoom, close) are on every pane either way."

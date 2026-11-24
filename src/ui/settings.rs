@@ -726,8 +726,13 @@ fn settings_search_entries() -> &'static [SearchEntry] {
         },
         SearchEntry {
             section: WindowTabs,
-            title: SettingsSidebarAgentProductIcons,
-            keywords: SettingsSidebarAgentProductIconsDesc,
+            title: SettingsSidebarAgentIcons,
+            keywords: SettingsSidebarAgentIconsDesc,
+        },
+        SearchEntry {
+            section: WindowTabs,
+            title: SettingsSidebarAgentNames,
+            keywords: SettingsSidebarAgentNamesDesc,
         },
         SearchEntry {
             section: WindowTabs,
@@ -888,6 +893,8 @@ pub(crate) struct SettingsState {
     pub(crate) focus_handle: gpui::FocusHandle,
     pub(crate) section: SettingsSection,
     pub(crate) search: Entity<InputState>,
+    pub(crate) sidebar_icon_search: Entity<InputState>,
+    pub(crate) sidebar_icon_choices_open: bool,
     /// The page's own scroll, and an anchor on it that the first matching row
     /// claims. Searching tells you "Appearance (2)"; these are what carry you
     /// to the two, which on a long page start well below the fold.
@@ -1966,7 +1973,7 @@ impl HittyApp {
     /// Whether the row measured this render came out narrower than a threshold
     /// quoted at the default interface font — the only way those px thresholds
     /// mean anything to a reader who scaled the interface up.
-    fn settings_row_under(&self, at_default_font: f32, cx: &App) -> bool {
+    pub(crate) fn settings_row_under(&self, at_default_font: f32, cx: &App) -> bool {
         self.settings_row_width.get() < at_default_font * ui_scale(cx)
     }
 
@@ -5946,7 +5953,7 @@ impl HittyApp {
         };
         let sidebar_diff_preview = cfg.sidebar_diff_preview;
         let sidebar_agent_status_text = cfg.sidebar_agent_status_text;
-        let sidebar_agent_product_icons = cfg.sidebar_agent_product_icons;
+        let sidebar_agent_names = cfg.sidebar_agent_names;
         let show_agent_pane_titles = cfg.show_agent_pane_titles;
         let show_agent_pane_task_titles = cfg.show_agent_pane_task_titles;
         let sidebar_group_arrows = cfg.sidebar_group_arrows;
@@ -6170,13 +6177,12 @@ impl HittyApp {
                     this.set_sidebar_agent_status_text(*on, cx)
                 }))
                 .into_any_element();
-        let sidebar_agent_product_icons_switch =
-            crate::ui::theme::switch("wt-sidebar-agent-product-icons", cx)
-                .checked(sidebar_agent_product_icons)
-                .on_click(cx.listener(|this, on: &bool, _w, cx| {
-                    this.set_sidebar_agent_product_icons(*on, cx)
-                }))
-                .into_any_element();
+        let sidebar_agent_names_switch = crate::ui::theme::switch("wt-sidebar-agent-names", cx)
+            .checked(sidebar_agent_names)
+            .on_click(cx.listener(|this, on: &bool, _w, cx| {
+                this.update_config(cx, |cfg| cfg.sidebar_agent_names = *on)
+            }))
+            .into_any_element();
         let agent_pane_titles_switch = crate::ui::theme::switch("wt-agent-pane-titles", cx)
             .checked(show_agent_pane_titles)
             .on_click(
@@ -6280,11 +6286,12 @@ impl HittyApp {
                 cx,
             ))
             .child(self.settings_row(
-                t(L10nKey::SettingsSidebarAgentProductIcons),
-                t(L10nKey::SettingsSidebarAgentProductIconsDesc),
-                sidebar_agent_product_icons_switch,
+                t(L10nKey::SettingsSidebarAgentNames),
+                t(L10nKey::SettingsSidebarAgentNamesDesc),
+                sidebar_agent_names_switch,
                 cx,
             ))
+            .child(self.sidebar_agent_icon_settings(cx))
             .child(self.settings_row(
                 t(L10nKey::SettingsShowAgentPaneTitles),
                 t(L10nKey::SettingsShowAgentPaneTitlesDesc),
@@ -8857,9 +8864,9 @@ mod gpui_tests {
                 });
             window.activate_window();
         });
-        // Tall enough for the Window & Tabs page with the agent pane titles row;
-        // the preview button sits near the bottom of the Notifications block.
-        vcx.simulate_resize(size(px(1100.), px(1800.)));
+        // Keep the notification sound preview inside the viewport after the
+        // Window & Tabs rows above the Notifications block.
+        vcx.simulate_resize(size(px(1100.), px(2200.)));
         vcx.run_until_parked();
         vcx.update(|window, cx| {
             let _ = window.draw(cx);

@@ -3260,10 +3260,6 @@ impl HittyApp {
         self.update_config(cx, |cfg| cfg.sidebar_agent_status_text = on);
     }
 
-    pub(crate) fn set_sidebar_agent_product_icons(&mut self, on: bool, cx: &mut Context<Self>) {
-        self.update_config(cx, |cfg| cfg.sidebar_agent_product_icons = on);
-    }
-
     pub(crate) fn set_show_agent_pane_titles(&mut self, on: bool, cx: &mut Context<Self>) {
         self.update_config(cx, |cfg| cfg.show_agent_pane_titles = on);
     }
@@ -5859,6 +5855,17 @@ impl HittyApp {
             }),
         );
 
+        let sidebar_icon_search = cx.new(|cx| {
+            InputState::new(window, cx).placeholder(t(L10nKey::SettingsSidebarIconsSearch))
+        });
+        subs.push(
+            cx.subscribe_in(&sidebar_icon_search, window, |_this, _i, ev, _w, cx| {
+                if matches!(ev, InputEvent::Change) {
+                    cx.notify();
+                }
+            }),
+        );
+
         let ssh_filter = cx.new(|cx| {
             InputState::new(window, cx).placeholder(t(crate::ui::i18n::L10nKey::FilterHosts))
         });
@@ -5888,6 +5895,8 @@ impl HittyApp {
             focus_handle: focus_handle.clone(),
             section: SettingsSection::Appearance,
             search: settings_search,
+            sidebar_icon_search,
+            sidebar_icon_choices_open: false,
             content_scroll,
             ssh_master_scroll: gpui::ScrollHandle::new(),
             ssh_detail_scroll: gpui::ScrollHandle::new(),
