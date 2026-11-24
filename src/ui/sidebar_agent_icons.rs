@@ -51,8 +51,13 @@ fn product_icon(agent: CLIAgent) -> Option<ProductIcon> {
 }
 
 impl ProductIcon {
-    fn image(self, claude: &Option<ImageSource>) -> Option<ImageSource> {
-        self.asset.map(ImageSource::from).or_else(|| claude.clone())
+    fn image(self, claude: &Option<ImageSource>) -> ImageSource {
+        match self.asset {
+            Some(asset) => ImageSource::from(asset),
+            None => claude
+                .clone()
+                .unwrap_or_else(|| ImageSource::from("icons/agents/claude-clawd.png")),
+        }
     }
 }
 
@@ -67,10 +72,13 @@ pub(crate) fn selected_product_icon(
     claude: &Option<ImageSource>,
     config: &Config,
 ) -> Option<ImageSource> {
+    if agent == CLIAgent::Antigravity {
+        return Some(ImageSource::from("icons/agents/antigravity-full-color.png"));
+    }
     if config.sidebar_agent_standard_icons.contains(agent.slug()) {
         return None;
     }
-    product_icon(agent)?.image(claude)
+    Some(product_icon(agent)?.image(claude))
 }
 
 pub(crate) fn agent_icon(
@@ -106,8 +114,13 @@ pub(crate) fn agent_icon(
     }
 }
 
-fn ordered_agents() -> [CLIAgent; CLIAgent::ALL.len()] {
-    let mut agents = CLIAgent::ALL;
+fn ordered_agents() -> Vec<CLIAgent> {
+    use CLIAgent::{Aider, Amp, Auggie, Droid, Goose};
+
+    let mut agents: Vec<_> = CLIAgent::ALL
+        .into_iter()
+        .filter(|agent| !matches!(agent, Aider | Amp | Auggie | Droid | Goose))
+        .collect();
     agents.sort_by_key(|agent| {
         (
             FIRST
@@ -261,14 +274,12 @@ impl HittyApp {
         cx: &Context<Self>,
     ) -> gpui::Div {
         let theme = cx.theme();
+        let config = cx.global::<Config>();
         let choice = product_icon(agent);
-        let standard = cx
-            .global::<Config>()
-            .sidebar_agent_standard_icons
-            .contains(agent.slug());
+        let standard = config.sidebar_agent_standard_icons.contains(agent.slug());
         let control = match choice {
             Some(choice) => {
-                let default_image = choice.image(claude);
+                let default_image = Some(choice.image(claude));
                 let control = Button::new(("sidebar-agent-icon-choice", agent as usize))
                     .small()
                     .child(icon_label(
@@ -330,9 +341,14 @@ impl HittyApp {
                     })
                     .into_any_element()
             }
-            None => icon_label(agent, None, t(L10nKey::SettingsSidebarIconDefault), cx)
-                .text_color(theme.muted_foreground)
-                .into_any_element(),
+            None => icon_label(
+                agent,
+                selected_product_icon(agent, claude, config),
+                t(L10nKey::SettingsSidebarIconDefault),
+                cx,
+            )
+            .text_color(theme.muted_foreground)
+            .into_any_element(),
         };
         h_flex()
             .justify_between()
@@ -360,17 +376,18 @@ mod tests {
     use super::*;
 
     #[test]
-    fn sidebar_lists_all_agents_in_preferred_order_and_searches_commands() {
+    fn sidebar_lists_visible_agents_in_preferred_order_and_searches_commands() {
         let agents = ordered_agents();
         assert_eq!(&agents[..FIRST.len()], &FIRST);
-        assert_eq!(
-            agents
-                .into_iter()
-                .map(CLIAgent::slug)
-                .collect::<std::collections::HashSet<_>>()
-                .len(),
-            CLIAgent::ALL.len()
-        );
+        let hidden = ["aider", "amp", "auggie", "droid", "goose"];
+        let listed: std::collections::BTreeSet<_> =
+            agents.iter().map(|agent| agent.slug()).collect();
+        for agent in CLIAgent::ALL {
+            assert_eq!(
+                listed.contains(agent.slug()),
+                !hidden.contains(&agent.slug())
+            );
+        }
         assert!(
             agents[FIRST.len()..]
                 .windows(2)
@@ -380,7 +397,8 @@ mod tests {
         for (query, expected) in [("agy", CLIAgent::Antigravity), ("cbc", CLIAgent::CodeBuddy)] {
             assert_eq!(
                 agents
-                    .into_iter()
+                    .iter()
+                    .copied()
                     .filter(|agent| agent_matches(*agent, query))
                     .collect::<Vec<_>>(),
                 [expected]

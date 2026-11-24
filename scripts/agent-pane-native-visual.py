@@ -63,6 +63,9 @@ SCENES = [  # (name, titles, dark, hover pane, zoom, settings page, layout)
     ("sidebar-icon-choices-light", False, False, None, False, False, "sidebar-activity"),
     ("sidebar-icon-choices-dark", False, True, None, False, False, "sidebar-activity"),
     ("sidebar-icon-choices-settings", False, False, None, False, True, "grid"),
+    ("sidebar-icon-choices-expanded", False, False, None, False, True, "grid"),
+    ("sidebar-icon-choices-clawd-menu", False, False, None, False, True, "grid"),
+    ("agent-hooks-settings", False, False, None, False, True, "grid"),
 ]
 # Scenes whose agent panes title themselves with a task, and whether the
 # task-title setting is on: scene name -> (tasks, task_titles).
@@ -138,7 +141,7 @@ def capture_scene(binary, output, phase, scene, scale):
                                 f"(New-Object -ComObject WScript.Shell).AppActivate({process.pid})"],
                                check=False, capture_output=True)
                 time.sleep(0.8)
-                if settings:
+                if settings and name != "agent-hooks-settings":
                     x, y, notches = SETTINGS_SCROLL
                     subprocess.run(["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File",
                                     str(WHEEL), "-ProcId", str(process.pid), "-X", str(int(x * scale)),
@@ -155,6 +158,13 @@ def capture_scene(binary, output, phase, scene, scale):
                     command += ["-MoveTo", f"{int(x * scale)},{int(y * scale)}"]
                 elif name == "sidebar-icon-choices-settings":
                     command += ["-MoveTo", "400,345"]
+                elif name in ("sidebar-icon-choices-expanded", "sidebar-icon-choices-clawd-menu"):
+                    command += ["-MoveTo", f"{int(978 * scale)},{int(316 * scale)}", "-Click"]
+                    if name.endswith("clawd-menu"):
+                        subprocess.run(command, check=True, capture_output=True)
+                        command[-2] = f"{int(822 * scale)},{int(416 * scale)}"
+                elif name == "agent-hooks-settings":
+                    command += ["-MoveTo", f"{int(66 * scale)},{int(277 * scale)}", "-Click"]
                 result = subprocess.run(command, check=True, capture_output=True, text=True)
                 print(f"  {name}: {result.stdout.strip()}", flush=True)
             finally:

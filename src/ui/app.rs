@@ -7018,6 +7018,7 @@ impl HittyApp {
                 Some(
                     HookAgent::ALL
                         .into_iter()
+                        .filter(|&agent| super::settings::show_agent_hook_in_settings(agent))
                         .map(|agent| AgentHookRow {
                             agent,
                             state: crate::core::agent_hooks::hooks_state(&target, agent),

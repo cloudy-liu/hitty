@@ -658,7 +658,7 @@ pub fn translate_ja(key: L10nKey) -> Option<&'static str> {
         L10nKey::SettingsSidebarIconsPreview => "アイコンのプレビュー",
         L10nKey::SettingsSidebarIconDefault => "既定",
         L10nKey::SettingsSidebarIconDefaultChoice => "既定 · {icon}",
-        L10nKey::SettingsSidebarIconClawd => "Clawd（利用可能な場合）",
+        L10nKey::SettingsSidebarIconClawd => "Clawd",
         L10nKey::SettingsSidebarIconStarburst => "星形",
         L10nKey::SettingsSidebarIconApp => "アプリアイコン",
         L10nKey::SettingsSidebarIconOpenAI => "OpenAI のロゴ",
@@ -846,9 +846,7 @@ pub fn translate_ja(key: L10nKey) -> Option<&'static str> {
         L10nKey::SettingsAgentGrokBuild => "Grok Build",
         L10nKey::SettingsAgentOhMyPi => "Oh My Pi",
         L10nKey::SettingsAgentGemini => "Gemini",
-        L10nKey::SettingsAgentDroid => "Droid",
         L10nKey::SettingsAgentQwenCode => "Qwen Code",
-        L10nKey::SettingsAgentGoose => "Goose",
         L10nKey::SettingsAgentKimiCode => "Kimi Code",
         L10nKey::SettingsAgentQoderCLI => "Qoder",
         L10nKey::SettingsAgentCodeBuddy => "CodeBuddy",
@@ -981,14 +979,8 @@ pub fn translate_ja(key: L10nKey) -> Option<&'static str> {
         L10nKey::SettingsSearchGeminiKeywords => {
             "エージェント 統合 フック インストール gemini google agent integration hooks install"
         }
-        L10nKey::SettingsSearchDroidKeywords => {
-            "エージェント 統合 フック インストール droid factory agent integration hooks install"
-        }
         L10nKey::SettingsSearchQwenCodeKeywords => {
             "エージェント 統合 フック インストール qwen code agent integration hooks install"
-        }
-        L10nKey::SettingsSearchGooseKeywords => {
-            "エージェント 統合 フック プラグイン インストール goose agent integration hooks plugin install"
         }
         L10nKey::SettingsSearchKimiCodeKeywords => {
             "エージェント 統合 フック インストール kimi code moonshot agent integration hooks install"

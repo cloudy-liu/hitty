@@ -646,7 +646,7 @@ pub fn translate_en(key: L10nKey) -> &'static str {
         L10nKey::SettingsSidebarIconsPreview => "Icon preview",
         L10nKey::SettingsSidebarIconDefault => "Default",
         L10nKey::SettingsSidebarIconDefaultChoice => "Default · {icon}",
-        L10nKey::SettingsSidebarIconClawd => "Clawd (when available)",
+        L10nKey::SettingsSidebarIconClawd => "Clawd",
         L10nKey::SettingsSidebarIconStarburst => "Starburst",
         L10nKey::SettingsSidebarIconApp => "App icon",
         L10nKey::SettingsSidebarIconOpenAI => "OpenAI knot",
@@ -832,9 +832,7 @@ pub fn translate_en(key: L10nKey) -> &'static str {
         L10nKey::SettingsAgentGrokBuild => "Grok Build",
         L10nKey::SettingsAgentOhMyPi => "Oh My Pi",
         L10nKey::SettingsAgentGemini => "Gemini",
-        L10nKey::SettingsAgentDroid => "Droid",
         L10nKey::SettingsAgentQwenCode => "Qwen Code",
-        L10nKey::SettingsAgentGoose => "Goose",
         L10nKey::SettingsAgentKimiCode => "Kimi Code",
         L10nKey::SettingsAgentQoderCLI => "Qoder",
         L10nKey::SettingsAgentCodeBuddy => "CodeBuddy",
@@ -929,11 +927,9 @@ pub fn translate_en(key: L10nKey) -> &'static str {
         }
         L10nKey::SettingsSearchOhMyPiKeywords => "agent integration extension install omp oh my pi",
         L10nKey::SettingsSearchGeminiKeywords => "agent integration hooks install gemini google",
-        L10nKey::SettingsSearchDroidKeywords => "agent integration hooks install droid factory",
         L10nKey::SettingsSearchQwenCodeKeywords => {
             "agent integration hooks install qwen code qwen-code"
         }
-        L10nKey::SettingsSearchGooseKeywords => "agent integration hooks plugin install goose",
         L10nKey::SettingsSearchKimiCodeKeywords => {
             "agent integration hooks install kimi code kimi-code moonshot"
         }

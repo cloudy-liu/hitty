@@ -23,6 +23,7 @@ use std::sync::Arc;
 
 use uuid::Uuid;
 
+use crate::core::agent_hooks::HookAgent;
 use crate::core::config::{
     BellMode, Config, CursorStyle, LinkFileOpen, MouseZoomModifier, NewTabPosition, NotifyMode,
     TabBarPosition, UI_FONT_SIZE_DEFAULT, WindowBackdrop,
@@ -636,18 +637,8 @@ fn settings_search_entries() -> &'static [SearchEntry] {
         },
         SearchEntry {
             section: Agents,
-            title: SettingsAgentDroid,
-            keywords: SettingsSearchDroidKeywords,
-        },
-        SearchEntry {
-            section: Agents,
             title: SettingsAgentQwenCode,
             keywords: SettingsSearchQwenCodeKeywords,
-        },
-        SearchEntry {
-            section: Agents,
-            title: SettingsAgentGoose,
-            keywords: SettingsSearchGooseKeywords,
         },
         SearchEntry {
             section: Agents,
@@ -946,6 +937,10 @@ pub(crate) enum AgentHooksView {
     Loading,
     Ready(Vec<AgentHookRow>),
     Unavailable(String),
+}
+
+pub(super) fn show_agent_hook_in_settings(agent: HookAgent) -> bool {
+    !matches!(agent, HookAgent::Droid | HookAgent::Goose)
 }
 
 #[derive(Clone)]
@@ -8436,14 +8431,15 @@ mod tests {
     }
 
     #[test]
-    fn agent_rows_are_in_the_search_index() {
-        for agent in crate::core::agent_hooks::HookAgent::ALL {
-            assert!(
+    fn the_agent_search_index_matches_visible_hook_rows() {
+        for agent in HookAgent::ALL {
+            assert_eq!(
                 settings_search_entries()
                     .iter()
                     .any(|e| e.section == SettingsSection::Agents
                         && t(e.title) == agent.display_name()),
-                "no Agents index entry titled {:?}",
+                show_agent_hook_in_settings(agent),
+                "incorrect Agents search visibility for {:?}",
                 agent.display_name()
             );
         }
