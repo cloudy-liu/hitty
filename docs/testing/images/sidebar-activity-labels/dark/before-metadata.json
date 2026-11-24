@@ -1,0 +1,15 @@
+{
+  "revision": "cbc800b009efce3506aff7578b672c37f6f647ba",
+  "platform": "Windows / GPUI / PrintWindow",
+  "viewport": [
+    1200,
+    700
+  ],
+  "display_scale": 1.75,
+  "activity_reference_secs": 1795495564,
+  "source": "Production HittyApp render; deterministic daemon messages, no live agent.",
+  "scenes": [
+    "session-activity-hover-dark",
+    "session-activity-wrap-dark"
+  ]
+}

@@ -11,7 +11,7 @@ use gpui_component::menu::{
     ContextMenu, ContextMenuExt as _, DropdownMenu as _, PopupMenu, PopupMenuItem,
 };
 use gpui_component::{ActiveTheme as _, Icon, IconName, Sizable as _, h_flex, v_flex};
-use hitty_core::core::machine::{AgentActivity, AgentActivityKind};
+use hitty_core::core::machine::AgentActivity;
 use std::cell::{Cell, RefCell};
 use std::collections::HashMap;
 use std::rc::Rc;
@@ -69,21 +69,6 @@ fn activity_label(
     )
 }
 
-fn activity_detail(at: &DateTime<FixedOffset>, kind: AgentActivityKind) -> SharedString {
-    let event = t(match kind {
-        AgentActivityKind::PromptSubmitted => L10nKey::SidebarPromptSubmitted,
-        AgentActivityKind::TurnStarted => L10nKey::SidebarTurnStarted,
-        AgentActivityKind::InputNeeded => L10nKey::SidebarInputNeeded,
-        AgentActivityKind::TurnFinished => L10nKey::SidebarTurnFinished,
-    });
-    let time = at.format("%Y-%m-%d %H:%M:%S %:z").to_string();
-    t_fmt(
-        L10nKey::SidebarLastActivity,
-        &[("time", &time), ("event", event)],
-    )
-    .into()
-}
-
 // Match workspace_head: 5px outer inset + 6px button padding + half its 20px avatar.
 const LEADING_ICON_CENTER: f32 = 21.;
 
@@ -128,10 +113,9 @@ mod row_metrics {
 /// a second time — the two derivations have to agree, and the shortest way to
 /// guarantee that is to only ever have one.
 struct SidebarRowShown {
-    /// The elided title, and the full string it came from. `None` when the
-    /// row is showing a placeholder (`Shell 3`) rather than a real title,
-    /// which nothing can expand.
-    title: Option<(SharedString, SharedString)>,
+    /// The elided and full title. A placeholder (`Shell 3`) uses the same
+    /// string for both.
+    title: (SharedString, SharedString),
     branch: Option<(SharedString, SharedString, u32, u32)>,
     cwd: Option<(SharedString, SharedString)>,
 }
@@ -145,20 +129,19 @@ impl Render for DragGroup {
     }
 }
 
-/// Every detail a sidebar row could not fit, collected so the hover card can
-/// be rendered from cloneable data (an `AnyElement` cannot be cloned, but the
-/// tooltip closure has to rebuild its content on every hover).
+/// The hover card's activity label and expanded details. Keep the data
+/// cloneable so the tooltip can rebuild its elements on each hover.
 #[derive(Clone)]
 struct SidebarInfo {
-    /// Full path, when the row's title was elided.
+    /// Full title, when elided or shown alongside the activity label.
     title: Option<SharedString>,
+    activity: Option<SharedString>,
     /// Full branch plus diff counts, when the row's branch was elided.
     branch: Option<(SharedString, u32, u32)>,
     /// Full working directory, when the row's second line was elided.
     cwd: Option<SharedString>,
     /// Remote host, which the row itself never names.
     host: Option<SharedString>,
-    activity: Option<SharedString>,
 }
 
 impl HittyApp {
@@ -543,25 +526,25 @@ impl HittyApp {
                         })
                         .max_by_key(|activity| activity.unix_ms)
                 };
-                let activity = activity.and_then(|activity| {
+                let activity_label = activity.and_then(|activity| {
                     let at = DateTime::from_timestamp_millis(activity.unix_ms.try_into().ok()?)?
                         .with_timezone(&Local)
                         .fixed_offset();
-                    Some((at, activity.kind))
-                });
-                let activity_slot = activity.as_ref().and_then(|(at, _)| {
-                    let (label, refresh) = activity_label(&now, at);
-                    let slot_width = measure_text(&window.text_system(), &font, meta_size, &label)
-                        .max(crate::ui::tab_strip::MIN_TARGET);
+                    let (label, refresh) = activity_label(&now, &at);
                     next_activity_refresh = next_activity_refresh.into_iter().chain(refresh).min();
-                    // Keep enough room for a short title even with an older date.
-                    if label_avail - slot_width - row_metrics::GAP < 28. {
-                        return None;
-                    }
-                    Some((label, slot_width))
+                    Some(SharedString::from(label))
                 });
-                let title_avail = activity_slot.as_ref().map_or(label_avail, |(_, slot)| {
-                    label_avail - slot - row_metrics::GAP
+                let activity_slot = activity_label
+                    .as_ref()
+                    .map(|label| {
+                        let width = measure_text(&window.text_system(), &font, meta_size, label)
+                            .max(crate::ui::tab_strip::MIN_TARGET);
+                        (label.clone(), width)
+                    })
+                    // Keep enough room for a short title even with an older date.
+                    .filter(|(_, width)| label_avail - width - row_metrics::GAP >= 28.);
+                let title_avail = activity_slot.as_ref().map_or(label_avail, |(_, width)| {
+                    label_avail - width - row_metrics::GAP
                 });
                 // An agent row opens its second line with a status tag, in the
                 // badge's colour, when enabled by configuration. The tag never
@@ -900,19 +883,14 @@ impl HittyApp {
                     .map(|r| r.input.clone());
 
                 let shown = SidebarRowShown {
-                    title: full_title.map(|full| (shown_title.clone(), full)),
+                    title: (
+                        shown_title.clone(),
+                        full_title.unwrap_or_else(|| shown_title.clone()),
+                    ),
                     branch: branch_shown.clone(),
                     cwd: cwd_shown.clone(),
                 };
-                let info = self.sidebar_info(
-                    tab,
-                    window,
-                    cx,
-                    &shown,
-                    activity
-                        .as_ref()
-                        .map(|(at, kind)| activity_detail(at, *kind)),
-                );
+                let info = self.sidebar_info(tab, window, cx, &shown, activity_label);
                 // Colors are captured by value so the tooltip builder (which
                 // borrows no app state) can style the card on its own.
                 let muted = cx.theme().muted_foreground;
@@ -953,11 +931,32 @@ impl HittyApp {
                                         // truncated a second time.
                                         .when_some(info.title.clone(), |c, title| {
                                             c.child(
-                                                div()
-                                                    .max_w(px(420.))
-                                                    .text_size(px(title_size))
-                                                    .font_weight(FontWeight::MEDIUM)
-                                                    .child(title),
+                                                h_flex()
+                                                    .items_baseline()
+                                                    .justify_between()
+                                                    .gap_2()
+                                                    .child(
+                                                        div()
+                                                            .flex_1()
+                                                            .min_w_0()
+                                                            .max_w(px(420.))
+                                                            .text_size(px(title_size))
+                                                            .font_weight(FontWeight::MEDIUM)
+                                                            .child(title),
+                                                    )
+                                                    .when_some(
+                                                        info.activity.clone(),
+                                                        |heading, label| {
+                                                            heading.child(
+                                                                div()
+                                                                    .flex_shrink_0()
+                                                                    .whitespace_nowrap()
+                                                                    .text_size(px(meta_size))
+                                                                    .text_color(muted)
+                                                                    .child(label),
+                                                            )
+                                                        },
+                                                    ),
                                             )
                                         })
                                         .when_some(
@@ -1018,15 +1017,6 @@ impl HittyApp {
                                                     )
                                                     .child(div().truncate().child(host)),
                                             )
-                                        })
-                                        .when_some(info.activity.clone(), |c, activity| {
-                                            c.child(
-                                                div()
-                                                    .max_w(px(420.))
-                                                    .text_xs()
-                                                    .text_color(muted)
-                                                    .child(activity),
-                                            )
                                         });
                                     card
                                 })
@@ -1052,6 +1042,7 @@ impl HittyApp {
                                         div()
                                             .w(px(slot_width))
                                             .flex_shrink_0()
+                                            .whitespace_nowrap()
                                             .text_right()
                                             .text_size(px(meta_size))
                                             .text_color(muted)
@@ -2101,17 +2092,12 @@ impl HittyApp {
         });
     }
 
-    /// What the sidebar row hid: the full title, the full branch and diff
-    /// counts, the working directory, and the target behind the SSH marker.
-    /// `None` when the row showed everything — a card would add noise,
-    /// not information. The host is included even for an untruncated row,
-    /// because the title strips the `user@host:` prefix the avatar cannot
-    /// spell out.
+    /// The full title, branch and diff counts, working directory, and target
+    /// behind the SSH marker. The card puts the activity label beside the
+    /// full title even when the title already fits in the sidebar.
     ///
-    /// Every line is decided by comparing what the row rendered against the
-    /// string it was elided from. Both come from the row itself: deriving
-    /// them here a second time is how a renamed tab ended up with a name the
-    /// row shortened and the card refused to expand.
+    /// Use the row's rendered and full strings to check what was elided. This
+    /// keeps renamed sessions and their expanded titles in sync.
     fn sidebar_info(
         &self,
         tab: &crate::ui::app::Tab,
@@ -2120,13 +2106,10 @@ impl HittyApp {
         shown: &SidebarRowShown,
         activity: Option<SharedString>,
     ) -> Option<SidebarInfo> {
-        let elided = |pair: &Option<(SharedString, SharedString)>| {
-            pair.as_ref()
-                .filter(|(shown, full)| shown != full)
-                .map(|(_, full)| full.clone())
-        };
         let mut info = SidebarInfo {
-            title: elided(&shown.title),
+            title: (activity.is_some() || shown.title.0 != shown.title.1)
+                .then(|| shown.title.1.clone()),
+            activity,
             branch: shown
                 .branch
                 .as_ref()
@@ -2135,9 +2118,12 @@ impl HittyApp {
             // The cwd only earns a card line when it was rendered *and*
             // elided: a repo row already shows the full path as its title, so
             // repeating the cwd under it would be noise, not information.
-            cwd: elided(&shown.cwd),
+            cwd: shown
+                .cwd
+                .as_ref()
+                .filter(|(shown, full)| shown != full)
+                .map(|(_, full)| full.clone()),
             host: None,
-            activity,
         };
         // The host is read off the same leaf the title and cwd came from; a
         // split tab whose panes sit on different machines would otherwise
@@ -2150,12 +2136,8 @@ impl HittyApp {
         {
             info.host = Some(target);
         }
-        (info.title.is_some()
-            || info.branch.is_some()
-            || info.cwd.is_some()
-            || info.host.is_some()
-            || info.activity.is_some())
-        .then_some(info)
+        (info.title.is_some() || info.branch.is_some() || info.cwd.is_some() || info.host.is_some())
+            .then_some(info)
     }
 
     fn sidebar_group_keys(&self, cx: &gpui::App) -> Vec<Option<PathBuf>> {
