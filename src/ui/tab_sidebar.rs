@@ -189,7 +189,7 @@ impl HittyApp {
         let show_badges = self.mod_hint_badges;
         let show_agent_names = cx.global::<Config>().sidebar_agent_names;
         let show_status_text = cx.global::<Config>().sidebar_agent_status_text;
-        let claude_product_icon = super::sidebar_agent_icons::local_claude_icon();
+        let claude_product_icon = super::sidebar_agent_icons::selected_claude_icon(cx);
         let width = self.sidebar_px(window, cx);
         let host = WorkspaceStore::host_of(cx, self.workspace);
         let activities: HashMap<u64, AgentActivity> =
@@ -582,14 +582,6 @@ impl HittyApp {
                 };
                 let sidebar_agent = match avatar {
                     TabAvatar::Agent(agent) if show_agent_names => Some(agent),
-                    _ => None,
-                };
-                let product_icon = match avatar {
-                    TabAvatar::Agent(agent) => super::sidebar_agent_icons::selected_product_icon(
-                        agent,
-                        &claude_product_icon,
-                        cx.global::<Config>(),
-                    ),
                     _ => None,
                 };
                 let git_status = tab.git_status(Some(window), cx);
@@ -1145,7 +1137,7 @@ impl HittyApp {
                                 agent_indicator,
                                 22.,
                                 ssh,
-                                product_icon,
+                                &claude_product_icon,
                                 cx,
                             )),
                     )

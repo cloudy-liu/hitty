@@ -648,7 +648,7 @@ pub fn translate_ja(key: L10nKey) -> Option<&'static str> {
         }
         L10nKey::SettingsSidebarAgentIcons => "サイドバーのエージェントアイコン",
         L10nKey::SettingsSidebarAgentIconsDesc => {
-            "サイドバーのタブで使うアイコンをエージェントごとに選びます。"
+            "タブ、スイッチャー、エージェントペインのタイトルで使うアイコンをエージェントごとに選びます。"
         }
         L10nKey::SettingsSidebarIconsCustomize => "カスタマイズ",
         L10nKey::SettingsSidebarIconsCollapse => "選択肢を閉じる",

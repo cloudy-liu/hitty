@@ -171,8 +171,8 @@ pub(crate) fn run(path: &std::ffi::OsStr) {
             value[names_key] = serde_json::Value::Bool(options.sidebar_product_icons);
             if options.sidebar_icon_fixture {
                 let saved = serde_json::to_value(&Config::load().0).unwrap();
-                if let Some(icons) = saved.get("sidebar_agent_standard_icons") {
-                    value["sidebar_agent_standard_icons"] = icons.clone();
+                if let Some(icons) = saved.get("sidebar_agent_custom_icons") {
+                    value["sidebar_agent_custom_icons"] = icons.clone();
                 }
             }
             let config = Config(serde_json::from_value(value).unwrap());
