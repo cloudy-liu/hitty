@@ -335,10 +335,15 @@ impl PaneRecord {
     }
 
     pub fn merge_activity_from(&mut self, previous: &Self) {
-        self.last_terminal_activity_ms = self
-            .last_terminal_activity_ms
-            .max(previous.last_terminal_activity_ms);
-        if let Some(activity) = previous.last_agent_activity {
+        self.note_activity(
+            previous.last_agent_activity,
+            previous.last_terminal_activity_ms,
+        );
+    }
+
+    pub fn note_activity(&mut self, agent: Option<AgentActivity>, terminal: Option<u64>) {
+        self.last_terminal_activity_ms = self.last_terminal_activity_ms.max(terminal);
+        if let Some(activity) = agent {
             self.note_agent_activity(activity);
         }
     }

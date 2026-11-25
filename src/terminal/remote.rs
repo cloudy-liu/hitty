@@ -113,6 +113,7 @@ pub struct PaneWorkspace {
     /// `false` whenever the answer is unknown (link down, server too old to
     /// advertise), which keeps the safe reflow-at-request behavior.
     pub resize_echo: bool,
+    pub passive_input: bool,
 }
 
 impl PaneWorkspace {
@@ -156,6 +157,7 @@ pub enum PaneRoute {
         /// answer everywhere a route is assigned — spawn, attach, relink —
         /// and a relink builds its route fresh, so a reconnect re-answers it.
         resize_echo: bool,
+        passive_input: bool,
     },
     Unroutable(String),
 }
@@ -168,6 +170,7 @@ impl PaneRoute {
                 Ok(header) => PaneRoute::Remote {
                     header: Box::new(header),
                     resize_echo: ws.resize_echo,
+                    passive_input: ws.passive_input,
                 },
                 Err(e) => PaneRoute::Unroutable(e.to_string()),
             },
@@ -1573,6 +1576,25 @@ impl RemoteTerminal {
             return;
         }
         self.link.send(ClientMsg::Input(bytes.into_owned()));
+    }
+
+    pub fn write_passive<B: Into<Cow<'static, [u8]>>>(&self, bytes: B) {
+        let bytes = bytes.into();
+        if bytes.is_empty() {
+            return;
+        }
+        let supported = match &self.route {
+            PaneRoute::Local => crate::daemon::spawn::local_daemon_supports(
+                crate::daemon::protocol::FEATURE_PASSIVE_INPUT,
+            ),
+            PaneRoute::Remote { passive_input, .. } => *passive_input,
+            PaneRoute::Unroutable(_) => false,
+        };
+        self.link.send(if supported {
+            ClientMsg::PassiveInput(bytes.into_owned())
+        } else {
+            ClientMsg::Input(bytes.into_owned())
+        });
     }
 
     /// Whether the daemon behind this pane echoes a `DaemonMsg::Size` into the
@@ -3691,6 +3713,7 @@ mod tests {
             )),
             label: None,
             resize_echo: false,
+            passive_input: false,
         }
     }
 
@@ -3720,6 +3743,7 @@ mod tests {
                 PaneRoute::for_workspace(Some(&ws)),
                 PaneRoute::Remote {
                     resize_echo: true,
+                    passive_input: false,
                     ..
                 }
             ),
@@ -3737,6 +3761,7 @@ mod tests {
             spec: None,
             label: None,
             resize_echo: false,
+            passive_input: false,
         };
         let route = PaneRoute::for_workspace(Some(&ws));
         let header = route.header().expect("WSL is routed");
@@ -3755,6 +3780,7 @@ mod tests {
             spec: None,
             label: None,
             resize_echo: false,
+            passive_input: false,
         };
         let route = PaneRoute::for_workspace(Some(&ws));
         let header = route.header().expect("a local child is routable");
@@ -3778,6 +3804,7 @@ mod tests {
             spec: None,
             label: None,
             resize_echo: false,
+            passive_input: false,
         };
         let route = PaneRoute::for_workspace(Some(&ws));
         assert!(matches!(route, PaneRoute::Unroutable(_)));
@@ -4514,6 +4541,31 @@ mod tests {
         }
     }
 
+    #[test]
+    fn passive_input_keeps_the_bytes_and_negotiates_the_frame() {
+        let (client_side, mut daemon_side) = UnixStream::pair().unwrap();
+        let mut term = RemoteTerminal::from_stream(client_side, TermSize::new(80, 24)).unwrap();
+        let bytes = b"\x1b[A".to_vec();
+        term.route = PaneRoute::Remote {
+            header: Box::new(crate::daemon::router::RouteHeader::wsl("Ubuntu-22.04")),
+            resize_echo: false,
+            passive_input: true,
+        };
+        term.write_passive(bytes.clone());
+        assert_eq!(
+            ClientMsg::read(&mut daemon_side).unwrap(),
+            ClientMsg::PassiveInput(bytes.clone())
+        );
+        if let PaneRoute::Remote { passive_input, .. } = &mut term.route {
+            *passive_input = false;
+        }
+        term.write_passive(bytes.clone());
+        assert_eq!(
+            ClientMsg::read(&mut daemon_side).unwrap(),
+            ClientMsg::Input(bytes)
+        );
+    }
+
     /// A peer that holds the link open and stops reading is what the router
     /// looks like from here when the far end is congested: `copy_bidirectional`
     /// stops draining our half and the send buffer fills. The socket is
@@ -4882,6 +4934,7 @@ mod tests {
         term.route = PaneRoute::Remote {
             header: Box::new(crate::daemon::router::RouteHeader::wsl("Ubuntu-22.04")),
             resize_echo: true,
+            passive_input: false,
         };
 
         term.resize(TermSize::new(120, 30), 8, 17);
@@ -4949,6 +5002,7 @@ mod tests {
         term.route = PaneRoute::Remote {
             header: Box::new(crate::daemon::router::RouteHeader::wsl("Ubuntu-22.04")),
             resize_echo: false,
+            passive_input: false,
         };
 
         term.resize(TermSize::new(120, 30), 8, 17);

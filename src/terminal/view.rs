@@ -2100,7 +2100,7 @@ impl TerminalView {
             }
             AlacEvent::Title(title) => self.set_title_when_settled(title, cx),
             AlacEvent::ResetTitle => self.set_title_when_settled(self.default_title.clone(), cx),
-            AlacEvent::PtyWrite(text) => self.terminal.write(text.into_bytes()),
+            AlacEvent::PtyWrite(text) => self.terminal.write_passive(text.into_bytes()),
             AlacEvent::ChildExit(_) | AlacEvent::Exit => {
                 self.terminal.exited = true;
                 self.release_native_git(cx);
@@ -2130,7 +2130,7 @@ impl TerminalView {
             }
             AlacEvent::ClipboardLoad(_, fmt) => {
                 if let Some(text) = cx.read_from_clipboard().and_then(|c| c.text()) {
-                    self.terminal.write(fmt(&text).into_bytes());
+                    self.terminal.write_passive(fmt(&text).into_bytes());
                 }
             }
             AlacEvent::ColorRequest(idx, fmt) => {
@@ -2149,7 +2149,7 @@ impl TerminalView {
                     258 => super::palette::hsla_to_rgb(theme.caret),
                     i => self.terminal.palette[i.min(255)],
                 };
-                self.terminal.write(fmt(rgb).into_bytes());
+                self.terminal.write_passive(fmt(rgb).into_bytes());
             }
             AlacEvent::Bell => match cx.global::<Config>().bell {
                 BellMode::None => {}
@@ -2172,7 +2172,7 @@ impl TerminalView {
                     cell_width: self.cell_width.as_f32().round() as u16,
                     cell_height: self.line_height.as_f32().round() as u16,
                 });
-                self.terminal.write(reply.into_bytes());
+                self.terminal.write_passive(reply.into_bytes());
             }
             _ => {}
         }
@@ -2181,7 +2181,7 @@ impl TerminalView {
     fn report_focus_change(&self, focused: bool) {
         let mode = *self.terminal.term.lock().mode();
         if let Some(bytes) = focus_report_bytes(mode, focused) {
-            self.terminal.write(bytes);
+            self.terminal.write_passive(bytes);
         }
     }
 
@@ -3005,7 +3005,11 @@ impl TerminalView {
             .mode()
             .contains(TermMode::SGR_MOUSE);
         if let Some(msg) = encode_mouse(sgr, base, mods, col, row, pressed) {
-            self.terminal.write(msg);
+            if pressed && base < 3 {
+                self.terminal.write(msg);
+            } else {
+                self.terminal.write_passive(msg);
+            }
         }
     }
 
@@ -3093,7 +3097,7 @@ impl TerminalView {
                 for _ in 0..lines.unsigned_abs() {
                     out.extend_from_slice(seq);
                 }
-                self.terminal.write(out);
+                self.terminal.write_passive(out);
             }
             WheelRoute::Scrollback => {
                 self.scroll_frac = 0.;
@@ -7813,6 +7817,7 @@ mod tests {
             }),
             label: None,
             resize_echo: false,
+            passive_input: false,
         }
     }
 
@@ -9122,6 +9127,7 @@ mod tests {
             spec: None,
             label: None,
             resize_echo: false,
+            passive_input: false,
         };
 
         let remote = ws.target.host_id();
@@ -9139,6 +9145,7 @@ mod tests {
             spec: None,
             label: None,
             resize_echo: false,
+            passive_input: false,
         };
         assert_eq!(sibling.target.host_id(), remote);
     }
@@ -12746,6 +12753,7 @@ mod gpui_tests {
             )),
             label: None,
             resize_echo: false,
+            passive_input: false,
         }));
         id
     }
@@ -12999,6 +13007,7 @@ mod gpui_tests {
                     spec: None,
                     label: Some("hummingbot".into()),
                     resize_echo: false,
+                    passive_input: false,
                 }));
                 assert_eq!(view.title, "hummingbot", "an untitled tab shows the name");
                 view.handle_event(AlacEvent::Exit, cx);

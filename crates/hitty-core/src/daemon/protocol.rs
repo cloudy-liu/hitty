@@ -28,6 +28,8 @@ pub const FEATURE_RESTORE_SCROLLBACK: &str = "restore-scrollback";
 /// command on the pane's controlling connection.
 pub const FEATURE_AGENT_RESUME: &str = "agent-resume";
 
+pub const FEATURE_PASSIVE_INPUT: &str = "passive-input";
+
 /// Bounded read-only Git queries on an established Native SSH pane connection.
 pub const FEATURE_NATIVE_SSH_GIT: &str = "native-ssh-git";
 /// Recoverable trash over a Native SSH pane, with no permanent-delete fallback.
@@ -58,6 +60,7 @@ impl DaemonVersion {
             FEATURE_RESIZE_ECHO.to_string(),
             FEATURE_RESTORE_SCROLLBACK.to_string(),
             FEATURE_AGENT_RESUME.to_string(),
+            FEATURE_PASSIVE_INPUT.to_string(),
             FEATURE_NATIVE_SSH_GIT.to_string(),
             FEATURE_NATIVE_SSH_TRASH.to_string(),
         ];
@@ -769,6 +772,8 @@ pub enum ClientMsg {
         size: WinSize,
     },
     Input(Vec<u8>),
+    /// Navigation and terminal replies go to the PTY without recording activity.
+    PassiveInput(Vec<u8>),
     ResumeAgent(AgentResume),
     SendInput {
         pane_id: u64,
@@ -948,6 +953,7 @@ mod kind {
     pub const RESUME_AGENT: u8 = 57;
     pub const AGENT_EVENT: u8 = 58;
     pub const SSH_GIT: u8 = 62;
+    pub const PASSIVE_INPUT: u8 = 63;
 
     pub const SPAWNED: u8 = 1;
     pub const SNAPSHOT: u8 = 2;
@@ -1135,6 +1141,7 @@ impl ClientMsg {
                 write_frame(w, kind::OBSERVE, &to_json(&(pane_id, size))?)
             }
             ClientMsg::Input(bytes) => write_frame(w, kind::INPUT, bytes),
+            ClientMsg::PassiveInput(bytes) => write_frame(w, kind::PASSIVE_INPUT, bytes),
             ClientMsg::ResumeAgent(resume) => write_frame(w, kind::RESUME_AGENT, &to_json(resume)?),
             ClientMsg::SendInput { pane_id, bytes } => {
                 write_frame(w, kind::SEND_INPUT, &to_json(&(pane_id, bytes))?)
@@ -1252,6 +1259,7 @@ impl ClientMsg {
                 ClientMsg::Observe { pane_id, size }
             }
             kind::INPUT => ClientMsg::Input(payload),
+            kind::PASSIVE_INPUT => ClientMsg::PassiveInput(payload),
             kind::RESUME_AGENT => ClientMsg::ResumeAgent(from_json(&payload)?),
             kind::SEND_INPUT => {
                 let (pane_id, bytes) = from_json(&payload)?;
@@ -1511,6 +1519,7 @@ mod tests {
             },
             ClientMsg::Resize(SIZE),
             ClientMsg::Input(vec![b'l', b's', b'\r']),
+            ClientMsg::PassiveInput(b"\x1b[A".to_vec()),
             ClientMsg::Detach,
         ];
         let daemon_msgs = vec![

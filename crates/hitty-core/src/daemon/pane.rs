@@ -2364,11 +2364,14 @@ impl DaemonPane {
                             let (agent_ended, command_started) = apply_signals(&mut st, signals);
                             if st.agent.is_none() {
                                 output_activity = None;
-                            } else if output_activity
-                                .get_or_insert_with(super::terminal_activity::OutputActivity::default)
-                                .feed(bytes)
-                            {
-                                note_terminal_activity(&mut st);
+                            } else {
+                                let size = st.ring.tail_size();
+                                let observation = output_activity.get_or_insert_with(|| {
+                                    super::terminal_activity::OutputActivity::new(size)
+                                });
+                                if observation.feed(bytes, size) {
+                                    note_terminal_activity(&mut st);
+                                }
                             }
                             if let Some(remote) = remote {
                                 apply_remote_context(&mut st, remote);
@@ -2610,6 +2613,10 @@ impl DaemonPane {
         if let Some(activity) = activity {
             publish_terminal_activity(self.id, Some(activity));
         }
+        self.write_passive_input(bytes);
+    }
+
+    pub(super) fn write_passive_input(&self, bytes: &[u8]) {
         if let Ok(mut writer) = self.writer.lock() {
             let _ = writer.write_all(bytes);
             let _ = writer.flush();
@@ -3289,12 +3296,7 @@ fn publish_facts(
         } else if command_started && p.agent.as_ref().is_some_and(|a| a.restore_pending) {
             p.agent = None;
         }
-        if let Some(activity) = after.last_agent_activity {
-            p.note_agent_activity(activity);
-        }
-        p.last_terminal_activity_ms = p
-            .last_terminal_activity_ms
-            .max(after.last_terminal_activity_ms);
+        p.note_activity(after.last_agent_activity, after.last_terminal_activity_ms);
         if after.shell.is_some() {
             p.shell = after.shell;
         }
@@ -3808,16 +3810,11 @@ fn stamp_launch_argv(st: &mut PaneState, argv: Option<Vec<String>>) {
 }
 
 fn note_terminal_activity(st: &mut PaneState) -> Option<u64> {
-    if !st.alive {
-        return None;
-    }
-    let now = activity_now_ms()?;
-    // A burst of keystrokes or streaming output needs one tree update per
-    // second. The first event after a quiet period is published immediately.
-    if st
-        .last_terminal_activity_ms
-        .is_some_and(|last| now / 1000 <= last / 1000)
-    {
+    note_terminal_activity_at(st, activity_now_ms()?)
+}
+
+fn note_terminal_activity_at(st: &mut PaneState, now: u64) -> Option<u64> {
+    if !st.alive || st.last_terminal_activity_ms.is_some_and(|last| now <= last) {
         return None;
     }
     st.last_terminal_activity_ms = Some(now);
@@ -3826,7 +3823,7 @@ fn note_terminal_activity(st: &mut PaneState) -> Option<u64> {
 
 fn publish_terminal_activity(pane: u64, activity: Option<u64>) {
     crate::core::machine::observe_pane(pane, |record| {
-        record.last_terminal_activity_ms = record.last_terminal_activity_ms.max(activity);
+        record.note_activity(None, activity);
     });
 }
 
@@ -3868,6 +3865,12 @@ fn only_terminal_replies(mut bytes: &[u8]) -> bool {
                     .all(|b| b.is_ascii_digit() || b";?>".contains(b)),
                 b'u' => params.starts_with(b"?"),
                 b'I' | b'O' => params.is_empty(),
+                b'y' => {
+                    params.ends_with(b"$")
+                        && params[..params.len() - 1]
+                            .iter()
+                            .all(|b| b.is_ascii_digit() || b";?".contains(b))
+                }
                 _ => false,
             };
             if !reply {
@@ -7569,6 +7572,15 @@ mod tests {
                 .all(|message| !matches!(message, DaemonMsg::Agent(Some(CLIAgent::Claude)))),
             "subscribers must never receive a Claude identity"
         );
+    }
+
+    #[test]
+    fn terminal_activity_keeps_the_latest_event_inside_the_same_second() {
+        let mut state = test_state(true);
+        assert_eq!(note_terminal_activity_at(&mut state, 1001), Some(1001));
+        assert_eq!(note_terminal_activity_at(&mut state, 1900), Some(1900));
+        assert_eq!(note_terminal_activity_at(&mut state, 1800), None);
+        assert_eq!(state.last_terminal_activity_ms, Some(1900));
     }
 
     #[test]

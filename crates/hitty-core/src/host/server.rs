@@ -964,12 +964,8 @@ impl Conn {
             .and_then(|p| p.recent_pane_activity(pane))
             && (agent.is_some() || terminal.is_some())
         {
-            self.machine()?.note_pane_facts(pane, |p| {
-                if let Some(activity) = agent {
-                    p.note_agent_activity(activity);
-                }
-                p.last_terminal_activity_ms = p.last_terminal_activity_ms.max(terminal);
-            });
+            self.machine()?
+                .note_pane_facts(pane, |p| p.note_activity(agent, terminal));
         }
         Ok(())
     }

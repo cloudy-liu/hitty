@@ -2663,6 +2663,7 @@ mod gpui_tests {
                 spec: None,
                 label: None,
                 resize_echo: false,
+                passive_input: false,
             });
             let entry = SftpEntry {
                 name: "keep.txt".into(),

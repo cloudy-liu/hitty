@@ -124,8 +124,8 @@ smol.workspace = true
 # where a per-byte state machine costs a measurable slice of the reader loop.
 memchr = "2"
 
-# Reuse the terminal's existing VT parser to recognize forward agent output.
-vte = "0.15"
+# Use the same terminal grid as the GUI to recognize new agent text.
+alacritty_terminal.workspace = true
 
 # Base64 for the byte fields that cross the control dialect's JSON wire
 # (`host::Output`'s stdout/stderr). JSON has no byte type — `serde_json` renders

@@ -316,6 +316,10 @@ impl HittyApp {
         let meta_size = 0.75 * rem;
         let compact_activity_width = measure_text(&window.text_system(), &font, meta_size, "59m")
             .max(crate::ui::tab_strip::MIN_TARGET);
+        let month_day_width = measure_text(&window.text_system(), &font, meta_size, "88/88")
+            .max(compact_activity_width);
+        let full_date_width = measure_text(&window.text_system(), &font, meta_size, "8888-88-88")
+            .max(month_day_width);
         let rendered = |ix: &usize| {
             !visible_by_section[*ix].is_empty()
                 || (sections[*ix].pinned && sections[*ix].tabs.is_empty() && query.is_empty())
@@ -523,30 +527,34 @@ impl HittyApp {
                         })
                         .max()
                 };
-                let activity_at = activity.and_then(|at| {
-                    Some(
-                        DateTime::from_timestamp_millis((*at).try_into().ok()?)?
-                            .with_timezone(&Local)
-                            .fixed_offset(),
-                    )
+                let activity_at = activity
+                    .and_then(|at| DateTime::from_timestamp_millis((*at).try_into().ok()?))
+                    .map(|at| at.with_timezone(&Local).fixed_offset());
+                let age_label = activity_at.as_ref().and_then(|at| {
+                    let (label, refresh) = activity_label(&now, at);
+                    next_activity_refresh = next_activity_refresh.into_iter().chain(refresh).min();
+                    label
                 });
-                let activity_slot = activity_at
-                    .as_ref()
-                    .map(|at| {
-                        let (label, refresh) = activity_label(&now, at);
-                        next_activity_refresh =
-                            next_activity_refresh.into_iter().chain(refresh).min();
-                        let width = label.as_ref().map_or(compact_activity_width, |label| {
-                            measure_text(&window.text_system(), &font, meta_size, label)
-                                .max(compact_activity_width)
-                        });
-                        (label, width)
-                    })
-                    // Keep enough room for a short title even with an older date.
-                    .filter(|(_, width)| label_avail - width - row_metrics::GAP >= 28.);
-                let title_avail = activity_slot.as_ref().map_or(label_avail, |(_, width)| {
-                    label_avail - width - row_metrics::GAP
+                // Reserve the same width through empty, recent and dated
+                // states. When a date would crowd the title, use the hover card.
+                let activity_width = [
+                    (full_date_width, 104.),
+                    (month_day_width, 56.),
+                    (compact_activity_width, 28.),
+                ]
+                .into_iter()
+                .find(|(width, title_min)| {
+                    label_avail - width - row_metrics::GAP >= *title_min * (rem / 16.)
+                })
+                .map(|(width, _)| width);
+                let activity_slot = activity_width.map(|width| {
+                    let label = age_label.filter(|label| {
+                        measure_text(&window.text_system(), &font, meta_size, label) <= width
+                    });
+                    (label, width)
                 });
+                let title_avail = activity_width
+                    .map_or(label_avail, |width| label_avail - width - row_metrics::GAP);
                 // An agent row opens its second line with a status tag, in the
                 // badge's colour, when enabled by configuration. The tag never
                 // elides; whatever follows it gives up the room.
