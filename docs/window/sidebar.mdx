@@ -46,12 +46,13 @@ tabs whose shell has not reported a directory yet.
     there is a finished turn to mark.
   </Card>
   <Card title="When the session last had activity" icon="clock">
-    The time beside the title updates when a coding agent receives a prompt,
-    asks for input, or finishes a turn. For agents with screen-based detection,
-    a visible start, input request, or completion can also update the time.
-    It reads `3m`, `1h`, or `2d`, and shows a date after a week. Hover the title
-    or branch for the local time and event. The close button takes the time's
-    place while the row is hovered.
+    Terminal input, new agent output, and agent events such as tool completion,
+    input requests, or turn completion update the session's activity time.
+    A new activity clears the label. After one minute of quiet the label appears
+    as `1m` and ages through minutes, hours, days, and then a date after a week.
+    Hover the title or branch to see the compact activity label in the hover card.
+    A narrow sidebar leaves longer dates in the hover card.
+    The close button takes the time's place while the row is hovered.
   </Card>
 </CardGroup>
 

@@ -10,7 +10,7 @@ use std::time::Duration;
 use portable_pty::{Child, CommandBuilder, MasterPty, PtySize, native_pty_system};
 
 use crate::core::kitty_graphics::{GraphicsSniffer, Segment, Sniffed};
-use crate::core::machine::{AgentActivity, AgentActivityKind};
+use crate::core::machine::{AgentActivity, AgentActivityKind, activity_now_ms};
 use crate::core::osc::{OscTokenizer, percent_decode};
 use crate::daemon::protocol::{
     AuthResponse, DaemonMsg, MAX_FRAME, NativeSshSpec, PaneInfo, RemoteContext, RemoteKind,
@@ -768,6 +768,7 @@ struct PaneState {
     agent_argv: Option<Vec<String>>,
     agent_session: Option<crate::core::cli_agent::AgentSessionState>,
     last_agent_activity: Option<AgentActivity>,
+    last_terminal_activity_ms: Option<u64>,
     command_input: CommandInput,
     /// Process probes may still see an invocation after its shutdown hook.
     /// Keep it suppressed until a new command/hook or a different process.
@@ -1706,6 +1707,7 @@ impl DaemonPane {
                 agent_input_suspended: false,
                 agent_session: None,
                 last_agent_activity: None,
+                last_terminal_activity_ms: None,
                 agent_argv: None,
                 ended_agent: None,
                 command_input: CommandInput::default(),
@@ -1956,6 +1958,7 @@ impl DaemonPane {
                 agent_input_suspended: false,
                 agent_session: carried.agent_session,
                 last_agent_activity: None,
+                last_terminal_activity_ms: None,
                 agent_argv: carried.agent_argv,
                 ended_agent: carried.ended_agent,
                 command_input: CommandInput::default(),
@@ -2013,6 +2016,7 @@ impl DaemonPane {
             agent_input_suspended: false,
             agent_session: None,
             last_agent_activity: None,
+            last_terminal_activity_ms: None,
             agent_argv: None,
             ended_agent: None,
             command_input: CommandInput::default(),
@@ -2124,6 +2128,7 @@ impl DaemonPane {
             .spawn(move || {
                 crate::core::threads::promote_to_user_interactive();
                 let mut sniffer = OscSniffer::new();
+                let mut output_activity = None;
                 // A hook without command-start support cannot acknowledge each
                 // queued line. Retain the process-tree fallback between its
                 // prompt reports until the process tree is idle again.
@@ -2345,6 +2350,7 @@ impl DaemonPane {
                                 || probed_cwd.is_some();
                             let mut st = state.lock().unwrap();
                             let facts_before = may_change_facts.then(|| observed_facts(&st));
+                            let previous_activity = st.last_terminal_activity_ms;
                             st.ring.append(bytes);
                             fan_out_output(&mut st, bytes, frames, &gate);
                             // The probe was taken before parsing these hooks;
@@ -2356,6 +2362,17 @@ impl DaemonPane {
                                 apply_foreground_app(&mut st, app);
                             }
                             let (agent_ended, command_started) = apply_signals(&mut st, signals);
+                            if st.agent.is_none() {
+                                output_activity = None;
+                            } else {
+                                let size = st.ring.tail_size();
+                                let observation = output_activity.get_or_insert_with(|| {
+                                    super::terminal_activity::OutputActivity::new(size)
+                                });
+                                if observation.feed(bytes, size) {
+                                    note_terminal_activity(&mut st);
+                                }
+                            }
                             if let Some(remote) = remote {
                                 apply_remote_context(&mut st, remote);
                             }
@@ -2372,9 +2389,12 @@ impl DaemonPane {
                             let pane = st.id;
                             let alive = st.alive;
                             let facts_after = may_change_facts.then(|| observed_facts(&st));
+                            let activity = st.last_terminal_activity_ms;
                             drop(st);
-                            if !shutting_down.load(Ordering::SeqCst)
-                                && let (Some(before), Some(after)) = (facts_before, facts_after)
+                            if shutting_down.load(Ordering::SeqCst) {
+                                continue;
+                            }
+                            if let (Some(before), Some(after)) = (facts_before, facts_after)
                                 && (facts_changed(&before, &after) || agent_ended || command_started)
                             {
                                 let agent_changed = agent_ended || agent_facts_changed(
@@ -2382,6 +2402,8 @@ impl DaemonPane {
                                     after.agent.as_ref(),
                                 );
                                 publish_facts(pane, alive, after, agent_changed, command_started);
+                            } else if activity != previous_activity {
+                                publish_terminal_activity(pane, activity);
                             }
                         }
                         Err(err) if err.kind() == std::io::ErrorKind::Interrupted => continue,
@@ -2428,8 +2450,9 @@ impl DaemonPane {
         agent_state_snapshot(&self.state.lock().unwrap())
     }
 
-    pub(super) fn last_agent_activity(&self) -> Option<AgentActivity> {
-        self.state.lock().ok()?.last_agent_activity
+    pub(super) fn recent_activity(&self) -> Option<(Option<AgentActivity>, Option<u64>)> {
+        let state = self.state.lock().ok()?;
+        Some((state.last_agent_activity, state.last_terminal_activity_ms))
     }
 
     pub(super) fn remember_screen_activity(&self, activity: AgentActivity) {
@@ -2575,14 +2598,25 @@ impl DaemonPane {
             return;
         }
         dismiss_pending_restore_on_submit(self.id, bytes);
-        {
+        let activity = {
             let mut state = self.state.lock().unwrap();
-            if !only_terminal_replies(bytes) && state.pending_ssh_resume.take().is_some() {
+            let interactive = !only_terminal_replies(bytes);
+            if interactive && state.pending_ssh_resume.take().is_some() {
                 end_agent(&mut state);
                 crate::core::machine::observe_pane(self.id, |pane| pane.agent = None);
             }
             note_agent_input(&mut state, bytes);
+            interactive
+                .then(|| note_terminal_activity(&mut state))
+                .flatten()
+        };
+        if let Some(activity) = activity {
+            publish_terminal_activity(self.id, Some(activity));
         }
+        self.write_passive_input(bytes);
+    }
+
+    pub(super) fn write_passive_input(&self, bytes: &[u8]) {
         if let Ok(mut writer) = self.writer.lock() {
             let _ = writer.write_all(bytes);
             let _ = writer.flush();
@@ -3189,6 +3223,7 @@ struct ObservedFacts {
     osc_title: Option<String>,
     agent: Option<crate::core::machine::AgentFacts>,
     last_agent_activity: Option<AgentActivity>,
+    last_terminal_activity_ms: Option<u64>,
     shell: Option<ShellSpec>,
 }
 
@@ -3211,6 +3246,7 @@ fn observed_facts(st: &PaneState) -> ObservedFacts {
         osc_title: st.osc_title.clone(),
         agent,
         last_agent_activity: st.last_agent_activity,
+        last_terminal_activity_ms: st.last_terminal_activity_ms,
         shell: st.shell_spec.clone(),
     }
 }
@@ -3260,9 +3296,7 @@ fn publish_facts(
         } else if command_started && p.agent.as_ref().is_some_and(|a| a.restore_pending) {
             p.agent = None;
         }
-        if let Some(activity) = after.last_agent_activity {
-            p.note_agent_activity(activity);
-        }
+        p.note_activity(after.last_agent_activity, after.last_terminal_activity_ms);
         if after.shell.is_some() {
             p.shell = after.shell;
         }
@@ -3277,6 +3311,7 @@ fn facts_changed(before: &ObservedFacts, after: &ObservedFacts) -> bool {
         || before.osc_title != after.osc_title
         || agent_facts_changed(before.agent.as_ref(), after.agent.as_ref())
         || before.last_agent_activity != after.last_agent_activity
+        || before.last_terminal_activity_ms != after.last_terminal_activity_ms
         || before.shell != after.shell
 }
 
@@ -3475,6 +3510,9 @@ fn apply_agent_signals(
         };
         activity = kind.or(activity);
         session.apply_event(event);
+        if event.kind == AgentEventKind::ToolComplete {
+            note_terminal_activity(st);
+        }
     }
 
     if let Some(body) = notification
@@ -3771,6 +3809,24 @@ fn stamp_launch_argv(st: &mut PaneState, argv: Option<Vec<String>>) {
     }
 }
 
+fn note_terminal_activity(st: &mut PaneState) -> Option<u64> {
+    note_terminal_activity_at(st, activity_now_ms()?)
+}
+
+fn note_terminal_activity_at(st: &mut PaneState, now: u64) -> Option<u64> {
+    if !st.alive || st.last_terminal_activity_ms.is_some_and(|last| now <= last) {
+        return None;
+    }
+    st.last_terminal_activity_ms = Some(now);
+    Some(now)
+}
+
+fn publish_terminal_activity(pane: u64, activity: Option<u64>) {
+    crate::core::machine::observe_pane(pane, |record| {
+        record.note_activity(None, activity);
+    });
+}
+
 fn note_agent_input(st: &mut PaneState, bytes: &[u8]) {
     if bytes.is_empty() || only_terminal_replies(bytes) {
         return;
@@ -3809,6 +3865,12 @@ fn only_terminal_replies(mut bytes: &[u8]) -> bool {
                     .all(|b| b.is_ascii_digit() || b";?>".contains(b)),
                 b'u' => params.starts_with(b"?"),
                 b'I' | b'O' => params.is_empty(),
+                b'y' => {
+                    params.ends_with(b"$")
+                        && params[..params.len() - 1]
+                            .iter()
+                            .all(|b| b.is_ascii_digit() || b";?".contains(b))
+                }
                 _ => false,
             };
             if !reply {
@@ -4514,7 +4576,9 @@ mod tests {
 
         // Give the attach/credit exchange a beat, then type.
         std::thread::sleep(Duration::from_millis(200));
+        assert_eq!(pane.recent_activity(), Some((None, None)));
         pane.write_input(b"typed\r");
+        assert!(pane.recent_activity().unwrap().1.is_some());
 
         let mut output = Vec::new();
         let mut exited = None;
@@ -6824,6 +6888,7 @@ mod tests {
             agent_input_suspended: false,
             agent_session: None,
             last_agent_activity: None,
+            last_terminal_activity_ms: None,
             agent_argv: None,
             ended_agent: None,
             command_input: CommandInput::default(),
@@ -6977,6 +7042,7 @@ mod tests {
                 osc_title: None,
                 agent: None,
                 last_agent_activity: None,
+                last_terminal_activity_ms: None,
                 shell: None,
             }
         );
@@ -7509,6 +7575,15 @@ mod tests {
     }
 
     #[test]
+    fn terminal_activity_keeps_the_latest_event_inside_the_same_second() {
+        let mut state = test_state(true);
+        assert_eq!(note_terminal_activity_at(&mut state, 1001), Some(1001));
+        assert_eq!(note_terminal_activity_at(&mut state, 1900), Some(1900));
+        assert_eq!(note_terminal_activity_at(&mut state, 1800), None);
+        assert_eq!(state.last_terminal_activity_ms, Some(1900));
+    }
+
+    #[test]
     fn accepted_agent_hooks_record_only_conversation_activity() {
         let mut state = test_state(true);
         let gate = OutputGate::new();
@@ -7521,10 +7596,16 @@ mod tests {
             ("session-end", Some(AgentActivityKind::TurnFinished)),
         ] {
             let body = format!(r#"{{"agent":"codex","event":"{event}","session_id":"test"}}"#);
+            let previous = state.last_terminal_activity_ms;
             apply_socket_agent_event(&mut state, &body, &gate).unwrap();
             assert_eq!(
                 state.last_agent_activity.map(|a| a.kind),
                 expected,
+                "{event}"
+            );
+            assert_eq!(
+                state.last_terminal_activity_ms != previous,
+                event == "tool-complete",
                 "{event}"
             );
         }
