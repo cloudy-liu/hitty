@@ -95,10 +95,7 @@ fn downsample_png(
         }
     }
     let buffer = RgbaImage::from_raw(target_px, target_px, bgra)?;
-    Some(RenderImage::new(SmallVec::from_elem(
-        Frame::new(buffer),
-        1,
-    )))
+    Some(RenderImage::new(SmallVec::from_elem(Frame::new(buffer), 1)))
 }
 
 /// Rasterizes Qoder's 5x5 startup mark onto an exact integer multiple of 5
@@ -122,10 +119,7 @@ fn render_qoder_startup(target_px: u32) -> Option<RenderImage> {
         bgra.extend_from_slice(&[c.blue(), c.green(), c.red(), c.alpha()]);
     }
     let buffer = RgbaImage::from_raw(target_px, target_px, bgra)?;
-    Some(RenderImage::new(SmallVec::from_elem(
-        Frame::new(buffer),
-        1,
-    )))
+    Some(RenderImage::new(SmallVec::from_elem(Frame::new(buffer), 1)))
 }
 
 fn render_crisp_asset(agent: CLIAgent, target_px: u32) -> Option<RenderImage> {
@@ -586,7 +580,9 @@ mod tests {
         assert!(selected_product_icon(CLIAgent::Antigravity, &None, &config).is_some());
 
         for agent in [CLIAgent::Claude, CLIAgent::Codex, CLIAgent::QoderCLI] {
-            config.sidebar_agent_custom_icons.insert(agent.slug().into());
+            config
+                .sidebar_agent_custom_icons
+                .insert(agent.slug().into());
             assert!(
                 selected_product_icon(agent, &None, &config).is_some(),
                 "{} should resolve to custom artwork when opted in",

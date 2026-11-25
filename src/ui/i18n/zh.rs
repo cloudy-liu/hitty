@@ -570,9 +570,7 @@ pub fn translate_zh(key: L10nKey) -> Option<&'static str> {
         L10nKey::SettingsSidebarAgentNames => "在侧栏显示 Agent 名称",
         L10nKey::SettingsSidebarAgentNamesDesc => "在侧栏标签页的第二行显示 Agent 名称。",
         L10nKey::SettingsSidebarAgentIcons => "侧栏 Agent 图标",
-        L10nKey::SettingsSidebarAgentIconsDesc => {
-            "为每个 Agent 选择标签页、切换器和窗格标题图标。"
-        }
+        L10nKey::SettingsSidebarAgentIconsDesc => "为每个 Agent 选择标签页、切换器和窗格标题图标。",
         L10nKey::SettingsSidebarIconsCustomize => "自定义",
         L10nKey::SettingsSidebarIconsCollapse => "收起选项",
         L10nKey::SettingsSidebarIconsSearch => "搜索名称或命令",
