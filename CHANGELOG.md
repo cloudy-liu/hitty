@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.5.3 - 2026-11-26
+
+- Show how long a session has been quiet. Track typing, new agent text, and
+  agent events. Hide ages under one minute and keep the compact age in the
+  hover card (cloudy-liu/hitty#64).
+- Restore standard agent icons by default and apply per-agent icon choices
+  across session navigation and pane titles. Improve the clarity of bundled
+  icons on scaled displays (cloudy-liu/hitty#63).
+
+See the [release notes](docs/releases/hitty-v0.5.3.md) for scope and
+limitations.
+
 ## v0.5.2 - 2026-11-25
 
 - Add per-agent sidebar icon customization with bundled product artwork for
