@@ -637,7 +637,9 @@ pub fn translate_en(key: L10nKey) -> &'static str {
             "Show the agent name on the second line of sidebar tabs."
         }
         L10nKey::SettingsSidebarAgentIcons => "Sidebar agent icons",
-        L10nKey::SettingsSidebarAgentIconsDesc => "Choose an icon for each agent in sidebar tabs.",
+        L10nKey::SettingsSidebarAgentIconsDesc => {
+            "Choose an icon for each agent across tabs, the switcher, and agent pane titles."
+        }
         L10nKey::SettingsSidebarIconsCustomize => "Customize",
         L10nKey::SettingsSidebarIconsCollapse => "Hide choices",
         L10nKey::SettingsSidebarIconsSearch => "Search names or commands",

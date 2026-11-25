@@ -10675,6 +10675,7 @@ mod ssh_tab_gpui_tests {
                     spec: None,
                     label: None,
                     resize_echo: false,
+                    passive_input: false,
                 }));
                 view.title = "dev@server:~/projects/api".into();
             });

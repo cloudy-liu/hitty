@@ -11228,6 +11228,7 @@ dependencies = [
 name = "hitty-core"
 version = "0.5.2"
 dependencies = [
+ "alacritty_terminal",
  "anyhow",
  "base64 0.22.1",
  "core-foundation 0.10.0",

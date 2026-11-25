@@ -252,9 +252,10 @@ pub struct Config {
     /// controlled this label.
     #[serde(default, alias = "sidebar_agent_product_icons")]
     pub sidebar_agent_names: bool,
-    /// Agent slugs that use the standard glyph instead of the default artwork.
+    /// Agent slugs that opt into alternate product artwork instead of their
+    /// default glyph.
     #[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
-    pub sidebar_agent_standard_icons: BTreeSet<String>,
+    pub sidebar_agent_custom_icons: BTreeSet<String>,
     /// Draw a recognized agent pane's icon and name in a row above its
     /// terminal. On by default; the hover toolbar on agent panes does not
     /// depend on it.
@@ -698,7 +699,7 @@ impl Default for Config {
             sidebar_diff_preview: true,
             sidebar_agent_status_text: true,
             sidebar_agent_names: false,
-            sidebar_agent_standard_icons: BTreeSet::new(),
+            sidebar_agent_custom_icons: BTreeSet::new(),
             show_agent_pane_titles: true,
             show_agent_pane_task_titles: false,
             sidebar_group_names: BTreeMap::new(),
@@ -1561,17 +1562,21 @@ mod tests {
         assert!(!Config::default().sidebar_agent_names);
         let old: Config = serde_json::from_str("{}").unwrap();
         assert!(!old.sidebar_agent_names);
-        assert!(old.sidebar_agent_standard_icons.is_empty());
+        assert!(old.sidebar_agent_custom_icons.is_empty());
+
+        let legacy: Config =
+            serde_json::from_str(r#"{"sidebar_agent_standard_icons":["claude"]}"#).unwrap();
+        assert!(legacy.sidebar_agent_custom_icons.is_empty());
 
         let mut config: Config =
             serde_json::from_str(r#"{"sidebar_agent_product_icons":true}"#).unwrap();
         assert!(config.sidebar_agent_names);
-        config.sidebar_agent_standard_icons.insert("claude".into());
+        config.sidebar_agent_custom_icons.insert("claude".into());
         config.sidebar_agent_names = false;
         let back: Config = serde_json::from_str(&serde_json::to_string(&config).unwrap()).unwrap();
         assert!(!back.sidebar_agent_names);
-        assert!(back.sidebar_agent_standard_icons.contains("claude"));
-        assert!(!back.sidebar_agent_standard_icons.contains("codex"));
+        assert!(back.sidebar_agent_custom_icons.contains("claude"));
+        assert!(!back.sidebar_agent_custom_icons.contains("codex"));
     }
 
     #[test]

@@ -108,8 +108,11 @@ impl crate::host::server::PaneDirectory for Registry {
         states
     }
 
-    fn last_agent_activity(&self, pane: u64) -> Option<crate::core::machine::AgentActivity> {
-        self.get(pane)?.last_agent_activity()
+    fn recent_pane_activity(
+        &self,
+        pane: u64,
+    ) -> Option<(Option<crate::core::machine::AgentActivity>, Option<u64>)> {
+        self.get(pane)?.recent_activity()
     }
 
     fn remember_screen_activity(&self, pane: u64, activity: crate::core::machine::AgentActivity) {
@@ -1231,7 +1234,12 @@ fn stream_observer(
 fn observe_loop<R: std::io::Read>(read_stream: &mut R, refusals: &mpsc::Sender<DaemonMsg>) {
     loop {
         match ClientMsg::read(read_stream) {
-            Ok(ClientMsg::Input(_)) | Ok(ClientMsg::ResumeAgent(_)) | Ok(ClientMsg::Resize(_)) => {
+            Ok(
+                ClientMsg::Input(_)
+                | ClientMsg::PassiveInput(_)
+                | ClientMsg::ResumeAgent(_)
+                | ClientMsg::Resize(_),
+            ) => {
                 let refused = refusals.send(DaemonMsg::Error(
                     "this connection is a read-only observer; attach to write".to_string(),
                 ));
@@ -1281,6 +1289,12 @@ fn run_stream(
                         break 'conn;
                     }
                     pane.write_input(&bytes);
+                }
+                ClientMsg::PassiveInput(bytes) => {
+                    if !pane.controls(epoch) {
+                        break 'conn;
+                    }
+                    pane.write_passive_input(&bytes);
                 }
                 ClientMsg::ResumeAgent(resume) => {
                     if !pane.controls(epoch) {
@@ -1469,6 +1483,9 @@ mod tests {
         ClientMsg::Input(b"echo hijack\r".to_vec())
             .encode(&mut wire)
             .unwrap();
+        ClientMsg::PassiveInput(b"\x1b[A".to_vec())
+            .encode(&mut wire)
+            .unwrap();
         ClientMsg::Resize(size).encode(&mut wire).unwrap();
         ClientMsg::ResumeAgent(crate::daemon::protocol::AgentResume {
             agent: crate::core::cli_agent::CLIAgent::Codex,
@@ -1493,6 +1510,10 @@ mod tests {
         assert!(
             matches!(rx.try_recv(), Ok(DaemonMsg::Error(m)) if m.contains("read-only")),
             "an observer's Input must be answered with an Error, not forwarded"
+        );
+        assert!(
+            matches!(rx.try_recv(), Ok(DaemonMsg::Error(m)) if m.contains("read-only")),
+            "an observer's passive bytes cannot reach the PTY"
         );
         assert!(
             matches!(rx.try_recv(), Ok(DaemonMsg::Error(m)) if m.contains("read-only")),
