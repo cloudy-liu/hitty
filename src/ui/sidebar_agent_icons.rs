@@ -283,7 +283,7 @@ pub(crate) fn agent_icon(
     match artwork {
         Some(source) => {
             let image_size = if matches!(agent, CLIAgent::QoderCLI | CLIAgent::QoderCLICn) {
-                (size * 0.68).round()
+                size * STANDARD_GLYPH_RATIO
             } else {
                 size - 2.
             };
