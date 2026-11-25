@@ -18,7 +18,6 @@ use std::rc::Rc;
 
 use std::path::{Path, PathBuf};
 
-use crate::core::cli_agent::CLIAgent;
 use crate::core::config::{Config, SidebarGrouping};
 use crate::core::session::WorkspaceStore;
 use crate::daemon::protocol::RemoteKind;
@@ -188,13 +187,9 @@ impl HittyApp {
         let active = self.active;
         let sf = cx.global::<crate::ui::presets::Surfaces>().sidebar;
         let show_badges = self.mod_hint_badges;
-        let show_product_icons = cx.global::<Config>().sidebar_agent_product_icons;
+        let show_agent_names = cx.global::<Config>().sidebar_agent_names;
         let show_status_text = cx.global::<Config>().sidebar_agent_status_text;
-        let claude_product_icon = show_product_icons
-            .then(|| crate::core::config::config_path("agent-icons/claude.png"))
-            .flatten()
-            .filter(|path| path.is_file())
-            .map(gpui::ImageSource::from);
+        let claude_product_icon = super::sidebar_agent_icons::local_claude_icon();
         let width = self.sidebar_px(window, cx);
         let host = WorkspaceStore::host_of(cx, self.workspace);
         let activities: HashMap<u64, AgentActivity> =
@@ -586,12 +581,15 @@ impl HittyApp {
                     })
                 };
                 let sidebar_agent = match avatar {
-                    TabAvatar::Agent(agent) if show_product_icons => Some(agent),
+                    TabAvatar::Agent(agent) if show_agent_names => Some(agent),
                     _ => None,
                 };
-                let product_icon = match sidebar_agent {
-                    Some(CLIAgent::Codex) => Some("icons/agents/codex-product.png".into()),
-                    Some(CLIAgent::Claude) => claude_product_icon.clone(),
+                let product_icon = match avatar {
+                    TabAvatar::Agent(agent) => super::sidebar_agent_icons::selected_product_icon(
+                        agent,
+                        &claude_product_icon,
+                        cx.global::<Config>(),
+                    ),
                     _ => None,
                 };
                 let git_status = tab.git_status(Some(window), cx);

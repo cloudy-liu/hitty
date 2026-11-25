@@ -37,6 +37,9 @@ struct Options {
     task_titles: bool,
     #[serde(default)]
     sidebar_product_icons: bool,
+    /// Include Qoder and Antigravity in both revisions for icon comparison.
+    #[serde(default)]
+    sidebar_icon_fixture: bool,
     #[serde(default)]
     dark: bool,
     #[serde(default)]
@@ -96,6 +99,23 @@ const CASES: [(&str, Option<CLIAgent>, &str, &str); 4] = [
     ),
 ];
 
+const ICON_CASES: [(&str, Option<CLIAgent>, &str, &str); 4] = [
+    CASES[0],
+    CASES[1],
+    (
+        "Qoder",
+        Some(CLIAgent::QoderCLI),
+        "Update terminal docs",
+        "Qoder CLI\r\n",
+    ),
+    (
+        "Antigravity",
+        Some(CLIAgent::Antigravity),
+        "Check startup",
+        "Antigravity CLI\r\n",
+    ),
+];
+
 /// What a pane's title settles on: its task when the scene asks for tasks and
 /// it is an agent's, else its name.
 fn pane_title(
@@ -118,6 +138,11 @@ pub(crate) fn run(path: &std::ffi::OsStr) {
             crate::register_bundled_fonts(cx);
             let mut config = Config::default();
             let sidebar_activity = options.layout == "sidebar-activity";
+            let cases = if options.sidebar_icon_fixture {
+                &ICON_CASES
+            } else {
+                &CASES
+            };
             config.theme_follow_system = false;
             config.theme_preset = if options.dark { "dark" } else { "light" }.into();
             config.install_cli_on_path = false;
@@ -138,8 +163,18 @@ pub(crate) fn run(path: &std::ffi::OsStr) {
             let mut value = serde_json::to_value(&config.0).unwrap();
             value["show_agent_pane_titles"] = serde_json::Value::Bool(options.titles);
             value["show_agent_pane_task_titles"] = serde_json::Value::Bool(options.task_titles);
-            value["sidebar_agent_product_icons"] =
-                serde_json::Value::Bool(options.sidebar_product_icons);
+            let names_key = if value.get("sidebar_agent_names").is_some() {
+                "sidebar_agent_names"
+            } else {
+                "sidebar_agent_product_icons"
+            };
+            value[names_key] = serde_json::Value::Bool(options.sidebar_product_icons);
+            if options.sidebar_icon_fixture {
+                let saved = serde_json::to_value(&Config::load().0).unwrap();
+                if let Some(icons) = saved.get("sidebar_agent_standard_icons") {
+                    value["sidebar_agent_standard_icons"] = icons.clone();
+                }
+            }
             let config = Config(serde_json::from_value(value).unwrap());
             cx.set_global(config);
             crate::core::session::WorkspaceStore::init(cx);
@@ -176,7 +211,7 @@ pub(crate) fn run(path: &std::ffi::OsStr) {
                         });
                         let mut streams = Vec::new();
                         owner.update(cx, |app, cx| {
-                            for (index, case) in CASES.iter().enumerate() {
+                            for (index, case) in cases.iter().enumerate() {
                                 let (_, agent, _, screen) = case;
                                 let name = if options.short_title && index == 0 {
                                     "hitty"
@@ -191,11 +226,19 @@ pub(crate) fn run(path: &std::ffi::OsStr) {
                                 DaemonMsg::Agent(*agent).encode(&mut stream).unwrap();
                                 if agent.is_some() {
                                     DaemonMsg::AgentStatus(Some(AgentSessionState {
-                                        status: if options.sidebar_product_icons {
+                                        status: if options.sidebar_icon_fixture {
+                                            [
+                                                AgentStatus::Waiting,
+                                                AgentStatus::Working,
+                                                AgentStatus::Idle,
+                                                AgentStatus::Done,
+                                            ][index]
+                                        } else if options.sidebar_product_icons {
                                             [
                                                 AgentStatus::Waiting,
                                                 AgentStatus::Idle,
                                                 AgentStatus::Done,
+                                                AgentStatus::Idle,
                                             ][index]
                                         } else {
                                             AgentStatus::Working
@@ -294,7 +337,7 @@ pub(crate) fn run(path: &std::ffi::OsStr) {
                     let ready =
                         views
                             .iter()
-                            .zip(CASES.iter())
+                            .zip(cases.iter())
                             .enumerate()
                             .all(|(index, (view, case))| {
                                 let title = if options.short_title && index == 0 {

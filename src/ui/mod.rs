@@ -46,6 +46,7 @@ pub mod scrollbar;
 pub mod settings;
 pub mod sftp;
 pub mod sftp_host;
+mod sidebar_agent_icons;
 pub mod ssh_connect;
 pub mod ssh_prompt;
 pub mod status_indicator;

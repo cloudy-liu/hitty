@@ -567,10 +567,24 @@ pub fn translate_zh(key: L10nKey) -> Option<&'static str> {
         L10nKey::SettingsSidebarAgentStatusTextDesc => {
             "在侧栏标签页第二行显示 IDLE、RUN、INPUT、DONE 状态标签。关闭时仅通过头像角标指示状态。"
         }
-        L10nKey::SettingsSidebarAgentProductIcons => "使用 Agent 产品图标",
-        L10nKey::SettingsSidebarAgentProductIconsDesc => {
-            "在侧栏标签页使用可用的产品图标，并在第二行显示 Agent 名称。"
-        }
+        L10nKey::SettingsSidebarAgentNames => "在侧栏显示 Agent 名称",
+        L10nKey::SettingsSidebarAgentNamesDesc => "在侧栏标签页的第二行显示 Agent 名称。",
+        L10nKey::SettingsSidebarAgentIcons => "侧栏 Agent 图标",
+        L10nKey::SettingsSidebarAgentIconsDesc => "为每个 Agent 选择侧栏标签页图标。",
+        L10nKey::SettingsSidebarIconsCustomize => "自定义",
+        L10nKey::SettingsSidebarIconsCollapse => "收起选项",
+        L10nKey::SettingsSidebarIconsSearch => "搜索名称或命令",
+        L10nKey::SettingsSidebarIconsCount => "{count} 个 Agent",
+        L10nKey::SettingsSidebarIconsNoMatches => "没有匹配的 Agent",
+        L10nKey::SettingsSidebarIconsPreview => "图标预览",
+        L10nKey::SettingsSidebarIconDefault => "默认",
+        L10nKey::SettingsSidebarIconDefaultChoice => "默认 · {icon}",
+        L10nKey::SettingsSidebarIconClawd => "Clawd",
+        L10nKey::SettingsSidebarIconStarburst => "星芒",
+        L10nKey::SettingsSidebarIconApp => "应用图标",
+        L10nKey::SettingsSidebarIconOpenAI => "OpenAI 结标",
+        L10nKey::SettingsSidebarIconPixelQ => "绿色像素 Q",
+        L10nKey::SettingsSidebarIconOutline => "单色轮廓",
         L10nKey::SettingsShowAgentPaneTitles => "显示 Agent 窗格标题",
         L10nKey::SettingsShowAgentPaneTitlesDesc => {
             "在 Agent 窗格的终端上方显示一行图标和名称。普通终端不显示这一行；无论开关如何，悬浮操作（分屏、放大、关闭）每个窗格都有。"
@@ -735,9 +749,7 @@ pub fn translate_zh(key: L10nKey) -> Option<&'static str> {
         L10nKey::SettingsAgentGrokBuild => "Grok Build",
         L10nKey::SettingsAgentOhMyPi => "Oh My Pi",
         L10nKey::SettingsAgentGemini => "Gemini",
-        L10nKey::SettingsAgentDroid => "Droid",
         L10nKey::SettingsAgentQwenCode => "Qwen Code",
-        L10nKey::SettingsAgentGoose => "Goose",
         L10nKey::SettingsAgentKimiCode => "Kimi Code",
         L10nKey::SettingsAgentQoderCLI => "Qoder",
         L10nKey::SettingsAgentCodeBuddy => "CodeBuddy",
@@ -868,14 +880,8 @@ pub fn translate_zh(key: L10nKey) -> Option<&'static str> {
         L10nKey::SettingsSearchGeminiKeywords => {
             "Gemini agent 集成 钩子 安装 gemini google agent integration hooks install"
         }
-        L10nKey::SettingsSearchDroidKeywords => {
-            "Droid agent 集成 钩子 安装 droid factory agent integration hooks install"
-        }
         L10nKey::SettingsSearchQwenCodeKeywords => {
             "Qwen Code 通义千问 agent 集成 钩子 安装 qwen code agent integration hooks install"
-        }
-        L10nKey::SettingsSearchGooseKeywords => {
-            "Goose agent 集成 钩子 插件 安装 goose agent integration hooks plugin install"
         }
         L10nKey::SettingsSearchKimiCodeKeywords => {
             "Kimi Code 月之暗面 agent 集成 钩子 安装 kimi code moonshot agent integration hooks install"
