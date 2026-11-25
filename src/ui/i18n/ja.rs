@@ -1999,7 +1999,6 @@ pub fn translate_ja(key: L10nKey) -> Option<&'static str> {
         L10nKey::SidebarRenameGroup => "グループ名を変更",
         L10nKey::SidebarPinGroup => "グループを固定",
         L10nKey::SidebarUnpinGroup => "固定を解除",
-        L10nKey::SidebarLastActivity => "最終アクティビティ · {time}",
         L10nKey::SidebarNewTabHere => "ここに新しいタブ",
         L10nKey::SidebarNewTabIn => "{name} に新しいタブ",
         L10nKey::SidebarCollapseOthers => "他を折りたたむ",

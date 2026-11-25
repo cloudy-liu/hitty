@@ -535,6 +535,13 @@ impl HittyApp {
                     next_activity_refresh = next_activity_refresh.into_iter().chain(refresh).min();
                     label
                 });
+                let activity_tooltip = activity_at.map(|_| {
+                    SharedString::from(
+                        age_label
+                            .as_deref()
+                            .unwrap_or_else(|| t(L10nKey::ScmTimeNow)),
+                    )
+                });
                 // Reserve the same width through empty, recent and dated
                 // states. When a date would crowd the title, use the hover card.
                 let activity_width = [
@@ -902,10 +909,6 @@ impl HittyApp {
                     branch: branch_shown.clone(),
                     cwd: cwd_shown.clone(),
                 };
-                let activity_tooltip = activity_at.map(|at| {
-                    let time = at.format("%Y-%m-%d %H:%M:%S").to_string();
-                    SharedString::from(t_fmt(L10nKey::SidebarLastActivity, &[("time", &time)]))
-                });
                 let info = self.sidebar_info(tab, window, cx, &shown, activity_tooltip);
                 // Colors are captured by value so the tooltip builder (which
                 // borrows no app state) can style the card on its own.

@@ -1097,7 +1097,6 @@ l10n_keys! {
     SidebarRenameGroup,
     SidebarPinGroup,
     SidebarUnpinGroup,
-    SidebarLastActivity,
     SidebarNewTabHere,
     SidebarNewTabIn,
     SidebarCollapseOthers,
