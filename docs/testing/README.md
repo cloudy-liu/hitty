@@ -46,6 +46,7 @@ limitations. Verify all release assets and checksums using the
 
 ## Current records
 
+- [Sidebar activity labels stay on one line](sidebar-activity-wrap.md).
 - [Codex surfaces across One Light / One Dark Pro switches](codex-theme-switch.md).
 - [Terminal startup preparation and isolated Cmder measurements](terminal-startup.md).
 - [Herdr-core pane engine acceptance](herdr-pane-engine.md) and

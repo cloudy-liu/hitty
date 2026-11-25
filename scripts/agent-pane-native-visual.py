@@ -57,6 +57,12 @@ SCENES = [  # (name, titles, dark, hover pane, zoom, settings page, layout)
     ("task-titles-settings-light", True, False, None, False, True, "grid"),
     ("session-activity-light", False, False, None, False, False, "sidebar-activity"),
     ("session-activity-hover-light", False, False, None, False, False, "sidebar-activity"),
+    ("session-activity-hover-dark", False, True, None, False, False, "sidebar-activity"),
+    ("session-activity-short-hover-light", False, False, None, False, False, "sidebar-activity"),
+    ("session-activity-wrap-light", False, False, None, False, False, "sidebar-activity"),
+    ("session-activity-wrap-dark", False, True, None, False, False, "sidebar-activity"),
+    ("session-activity-wrap-large", False, False, None, False, False, "sidebar-activity"),
+    ("session-activity-wrap-hover-large", False, False, None, False, False, "sidebar-activity"),
     ("sidebar-product-icons-light", False, False, None, False, False, "sidebar-activity"),
     ("sidebar-product-icons-dark", False, True, None, False, False, "sidebar-activity"),
     ("sidebar-product-icons-settings", False, False, None, False, True, "grid"),
@@ -78,6 +84,12 @@ TASKS = {
     "task-titles-settings-light": (False, True),
     "session-activity-light": (True, False),
     "session-activity-hover-light": (True, False),
+    "session-activity-hover-dark": (True, False),
+    "session-activity-short-hover-light": (True, False),
+    "session-activity-wrap-light": (True, False),
+    "session-activity-wrap-dark": (True, False),
+    "session-activity-wrap-large": (True, False),
+    "session-activity-wrap-hover-large": (True, False),
     "sidebar-product-icons-light": (True, False),
     "sidebar-product-icons-dark": (True, False),
     "sidebar-icon-choices-light": (True, False),
@@ -107,16 +119,20 @@ def prepare_before(destination):
         replace_once(main, b"    apply_config_dir_arg(&args);\n\n", b"    apply_config_dir_arg(&args);\n\n" + ENTRY)
 
 
-def capture_scene(binary, output, phase, scene, scale):
+def capture_scene(binary, output, phase, scene, scale, activity_reference_secs=None):
     name, titles, dark, hover, zoom, settings, layout = scene
     tasks, task_titles = TASKS.get(name, (False, False))
+    activity_wrap = name.startswith("session-activity-wrap-")
+    sidebar_width = 180 if name.endswith("-large") else 206
+    ui_font_size = 24 if name.endswith("-large") else 16
     png = output / f"{phase}-{name}.png"
     log = output / f"{phase}-{name}.log"
     with tempfile.TemporaryDirectory(prefix="hitty-agent-pane-visual-") as temporary:
         options = pathlib.Path(temporary) / "options.json"
         if layout == "sidebar-activity":
             options.with_name("config.json").write_text(json.dumps({
-                "sidebar_width": 206, "sidebar_grouping": "none",
+                "sidebar_width": sidebar_width, "sidebar_grouping": "none",
+                "ui_font_size": ui_font_size,
                 "theme_follow_system": False, "theme_preset": "dark" if dark else "light",
                 "install_cli_on_path": False,
             }), encoding="utf-8")
@@ -124,6 +140,11 @@ def capture_scene(binary, output, phase, scene, scale):
                                        "tasks": tasks, "task_titles": task_titles,
                                        "sidebar_product_icons": name.startswith(("sidebar-product-icons", "sidebar-icon-choices")),
                                        "sidebar_icon_fixture": name.startswith("sidebar-icon-choices"),
+                                       "activity_ages": [46 * 60, 12 * 3600, 8 * 86400] if activity_wrap else None,
+                                       "activity_reference_secs": activity_reference_secs,
+                                       "short_title": "short" in name,
+                                       "sidebar_width": sidebar_width if layout == "sidebar-activity" else None,
+                                       "ui_font_size": ui_font_size,
                                        "zoom": zoom, "settings": settings, "layout": layout, "hold_seconds": 90,
                                        "height": SETTINGS_HEIGHT if settings else None}), encoding="utf-8")
         with log.open("w", encoding="utf-8") as log_stream:
@@ -154,8 +175,15 @@ def capture_scene(binary, output, phase, scene, scale):
                     x, y = EDGES[hover]
                     command += ["-MoveTo", f"{int(x * scale)},{int(y * scale)}"]
                 elif layout == "sidebar-activity":
-                    x, y = (100, 132) if "hover" in name else (700, 80)
+                    x, y = (100, 152 if name.endswith("-large") else 132) if "hover" in name else (700, 80)
                     command += ["-MoveTo", f"{int(x * scale)},{int(y * scale)}"]
+                    if "hover" in name:
+                        subprocess.run([
+                            "powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File",
+                            str(CAPTURE), "-ProcId", str(process.pid),
+                            "-Out", str(png.with_suffix(".away.png")),
+                            "-MoveTo", f"{int(700 * scale)},{int(400 * scale)}", "-SettleMs", "600",
+                        ], check=True, capture_output=True)
                 elif name == "sidebar-icon-choices-settings":
                     command += ["-MoveTo", "400,345"]
                 elif name in ("sidebar-icon-choices-expanded", "sidebar-icon-choices-clawd-menu"):
@@ -167,6 +195,13 @@ def capture_scene(binary, output, phase, scene, scale):
                     command += ["-MoveTo", f"{int(66 * scale)},{int(277 * scale)}", "-Click"]
                 result = subprocess.run(command, check=True, capture_output=True, text=True)
                 print(f"  {name}: {result.stdout.strip()}", flush=True)
+                if layout == "sidebar-activity" and "hover" in name:
+                    subprocess.run([
+                        "powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File",
+                        str(CAPTURE), "-ProcId", str(process.pid),
+                        "-Out", str(png.with_suffix(".dismissed.png")),
+                        "-MoveTo", f"{int(700 * scale)},{int(400 * scale)}", "-SettleMs", "1200",
+                    ], check=True, capture_output=True)
             finally:
                 png.with_suffix(".done").write_text("captured", encoding="utf-8")
                 try:
@@ -177,7 +212,7 @@ def capture_scene(binary, output, phase, scene, scale):
     return png
 
 
-def capture_sidebar_activity(binary, output, phase, scene, scale):
+def capture_sidebar_activity(binary, output, phase, scene, scale, activity_reference_secs):
     with tempfile.TemporaryDirectory(prefix="hitty-sidebar-activity-") as temporary:
         fixture = pathlib.Path(temporary)
         for index in range(4):
@@ -193,24 +228,43 @@ def capture_sidebar_activity(binary, output, phase, scene, scale):
                 subprocess.run([*git, "-c", "user.name=Hitty Fixture", "-c", "user.email=fixture@example.invalid",
                                 "-c", "commit.gpgsign=false", "commit", "-qm", "Initial notes"], check=True)
                 notes.write_text("Keep\n" + "Add\n" * 18, encoding="utf-8")
-        png = capture_scene(binary, fixture, phase, scene, scale)
-        for evidence in (png, png.with_suffix(".log")):
+        png = capture_scene(binary, fixture, phase, scene, scale, activity_reference_secs)
+        for evidence in (png, png.with_suffix(".log"), png.with_suffix(".layout.json"),
+                         png.with_suffix(".dismissed.png")):
+            if not evidence.exists():
+                continue
             shutil.copyfile(evidence, output / evidence.name)
+        if scene[0].startswith("session-activity-"):
+            layout = json.loads(png.with_suffix(".layout.json").read_text(encoding="utf-8"))
+            assert abs(layout["display_scale"] - scale) < 0.01, "display scale differs from capture settings"
+            before, after = layout["without_activity"], layout["with_activity"]
+            assert len(before) == len(after) == 4, "missing sidebar row measurements"
+            wrapped = [index for index, (a, b) in enumerate(zip(before, after)) if b > a + 1]
+            print(f"  single-line activity: {'FAIL' if wrapped else 'PASS'}; "
+                  f"row heights {before} -> {after}", flush=True)
+            if phase == "after":
+                assert not wrapped, f"activity wrapped and increased row heights: {wrapped}"
 
 
 def capture(binary, output, phase, repository, scale, only=None):
     output.mkdir(parents=True, exist_ok=True)
+    before_metadata = output / "before-metadata.json"
+    activity_reference_secs = int(time.time())
+    if phase == "after" and before_metadata.exists():
+        activity_reference_secs = json.loads(before_metadata.read_text(encoding="utf-8")).get(
+            "activity_reference_secs", activity_reference_secs)
     for scene in SCENES:
         if only and scene[0] not in only:
             continue
         if scene[-1] == "sidebar-activity":
-            capture_sidebar_activity(binary, output, phase, scene, scale)
+            capture_sidebar_activity(binary, output, phase, scene, scale, activity_reference_secs)
         else:
             capture_scene(binary, output, phase, scene, scale)
     revision = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=repository, text=True).strip()
     (output / f"{phase}-metadata.json").write_text(json.dumps({
         "revision": revision, "platform": "Windows / GPUI / PrintWindow",
         "viewport": [W, H], "display_scale": scale,
+        "activity_reference_secs": activity_reference_secs,
         "source": "Production HittyApp render; deterministic daemon messages, no live agent.",
         "scenes": [s[0] for s in SCENES if not only or s[0] in only],
     }, indent=2), encoding="utf-8")

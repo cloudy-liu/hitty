@@ -50,6 +50,12 @@ struct Options {
     /// "grid" (2x2, default) or "column": one wide pane beside three stacked.
     #[serde(default)]
     layout: String,
+    activity_ages: Option<[u64; 3]>,
+    activity_reference_secs: Option<u64>,
+    #[serde(default)]
+    short_title: bool,
+    sidebar_width: Option<f32>,
+    ui_font_size: Option<f32>,
     height: Option<f32>,
     hold_seconds: Option<u64>,
 }
@@ -141,7 +147,13 @@ pub(crate) fn run(path: &std::ffi::OsStr) {
             config.theme_preset = if options.dark { "dark" } else { "light" }.into();
             config.install_cli_on_path = false;
             config.cursor_blink = false;
-            config.sidebar_width = if sidebar_activity { 206. } else { 240. };
+            config.sidebar_width =
+                options
+                    .sidebar_width
+                    .unwrap_or(if sidebar_activity { 206. } else { 240. });
+            if let Some(size) = options.ui_font_size {
+                config.ui_font_size = size;
+            }
             if sidebar_activity {
                 config.sidebar_grouping = crate::core::config::SidebarGrouping::None;
             }
@@ -201,7 +213,11 @@ pub(crate) fn run(path: &std::ffi::OsStr) {
                         owner.update(cx, |app, cx| {
                             for (index, case) in cases.iter().enumerate() {
                                 let (_, agent, _, screen) = case;
-                                let name = pane_title(case, options.tasks);
+                                let name = if options.short_title && index == 0 {
+                                    "hitty"
+                                } else {
+                                    pane_title(case, options.tasks)
+                                };
                                 let (view, mut stream) =
                                     quiet_test_pane(index as u64 + 1, window, cx);
                                 if sidebar_activity {
@@ -318,11 +334,21 @@ pub(crate) fn run(path: &std::ffi::OsStr) {
                     cx.background_executor()
                         .timer(Duration::from_millis(100))
                         .await;
-                    let ready = views.iter().zip(cases.iter()).all(|(view, case)| {
-                        view.read_with(cx, |view, _| {
-                            view.title == pane_title(case, options.tasks) && view.agent() == case.1
-                        })
-                    });
+                    let ready =
+                        views
+                            .iter()
+                            .zip(cases.iter())
+                            .enumerate()
+                            .all(|(index, (view, case))| {
+                                let title = if options.short_title && index == 0 {
+                                    "hitty"
+                                } else {
+                                    pane_title(case, options.tasks)
+                                };
+                                view.read_with(cx, |view, _| {
+                                    view.title == title && view.agent() == case.1
+                                })
+                            });
                     if ready {
                         break;
                     }
@@ -351,11 +377,37 @@ pub(crate) fn run(path: &std::ffi::OsStr) {
                 .unwrap();
                 cx.background_executor().timer(Duration::from_secs(2)).await;
                 cx.update_window(handle.into(), |_, window, cx| {
+                    let row_heights = |cx: &App| {
+                        owner
+                            .read(cx)
+                            .sidebar_slots
+                            .borrow()
+                            .iter()
+                            .map(|bounds| bounds.size.height.as_f32())
+                            .collect::<Vec<_>>()
+                    };
+                    let without_activity = row_heights(cx);
                     if sidebar_activity {
-                        seed_sidebar_activity(cx);
+                        seed_sidebar_activity(
+                            options.activity_ages.unwrap_or([180, 3600, 172_800]),
+                            options.activity_reference_secs,
+                            cx,
+                        );
                     }
                     window.refresh();
                     let _ = window.draw(cx);
+                    if sidebar_activity {
+                        std::fs::write(
+                            options.output.with_extension("layout.json"),
+                            serde_json::to_vec_pretty(&serde_json::json!({
+                                "without_activity": without_activity,
+                                "with_activity": row_heights(cx),
+                                "display_scale": window.scale_factor(),
+                            }))
+                            .unwrap(),
+                        )
+                        .unwrap();
+                    }
                     window.set_window_title("Agent pane visual acceptance");
                 })
                 .unwrap();
@@ -416,10 +468,10 @@ fn seed_sidebar_repo(index: usize, output: &std::path::Path, stream: &mut Stream
     });
 }
 
-fn seed_sidebar_activity(cx: &mut App) {
+fn seed_sidebar_activity(ages: [u64; 3], reference_secs: Option<u64>, cx: &mut App) {
     let mut machine = hitty_core::core::machine::Machine::default();
-    let now = crate::ui::home::now_secs();
-    for (index, age) in [180, 3600, 172_800].into_iter().enumerate() {
+    let now = reference_secs.unwrap_or_else(crate::ui::home::now_secs);
+    for (index, age) in ages.into_iter().enumerate() {
         let pane = PaneRecord::new(index as u64 + 1);
         let mut value = serde_json::to_value(pane).unwrap();
         // The baseline ignores this field, while the fixture renders the
