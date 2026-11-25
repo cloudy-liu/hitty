@@ -38,6 +38,7 @@ EDGES = {  # pane index -> logical (x, y) on that pane's top edge
     0: (SIDEBAR + PANE_W / 4, TITLE_BAR + TOP_EDGE),
     3: (SIDEBAR + PANE_W * 1.25, TITLE_BAR + PANE_H + TOP_EDGE),
 }
+TWO_DIGIT_MINUTES = "session-activity-two-digit-minutes-light"
 SCENES = [  # (name, titles, dark, hover pane, zoom, settings page, layout)
     ("default-dark", False, True, None, False, False, "grid"),
     ("hover-dark", False, True, 0, False, False, "grid"),
@@ -59,6 +60,7 @@ SCENES = [  # (name, titles, dark, hover pane, zoom, settings page, layout)
     ("session-activity-hover-light", False, False, None, False, False, "sidebar-activity"),
     ("session-activity-hover-dark", False, True, None, False, False, "sidebar-activity"),
     ("session-activity-short-hover-light", False, False, None, False, False, "sidebar-activity"),
+    (TWO_DIGIT_MINUTES, False, False, None, False, False, "sidebar-activity"),
     ("session-activity-wrap-light", False, False, None, False, False, "sidebar-activity"),
     ("session-activity-wrap-dark", False, True, None, False, False, "sidebar-activity"),
     ("session-activity-wrap-large", False, False, None, False, False, "sidebar-activity"),
@@ -86,6 +88,7 @@ TASKS = {
     "session-activity-hover-light": (True, False),
     "session-activity-hover-dark": (True, False),
     "session-activity-short-hover-light": (True, False),
+    TWO_DIGIT_MINUTES: (True, False),
     "session-activity-wrap-light": (True, False),
     "session-activity-wrap-dark": (True, False),
     "session-activity-wrap-large": (True, False),
@@ -122,7 +125,13 @@ def prepare_before(destination):
 def capture_scene(binary, output, phase, scene, scale, activity_reference_secs=None):
     name, titles, dark, hover, zoom, settings, layout = scene
     tasks, task_titles = TASKS.get(name, (False, False))
-    activity_wrap = name.startswith("session-activity-wrap-")
+    activity_ages = None
+    if name.startswith("session-activity-wrap-"):
+        activity_ages = [46 * 60, 12 * 3600, 8 * 86400]
+    elif name == TWO_DIGIT_MINUTES:
+        activity_ages = [60, 28 * 60, 6 * 60]
+        # Seed against the fixture's clock even when the before capture is old.
+        activity_reference_secs = None
     sidebar_width = 180 if name.endswith("-large") else 206
     ui_font_size = 24 if name.endswith("-large") else 16
     png = output / f"{phase}-{name}.png"
@@ -140,7 +149,7 @@ def capture_scene(binary, output, phase, scene, scale, activity_reference_secs=N
                                        "tasks": tasks, "task_titles": task_titles,
                                        "sidebar_product_icons": name.startswith(("sidebar-product-icons", "sidebar-icon-choices")),
                                        "sidebar_icon_fixture": name.startswith("sidebar-icon-choices"),
-                                       "activity_ages": [46 * 60, 12 * 3600, 8 * 86400] if activity_wrap else None,
+                                       "activity_ages": activity_ages,
                                        "activity_reference_secs": activity_reference_secs,
                                        "short_title": "short" in name,
                                        "sidebar_width": sidebar_width if layout == "sidebar-activity" else None,
@@ -252,7 +261,7 @@ def capture(binary, output, phase, repository, scale, only=None):
     activity_reference_secs = int(time.time())
     if phase == "after" and before_metadata.exists():
         activity_reference_secs = json.loads(before_metadata.read_text(encoding="utf-8")).get(
-            "activity_reference_secs", activity_reference_secs)
+            "activity_reference_secs") or activity_reference_secs
     for scene in SCENES:
         if only and scene[0] not in only:
             continue
@@ -264,7 +273,7 @@ def capture(binary, output, phase, repository, scale, only=None):
     (output / f"{phase}-metadata.json").write_text(json.dumps({
         "revision": revision, "platform": "Windows / GPUI / PrintWindow",
         "viewport": [W, H], "display_scale": scale,
-        "activity_reference_secs": activity_reference_secs,
+        "activity_reference_secs": None if only == [TWO_DIGIT_MINUTES] else activity_reference_secs,
         "source": "Production HittyApp render; deterministic daemon messages, no live agent.",
         "scenes": [s[0] for s in SCENES if not only or s[0] in only],
     }, indent=2), encoding="utf-8")

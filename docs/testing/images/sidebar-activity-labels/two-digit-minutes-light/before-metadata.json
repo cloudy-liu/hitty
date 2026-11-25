@@ -1,0 +1,14 @@
+{
+  "revision": "f414eb5c173c1d6740ca6e0160930075eaf647e3",
+  "platform": "Windows / GPUI / PrintWindow",
+  "viewport": [
+    1200,
+    700
+  ],
+  "display_scale": 1.75,
+  "activity_reference_secs": null,
+  "source": "Production HittyApp render; deterministic daemon messages, no live agent.",
+  "scenes": [
+    "session-activity-two-digit-minutes-light"
+  ]
+}
