@@ -583,7 +583,7 @@ pub fn translate_zh(key: L10nKey) -> Option<&'static str> {
         L10nKey::SettingsSidebarIconStarburst => "星芒",
         L10nKey::SettingsSidebarIconApp => "应用图标",
         L10nKey::SettingsSidebarIconOpenAI => "OpenAI 结标",
-        L10nKey::SettingsSidebarIconGreenQ => "绿色 Q",
+        L10nKey::SettingsSidebarIconPixelQ => "绿色像素 Q",
         L10nKey::SettingsSidebarIconOutline => "单色轮廓",
         L10nKey::SettingsShowAgentPaneTitles => "显示 Agent 窗格标题",
         L10nKey::SettingsShowAgentPaneTitlesDesc => {

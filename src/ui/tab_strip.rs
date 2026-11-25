@@ -1357,7 +1357,24 @@ impl HittyApp {
                     claude_icon,
                     cx.global::<crate::core::config::Config>(),
                 );
+                let offset_qoder = matches!(
+                    agent,
+                    crate::core::cli_agent::CLIAgent::QoderCLI
+                        | crate::core::cli_agent::CLIAgent::QoderCLICn
+                ) && product_icon.is_some()
+                    && badge.is_some();
                 let icon = super::sidebar_agent_icons::agent_icon(agent, product_icon, size, cx);
+                let icon = if offset_qoder {
+                    // Keep the bottom-right pixel of the Q clear of its badge.
+                    div()
+                        .relative()
+                        .left(px(-2.5))
+                        .top(px(-2.5))
+                        .child(icon)
+                        .into_any_element()
+                } else {
+                    icon
+                };
                 base.child(icon).when_some(badge, |b, badge| b.child(badge))
             }
             TabAvatar::App(crate::core::foreground_app::ForegroundApp::Herdr) => base

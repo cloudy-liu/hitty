@@ -662,7 +662,7 @@ pub fn translate_ja(key: L10nKey) -> Option<&'static str> {
         L10nKey::SettingsSidebarIconStarburst => "星形",
         L10nKey::SettingsSidebarIconApp => "アプリアイコン",
         L10nKey::SettingsSidebarIconOpenAI => "OpenAI のロゴ",
-        L10nKey::SettingsSidebarIconGreenQ => "緑の Q",
+        L10nKey::SettingsSidebarIconPixelQ => "緑のピクセル Q",
         L10nKey::SettingsSidebarIconOutline => "単色の輪郭",
         L10nKey::SettingsShowAgentPaneTitles => "エージェントペインのタイトルを表示",
         L10nKey::SettingsShowAgentPaneTitlesDesc => {

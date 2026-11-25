@@ -652,7 +652,7 @@ pub fn translate_en(key: L10nKey) -> &'static str {
         L10nKey::SettingsSidebarIconStarburst => "Starburst",
         L10nKey::SettingsSidebarIconApp => "App icon",
         L10nKey::SettingsSidebarIconOpenAI => "OpenAI knot",
-        L10nKey::SettingsSidebarIconGreenQ => "Green Q",
+        L10nKey::SettingsSidebarIconPixelQ => "Green pixel Q",
         L10nKey::SettingsSidebarIconOutline => "Monochrome outline",
         L10nKey::SettingsShowAgentPaneTitles => "Show agent pane titles",
         L10nKey::SettingsShowAgentPaneTitlesDesc => {

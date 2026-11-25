@@ -522,7 +522,7 @@ l10n_keys! {
     SettingsSidebarIconStarburst,
     SettingsSidebarIconApp,
     SettingsSidebarIconOpenAI,
-    SettingsSidebarIconGreenQ,
+    SettingsSidebarIconPixelQ,
     SettingsSidebarIconOutline,
     SettingsShowAgentPaneTitles,
     SettingsShowAgentPaneTitlesDesc,
