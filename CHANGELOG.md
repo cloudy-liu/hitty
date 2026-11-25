@@ -1,5 +1,18 @@
 # Changelog
 
+## v0.5.2 - 2026-11-25
+
+- Add per-agent sidebar icon customization with bundled product artwork for
+  Claude Code, Codex, Antigravity, and Qoder, alias search, and an independent
+  toggle for showing agent names in the sidebar (cloudy-liu/hitty#59,
+  cloudy-liu/hitty#61).
+- Keep sidebar activity durations and calendar dates on a single line across
+  sidebar widths and UI font sizes, and show the compact activity label beside
+  the full title in the hover card (cloudy-liu/hitty#60).
+
+See the [release notes](docs/releases/hitty-v0.5.2.md) for scope and
+limitations.
+
 ## v0.5.1 - 2026-11-23
 
 - Show recent agent activity beside session titles. Hover to see the exact
