@@ -1320,7 +1320,7 @@ impl HittyApp {
         indicator: Option<crate::ui::status_indicator::StatusIndicator>,
         size: f32,
         ssh: bool,
-        product_icon: Option<gpui::ImageSource>,
+        claude_icon: &Option<gpui::ImageSource>,
         cx: &App,
     ) -> gpui::AnyElement {
         let base = div()
@@ -1352,6 +1352,11 @@ impl HittyApp {
         };
         let avatar = match avatar {
             TabAvatar::Agent(agent) => {
+                let product_icon = super::sidebar_agent_icons::selected_product_icon(
+                    agent,
+                    claude_icon,
+                    cx.global::<crate::core::config::Config>(),
+                );
                 let offset_qoder = agent == crate::core::cli_agent::CLIAgent::QoderCLI
                     && product_icon.is_some()
                     && badge.is_some();
@@ -1814,6 +1819,7 @@ impl HittyApp {
             None => (0..self.tabs.len()).collect(),
         };
         let display = visible_chips(&display, active, f32::from(chips_avail));
+        let claude_product_icon = super::sidebar_agent_icons::selected_claude_icon(cx);
 
         for i in display {
             if !show_chips {
@@ -1943,7 +1949,7 @@ impl HittyApp {
                         agent_indicator,
                         18.,
                         ssh,
-                        None,
+                        &claude_product_icon,
                         cx,
                     ))
                 })

@@ -2799,6 +2799,8 @@ impl HittyApp {
                 })),
         );
 
+        let claude_product_icon = super::sidebar_agent_icons::selected_claude_icon(cx);
+
         for (nth, i) in hits.iter().enumerate() {
             let tab = &row.tabs[*i];
             let picked = nth == right_sel && column == Column::Right;
@@ -2869,7 +2871,7 @@ impl HittyApp {
                         tab.indicator,
                         ROW_AVATAR,
                         false,
-                        None,
+                        &claude_product_icon,
                         cx,
                     ))
                     .child(

@@ -129,7 +129,6 @@ pub(crate) fn title_row(
     dim: f32,
     cx: &App,
 ) -> AnyElement {
-    let ink = cx.global::<crate::ui::presets::AgentIcons>().ink(agent);
     div()
         .debug_selector(move || format!("agent-pane-title-{}", pane.as_u64()))
         .flex_shrink_0()
@@ -141,13 +140,9 @@ pub(crate) fn title_row(
         .pl(px(TITLE_PAD_X))
         .pr(px(TITLE_PAD_RIGHT))
         .when(dim < 1., |d| d.opacity(dim))
-        .child(
-            gpui::svg()
-                .path(agent.icon_path())
-                .flex_shrink_0()
-                .size(px(TITLE_ICON))
-                .text_color(gpui::rgb(ink)),
-        )
+        .child(crate::ui::sidebar_agent_icons::agent_icon_for_glyph(
+            pane, agent, TITLE_ICON, cx,
+        ))
         .child(
             // The repository's truncation idiom: take the rest of the row and be
             // allowed to shrink, so the ellipsis only ever comes from a pane
@@ -609,5 +604,21 @@ mod gpui_tests {
             drawn(&mut vcx, "agent-pane-toolbar", agent),
             "the toolbar is every pane's"
         );
+    }
+
+    #[gpui::test]
+    fn custom_agent_icon_setting_updates_the_pane_title_icon(cx: &mut TestAppContext) {
+        let (app, mut vcx, [agent, _shell], _streams) = split(cx);
+        assert!(drawn(&mut vcx, "agent-pane-icon-standard", agent));
+        assert!(!drawn(&mut vcx, "agent-pane-icon-custom", agent));
+
+        app.update_in(&mut vcx, |app, _, cx| {
+            app.update_config(cx, |cfg| {
+                cfg.sidebar_agent_custom_icons.insert("claude".into());
+            });
+        });
+        settle(&mut vcx);
+        assert!(drawn(&mut vcx, "agent-pane-icon-custom", agent));
+        assert!(!drawn(&mut vcx, "agent-pane-icon-standard", agent));
     }
 }

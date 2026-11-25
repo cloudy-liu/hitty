@@ -1,13 +1,23 @@
-use gpui::{Anchor, AnyElement, App, Context, ImageSource, div, img, prelude::*, px, rgb, svg};
+use std::collections::HashMap;
+use std::sync::{Arc, LazyLock, Mutex};
+
+use gpui::{
+    Anchor, AnyElement, App, Context, ImageSource, RenderImage, div, img, prelude::*, px, rgb, svg,
+};
 use gpui_component::button::Button;
 use gpui_component::input::Input;
 use gpui_component::menu::{DropdownMenu as _, PopupMenuItem};
 use gpui_component::{ActiveTheme as _, Icon, IconName, Sizable as _, h_flex, v_flex};
+use image::{Frame, ImageBuffer, Rgba, RgbaImage, imageops::FilterType};
+use resvg::{tiny_skia, usvg};
+use smallvec::SmallVec;
 
 use crate::core::{cli_agent::CLIAgent, config::Config};
 use crate::ui::app::HittyApp;
 use crate::ui::i18n::{L10nKey, t, t_fmt};
 use crate::ui::presets::AgentIcons;
+
+const STANDARD_GLYPH_RATIO: f32 = 0.78;
 
 const FIRST: [CLIAgent; 5] = [
     CLIAgent::Claude,
@@ -22,6 +32,135 @@ struct ProductIcon {
     label: L10nKey,
     standard_label: L10nKey,
     asset: Option<&'static str>,
+}
+
+static CRISP_RASTERS: LazyLock<Mutex<HashMap<(u8, u32), Option<Arc<RenderImage>>>>> =
+    LazyLock::new(Default::default);
+
+fn srgb_to_linear(u: u8) -> f32 {
+    let c = f32::from(u) / 255.;
+    if c <= 0.04045 {
+        c / 12.92
+    } else {
+        ((c + 0.055) / 1.055).powf(2.4)
+    }
+}
+
+fn linear_to_srgb(c: f32) -> u8 {
+    let c = c.clamp(0., 1.);
+    let s = if c <= 0.0031308 {
+        c * 12.92
+    } else {
+        1.055 * c.powf(1. / 2.4) - 0.055
+    };
+    (s * 255.).round().clamp(0., 255.) as u8
+}
+
+/// Downsamples an RGBA PNG in linear-light premultiplied alpha to the exact
+/// target device pixel size so GPUI's un-mipmapped atlas does not alias edges
+/// or bleed dark fringes from transparent pixels.
+fn downsample_png(
+    bytes: &[u8],
+    crop: Option<(u32, u32, u32, u32)>,
+    target_px: u32,
+) -> Option<RenderImage> {
+    let decoded = image::load_from_memory(bytes).ok()?;
+    let rgba = match crop {
+        Some((x, y, w, h)) => decoded.crop_imm(x, y, w, h).into_rgba8(),
+        None => decoded.into_rgba8(),
+    };
+    let (w, h) = rgba.dimensions();
+    let mut premul = ImageBuffer::<Rgba<f32>, Vec<f32>>::new(w, h);
+    for (dst, src) in premul.pixels_mut().zip(rgba.pixels()) {
+        let a = f32::from(src[3]) / 255.;
+        *dst = Rgba([
+            srgb_to_linear(src[0]) * a,
+            srgb_to_linear(src[1]) * a,
+            srgb_to_linear(src[2]) * a,
+            a,
+        ]);
+    }
+    let resized = image::imageops::resize(&premul, target_px, target_px, FilterType::Lanczos3);
+    let mut bgra = Vec::with_capacity((target_px * target_px * 4) as usize);
+    for p in resized.pixels() {
+        let a = p[3].clamp(0., 1.);
+        if a <= 1e-4 {
+            bgra.extend_from_slice(&[0, 0, 0, 0]);
+        } else {
+            let r = linear_to_srgb(p[0] / a);
+            let g = linear_to_srgb(p[1] / a);
+            let b = linear_to_srgb(p[2] / a);
+            let a_u8 = (a * 255.).round().clamp(0., 255.) as u8;
+            bgra.extend_from_slice(&[b, g, r, a_u8]);
+        }
+    }
+    let buffer = RgbaImage::from_raw(target_px, target_px, bgra)?;
+    Some(RenderImage::new(SmallVec::from_elem(
+        Frame::new(buffer),
+        1,
+    )))
+}
+
+/// Rasterizes Qoder's 5x5 startup mark onto an exact integer multiple of 5
+/// device pixels centered inside `target_px` so every block has equal pixel
+/// width and razor-sharp edges at every display scale.
+fn render_qoder_startup(target_px: u32) -> Option<RenderImage> {
+    let svg_bytes = include_bytes!("../../assets/icons/agents/qoder-startup.svg");
+    let tree = usvg::Tree::from_data(svg_bytes, &usvg::Options::default()).ok()?;
+    let cell = (target_px / 5).max(1);
+    let grid = (cell * 5).min(target_px);
+    let pad = ((target_px - grid) / 2) as f32;
+    let mut pixmap = tiny_skia::Pixmap::new(target_px, target_px)?;
+    let (w, h) = (tree.size().width(), tree.size().height());
+    let transform =
+        tiny_skia::Transform::from_scale(grid as f32 / w, grid as f32 / h).post_translate(pad, pad);
+    resvg::render(&tree, transform, &mut pixmap.as_mut());
+
+    let mut bgra = Vec::with_capacity(pixmap.data().len());
+    for p in pixmap.pixels() {
+        let c = p.demultiply();
+        bgra.extend_from_slice(&[c.blue(), c.green(), c.red(), c.alpha()]);
+    }
+    let buffer = RgbaImage::from_raw(target_px, target_px, bgra)?;
+    Some(RenderImage::new(SmallVec::from_elem(
+        Frame::new(buffer),
+        1,
+    )))
+}
+
+fn render_crisp_asset(agent: CLIAgent, target_px: u32) -> Option<RenderImage> {
+    match agent {
+        CLIAgent::Antigravity => {
+            // The 540x540 brand PNG has generous transparent padding around a
+            // 404x372 glyph (67..471, 84..456). Cropping symmetrically to
+            // 460x460 matches the optical size of `antigravity.svg`.
+            downsample_png(
+                include_bytes!("../../assets/icons/agents/antigravity-full-color.png"),
+                Some((39, 40, 460, 460)),
+                target_px,
+            )
+        }
+        CLIAgent::Codex => downsample_png(
+            include_bytes!("../../assets/icons/agents/codex-product.png"),
+            None,
+            target_px,
+        ),
+        CLIAgent::QoderCLI => render_qoder_startup(target_px),
+        _ => None,
+    }
+}
+
+fn crisp_image_source(agent: CLIAgent, logical_size: f32) -> ImageSource {
+    ImageSource::Custom(Arc::new(move |window, _cx| {
+        let target_px = (logical_size * window.scale_factor()).round().max(1.) as u32;
+        CRISP_RASTERS
+            .lock()
+            .unwrap()
+            .entry((agent as u8, target_px))
+            .or_insert_with(|| render_crisp_asset(agent, target_px).map(Arc::new))
+            .clone()
+            .map(Ok)
+    }))
 }
 
 fn product_icon(agent: CLIAgent) -> Option<ProductIcon> {
@@ -61,10 +200,18 @@ impl ProductIcon {
     }
 }
 
-pub(crate) fn local_claude_icon() -> Option<ImageSource> {
+fn local_claude_icon() -> Option<ImageSource> {
     crate::core::config::config_path("agent-icons/claude.png")
         .filter(|path| path.is_file())
         .map(ImageSource::from)
+}
+
+pub(crate) fn selected_claude_icon(cx: &App) -> Option<ImageSource> {
+    cx.global::<Config>()
+        .sidebar_agent_custom_icons
+        .contains(CLIAgent::Claude.slug())
+        .then(local_claude_icon)
+        .flatten()
 }
 
 pub(crate) fn selected_product_icon(
@@ -75,10 +222,38 @@ pub(crate) fn selected_product_icon(
     if agent == CLIAgent::Antigravity {
         return Some(ImageSource::from("icons/agents/antigravity-full-color.png"));
     }
-    if config.sidebar_agent_standard_icons.contains(agent.slug()) {
+    if !config.sidebar_agent_custom_icons.contains(agent.slug()) {
         return None;
     }
     Some(product_icon(agent)?.image(claude))
+}
+
+/// Renders an agent's configured icon sized for a target standard-glyph extent
+/// (such as the pane title row), keeping monochrome glyphs at `glyph_size` and
+/// giving product artwork a matching centered box.
+pub(crate) fn agent_icon_for_glyph(
+    pane: gpui::EntityId,
+    agent: CLIAgent,
+    glyph_size: f32,
+    cx: &App,
+) -> AnyElement {
+    let avatar_size = (glyph_size / STANDARD_GLYPH_RATIO).round();
+    let claude = selected_claude_icon(cx);
+    let artwork = selected_product_icon(agent, &claude, cx.global::<Config>());
+    let kind = if artwork.is_some() {
+        "custom"
+    } else {
+        "standard"
+    };
+    div()
+        .debug_selector(move || format!("agent-pane-icon-{kind}-{}", pane.as_u64()))
+        .flex_shrink_0()
+        .size(px(avatar_size - 2.))
+        .flex()
+        .items_center()
+        .justify_center()
+        .child(agent_icon(agent, artwork, avatar_size, cx))
+        .into_any_element()
 }
 
 pub(crate) fn agent_icon(
@@ -91,16 +266,22 @@ pub(crate) fn agent_icon(
     let fallback = move || {
         svg()
             .path(agent.icon_path())
-            .size(px(size * 0.78))
+            .size(px(size * STANDARD_GLYPH_RATIO))
             .text_color(ink)
             .into_any_element()
     };
     match artwork {
         Some(source) => {
             let image_size = if agent == CLIAgent::QoderCLI {
-                size * 0.68
+                (size * 0.68).round()
             } else {
                 size - 2.
+            };
+            let source = match agent {
+                CLIAgent::Antigravity | CLIAgent::Codex | CLIAgent::QoderCLI => {
+                    crisp_image_source(agent, image_size)
+                }
+                _ => source,
             };
             img(source)
                 .size(px(image_size))
@@ -276,23 +457,19 @@ impl HittyApp {
         let theme = cx.theme();
         let config = cx.global::<Config>();
         let choice = product_icon(agent);
-        let standard = config.sidebar_agent_standard_icons.contains(agent.slug());
+        let custom = config.sidebar_agent_custom_icons.contains(agent.slug());
         let control = match choice {
             Some(choice) => {
-                let default_image = Some(choice.image(claude));
+                let custom_image = Some(choice.image(claude));
                 let control = Button::new(("sidebar-agent-icon-choice", agent as usize))
                     .small()
                     .child(icon_label(
                         agent,
-                        if standard {
-                            None
-                        } else {
-                            default_image.clone()
-                        },
-                        t(if standard {
-                            choice.standard_label
-                        } else {
+                        if custom { custom_image.clone() } else { None },
+                        t(if custom {
                             choice.label
+                        } else {
+                            choice.standard_label
                         }),
                         cx,
                     ))
@@ -302,42 +479,36 @@ impl HittyApp {
                     .dropdown_menu_with_anchor(Anchor::TopRight, move |menu, _, _| {
                         let default_label = t_fmt(
                             L10nKey::SettingsSidebarIconDefaultChoice,
-                            &[("icon", t(choice.label))],
+                            &[("icon", t(choice.standard_label))],
                         );
                         [
-                            (false, default_label, default_image.clone()),
-                            (true, t(choice.standard_label).to_owned(), None),
+                            (false, default_label, None),
+                            (true, t(choice.label).to_owned(), custom_image.clone()),
                         ]
                         .into_iter()
-                        .fold(
-                            menu,
-                            |menu, (use_standard, label, image)| {
-                                let app = app.clone();
-                                menu.item(
-                                    PopupMenuItem::element(move |_, cx| {
-                                        icon_label(agent, image.clone(), &label, cx)
-                                    })
-                                    .checked(standard == use_standard)
-                                    .on_click(
-                                        move |_, _, cx| {
-                                            if let Some(app) = app.upgrade() {
-                                                app.update(cx, |this, cx| {
-                                                    this.update_config(cx, |cfg| {
-                                                        let icons =
-                                                            &mut cfg.sidebar_agent_standard_icons;
-                                                        if use_standard {
-                                                            icons.insert(agent.slug().into());
-                                                        } else {
-                                                            icons.remove(agent.slug());
-                                                        }
-                                                    });
-                                                });
-                                            }
-                                        },
-                                    ),
-                                )
-                            },
-                        )
+                        .fold(menu, |menu, (use_custom, label, image)| {
+                            let app = app.clone();
+                            menu.item(
+                                PopupMenuItem::element(move |_, cx| {
+                                    icon_label(agent, image.clone(), &label, cx)
+                                })
+                                .checked(custom == use_custom)
+                                .on_click(move |_, _, cx| {
+                                    if let Some(app) = app.upgrade() {
+                                        app.update(cx, |this, cx| {
+                                            this.update_config(cx, |cfg| {
+                                                let icons = &mut cfg.sidebar_agent_custom_icons;
+                                                if use_custom {
+                                                    icons.insert(agent.slug().into());
+                                                } else {
+                                                    icons.remove(agent.slug());
+                                                }
+                                            });
+                                        });
+                                    }
+                                }),
+                            )
+                        })
                     })
                     .into_any_element()
             }
@@ -402,6 +573,63 @@ mod tests {
                     .filter(|agent| agent_matches(*agent, query))
                     .collect::<Vec<_>>(),
                 [expected]
+            );
+        }
+    }
+
+    #[test]
+    fn default_sidebar_icons_use_standard_marks_and_opt_in_custom_artwork() {
+        let mut config = Config::default();
+        assert!(selected_product_icon(CLIAgent::Claude, &None, &config).is_none());
+        assert!(selected_product_icon(CLIAgent::Codex, &None, &config).is_none());
+        assert!(selected_product_icon(CLIAgent::QoderCLI, &None, &config).is_none());
+        assert!(selected_product_icon(CLIAgent::Antigravity, &None, &config).is_some());
+
+        for agent in [CLIAgent::Claude, CLIAgent::Codex, CLIAgent::QoderCLI] {
+            config.sidebar_agent_custom_icons.insert(agent.slug().into());
+            assert!(
+                selected_product_icon(agent, &None, &config).is_some(),
+                "{} should resolve to custom artwork when opted in",
+                agent.display_name()
+            );
+        }
+    }
+
+    #[test]
+    fn crisp_rasters_match_device_pixels_without_qoder_subpixel_blur() {
+        for size in [15, 20, 26, 30, 35, 40] {
+            let agy = render_crisp_asset(CLIAgent::Antigravity, size).expect("antigravity raster");
+            let agy_bytes = agy.as_bytes(0).unwrap();
+            assert_eq!(agy_bytes.len(), (size * size * 4) as usize);
+            assert!(
+                agy_bytes.chunks_exact(4).any(|p| p[3] == 255),
+                "antigravity raster at {size}px should contain opaque pixels"
+            );
+
+            let codex = render_crisp_asset(CLIAgent::Codex, size).expect("codex raster");
+            assert_eq!(codex.as_bytes(0).unwrap().len(), (size * size * 4) as usize);
+
+            let qoder = render_crisp_asset(CLIAgent::QoderCLI, size).expect("qoder raster");
+            let qoder_bytes = qoder.as_bytes(0).unwrap();
+            assert_eq!(qoder_bytes.len(), (size * size * 4) as usize);
+            // Every pixel of the 5x5 startup glyph must be either fully
+            // transparent or solid #27BD51 (BGRA = 0x51, 0xBD, 0x27, 0xFF).
+            for px in qoder_bytes.chunks_exact(4) {
+                assert!(
+                    px == [0, 0, 0, 0] || px == [0x51, 0xBD, 0x27, 0xFF],
+                    "qoder pixel at {size}px should stay crisp without anti-aliased fringes: {px:?}"
+                );
+            }
+            let cell = (size / 5).max(1);
+            let filled = qoder_bytes
+                .chunks_exact(4)
+                .filter(|px| **px == [0x51, 0xBD, 0x27, 0xFF])
+                .count();
+            // The 5x5 startup glyph fills 13 unit cells (3+1+1+1+1+1+1+1+2+1).
+            assert_eq!(
+                filled,
+                13 * (cell * cell) as usize,
+                "qoder 13-cell glyph at {size}px should have uniform {cell}x{cell} blocks"
             );
         }
     }
