@@ -20,7 +20,7 @@ to Google and identifies Google Antigravity sessions. Source and guidelines:
 https://antigravity.google/press
 Source asset: https://antigravity.google/assets/image/brand/antigravity-icon__full-color.png
 
-The Qoder CLI mark in assets/icons/agents/qoder-startup.svg identifies Qoder
-sessions. Hitty converted the five rows of terminal blocks and the #27BD51
-color from the Qoder CLI 1.1.96 Windows startup banner into a vector.
-The original mark belongs to Qoder (https://qoder.com/cli).
+The Qoder CLI mark in assets/icons/agents/qoder-product.png identifies Qoder
+and Qoder CN sessions. Extracted from the official Windows application icon
+(IDI_MYICON) bundled in the Qoder CLI binary. The mark belongs to Qoder
+(https://qoder.com/cli).

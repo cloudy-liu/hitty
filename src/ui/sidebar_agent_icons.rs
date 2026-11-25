@@ -9,7 +9,6 @@ use gpui_component::input::Input;
 use gpui_component::menu::{DropdownMenu as _, PopupMenuItem};
 use gpui_component::{ActiveTheme as _, Icon, IconName, Sizable as _, h_flex, v_flex};
 use image::{Frame, ImageBuffer, Rgba, RgbaImage, imageops::FilterType};
-use resvg::{tiny_skia, usvg};
 use smallvec::SmallVec;
 
 use crate::core::{cli_agent::CLIAgent, config::Config};
@@ -98,30 +97,6 @@ fn downsample_png(
     Some(RenderImage::new(SmallVec::from_elem(Frame::new(buffer), 1)))
 }
 
-/// Rasterizes Qoder's 5x5 startup mark onto an exact integer multiple of 5
-/// device pixels centered inside `target_px` so every block has equal pixel
-/// width and razor-sharp edges at every display scale.
-fn render_qoder_startup(target_px: u32) -> Option<RenderImage> {
-    let svg_bytes = include_bytes!("../../assets/icons/agents/qoder-startup.svg");
-    let tree = usvg::Tree::from_data(svg_bytes, &usvg::Options::default()).ok()?;
-    let cell = (target_px / 5).max(1);
-    let grid = (cell * 5).min(target_px);
-    let pad = ((target_px - grid) / 2) as f32;
-    let mut pixmap = tiny_skia::Pixmap::new(target_px, target_px)?;
-    let (w, h) = (tree.size().width(), tree.size().height());
-    let transform =
-        tiny_skia::Transform::from_scale(grid as f32 / w, grid as f32 / h).post_translate(pad, pad);
-    resvg::render(&tree, transform, &mut pixmap.as_mut());
-
-    let mut bgra = Vec::with_capacity(pixmap.data().len());
-    for p in pixmap.pixels() {
-        let c = p.demultiply();
-        bgra.extend_from_slice(&[c.blue(), c.green(), c.red(), c.alpha()]);
-    }
-    let buffer = RgbaImage::from_raw(target_px, target_px, bgra)?;
-    Some(RenderImage::new(SmallVec::from_elem(Frame::new(buffer), 1)))
-}
-
 fn render_crisp_asset(agent: CLIAgent, target_px: u32) -> Option<RenderImage> {
     match agent {
         CLIAgent::Antigravity => {
@@ -139,19 +114,27 @@ fn render_crisp_asset(agent: CLIAgent, target_px: u32) -> Option<RenderImage> {
             None,
             target_px,
         ),
-        CLIAgent::QoderCLI => render_qoder_startup(target_px),
+        CLIAgent::QoderCLI | CLIAgent::QoderCLICn => downsample_png(
+            include_bytes!("../../assets/icons/agents/qoder-product.png"),
+            None,
+            target_px,
+        ),
         _ => None,
     }
 }
 
 fn crisp_image_source(agent: CLIAgent, logical_size: f32) -> ImageSource {
+    let key_agent = match agent {
+        CLIAgent::QoderCLICn => CLIAgent::QoderCLI,
+        other => other,
+    };
     ImageSource::Custom(Arc::new(move |window, _cx| {
         let target_px = (logical_size * window.scale_factor()).round().max(1.) as u32;
         CRISP_RASTERS
             .lock()
             .unwrap()
-            .entry((agent as u8, target_px))
-            .or_insert_with(|| render_crisp_asset(agent, target_px).map(Arc::new))
+            .entry((key_agent as u8, target_px))
+            .or_insert_with(|| render_crisp_asset(key_agent, target_px).map(Arc::new))
             .clone()
             .map(Ok)
     }))
@@ -169,10 +152,10 @@ fn product_icon(agent: CLIAgent) -> Option<ProductIcon> {
             L10nKey::SettingsSidebarIconOpenAI,
             Some("icons/agents/codex-product.png"),
         ),
-        CLIAgent::QoderCLI => (
-            L10nKey::SettingsSidebarIconPixelQ,
+        CLIAgent::QoderCLI | CLIAgent::QoderCLICn => (
+            L10nKey::SettingsSidebarIconGreenQ,
             L10nKey::SettingsSidebarIconOutline,
-            Some("icons/agents/qoder-startup.svg"),
+            Some("icons/agents/qoder-product.png"),
         ),
         _ => return None,
     };
@@ -266,15 +249,12 @@ pub(crate) fn agent_icon(
     };
     match artwork {
         Some(source) => {
-            let image_size = if agent == CLIAgent::QoderCLI {
-                (size * 0.68).round()
-            } else {
-                size - 2.
-            };
+            let image_size = size - 2.;
             let source = match agent {
-                CLIAgent::Antigravity | CLIAgent::Codex | CLIAgent::QoderCLI => {
-                    crisp_image_source(agent, image_size)
-                }
+                CLIAgent::Antigravity
+                | CLIAgent::Codex
+                | CLIAgent::QoderCLI
+                | CLIAgent::QoderCLICn => crisp_image_source(agent, image_size),
                 _ => source,
             };
             img(source)
@@ -577,9 +557,15 @@ mod tests {
         assert!(selected_product_icon(CLIAgent::Claude, &None, &config).is_none());
         assert!(selected_product_icon(CLIAgent::Codex, &None, &config).is_none());
         assert!(selected_product_icon(CLIAgent::QoderCLI, &None, &config).is_none());
+        assert!(selected_product_icon(CLIAgent::QoderCLICn, &None, &config).is_none());
         assert!(selected_product_icon(CLIAgent::Antigravity, &None, &config).is_some());
 
-        for agent in [CLIAgent::Claude, CLIAgent::Codex, CLIAgent::QoderCLI] {
+        for agent in [
+            CLIAgent::Claude,
+            CLIAgent::Codex,
+            CLIAgent::QoderCLI,
+            CLIAgent::QoderCLICn,
+        ] {
             config
                 .sidebar_agent_custom_icons
                 .insert(agent.slug().into());
@@ -592,41 +578,24 @@ mod tests {
     }
 
     #[test]
-    fn crisp_rasters_match_device_pixels_without_qoder_subpixel_blur() {
-        for size in [15, 20, 26, 30, 35, 40] {
-            let agy = render_crisp_asset(CLIAgent::Antigravity, size).expect("antigravity raster");
-            let agy_bytes = agy.as_bytes(0).unwrap();
-            assert_eq!(agy_bytes.len(), (size * size * 4) as usize);
-            assert!(
-                agy_bytes.chunks_exact(4).any(|p| p[3] == 255),
-                "antigravity raster at {size}px should contain opaque pixels"
-            );
-
-            let codex = render_crisp_asset(CLIAgent::Codex, size).expect("codex raster");
-            assert_eq!(codex.as_bytes(0).unwrap().len(), (size * size * 4) as usize);
-
-            let qoder = render_crisp_asset(CLIAgent::QoderCLI, size).expect("qoder raster");
-            let qoder_bytes = qoder.as_bytes(0).unwrap();
-            assert_eq!(qoder_bytes.len(), (size * size * 4) as usize);
-            // Every pixel of the 5x5 startup glyph must be either fully
-            // transparent or solid #27BD51 (BGRA = 0x51, 0xBD, 0x27, 0xFF).
-            for px in qoder_bytes.chunks_exact(4) {
+    fn crisp_rasters_match_device_pixels_for_all_bundled_product_pngs() {
+        for size in [16, 20, 28, 35, 40] {
+            for agent in [
+                CLIAgent::Antigravity,
+                CLIAgent::Codex,
+                CLIAgent::QoderCLI,
+                CLIAgent::QoderCLICn,
+            ] {
+                let image = render_crisp_asset(agent, size)
+                    .unwrap_or_else(|| panic!("{} raster at {size}px", agent.display_name()));
+                let bytes = image.as_bytes(0).unwrap();
+                assert_eq!(bytes.len(), (size * size * 4) as usize);
                 assert!(
-                    px == [0, 0, 0, 0] || px == [0x51, 0xBD, 0x27, 0xFF],
-                    "qoder pixel at {size}px should stay crisp without anti-aliased fringes: {px:?}"
+                    bytes.chunks_exact(4).any(|p| p[3] == 255),
+                    "{} raster at {size}px should contain opaque pixels",
+                    agent.display_name()
                 );
             }
-            let cell = (size / 5).max(1);
-            let filled = qoder_bytes
-                .chunks_exact(4)
-                .filter(|px| **px == [0x51, 0xBD, 0x27, 0xFF])
-                .count();
-            // The 5x5 startup glyph fills 13 unit cells (3+1+1+1+1+1+1+1+2+1).
-            assert_eq!(
-                filled,
-                13 * (cell * cell) as usize,
-                "qoder 13-cell glyph at {size}px should have uniform {cell}x{cell} blocks"
-            );
         }
     }
 }

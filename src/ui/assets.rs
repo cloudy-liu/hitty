@@ -127,8 +127,8 @@ fn agent_icon(path: &str) -> Option<&'static [u8]> {
         "icons/agents/qwen.svg" => include_bytes!("../../assets/icons/agents/qwen.svg"),
         "icons/agents/kimi.svg" => include_bytes!("../../assets/icons/agents/kimi.svg"),
         "icons/agents/qodercli.svg" => include_bytes!("../../assets/icons/agents/qodercli.svg"),
-        "icons/agents/qoder-startup.svg" => {
-            include_bytes!("../../assets/icons/agents/qoder-startup.svg")
+        "icons/agents/qoder-product.png" => {
+            include_bytes!("../../assets/icons/agents/qoder-product.png")
         }
         // The China build ships the same mark.
         "icons/agents/qoderclicn.svg" => {
