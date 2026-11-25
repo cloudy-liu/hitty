@@ -642,10 +642,28 @@ pub fn translate_ja(key: L10nKey) -> Option<&'static str> {
         L10nKey::SettingsSidebarAgentStatusTextDesc => {
             "タブの2行目に IDLE、RUN、INPUT、DONE の状態タグを表示します。オフにするとアバターのバッジのみで表示されます。"
         }
-        L10nKey::SettingsSidebarAgentProductIcons => "エージェントの製品アイコンを使う",
-        L10nKey::SettingsSidebarAgentProductIconsDesc => {
-            "サイドバーのタブに利用可能な製品アイコンを使い、2行目にエージェント名を表示します。"
+        L10nKey::SettingsSidebarAgentNames => "サイドバーにエージェント名を表示",
+        L10nKey::SettingsSidebarAgentNamesDesc => {
+            "サイドバーのタブの2行目にエージェント名を表示します。"
         }
+        L10nKey::SettingsSidebarAgentIcons => "サイドバーのエージェントアイコン",
+        L10nKey::SettingsSidebarAgentIconsDesc => {
+            "サイドバーのタブで使うアイコンをエージェントごとに選びます。"
+        }
+        L10nKey::SettingsSidebarIconsCustomize => "カスタマイズ",
+        L10nKey::SettingsSidebarIconsCollapse => "選択肢を閉じる",
+        L10nKey::SettingsSidebarIconsSearch => "名前またはコマンドを検索",
+        L10nKey::SettingsSidebarIconsCount => "{count} 件",
+        L10nKey::SettingsSidebarIconsNoMatches => "一致するエージェントがありません",
+        L10nKey::SettingsSidebarIconsPreview => "アイコンのプレビュー",
+        L10nKey::SettingsSidebarIconDefault => "既定",
+        L10nKey::SettingsSidebarIconDefaultChoice => "既定 · {icon}",
+        L10nKey::SettingsSidebarIconClawd => "Clawd",
+        L10nKey::SettingsSidebarIconStarburst => "星形",
+        L10nKey::SettingsSidebarIconApp => "アプリアイコン",
+        L10nKey::SettingsSidebarIconOpenAI => "OpenAI のロゴ",
+        L10nKey::SettingsSidebarIconPixelQ => "緑のピクセル Q",
+        L10nKey::SettingsSidebarIconOutline => "単色の輪郭",
         L10nKey::SettingsShowAgentPaneTitles => "エージェントペインのタイトルを表示",
         L10nKey::SettingsShowAgentPaneTitlesDesc => {
             "エージェントのアイコンと名前をターミナルの上の行に表示します。通常のターミナルには表示されません。ホバー操作（分割・拡大・閉じる）はどのペインでも使えます。"
@@ -828,9 +846,7 @@ pub fn translate_ja(key: L10nKey) -> Option<&'static str> {
         L10nKey::SettingsAgentGrokBuild => "Grok Build",
         L10nKey::SettingsAgentOhMyPi => "Oh My Pi",
         L10nKey::SettingsAgentGemini => "Gemini",
-        L10nKey::SettingsAgentDroid => "Droid",
         L10nKey::SettingsAgentQwenCode => "Qwen Code",
-        L10nKey::SettingsAgentGoose => "Goose",
         L10nKey::SettingsAgentKimiCode => "Kimi Code",
         L10nKey::SettingsAgentQoderCLI => "Qoder",
         L10nKey::SettingsAgentCodeBuddy => "CodeBuddy",
@@ -963,14 +979,8 @@ pub fn translate_ja(key: L10nKey) -> Option<&'static str> {
         L10nKey::SettingsSearchGeminiKeywords => {
             "エージェント 統合 フック インストール gemini google agent integration hooks install"
         }
-        L10nKey::SettingsSearchDroidKeywords => {
-            "エージェント 統合 フック インストール droid factory agent integration hooks install"
-        }
         L10nKey::SettingsSearchQwenCodeKeywords => {
             "エージェント 統合 フック インストール qwen code agent integration hooks install"
-        }
-        L10nKey::SettingsSearchGooseKeywords => {
-            "エージェント 統合 フック プラグイン インストール goose agent integration hooks plugin install"
         }
         L10nKey::SettingsSearchKimiCodeKeywords => {
             "エージェント 統合 フック インストール kimi code moonshot agent integration hooks install"

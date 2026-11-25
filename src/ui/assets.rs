@@ -101,6 +101,9 @@ fn agent_icon(path: &str) -> Option<&'static [u8]> {
         "icons/status/idle.svg" => include_bytes!("../../assets/icons/status/idle.svg"),
         "icons/status/unknown.svg" => include_bytes!("../../assets/icons/status/unknown.svg"),
         "icons/agents/claude.svg" => include_bytes!("../../assets/icons/agents/claude.svg"),
+        "icons/agents/claude-clawd.png" => {
+            include_bytes!("../../assets/icons/agents/claude-clawd.png")
+        }
         "icons/agents/codex.svg" => include_bytes!("../../assets/icons/agents/codex.svg"),
         "icons/agents/codex-product.png" => {
             include_bytes!("../../assets/icons/agents/codex-product.png")
@@ -108,6 +111,9 @@ fn agent_icon(path: &str) -> Option<&'static [u8]> {
         "icons/agents/gemini.svg" => include_bytes!("../../assets/icons/agents/gemini.svg"),
         "icons/agents/antigravity.svg" => {
             include_bytes!("../../assets/icons/agents/antigravity.svg")
+        }
+        "icons/agents/antigravity-full-color.png" => {
+            include_bytes!("../../assets/icons/agents/antigravity-full-color.png")
         }
         "icons/agents/amp.svg" => include_bytes!("../../assets/icons/agents/amp.svg"),
         "icons/agents/opencode.svg" => include_bytes!("../../assets/icons/agents/opencode.svg"),
@@ -121,6 +127,9 @@ fn agent_icon(path: &str) -> Option<&'static [u8]> {
         "icons/agents/qwen.svg" => include_bytes!("../../assets/icons/agents/qwen.svg"),
         "icons/agents/kimi.svg" => include_bytes!("../../assets/icons/agents/kimi.svg"),
         "icons/agents/qodercli.svg" => include_bytes!("../../assets/icons/agents/qodercli.svg"),
+        "icons/agents/qoder-startup.svg" => {
+            include_bytes!("../../assets/icons/agents/qoder-startup.svg")
+        }
         // The China build ships the same mark.
         "icons/agents/qoderclicn.svg" => {
             include_bytes!("../../assets/icons/agents/qoderclicn.svg")

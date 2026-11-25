@@ -10,3 +10,17 @@ The Codex product icon in assets/icons/agents/codex-product.png is an OpenAI
 mark used to identify Codex sessions. The artwork belongs to OpenAI and is
 subject to OpenAI's design guidelines at https://openai.com/brand/.
 Source: https://images.ctfassets.net/kftzwdyauwt9/YgXvGzKvVcDvpJGOFyroe/777616dd860276400c9c955688dce373/codex-app.png.png?w=256
+
+The Clawd mascot in assets/icons/agents/claude-clawd.png identifies Claude
+Code sessions. Hitty crops and scales Anthropic's static Clawd artwork:
+https://claude.ai/images/clawd/core/Clawd-Still.png
+
+The full-color icon in assets/icons/agents/antigravity-full-color.png belongs
+to Google and identifies Google Antigravity sessions. Source and guidelines:
+https://antigravity.google/press
+Source asset: https://antigravity.google/assets/image/brand/antigravity-icon__full-color.png
+
+The Qoder CLI mark in assets/icons/agents/qoder-startup.svg identifies Qoder
+sessions. Hitty converted the five rows of terminal blocks and the #27BD51
+color from the Qoder CLI 1.1.96 Windows startup banner into a vector.
+The original mark belongs to Qoder (https://qoder.com/cli).

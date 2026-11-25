@@ -60,6 +60,12 @@ SCENES = [  # (name, titles, dark, hover pane, zoom, settings page, layout)
     ("sidebar-product-icons-light", False, False, None, False, False, "sidebar-activity"),
     ("sidebar-product-icons-dark", False, True, None, False, False, "sidebar-activity"),
     ("sidebar-product-icons-settings", False, False, None, False, True, "grid"),
+    ("sidebar-icon-choices-light", False, False, None, False, False, "sidebar-activity"),
+    ("sidebar-icon-choices-dark", False, True, None, False, False, "sidebar-activity"),
+    ("sidebar-icon-choices-settings", False, False, None, False, True, "grid"),
+    ("sidebar-icon-choices-expanded", False, False, None, False, True, "grid"),
+    ("sidebar-icon-choices-clawd-menu", False, False, None, False, True, "grid"),
+    ("agent-hooks-settings", False, False, None, False, True, "grid"),
 ]
 # Scenes whose agent panes title themselves with a task, and whether the
 # task-title setting is on: scene name -> (tasks, task_titles).
@@ -74,6 +80,8 @@ TASKS = {
     "session-activity-hover-light": (True, False),
     "sidebar-product-icons-light": (True, False),
     "sidebar-product-icons-dark": (True, False),
+    "sidebar-icon-choices-light": (True, False),
+    "sidebar-icon-choices-dark": (True, False),
 }
 SETTINGS_HEIGHT = 1400  # the Window & Tabs page is taller than the pane scenes
 
@@ -92,10 +100,10 @@ def prepare_before(destination):
     (destination / "src/agent_pane_visual.rs").write_bytes(
         (ROOT / "src/agent_pane_visual.rs").read_bytes())
     main = destination / "src/main.rs"
-    replace_once(main, b'#[cfg(feature = "markdown-visual-tests")]\nmod agent_attention_visual;\n',
-                 b'#[cfg(feature = "markdown-visual-tests")]\nmod agent_attention_visual;\n'
-                 b'#[cfg(feature = "markdown-visual-tests")]\nmod agent_pane_visual;\n')
     if b'"--agent-pane-visual"' not in main.read_bytes():
+        replace_once(main, b'#[cfg(feature = "markdown-visual-tests")]\nmod agent_attention_visual;\n',
+                     b'#[cfg(feature = "markdown-visual-tests")]\nmod agent_attention_visual;\n'
+                     b'#[cfg(feature = "markdown-visual-tests")]\nmod agent_pane_visual;\n')
         replace_once(main, b"    apply_config_dir_arg(&args);\n\n", b"    apply_config_dir_arg(&args);\n\n" + ENTRY)
 
 
@@ -114,7 +122,8 @@ def capture_scene(binary, output, phase, scene, scale):
             }), encoding="utf-8")
         options.write_text(json.dumps({"output": str(png), "titles": titles, "dark": dark,
                                        "tasks": tasks, "task_titles": task_titles,
-                                       "sidebar_product_icons": name.startswith("sidebar-product-icons"),
+                                       "sidebar_product_icons": name.startswith(("sidebar-product-icons", "sidebar-icon-choices")),
+                                       "sidebar_icon_fixture": name.startswith("sidebar-icon-choices"),
                                        "zoom": zoom, "settings": settings, "layout": layout, "hold_seconds": 90,
                                        "height": SETTINGS_HEIGHT if settings else None}), encoding="utf-8")
         with log.open("w", encoding="utf-8") as log_stream:
@@ -132,7 +141,7 @@ def capture_scene(binary, output, phase, scene, scale):
                                 f"(New-Object -ComObject WScript.Shell).AppActivate({process.pid})"],
                                check=False, capture_output=True)
                 time.sleep(0.8)
-                if settings:
+                if settings and name != "agent-hooks-settings":
                     x, y, notches = SETTINGS_SCROLL
                     subprocess.run(["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File",
                                     str(WHEEL), "-ProcId", str(process.pid), "-X", str(int(x * scale)),
@@ -147,6 +156,15 @@ def capture_scene(binary, output, phase, scene, scale):
                 elif layout == "sidebar-activity":
                     x, y = (100, 132) if "hover" in name else (700, 80)
                     command += ["-MoveTo", f"{int(x * scale)},{int(y * scale)}"]
+                elif name == "sidebar-icon-choices-settings":
+                    command += ["-MoveTo", "400,345"]
+                elif name in ("sidebar-icon-choices-expanded", "sidebar-icon-choices-clawd-menu"):
+                    command += ["-MoveTo", f"{int(978 * scale)},{int(316 * scale)}", "-Click"]
+                    if name.endswith("clawd-menu"):
+                        subprocess.run(command, check=True, capture_output=True)
+                        command[-2] = f"{int(822 * scale)},{int(416 * scale)}"
+                elif name == "agent-hooks-settings":
+                    command += ["-MoveTo", f"{int(66 * scale)},{int(277 * scale)}", "-Click"]
                 result = subprocess.run(command, check=True, capture_output=True, text=True)
                 print(f"  {name}: {result.stdout.strip()}", flush=True)
             finally:

@@ -56,7 +56,7 @@ impl CLIAgent {
         CLIAgent::CodeBuddy,
     ];
 
-    fn aliases(self) -> &'static [&'static str] {
+    pub fn aliases(self) -> &'static [&'static str] {
         match self {
             CLIAgent::Claude => &["claude", "claude-code"],
             CLIAgent::Codex => &["codex", "codex-cli"],
