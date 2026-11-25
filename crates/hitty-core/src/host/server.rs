@@ -28,7 +28,10 @@ pub trait PaneDirectory: Send + Sync {
     fn pane_count(&self) -> u64;
     fn panes(&self) -> Vec<PaneInfo>;
     fn agent_states(&self) -> Vec<PaneAgentState>;
-    fn last_agent_activity(&self, _pane: u64) -> Option<machine::AgentActivity> {
+    fn recent_pane_activity(
+        &self,
+        _pane: u64,
+    ) -> Option<(Option<machine::AgentActivity>, Option<u64>)> {
         None
     }
     fn remember_screen_activity(&self, _pane: u64, _activity: machine::AgentActivity) {}
@@ -954,14 +957,19 @@ impl Conn {
     }
 
     fn catch_up_pane_activity(&self, pane: u64) -> io::Result<()> {
-        // Agent hooks may arrive before the pane enters the machine tree.
-        if let Some(activity) = self
+        // Live activity can arrive before the pane enters the machine tree.
+        if let Some((agent, terminal)) = self
             .panes
             .as_ref()
-            .and_then(|p| p.last_agent_activity(pane))
+            .and_then(|p| p.recent_pane_activity(pane))
+            && (agent.is_some() || terminal.is_some())
         {
-            self.machine()?
-                .note_pane_facts(pane, |p| p.note_agent_activity(activity));
+            self.machine()?.note_pane_facts(pane, |p| {
+                if let Some(activity) = agent {
+                    p.note_agent_activity(activity);
+                }
+                p.last_terminal_activity_ms = p.last_terminal_activity_ms.max(terminal);
+            });
         }
         Ok(())
     }

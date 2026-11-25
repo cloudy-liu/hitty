@@ -108,8 +108,11 @@ impl crate::host::server::PaneDirectory for Registry {
         states
     }
 
-    fn last_agent_activity(&self, pane: u64) -> Option<crate::core::machine::AgentActivity> {
-        self.get(pane)?.last_agent_activity()
+    fn recent_pane_activity(
+        &self,
+        pane: u64,
+    ) -> Option<(Option<crate::core::machine::AgentActivity>, Option<u64>)> {
+        self.get(pane)?.recent_activity()
     }
 
     fn remember_screen_activity(&self, pane: u64, activity: crate::core::machine::AgentActivity) {

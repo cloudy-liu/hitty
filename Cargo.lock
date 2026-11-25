@@ -11256,6 +11256,7 @@ dependencies = [
  "toml_edit 0.25.13+spec-1.1.0",
  "ureq",
  "uuid",
+ "vte",
  "windows 0.58.0",
  "windows-sys 0.59.0",
  "winreg 0.52.0",

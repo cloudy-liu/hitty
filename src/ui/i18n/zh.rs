@@ -1824,6 +1824,7 @@ pub fn translate_zh(key: L10nKey) -> Option<&'static str> {
         L10nKey::SidebarRenameGroup => "重命名分组",
         L10nKey::SidebarPinGroup => "固定分组",
         L10nKey::SidebarUnpinGroup => "取消固定",
+        L10nKey::SidebarLastActivity => "???? ? {time}",
         L10nKey::SidebarNewTabHere => "在此新建标签页",
         L10nKey::SidebarNewTabIn => "在 {name} 中新建标签页",
         L10nKey::SidebarCollapseOthers => "折叠其他",

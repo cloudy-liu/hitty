@@ -1925,6 +1925,7 @@ pub fn translate_en(key: L10nKey) -> &'static str {
         L10nKey::SidebarRenameGroup => "Rename Group",
         L10nKey::SidebarPinGroup => "Pin Group",
         L10nKey::SidebarUnpinGroup => "Unpin",
+        L10nKey::SidebarLastActivity => "Last activity ? {time}",
         L10nKey::SidebarNewTabHere => "New Tab Here",
         L10nKey::SidebarNewTabIn => "New tab in {name}",
         L10nKey::SidebarCollapseOthers => "Collapse Others",

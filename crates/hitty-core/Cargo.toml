@@ -124,6 +124,9 @@ smol.workspace = true
 # where a per-byte state machine costs a measurable slice of the reader loop.
 memchr = "2"
 
+# Reuse the terminal's existing VT parser to recognize forward agent output.
+vte = "0.15"
+
 # Base64 for the byte fields that cross the control dialect's JSON wire
 # (`host::Output`'s stdout/stderr). JSON has no byte type — `serde_json` renders
 # a `Vec<u8>` as an array of decimal numbers, inflating a 1 MB `git diff` to

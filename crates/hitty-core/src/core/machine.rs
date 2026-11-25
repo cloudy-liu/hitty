@@ -295,6 +295,8 @@ pub struct PaneRecord {
     pub agent: Option<AgentFacts>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub last_agent_activity: Option<AgentActivity>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub last_terminal_activity_ms: Option<u64>,
     #[serde(default)]
     pub foreground_app: Option<ForegroundApp>,
     /// What the pane is actually running, resolved: the spawn's override if it
@@ -320,9 +322,24 @@ impl PaneRecord {
             ssh_spec: None,
             agent: None,
             last_agent_activity: None,
+            last_terminal_activity_ms: None,
             foreground_app: None,
             shell: None,
             live: false,
+        }
+    }
+
+    pub fn last_activity_ms(&self) -> Option<u64> {
+        self.last_terminal_activity_ms
+            .max(self.last_agent_activity.map(|activity| activity.unix_ms))
+    }
+
+    pub fn merge_activity_from(&mut self, previous: &Self) {
+        self.last_terminal_activity_ms = self
+            .last_terminal_activity_ms
+            .max(previous.last_terminal_activity_ms);
+        if let Some(activity) = previous.last_agent_activity {
+            self.note_agent_activity(activity);
         }
     }
 
@@ -344,14 +361,18 @@ pub struct AgentActivity {
 
 impl AgentActivity {
     pub fn now(kind: AgentActivityKind) -> Option<Self> {
-        let elapsed = std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .ok()?;
         Some(Self {
-            unix_ms: elapsed.as_millis() as u64,
+            unix_ms: activity_now_ms()?,
             kind,
         })
     }
+}
+
+pub(crate) fn activity_now_ms() -> Option<u64> {
+    let elapsed = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .ok()?;
+    Some(elapsed.as_millis() as u64)
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -424,6 +445,7 @@ impl PaneSeed {
             ssh_spec: self.ssh_spec.map(|s| Box::new(s.without_secrets())),
             agent: self.agent,
             last_agent_activity: None,
+            last_terminal_activity_ms: None,
             foreground_app: None,
             shell: self.shell,
             live,
@@ -999,17 +1021,15 @@ impl MachineStore {
         let live = self.seed_is_live(new.pane);
         self.mutate(origin, |m| {
             register_pane(m, new.clone(), live)?;
-            let activity = m
-                .panes
-                .iter()
-                .find(|p| p.id == old)
-                .and_then(|p| p.last_agent_activity);
+            let previous = m.panes.iter().find(|p| p.id == old).cloned();
             let record = m
                 .panes
                 .iter_mut()
                 .find(|p| p.id == new.pane)
                 .expect("registered above");
-            record.last_agent_activity = activity;
+            if let Some(previous) = previous.as_ref() {
+                record.merge_activity_from(previous);
+            }
             let record = record.clone();
             let ws = find_workspace(m, workspace)?;
             let tab = ws
@@ -1718,7 +1738,11 @@ mod tests {
             unix_ms: 1_700_000_000_000,
             kind: AgentActivityKind::TurnFinished,
         };
-        store.note_pane_facts(7, |pane| pane.last_agent_activity = Some(activity));
+        let terminal_activity = Some(activity.unix_ms + 10_000);
+        store.note_pane_facts(7, |pane| {
+            pane.last_agent_activity = Some(activity);
+            pane.last_terminal_activity_ms = terminal_activity;
+        });
         store.flush();
 
         let restarted = MachineStore::open(dir.path().join(MACHINE_FILE));
@@ -1733,6 +1757,10 @@ mod tests {
         );
         assert!(restarted.pane(7).is_none(), "the old record is spent");
         assert!(restarted.pane(42).unwrap().live);
+        assert_eq!(
+            restarted.pane(42).unwrap().last_activity_ms(),
+            terminal_activity
+        );
         let heard = heard.lock().unwrap();
         assert_eq!(heard.len(), 1);
         match &heard[0].1 {

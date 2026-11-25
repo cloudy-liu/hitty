@@ -110,11 +110,12 @@ impl MachineMirrors {
             let observed: HashMap<_, _> = previous
                 .panes
                 .iter()
-                .filter_map(|pane| pane.last_agent_activity.map(|activity| (pane.id, activity)))
+                .filter(|pane| pane.last_activity_ms().is_some())
+                .map(|pane| (pane.id, pane))
                 .collect();
             for pane in &mut machine.panes {
-                if let Some(&activity) = observed.get(&pane.id) {
-                    pane.note_agent_activity(activity);
+                if let Some(previous) = observed.get(&pane.id) {
+                    pane.merge_activity_from(previous);
                 }
             }
         }
@@ -211,15 +212,11 @@ impl MachineMirrors {
         }
         Self::write(cx, host, move |machine| {
             for &(old, new) in &replacements {
-                let activity = machine
-                    .panes
-                    .iter()
-                    .find(|p| p.id == old)
-                    .and_then(|p| p.last_agent_activity);
-                if let Some(activity) = activity
+                let activity = machine.panes.iter().find(|p| p.id == old).cloned();
+                if let Some(previous) = activity
                     && let Some(pane) = machine.panes.iter_mut().find(|p| p.id == new)
                 {
-                    pane.note_agent_activity(activity);
+                    pane.merge_activity_from(&previous);
                 }
             }
         });

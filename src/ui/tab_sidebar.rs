@@ -11,7 +11,6 @@ use gpui_component::menu::{
     ContextMenu, ContextMenuExt as _, DropdownMenu as _, PopupMenu, PopupMenuItem,
 };
 use gpui_component::{ActiveTheme as _, Icon, IconName, Sizable as _, h_flex, v_flex};
-use hitty_core::core::machine::AgentActivity;
 use std::cell::{Cell, RefCell};
 use std::collections::HashMap;
 use std::rc::Rc;
@@ -44,11 +43,12 @@ const DAY_MS: i64 = 24 * HOUR_MS;
 fn activity_label(
     now: &DateTime<FixedOffset>,
     at: &DateTime<FixedOffset>,
-) -> (String, Option<i64>) {
+) -> (Option<String>, Option<i64>) {
     let age = (now.timestamp_millis() - at.timestamp_millis()).max(0);
-    let (label, interval) = if age < MINUTE_MS {
-        (t(L10nKey::ScmTimeNow).to_string(), MINUTE_MS)
-    } else if age < HOUR_MS {
+    if age < MINUTE_MS {
+        return (None, Some(at.timestamp_millis() + MINUTE_MS));
+    }
+    let (label, interval) = if age < HOUR_MS {
         (format!("{}m", age / MINUTE_MS), MINUTE_MS)
     } else if age < DAY_MS {
         (format!("{}h", age / HOUR_MS), HOUR_MS)
@@ -60,10 +60,10 @@ fn activity_label(
         } else {
             "%Y-%m-%d"
         };
-        return (at.format(pattern).to_string(), None);
+        return (Some(at.format(pattern).to_string()), None);
     };
     (
-        label,
+        Some(label),
         Some(at.timestamp_millis() + (age / interval + 1) * interval),
     )
 }
@@ -192,11 +192,11 @@ impl HittyApp {
         let claude_product_icon = super::sidebar_agent_icons::local_claude_icon();
         let width = self.sidebar_px(window, cx);
         let host = WorkspaceStore::host_of(cx, self.workspace);
-        let activities: HashMap<u64, AgentActivity> =
+        let activities: HashMap<u64, u64> =
             crate::ui::machine_mirror::MachineMirrors::machine(cx, host)
                 .into_iter()
                 .flat_map(|machine| &machine.panes)
-                .filter_map(|pane| pane.last_agent_activity.map(|activity| (pane.id, activity)))
+                .filter_map(|pane| pane.last_activity_ms().map(|activity| (pane.id, activity)))
                 .collect();
         let now = Local::now().fixed_offset();
         let mut next_activity_refresh: Option<i64> = None;
@@ -313,6 +313,9 @@ impl HittyApp {
         };
         let dark_sidebar = crate::ui::presets::surface_is_dark(cx.theme().sidebar);
         let rem = window.rem_size().as_f32();
+        let meta_size = 0.75 * rem;
+        let compact_activity_width = measure_text(&window.text_system(), &font, meta_size, "59m")
+            .max(crate::ui::tab_strip::MIN_TARGET);
         let rendered = |ix: &usize| {
             !visible_by_section[*ix].is_empty()
                 || (sections[*ix].pinned && sections[*ix].tabs.is_empty() && query.is_empty())
@@ -496,7 +499,6 @@ impl HittyApp {
                 let label_avail =
                     (row_metrics::text_budget(width) - content_indent - badge_extra).max(48.);
                 let title_size = row_metrics::TITLE_REM * rem;
-                let meta_size = 0.75 * rem;
                 let title_font = if is_active { &title_font_active } else { &font };
                 let activity = if activities.is_empty() {
                     None
@@ -519,22 +521,26 @@ impl HittyApp {
                             };
                             activities.get(&id)
                         })
-                        .max_by_key(|activity| activity.unix_ms)
+                        .max()
                 };
-                let activity_label = activity.and_then(|activity| {
-                    let at = DateTime::from_timestamp_millis(activity.unix_ms.try_into().ok()?)?
-                        .with_timezone(&Local)
-                        .fixed_offset();
-                    let (label, refresh) = activity_label(&now, &at);
-                    next_activity_refresh = next_activity_refresh.into_iter().chain(refresh).min();
-                    Some(SharedString::from(label))
+                let activity_at = activity.and_then(|at| {
+                    Some(
+                        DateTime::from_timestamp_millis((*at).try_into().ok()?)?
+                            .with_timezone(&Local)
+                            .fixed_offset(),
+                    )
                 });
-                let activity_slot = activity_label
+                let activity_slot = activity_at
                     .as_ref()
-                    .map(|label| {
-                        let width = measure_text(&window.text_system(), &font, meta_size, label)
-                            .max(crate::ui::tab_strip::MIN_TARGET);
-                        (label.clone(), width)
+                    .map(|at| {
+                        let (label, refresh) = activity_label(&now, at);
+                        next_activity_refresh =
+                            next_activity_refresh.into_iter().chain(refresh).min();
+                        let width = label.as_ref().map_or(compact_activity_width, |label| {
+                            measure_text(&window.text_system(), &font, meta_size, label)
+                                .max(compact_activity_width)
+                        });
+                        (label, width)
                     })
                     // Keep enough room for a short title even with an older date.
                     .filter(|(_, width)| label_avail - width - row_metrics::GAP >= 28.);
@@ -888,7 +894,11 @@ impl HittyApp {
                     branch: branch_shown.clone(),
                     cwd: cwd_shown.clone(),
                 };
-                let info = self.sidebar_info(tab, window, cx, &shown, activity_label);
+                let activity_tooltip = activity_at.map(|at| {
+                    let time = at.format("%Y-%m-%d %H:%M:%S").to_string();
+                    SharedString::from(t_fmt(L10nKey::SidebarLastActivity, &[("time", &time)]))
+                });
+                let info = self.sidebar_info(tab, window, cx, &shown, activity_tooltip);
                 // Colors are captured by value so the tooltip builder (which
                 // borrows no app state) can style the card on its own.
                 let muted = cx.theme().muted_foreground;
@@ -1049,7 +1059,7 @@ impl HittyApp {
                                                     s.invisible()
                                                 })
                                             })
-                                            .child(label),
+                                            .children(label),
                                     )
                                 }),
                         )
@@ -2787,17 +2797,21 @@ mod tests {
         let now = |age| at + chrono::TimeDelta::milliseconds(age);
         assert_eq!(
             activity_label(&now(MINUTE_MS - 1), &at),
+            (None, Some(at.timestamp_millis() + MINUTE_MS))
+        );
+        assert_eq!(
+            activity_label(&now(MINUTE_MS), &at),
             (
-                t(L10nKey::ScmTimeNow).into(),
-                Some(at.timestamp_millis() + MINUTE_MS)
+                Some("1m".into()),
+                Some(at.timestamp_millis() + 2 * MINUTE_MS)
             )
         );
         for (age, label) in [(3 * MINUTE_MS, "3m"), (HOUR_MS, "1h"), (2 * DAY_MS, "2d")] {
-            assert_eq!(activity_label(&now(age), &at).0, label);
+            assert_eq!(activity_label(&now(age), &at).0.as_deref(), Some(label));
         }
         assert_eq!(
             activity_label(&now(7 * DAY_MS), &at),
-            ("11/16".into(), None)
+            (Some("11/16".into()), None)
         );
     }
 
