@@ -10,6 +10,7 @@ pub mod workspace;
 mod auth;
 mod connect;
 mod handler;
+mod managed;
 
 #[cfg(test)]
 pub(crate) mod test_support;
