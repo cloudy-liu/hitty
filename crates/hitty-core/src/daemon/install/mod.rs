@@ -1095,8 +1095,8 @@ impl<'a> Installer<'a> {
 /// `hitty-server-c7p5` — which is why the fallback stays a fallback and `/proc`
 /// keeps first refusal.
 ///
-/// Neither arm reaches past the connecting user: `readlink` on another user's
-/// `exe` is refused, and `ps` without `-A` lists only our own processes. The
+/// Neither arm reaches past the connecting user: the `/proc` directory must
+/// have our effective UID, and `ps` without `-A` lists only our processes. The
 /// pattern is anchored at a `/` so it cannot match a name that merely ends in
 /// one of ours.
 ///
@@ -1106,7 +1106,7 @@ impl<'a> Installer<'a> {
 /// the loop at top level the trailing `true` never ran and every one of these
 /// was a silent no-op on every Mac. That is what left `restart_daemon` waiting
 /// out its ten seconds for a daemon nobody had asked to stop.
-const RUNNING_EXE_COMMAND: &str = r#"if [ -d /proc ]; then for p in /proc/[0-9]*; do e=$(readlink "$p/exe" 2>/dev/null) || continue; case "$e" in */hitty-server-*) printf '%s' "${e% (deleted)}"; break;; esac; done; else ps -xwwo pid=,comm= 2>/dev/null | while read -r pid e; do case "$e" in */hitty-server-*) printf '%s' "$e"; break;; esac; done; fi; true"#;
+const RUNNING_EXE_COMMAND: &str = r#"if [ -d /proc ]; then for p in /proc/[0-9]*; do [ -O "$p" ] || continue; e=$(readlink "$p/exe" 2>/dev/null) || continue; case "$e" in */hitty-server-*) printf '%s' "${e% (deleted)}"; break;; esac; done; else ps -xwwo pid=,comm= 2>/dev/null | while read -r pid e; do case "$e" in */hitty-server-*) printf '%s' "$e"; break;; esac; done; fi; true"#;
 
 const TERMINATE_RUNNING_COMMAND: &str = r#"if [ -d /proc ]; then for p in /proc/[0-9]*; do e=$(readlink "$p/exe" 2>/dev/null) || continue; case "$e" in */hitty-server-*) kill -TERM "${p#/proc/}" 2>/dev/null; break;; esac; done; else ps -xwwo pid=,comm= 2>/dev/null | while read -r pid e; do case "$e" in */hitty-server-*) kill -TERM "$pid" 2>/dev/null; break;; esac; done; fi; true"#;
 
@@ -1143,6 +1143,64 @@ pub(crate) fn shell_quote(s: &str) -> String {
 
 fn connection_label(conn: &SshConnection) -> String {
     conn.key().as_str().to_string()
+}
+
+/// Find a compatible executable using only SSH command channels.
+pub(super) async fn existing_server_binary(
+    conn: &Arc<SshConnection>,
+) -> Result<Option<String>, String> {
+    // Run the probe in sh even when sshd uses a non-POSIX login shell. Print
+    // the resolved path so the bridge uses the same binary we checked.
+    const VERSIONED_PROBE: &str = r#"
+case "$HOME" in /*) :;; *) exit 1;; esac
+bin="${HOME%/}$1"
+printf '%s\n' "$bin"
+exec "$bin" "$2"
+"#;
+    const PATH_LOOKUP: &str = r#"
+bin=$(command -v hitty-server) || exit
+case "$bin" in /*) printf '%s\n' "$bin";; *) printf '%s/%s\n' "$PWD" "$bin";; esac
+"#;
+    let wanted = RemoteProtocol::of_this_build();
+    let suffix = asset::remote_paths("", wanted.control, wanted.protocol).binary;
+    let probe = format!(
+        "sh -c {} sh {} {PROTOCOL_FLAG}",
+        shell_quote(VERSIONED_PROBE),
+        shell_quote(&suffix),
+    );
+    let result = ssh_ops::exec(conn, &probe).await?;
+    if output_serves(&result, &wanted)
+        && let Some(binary) = result
+            .stdout
+            .lines()
+            .rfind(|line| line.starts_with('/') && line.ends_with(&suffix))
+    {
+        return Ok(Some(binary.to_string()));
+    }
+
+    for discovery in [PATH_LOOKUP, RUNNING_EXE_COMMAND] {
+        let result = ssh_ops::exec(conn, &format!("sh -c {}", shell_quote(discovery))).await?;
+        if !result.success() {
+            continue;
+        }
+        let Some(exe) = result.stdout.lines().rfind(|line| {
+            line.starts_with('/')
+                && line.rsplit_once('/').is_some_and(|(_, name)| {
+                    name == "hitty-server" || name.starts_with("hitty-server-")
+                })
+        }) else {
+            continue;
+        };
+        let probe = ssh_ops::exec(conn, &format!("{} {PROTOCOL_FLAG}", shell_quote(exe))).await?;
+        if output_serves(&probe, &wanted) {
+            return Ok(Some(exe.to_string()));
+        }
+    }
+    Ok(None)
+}
+
+fn output_serves(output: &ExecOutput, wanted: &RemoteProtocol) -> bool {
+    output.success() && RemoteProtocol::parse(&output.stdout).is_some_and(|p| p.serves(wanted))
 }
 
 pub fn ensure_remote_server(conn: &Arc<SshConnection>) -> io::Result<String> {

@@ -28,10 +28,11 @@ use std::sync::{Arc, Mutex, OnceLock, Weak};
 use std::time::Duration;
 
 use russh::{ChannelMsg, Pty};
+use tokio::io::{AsyncReadExt as _, AsyncWriteExt as _};
 
 use crate::daemon::protocol::{
-    AuthPromptKind, AuthResponse, LoopbackForward, ManagedForward, NativeSshSpec, SshForwardRule,
-    SshPhase, SshTestNeed, SshTestReport, WinSize,
+    self, AuthPromptKind, AuthResponse, ClientMsg, DaemonMsg, DaemonVersion, LoopbackForward,
+    ManagedForward, NativeSshSpec, SshForwardRule, SshPhase, SshTestNeed, SshTestReport, WinSize,
 };
 use crate::daemon::remote_link::{self, RemoteEntry, RemoteLink};
 use crate::daemon::router::{RouteChannel, RouteSetup};
@@ -368,15 +369,37 @@ impl SshManager {
             }
         }
 
-        let channel = conn
-            .open_session_channel()
-            .await
-            .map_err(|e| anyhow::anyhow!("open remote workspace channel failed: {e}"))?;
-        channel
-            .exec(false, command.as_bytes())
-            .await
-            .map_err(|e| anyhow::anyhow!("exec `{command}` on the remote failed: {e}"))?;
-        Ok((RemoteLink::session_exec(channel), conn))
+        Ok((open_exec_link(&conn, &command).await?, conn))
+    }
+
+    /// Use a compatible installed server on an already authenticated connection.
+    pub(super) async fn open_existing_pane_link(
+        &self,
+        conn: &Arc<SshConnection>,
+    ) -> anyhow::Result<Option<(RemoteLink, DaemonVersion)>> {
+        tokio::time::timeout(PROBE_TIMEOUT, async {
+            use crate::daemon::install::{existing_server_binary, shell_quote};
+
+            let Some(binary) = existing_server_binary(conn)
+                .await
+                .map_err(anyhow::Error::msg)?
+            else {
+                return Ok(None);
+            };
+            let command =
+                RouteChannel::Pane.bridge_command(&format!("{} --stdio", shell_quote(&binary)));
+            // The installed binary may bridge to a daemon from a different
+            // build. Check the actual endpoint before offering it a pane.
+            let mut probe = open_exec_link(conn, &command).await?;
+            let Some(version) = probe_pane_version(&mut probe).await? else {
+                return Ok(None);
+            };
+            drop(probe);
+            // Version is a one-shot request. Spawn or Attach gets a fresh link.
+            Ok(Some((open_exec_link(conn, &command).await?, version)))
+        })
+        .await
+        .map_err(|_| anyhow::anyhow!("probing the installed remote pane server timed out"))?
     }
 
     pub async fn restart_remote_server(
@@ -620,6 +643,41 @@ const PROBE_TIMEOUT: Duration = Duration::from_secs(5);
 
 const PROBE_OUTPUT_LIMIT: usize = 8 * 1024;
 
+async fn open_exec_link(conn: &SshConnection, command: &str) -> anyhow::Result<RemoteLink> {
+    let channel = conn
+        .open_session_channel()
+        .await
+        .map_err(|e| anyhow::anyhow!("open remote workspace channel failed: {e}"))?;
+    channel
+        .exec(false, command.as_bytes())
+        .await
+        .map_err(|e| anyhow::anyhow!("exec `{command}` on the remote failed: {e}"))?;
+    Ok(RemoteLink::session_exec(channel))
+}
+
+async fn probe_pane_version(link: &mut RemoteLink) -> std::io::Result<Option<DaemonVersion>> {
+    let mut request = Vec::new();
+    ClientMsg::Version.encode(&mut request)?;
+    link.write_all(&request).await?;
+    link.flush().await?;
+
+    let mut response = Vec::new();
+    while link.read_buf(&mut response).await? != 0 && response.len() <= PROBE_OUTPUT_LIMIT {
+        if let Some((kind, payload)) = protocol::take_frame(&mut response)? {
+            return match DaemonMsg::from_frame(kind, payload)? {
+                DaemonMsg::Version(version)
+                    if version.protocol == protocol::PROTOCOL_VERSION
+                        && !version.instance.is_empty() =>
+                {
+                    Ok(Some(version))
+                }
+                _ => Ok(None),
+            };
+        }
+    }
+    Ok(None)
+}
+
 async fn probe_remote_shell(conn: &SshConnection) -> Option<(remote::RemoteShell, String)> {
     let mut channel = conn.open_command_channel().await.ok()?;
     channel.exec(true, remote::PROBE_COMMAND).await.ok()?;
@@ -689,8 +747,9 @@ fn sane_terminal_modes() -> Vec<(Pty, u32)> {
 
 #[cfg(test)]
 mod tests {
-    use super::test_support::{Exec, FakeSshd, base_spec};
+    use super::test_support::{Exec, FakeSshd, Request, base_spec};
     use super::*;
+    use crate::daemon::install::RemoteProtocol;
     use crate::daemon::protocol::{SshAuthMode, SshProxy};
 
     /// A manager of its own, so nothing here touches the global cache. Its
@@ -704,6 +763,127 @@ mod tests {
             conns: Mutex::new(HashMap::new()),
             forwards: SshForwardRegistry::default(),
             probes: Mutex::new(HashMap::new()),
+        }
+    }
+
+    #[test]
+    fn opens_an_existing_pane_bridge_over_the_authenticated_connection() {
+        let manager = manager();
+        manager.runtime.block_on(async {
+            let server = FakeSshd::connect(
+                Exec::Commands(pane_bridge_fixture::<{ protocol::PROTOCOL_VERSION }>),
+                None,
+            )
+            .await;
+            let (mut link, version) = manager
+                .open_existing_pane_link(&server.conn)
+                .await
+                .expect("SSH transport works")
+                .expect("compatible server is available");
+            assert!(link.is_ssh());
+            assert_eq!(version.instance, "fixture-daemon");
+
+            let mut request = Vec::new();
+            ClientMsg::List.encode(&mut request).unwrap();
+            link.write_all(&request).await.unwrap();
+            let mut reply = Vec::new();
+            tokio::time::timeout(PROBE_TIMEOUT, link.read_to_end(&mut reply))
+                .await
+                .expect("the pane bridge answered List")
+                .unwrap();
+            let (kind, payload) = protocol::read_frame(&mut reply.as_slice()).unwrap();
+            assert!(matches!(
+                DaemonMsg::from_frame(kind, payload),
+                Ok(DaemonMsg::PaneList(panes)) if panes.is_empty()
+            ));
+        });
+    }
+
+    #[test]
+    fn an_existing_pane_bridge_refuses_an_incompatible_running_daemon() {
+        let manager = manager();
+        manager.runtime.block_on(async {
+            let server = FakeSshd::connect(
+                Exec::Commands(pane_bridge_fixture::<{ protocol::PROTOCOL_VERSION + 1 }>),
+                None,
+            )
+            .await;
+            assert!(
+                manager
+                    .open_existing_pane_link(&server.conn)
+                    .await
+                    .unwrap()
+                    .is_none()
+            );
+            assert!(server.conn.is_alive());
+        });
+    }
+
+    #[test]
+    fn existing_pane_discovery_leaves_an_unprovisioned_ssh_connection_available() {
+        let manager = manager();
+        manager.runtime.block_on(async {
+            let server = FakeSshd::connect(
+                Exec::Commands(|request| {
+                    let Request::Exec(command) = request else {
+                        panic!("discovery has no pane traffic");
+                    };
+                    let command = std::str::from_utf8(command).unwrap();
+                    assert!(
+                        command.ends_with(" --protocol")
+                            || command.contains("command -v hitty-server")
+                            || command.contains("/proc/[0-9]*"),
+                        "unexpected command on a host with no server: {command}"
+                    );
+                    Some((Vec::new(), 127))
+                }),
+                None,
+            )
+            .await;
+            assert!(
+                manager
+                    .open_existing_pane_link(&server.conn)
+                    .await
+                    .unwrap()
+                    .is_none()
+            );
+            assert!(server.conn.is_alive());
+        });
+    }
+
+    fn pane_bridge_fixture<const LIVE_PROTOCOL: u32>(
+        request: Request<'_>,
+    ) -> Option<(Vec<u8>, u32)> {
+        match request {
+            Request::Exec(command) => {
+                let command = std::str::from_utf8(command).unwrap();
+                let dialect = RemoteProtocol::of_this_build();
+                let binary = format!(
+                    "/home/tester/.local/share/hitty/bin/hitty-server-c{}p{}",
+                    dialect.control, dialect.protocol,
+                );
+                if command.ends_with(" --protocol") {
+                    assert!(command.contains("/.local/share/hitty/bin/hitty-server-c"));
+                    return Some((format!("{binary}\n{}\n", dialect.to_line()).into_bytes(), 0));
+                }
+                assert_eq!(command, format!("'{binary}' --stdio --pane"));
+                None
+            }
+            Request::Data(bytes) => {
+                let (kind, payload) = protocol::read_frame(&mut &*bytes).unwrap();
+                let reply = match ClientMsg::from_frame(kind, payload).unwrap() {
+                    ClientMsg::Version => DaemonMsg::Version(DaemonVersion {
+                        protocol: LIVE_PROTOCOL,
+                        instance: "fixture-daemon".into(),
+                        ..DaemonVersion::current()
+                    }),
+                    ClientMsg::List => DaemonMsg::PaneList(Vec::new()),
+                    _ => panic!("unexpected pane request"),
+                };
+                let mut output = Vec::new();
+                reply.encode(&mut output).unwrap();
+                Some((output, 0))
+            }
         }
     }
 

@@ -154,7 +154,7 @@ fn is_not_found(msg: &str) -> bool {
         || lower.contains("does not exist")
 }
 
-async fn exec(conn: &Arc<SshConnection>, cmd: &str) -> Result<ExecOutput, String> {
+pub(super) async fn exec(conn: &Arc<SshConnection>, cmd: &str) -> Result<ExecOutput, String> {
     // The timeouts in `run` and `spawn_detached` drop this future mid-drain
     // when the remote does not finish; the channel closes on that drop too.
     let mut channel = conn
