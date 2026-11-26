@@ -1993,7 +1993,11 @@ impl TerminalView {
     }
 
     pub fn ssh_spec(&self) -> Option<Box<crate::daemon::protocol::NativeSshSpec>> {
-        self.ssh_spec.clone()
+        let mut spec = self.ssh_spec.clone()?;
+        if let Some(pane) = self.terminal.managed_ssh() {
+            spec.managed = Some(pane);
+        }
+        Some(spec)
     }
 
     pub fn ssh_phase(&self) -> Option<crate::daemon::protocol::SshPhase> {

@@ -273,6 +273,7 @@ pub(crate) fn base_spec() -> NativeSshSpec {
         login_script: vec![],
         display_name: None,
         profile_id: None,
+        managed: None,
     }
 }
 

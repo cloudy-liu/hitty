@@ -23,7 +23,7 @@ use crate::core::foreground_app::ForegroundApp;
 use crate::core::osc::OscTokenizer;
 use crate::daemon::protocol::{
     AuthPromptKind, AuthResponse, ClientMsg, DaemonMsg, KnownHostEntry, KnownHostId,
-    LoopbackForward, LoopbackForwardRequest, ManagedForward, NativeSshSpec, PaneProcs,
+    LoopbackForward, LoopbackForwardRequest, ManagedForward, ManagedSshPane, NativeSshSpec, PaneProcs,
     RemoteContext, RestoreFrom, SftpEntry, SftpJobProgress, SftpOp, SftpOpResult, SftpTransferSpec,
     ShellSpec, SshForwardRule, SshPhase, SshTestReport, WinSize, WorkspaceOp, WorkspaceRequest,
 };
@@ -80,6 +80,7 @@ struct ReaderSignals {
     running_command: Arc<Mutex<String>>,
     auth: Arc<Mutex<VecDeque<(u64, AuthPromptKind)>>>,
     phase: Arc<Mutex<Option<SshPhase>>>,
+    managed_ssh: Arc<Mutex<Option<ManagedSshPane>>>,
     /// Kitty-graphics images the daemon lifted out of the stream (issue #213),
     /// anchored to the grid for the paint path to blit. Shared with the reader,
     /// which places/deletes them as `DaemonMsg::Image`/`DeleteImage` frames land.
@@ -501,6 +502,7 @@ pub struct RemoteTerminal {
     running_command: Arc<Mutex<String>>,
     auth_prompts: Arc<Mutex<VecDeque<(u64, AuthPromptKind)>>>,
     ssh_phase: Arc<Mutex<Option<SshPhase>>>,
+    managed_ssh: Arc<Mutex<Option<ManagedSshPane>>>,
     ssh_endpoint: Option<(String, u16)>,
     /// The account the SSH connection authenticates as. `ssh_endpoint` is what
     /// the disconnect strip and the forward sheet need; the keychain files a
@@ -841,6 +843,7 @@ impl RemoteTerminal {
                 running_command: self.running_command.clone(),
                 auth: self.auth_prompts.clone(),
                 phase: self.ssh_phase.clone(),
+                managed_ssh: self.managed_ssh.clone(),
                 images: self.images.clone(),
                 turns: self.turns.clone(),
                 commands: self.commands.clone(),
@@ -898,6 +901,7 @@ impl RemoteTerminal {
         let auth_prompts: Arc<Mutex<VecDeque<(u64, AuthPromptKind)>>> =
             Arc::new(Mutex::new(VecDeque::new()));
         let ssh_phase: Arc<Mutex<Option<SshPhase>>> = Arc::new(Mutex::new(None));
+        let managed_ssh = Arc::new(Mutex::new(None));
         let images = crate::terminal::images::ImageStore::new();
         let turns = AgentTurns::new();
         let commands = CommandMarks::new(user_config.scrollback_limit);
@@ -926,6 +930,7 @@ impl RemoteTerminal {
                 running_command: running_command.clone(),
                 auth: auth_prompts.clone(),
                 phase: ssh_phase.clone(),
+                managed_ssh: managed_ssh.clone(),
                 images: images.clone(),
                 turns: turns.clone(),
                 commands: commands.clone(),
@@ -958,6 +963,7 @@ impl RemoteTerminal {
             running_command,
             auth_prompts,
             ssh_phase,
+            managed_ssh,
             ssh_endpoint: None,
             ssh_user: None,
             auto_supplied_password: false,
@@ -1043,6 +1049,7 @@ impl RemoteTerminal {
                     running_command,
                     auth,
                     phase,
+                    managed_ssh,
                     images,
                     turns,
             commands,
@@ -1411,6 +1418,12 @@ impl RemoteTerminal {
                                 flush_batch!();
                                 if let Ok(mut guard) = phase.lock() {
                                     *guard = Some(p);
+                                }
+                                proxy.send_event(AlacEvent::Wakeup);
+                            }
+                            DaemonMsg::ManagedSsh(pane) => {
+                                if let Ok(mut guard) = managed_ssh.lock() {
+                                    *guard = Some(pane);
                                 }
                                 proxy.send_event(AlacEvent::Wakeup);
                             }
@@ -1969,6 +1982,10 @@ impl RemoteTerminal {
 
     pub fn ssh_phase(&self) -> Option<SshPhase> {
         self.ssh_phase.lock().ok().and_then(|g| g.clone())
+    }
+
+    pub fn managed_ssh(&self) -> Option<ManagedSshPane> {
+        self.managed_ssh.lock().ok()?.clone()
     }
 
     pub fn ssh_endpoint(&self) -> Option<(String, u16)> {

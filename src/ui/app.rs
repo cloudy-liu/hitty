@@ -4041,7 +4041,8 @@ impl HittyApp {
             // dialled; one handed in by a caller was just built from that host
             // and needs no second pass.
             None => match target.read(cx).ssh_spec() {
-                Some(spec) => {
+                Some(mut spec) => {
+                    spec.managed = None;
                     SpawnAs::Ssh(crate::ui::ssh_connect::resolve_persisted_ssh_spec(spec, cx))
                 }
                 None => SpawnAs::Shell(target.read(cx).shell_spec()),
@@ -8499,7 +8500,8 @@ fn resume_agent_in_terminal(
         return;
     };
     if let Some(spec) = terminal.read(cx).ssh_spec() {
-        if !spec.shell_integration
+        if spec.managed.is_some()
+            || !spec.shell_integration
             || unstarted
             || !matches!(
                 agent,
@@ -9895,8 +9897,8 @@ mod tests {
         cx: &mut gpui::TestAppContext,
     ) {
         use crate::core::cli_agent::CLIAgent;
-        use crate::daemon::protocol::ClientMsg;
-        for case in 0..6 {
+        use crate::daemon::protocol::{ClientMsg, ManagedSshPane};
+        for case in 0..7 {
             let (app, mut vcx) = super::test_window::harness(cx);
             let (_view, mut daemon) = app.update_in(&mut vcx, |_, window, cx| {
                 cx.global_mut::<crate::core::config::Config>()
@@ -9907,6 +9909,12 @@ mod tests {
                 )
                 .unwrap();
                 spec.shell_integration = case != 1;
+                if case == 6 {
+                    spec.managed = Some(ManagedSshPane {
+                        instance: "server-7".into(),
+                        pane_id: 42,
+                    });
+                }
                 view.update(cx, |view, cx| {
                     view.remember_native_ssh_spec(Box::new(spec), cx)
                 });
@@ -11443,10 +11451,12 @@ mod pending_spawn_gpui_tests {
 
     #[gpui::test]
     fn reattached_ssh_pane_keeps_its_connection_for_the_next_reconnect(cx: &mut TestAppContext) {
+        use crate::daemon::protocol::{DaemonMsg, ManagedSshPane};
+
         for restored in [true, false] {
             let (app, mut vcx) = test_window::harness(cx);
             let _daemon = app.update_in(&mut vcx, |app, window, cx| {
-                let spec = Box::new(
+                let mut spec = Box::new(
                     serde_json::from_str::<crate::daemon::protocol::NativeSshSpec>(
                         r#"{"host":"build-box","port":2222,"user":"me","auth_mode":"auto","display_name":"Build box"}"#,
                     )
@@ -11470,7 +11480,7 @@ mod pending_spawn_gpui_tests {
                     panic!("expected a pending tree leaf");
                 };
                 assert_eq!(seed.ssh_spec, Some(spec.clone()));
-                let (mut parts, daemon) = crate::terminal::view::quiet_test_shell_parts(42);
+                let (mut parts, mut daemon) = crate::terminal::view::quiet_test_shell_parts(42);
                 parts.restored = restored;
                 app.land_pane(id, &pending, Ok(parts), 15.0, window, cx);
                 let slot = app.tabs[0].pane.first_leaf().unwrap();
@@ -11480,6 +11490,30 @@ mod pending_spawn_gpui_tests {
                     restored.then(|| spec.clone()),
                     "a reattached SSH pane must retain the connection needed to redial"
                 );
+                if restored {
+                    let managed = ManagedSshPane {
+                        instance: "server-7".into(),
+                        pane_id: 19,
+                    };
+                    DaemonMsg::ManagedSsh(managed.clone())
+                        .encode(&mut daemon)
+                        .unwrap();
+                    spec.managed = Some(managed);
+                    let deadline = std::time::Instant::now() + std::time::Duration::from_secs(2);
+                    while view.read(cx).ssh_spec().as_ref() != Some(&spec) {
+                        assert!(
+                            std::time::Instant::now() < deadline,
+                            "managed identity should update the saved connection"
+                        );
+                        std::thread::sleep(std::time::Duration::from_millis(5));
+                    }
+                    let (tabs, _, _) = crate::ui::tree_sync::desired_tabs(app, cx);
+                    let crate::ui::tree_sync::DesiredNode::Leaf { seed, .. } = &tabs[0].root
+                    else {
+                        panic!("expected a ready tree leaf");
+                    };
+                    assert_eq!(seed.ssh_spec.as_ref(), Some(&spec));
+                }
                 view.update(cx, |view, _| view.terminal.exited = true);
                 assert_eq!(view.read(cx).ssh_disconnected(), restored);
                 let SessionPane::Leaf { ssh_spec, .. } = pane_to_session(&app.tabs[0].pane, cx)
