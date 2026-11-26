@@ -13,6 +13,7 @@ pub mod markdown_document;
 pub mod markdown_frontmatter;
 pub mod markdown_svg;
 pub mod markdown_theme;
+pub mod open_in;
 pub mod rate_meter;
 pub mod session;
 pub mod shell_quote;

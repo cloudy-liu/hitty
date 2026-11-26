@@ -34,7 +34,7 @@ use crate::ui::host_ops::{HostId, SharedHost};
 use crate::ui::i18n::{L10nKey, t, t_fmt, t_plural};
 use crate::ui::right_panel::{
     FILE_ROW_H as ROW_H, HEADING, META, META_MONO, ROW_INSET, SEARCH_H, TEXT_MONO, action_strip,
-    git_badge, info_chip,
+    field_fill, git_badge, info_chip,
 };
 use crate::ui::rounding::{CARD_RADIUS, HAIRLINE, RoundedCorners as _, segment_corners};
 use crate::ui::scm::ScmIntent;
@@ -1944,19 +1944,6 @@ pub(crate) fn tracking_chip(
 ///
 /// The same quiet mono step the panel's badges and chips are set on, minus the
 /// fill, so a note and a chip still line up as one row of tokens.
-/// The fill under the commit area's two shapes — the message box and the split
-/// button's frame.
-///
-/// Half of the ramp's first rung, not the rung itself. `hover` is what a row
-/// wears while the pointer is on it, which is a state that lasts a moment;
-/// these two wear their fill permanently, and at full strength they were the
-/// loudest thing on an idle panel. Both read from here so they cannot drift
-/// apart: the commit area is one block, and two greys a shade off each other
-/// look like a mistake rather than a hierarchy.
-fn field_fill(sf: crate::ui::presets::Surface) -> u32 {
-    crate::ui::presets::mix(sf.base, sf.hover, 0.5)
-}
-
 /// One half of the split commit control: paints nothing, ever.
 ///
 /// Every state is transparent so the frame around both halves is the only

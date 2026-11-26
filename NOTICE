@@ -24,3 +24,11 @@ The Qoder CLI mark in assets/icons/agents/qoder-startup.svg identifies Qoder
 and Qoder CN sessions. Hitty converted the five rows of terminal blocks and
 the #27BD51 color from the Qoder CLI 1.1.96 Windows startup banner into a
 vector. The original mark belongs to Qoder (https://qoder.com/cli).
+
+The editor icons in assets/icons/editors/*.svg are simplified vector marks
+authored for Hitty to identify locally installed external editors in the
+Info panel's Open-in picker. The underlying product names and brand marks
+belong to their respective owners (Microsoft for VS Code and VS Code
+Insiders, Anysphere for Cursor, Codeium for Windsurf, Zed Industries for
+Zed, JetBrains for IntelliJ IDEA, CLion, RustRover, PyCharm, WebStorm, and
+GoLand, and Sublime HQ for Sublime Text).
