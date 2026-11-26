@@ -17,8 +17,10 @@ pub type SharedConnection = Arc<Mutex<Weak<SshConnection>>>;
 
 pub enum ChannelCmd {
     Data(Vec<u8>),
+    PassiveInput(Vec<u8>),
     Resize(WinSize),
     Close,
+    Detach,
 }
 
 pub struct SshSessionHandle {
@@ -32,6 +34,14 @@ impl SshSessionHandle {
 
     pub fn close(&self) {
         let _ = self.cmd_tx.send(ChannelCmd::Close);
+    }
+
+    pub(crate) fn detach(&self) {
+        let _ = self.cmd_tx.send(ChannelCmd::Detach);
+    }
+
+    pub(crate) fn passive_input(&self, bytes: &[u8]) {
+        let _ = self.cmd_tx.send(ChannelCmd::PassiveInput(bytes.to_vec()));
     }
 
     fn send_data(&self, bytes: Vec<u8>) -> io::Result<()> {
@@ -139,7 +149,7 @@ pub async fn drive_channel(
                 Some(_) => {}
             },
             cmd = cmd_rx.recv() => match cmd {
-                Some(ChannelCmd::Data(bytes)) => {
+                Some(ChannelCmd::Data(bytes) | ChannelCmd::PassiveInput(bytes)) => {
                     let _ = channel.data(&bytes[..]).await;
                 }
                 Some(ChannelCmd::Resize(size)) => {
@@ -148,7 +158,7 @@ pub async fn drive_channel(
                         .window_change(u32::from(size.cols), u32::from(size.rows), pw, ph)
                         .await;
                 }
-                Some(ChannelCmd::Close) | None => break,
+                Some(ChannelCmd::Close | ChannelCmd::Detach) | None => break,
             }
         }
     }
