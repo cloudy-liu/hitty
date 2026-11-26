@@ -23,9 +23,10 @@ use crate::core::foreground_app::ForegroundApp;
 use crate::core::osc::OscTokenizer;
 use crate::daemon::protocol::{
     AuthPromptKind, AuthResponse, ClientMsg, DaemonMsg, KnownHostEntry, KnownHostId,
-    LoopbackForward, LoopbackForwardRequest, ManagedForward, ManagedSshPane, NativeSshSpec, PaneProcs,
-    RemoteContext, RestoreFrom, SftpEntry, SftpJobProgress, SftpOp, SftpOpResult, SftpTransferSpec,
-    ShellSpec, SshForwardRule, SshPhase, SshTestReport, WinSize, WorkspaceOp, WorkspaceRequest,
+    LoopbackForward, LoopbackForwardRequest, ManagedForward, ManagedSshPane, NativeSshSpec,
+    PaneProcs, RemoteContext, RestoreFrom, SftpEntry, SftpJobProgress, SftpOp, SftpOpResult,
+    SftpTransferSpec, ShellSpec, SshForwardRule, SshPhase, SshTestReport, WinSize, WorkspaceOp,
+    WorkspaceRequest,
 };
 use crate::daemon::transport::{self, Stream};
 use gpui::EntityId;
