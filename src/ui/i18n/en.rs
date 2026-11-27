@@ -828,13 +828,10 @@ pub fn translate_en(key: L10nKey) -> &'static str {
         }
         L10nKey::SettingsAgentClaudeCode => "Claude Code",
         L10nKey::SettingsAgentCodex => "Codex",
-        L10nKey::SettingsAgentCopilotCli => "Copilot CLI",
         L10nKey::SettingsAgentOpencode => "OpenCode",
         L10nKey::SettingsAgentPi => "Pi",
         L10nKey::SettingsAgentGrokBuild => "Grok Build",
         L10nKey::SettingsAgentOhMyPi => "Oh My Pi",
-        L10nKey::SettingsAgentGemini => "Gemini",
-        L10nKey::SettingsAgentQwenCode => "Qwen Code",
         L10nKey::SettingsAgentKimiCode => "Kimi Code",
         L10nKey::SettingsAgentQoderCLI => "Qoder",
         L10nKey::SettingsAgentCodeBuddy => "CodeBuddy",
@@ -861,9 +858,6 @@ pub fn translate_en(key: L10nKey) -> &'static str {
         L10nKey::SettingsSearchCodexKeywords => "agent integration hooks install openai codex",
         L10nKey::SettingsSearchCommandLineToolKeywords => {
             "command line tool cli Hitty path shell command install symlink terminal iterm agent script"
-        }
-        L10nKey::SettingsSearchCopilotCliKeywords => {
-            "agent integration hooks install github copilot"
         }
         L10nKey::SettingsSearchCopyOnSelectKeywords => "clipboard selection yank mouse",
         L10nKey::SettingsSearchCursorBlinkKeywords => "caret blinking flash",
@@ -928,10 +922,6 @@ pub fn translate_en(key: L10nKey) -> &'static str {
             "alt keyboard modifier escape macos option meta option acts as meta"
         }
         L10nKey::SettingsSearchOhMyPiKeywords => "agent integration extension install omp oh my pi",
-        L10nKey::SettingsSearchGeminiKeywords => "agent integration hooks install gemini google",
-        L10nKey::SettingsSearchQwenCodeKeywords => {
-            "agent integration hooks install qwen code qwen-code"
-        }
         L10nKey::SettingsSearchKimiCodeKeywords => {
             "agent integration hooks install kimi code kimi-code moonshot"
         }

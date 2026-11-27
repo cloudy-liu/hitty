@@ -743,13 +743,10 @@ pub fn translate_zh(key: L10nKey) -> Option<&'static str> {
         L10nKey::SettingsAppHttpProxyInvalid => "不是有效的代理地址，该值未保存。",
         L10nKey::SettingsAgentClaudeCode => "Claude Code",
         L10nKey::SettingsAgentCodex => "Codex",
-        L10nKey::SettingsAgentCopilotCli => "Copilot CLI",
         L10nKey::SettingsAgentOpencode => "OpenCode",
         L10nKey::SettingsAgentPi => "Pi",
         L10nKey::SettingsAgentGrokBuild => "Grok Build",
         L10nKey::SettingsAgentOhMyPi => "Oh My Pi",
-        L10nKey::SettingsAgentGemini => "Gemini",
-        L10nKey::SettingsAgentQwenCode => "Qwen Code",
         L10nKey::SettingsAgentKimiCode => "Kimi Code",
         L10nKey::SettingsAgentQoderCLI => "Qoder",
         L10nKey::SettingsAgentCodeBuddy => "CodeBuddy",
@@ -784,9 +781,6 @@ pub fn translate_zh(key: L10nKey) -> Option<&'static str> {
         }
         L10nKey::SettingsSearchCommandLineToolKeywords => {
             "命令行工具 cli Hitty 路径 shell 命令 安装 符号链接 terminal command line tool"
-        }
-        L10nKey::SettingsSearchCopilotCliKeywords => {
-            "Copilot CLI agent 集成 hook 安装 GitHub copilot agent integration hooks install"
         }
         L10nKey::SettingsSearchCopyOnSelectKeywords => {
             "选中即复制 复制 剪贴板 选择 鼠标 copy on select clipboard yank"
@@ -876,12 +870,6 @@ pub fn translate_zh(key: L10nKey) -> Option<&'static str> {
         }
         L10nKey::SettingsSearchOhMyPiKeywords => {
             "Oh My Pi agent 集成 扩展 安装 omp oh my pi agent integration extension install"
-        }
-        L10nKey::SettingsSearchGeminiKeywords => {
-            "Gemini agent 集成 钩子 安装 gemini google agent integration hooks install"
-        }
-        L10nKey::SettingsSearchQwenCodeKeywords => {
-            "Qwen Code 通义千问 agent 集成 钩子 安装 qwen code agent integration hooks install"
         }
         L10nKey::SettingsSearchKimiCodeKeywords => {
             "Kimi Code 月之暗面 agent 集成 钩子 安装 kimi code moonshot agent integration hooks install"
