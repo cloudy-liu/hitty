@@ -8569,6 +8569,17 @@ mod tests {
 
     #[test]
     fn the_agent_search_index_matches_visible_hook_rows() {
+        let non_hook_entries = [
+            L10nKey::SettingsAgentLaunchHeading,
+            L10nKey::SettingsInstallCliOnPath,
+        ];
+        for title in non_hook_entries {
+            assert!(
+                settings_search_entries()
+                    .iter()
+                    .any(|entry| entry.section == SettingsSection::Agents && entry.title == title)
+            );
+        }
         for agent in HookAgent::ALL {
             assert_eq!(
                 settings_search_entries()
@@ -8584,7 +8595,7 @@ mod tests {
             .iter()
             .filter(|e| e.section == SettingsSection::Agents)
         {
-            if entry.title == L10nKey::SettingsInstallCliOnPath {
+            if non_hook_entries.contains(&entry.title) {
                 continue;
             }
             assert!(
