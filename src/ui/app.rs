@@ -1630,6 +1630,9 @@ impl HittyApp {
             crate::ui::tray::init(cx);
         }
         app.refresh_shells(cx);
+        if !cfg!(test) {
+            app.refresh_open_in_apps(cx);
+        }
         cx.on_app_quit(|app, cx| {
             app.save_session(cx);
             crate::core::window_state::WindowState::from_bounds(app.window_bounds).save();
@@ -3919,7 +3922,16 @@ impl HittyApp {
         window: &mut Window,
         cx: &mut Context<Self>,
     ) {
-        let cwd = None;
+        self.open_native_ssh_tab_at(None, spec, window, cx);
+    }
+
+    pub(crate) fn open_native_ssh_tab_at(
+        &mut self,
+        cwd: Option<std::path::PathBuf>,
+        spec: Box<crate::daemon::protocol::NativeSshSpec>,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
         let view = match new_terminal_native(self.font_size, cwd, spec, None, window, cx) {
             Ok(view) => view,
             Err(e) => {
@@ -5653,6 +5665,7 @@ impl HittyApp {
             CloseOtherTabs => self.close_other_tabs(self.active, window, cx),
             CloseTabsToTheRight => self.close_tabs_right_of(self.active, window, cx),
             CopyWorkingDirectory => self.copy_active_cwd(window, cx),
+            OpenWorkingDirectory => self.open_active_cwd(window, cx),
             MarkTabUnread => self.mark_tab_unread(self.active, window, cx),
             ForkAgentSession => self.fork_active_pane_session(ForkPlacement::NewTab, window, cx),
             CopyAgentSessionId => self.copy_agent_session_id(self.active, window, cx),
@@ -8310,6 +8323,9 @@ impl Render for HittyApp {
                 }))
                 .on_action(cx.listener(|this, _: &CopyWorkingDirectory, window, cx| {
                     this.copy_active_cwd(window, cx)
+                }))
+                .on_action(cx.listener(|this, _: &OpenWorkingDirectory, window, cx| {
+                    this.open_active_cwd(window, cx)
                 }))
                 .on_action(cx.listener(|this, _: &MarkTabUnread, window, cx| {
                     this.mark_tab_unread(this.active, window, cx)

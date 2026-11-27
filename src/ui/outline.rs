@@ -515,7 +515,7 @@ impl HittyApp {
             .is_some_and(|leaf| leaf.read(cx).agent().is_some())
         {
             let body = self
-                .turns_section(leaf.as_ref(), cx)
+                .turns_section(leaf.as_ref(), false, cx)
                 .unwrap_or_else(|| self.panel_empty(t(L10nKey::PanelOutlineEmpty), None, cx));
             return self.panel_scroll(body, title);
         }

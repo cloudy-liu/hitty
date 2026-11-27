@@ -56,6 +56,10 @@ struct Options {
     #[serde(default)]
     panel_width: Option<f32>,
     #[serde(default)]
+    info_turns: Vec<String>,
+    #[serde(default)]
+    info_conversation_collapsed: bool,
+    #[serde(default)]
     readme: bool,
     #[serde(default)]
     history: bool,
@@ -229,9 +233,34 @@ pub(crate) fn run(path: &std::ffi::OsStr) {
                             } else {
                                 let (view, mut stream) = quiet_test_pane(1, window, cx);
                                 DaemonMsg::Cwd(options.root.clone()).encode(&mut stream).unwrap();
+                                if !options.info_turns.is_empty() {
+                                    DaemonMsg::Agent(Some(CLIAgent::Claude))
+                                        .encode(&mut stream)
+                                        .unwrap();
+                                    for prompt in &options.info_turns {
+                                        let escaped = serde_json::to_string(prompt).unwrap();
+                                        let seq = format!(
+                                            "\x1b]777;notify;{};{{\"v\":1,\"agent\":\"claude\",\"event\":\"prompt-submit\",\"prompt\":{escaped}}}\x07",
+                                            crate::core::cli_agent::AGENT_EVENT_SENTINEL
+                                        );
+                                        DaemonMsg::Output(seq.into_bytes())
+                                            .encode(&mut stream)
+                                            .unwrap();
+                                    }
+                                }
                                 app.tabs.push(Tab::new(Pane::leaf(PaneSlot::Ready(view.clone()))));
-                                readme_panes.push(ReadmePane { view, _stream: stream, agent: None, status: None });
+                                readme_panes.push(ReadmePane {
+                                    view,
+                                    _stream: stream,
+                                    agent: (!options.info_turns.is_empty()).then_some(CLIAgent::Claude),
+                                    status: None,
+                                });
                                 app.active = app.tabs.len() - 1;
+                            }
+                            if options.info_conversation_collapsed {
+                                app.update_config(cx, |cfg| {
+                                    cfg.info_conversation_collapsed = true;
+                                });
                             }
                             app.tab_code_mut_or_init()
                                 .unwrap()
@@ -265,8 +294,13 @@ pub(crate) fn run(path: &std::ffi::OsStr) {
                 let deadline = Instant::now() + Duration::from_secs(20);
                 for pane in &readme_panes {
                     while !pane.view.read_with(cx, |view, _| {
+                        let turns_ok = options.info_turns.is_empty()
+                            || view.agent_turns().len() >= options.info_turns.len();
+                        let status_ok =
+                            !options.info_turns.is_empty() || view.agent_status() == pane.status;
                         view.agent() == pane.agent
-                            && view.agent_status() == pane.status
+                            && status_ok
+                            && turns_ok
                             && view.git_status_cwd().is_some()
                     }) {
                         assert!(
