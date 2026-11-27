@@ -754,13 +754,10 @@ pub fn translate_zh(key: L10nKey) -> Option<&'static str> {
         L10nKey::SettingsAppHttpProxyInvalid => "不是有效的代理地址，该值未保存。",
         L10nKey::SettingsAgentClaudeCode => "Claude Code",
         L10nKey::SettingsAgentCodex => "Codex",
-        L10nKey::SettingsAgentCopilotCli => "Copilot CLI",
         L10nKey::SettingsAgentOpencode => "OpenCode",
         L10nKey::SettingsAgentPi => "Pi",
         L10nKey::SettingsAgentGrokBuild => "Grok Build",
         L10nKey::SettingsAgentOhMyPi => "Oh My Pi",
-        L10nKey::SettingsAgentGemini => "Gemini",
-        L10nKey::SettingsAgentQwenCode => "Qwen Code",
         L10nKey::SettingsAgentKimiCode => "Kimi Code",
         L10nKey::SettingsAgentQoderCLI => "Qoder",
         L10nKey::SettingsAgentCodeBuddy => "CodeBuddy",
@@ -795,9 +792,6 @@ pub fn translate_zh(key: L10nKey) -> Option<&'static str> {
         }
         L10nKey::SettingsSearchCommandLineToolKeywords => {
             "命令行工具 cli Hitty 路径 shell 命令 安装 符号链接 terminal command line tool"
-        }
-        L10nKey::SettingsSearchCopilotCliKeywords => {
-            "Copilot CLI agent 集成 hook 安装 GitHub copilot agent integration hooks install"
         }
         L10nKey::SettingsSearchCopyOnSelectKeywords => {
             "选中即复制 复制 剪贴板 选择 鼠标 copy on select clipboard yank"
@@ -887,12 +881,6 @@ pub fn translate_zh(key: L10nKey) -> Option<&'static str> {
         }
         L10nKey::SettingsSearchOhMyPiKeywords => {
             "Oh My Pi agent 集成 扩展 安装 omp oh my pi agent integration extension install"
-        }
-        L10nKey::SettingsSearchGeminiKeywords => {
-            "Gemini agent 集成 钩子 安装 gemini google agent integration hooks install"
-        }
-        L10nKey::SettingsSearchQwenCodeKeywords => {
-            "Qwen Code 通义千问 agent 集成 钩子 安装 qwen code agent integration hooks install"
         }
         L10nKey::SettingsSearchKimiCodeKeywords => {
             "Kimi Code 月之暗面 agent 集成 钩子 安装 kimi code moonshot agent integration hooks install"
@@ -1124,13 +1112,13 @@ pub fn translate_zh(key: L10nKey) -> Option<&'static str> {
         L10nKey::PanelNotAGitRepoHint => "进入 git 仓库后，此标签页会列出未提交的变更。",
         L10nKey::PanelNoChanges => "没有未提交的变更。",
         L10nKey::PanelNoChangesHint => "worktree 是干净的。",
+        L10nKey::PanelWorkingDirectorySubtitle => "工作目录",
         L10nKey::PanelSessionSubtitle => "会话",
         L10nKey::PanelConversationSubtitle => "对话",
         L10nKey::PanelTurnAltScreenNow => "全屏程序占着此窗格，没有 scrollback 可跳回。",
         L10nKey::PanelTurnNoScrollback => "这一轮画在 alt screen 上，scrollback 里没有留下它。",
         L10nKey::PanelProcessesSubtitle => "进程",
         L10nKey::PanelPortsSubtitle => "端口",
-        L10nKey::PanelCwd => "工作目录",
         L10nKey::PanelShell => "shell",
         L10nKey::PanelSsh => "ssh",
         L10nKey::PanelBranch => "分支",
@@ -1141,6 +1129,17 @@ pub fn translate_zh(key: L10nKey) -> Option<&'static str> {
         L10nKey::PanelRevealInFinder => "在 Finder 中显示",
         L10nKey::PanelOpenFolder => "打开文件夹",
         L10nKey::PanelOpenInBrowser => "在浏览器中打开",
+        L10nKey::PanelOpenInApp => "在 {app} 中打开",
+        L10nKey::PanelOpenInChoose => "选择编辑器",
+        L10nKey::PanelOpenInNewTab => "在新标签页中打开",
+        L10nKey::PanelOpenInLocalOnly => "仅限本机",
+        L10nKey::PanelOpenInNeedsCli => "需要 CLI",
+        L10nKey::PanelOpenInUnsupported => "不支持",
+        L10nKey::PanelOpenInNoRemoteEditor => "无远程编辑器",
+        L10nKey::PanelOpenInFailed => "无法打开：{error}",
+        L10nKey::PanelFileManagerWindows => "文件资源管理器",
+        L10nKey::PanelFileManagerMac => "Finder",
+        L10nKey::PanelFileManagerLinux => "文件管理器",
         L10nKey::ScmGroupMerge => "合并冲突",
         L10nKey::ScmGroupStaged => "暂存的更改",
         L10nKey::ScmGroupChanges => "更改",
@@ -1481,6 +1480,7 @@ pub fn translate_zh(key: L10nKey) -> Option<&'static str> {
         L10nKey::CmdNextTab => "下一标签页",
         L10nKey::CmdPreviousTab => "上一标签页",
         L10nKey::CmdCopyWorkingDirectory => "复制工作目录",
+        L10nKey::CmdOpenWorkingDirectory => "打开工作目录",
         L10nKey::CmdCopySessionId => "复制会话 ID",
         L10nKey::CmdCopySessionIdSubtitle => "编码 agent 自身的会话 ID",
         L10nKey::CmdForkSession => "Fork 会话",

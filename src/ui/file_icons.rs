@@ -164,7 +164,7 @@ fn raster(icon: FileIcon, device: u32) -> Option<Arc<RenderImage>> {
         .clone()
 }
 
-fn rasterize(svg: &[u8], size: u32) -> Option<RenderImage> {
+pub(crate) fn rasterize(svg: &[u8], size: u32) -> Option<RenderImage> {
     let tree = usvg::Tree::from_data(svg, &usvg::Options::default()).ok()?;
     let mut pixmap = tiny_skia::Pixmap::new(size, size)?;
     let (w, h) = (tree.size().width(), tree.size().height());

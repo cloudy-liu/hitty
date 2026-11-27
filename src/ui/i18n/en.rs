@@ -839,13 +839,10 @@ pub fn translate_en(key: L10nKey) -> &'static str {
         }
         L10nKey::SettingsAgentClaudeCode => "Claude Code",
         L10nKey::SettingsAgentCodex => "Codex",
-        L10nKey::SettingsAgentCopilotCli => "Copilot CLI",
         L10nKey::SettingsAgentOpencode => "OpenCode",
         L10nKey::SettingsAgentPi => "Pi",
         L10nKey::SettingsAgentGrokBuild => "Grok Build",
         L10nKey::SettingsAgentOhMyPi => "Oh My Pi",
-        L10nKey::SettingsAgentGemini => "Gemini",
-        L10nKey::SettingsAgentQwenCode => "Qwen Code",
         L10nKey::SettingsAgentKimiCode => "Kimi Code",
         L10nKey::SettingsAgentQoderCLI => "Qoder",
         L10nKey::SettingsAgentCodeBuddy => "CodeBuddy",
@@ -872,9 +869,6 @@ pub fn translate_en(key: L10nKey) -> &'static str {
         L10nKey::SettingsSearchCodexKeywords => "agent integration hooks install openai codex",
         L10nKey::SettingsSearchCommandLineToolKeywords => {
             "command line tool cli Hitty path shell command install symlink terminal iterm agent script"
-        }
-        L10nKey::SettingsSearchCopilotCliKeywords => {
-            "agent integration hooks install github copilot"
         }
         L10nKey::SettingsSearchCopyOnSelectKeywords => "clipboard selection yank mouse",
         L10nKey::SettingsSearchCursorBlinkKeywords => "caret blinking flash",
@@ -939,10 +933,6 @@ pub fn translate_en(key: L10nKey) -> &'static str {
             "alt keyboard modifier escape macos option meta option acts as meta"
         }
         L10nKey::SettingsSearchOhMyPiKeywords => "agent integration extension install omp oh my pi",
-        L10nKey::SettingsSearchGeminiKeywords => "agent integration hooks install gemini google",
-        L10nKey::SettingsSearchQwenCodeKeywords => {
-            "agent integration hooks install qwen code qwen-code"
-        }
         L10nKey::SettingsSearchKimiCodeKeywords => {
             "agent integration hooks install kimi code kimi-code moonshot"
         }
@@ -1180,6 +1170,7 @@ pub fn translate_en(key: L10nKey) -> &'static str {
         L10nKey::PanelNotAGitRepoHint => "cd into one and this tab lists its uncommitted changes.",
         L10nKey::PanelNoChanges => "No uncommitted changes.",
         L10nKey::PanelNoChangesHint => "The working tree is clean.",
+        L10nKey::PanelWorkingDirectorySubtitle => "Working Directory",
         L10nKey::PanelSessionSubtitle => "Session",
         L10nKey::PanelConversationSubtitle => "Conversation",
         L10nKey::PanelTurnAltScreenNow => {
@@ -1190,7 +1181,6 @@ pub fn translate_en(key: L10nKey) -> &'static str {
         }
         L10nKey::PanelProcessesSubtitle => "Processes",
         L10nKey::PanelPortsSubtitle => "Ports",
-        L10nKey::PanelCwd => "cwd",
         L10nKey::PanelShell => "shell",
         L10nKey::PanelSsh => "ssh",
         L10nKey::PanelBranch => "branch",
@@ -1201,6 +1191,17 @@ pub fn translate_en(key: L10nKey) -> &'static str {
         L10nKey::PanelRevealInFinder => "Reveal in Finder",
         L10nKey::PanelOpenFolder => "Open Folder",
         L10nKey::PanelOpenInBrowser => "Open in Browser",
+        L10nKey::PanelOpenInApp => "Open in {app}",
+        L10nKey::PanelOpenInChoose => "Choose editor",
+        L10nKey::PanelOpenInNewTab => "Open in New Tab",
+        L10nKey::PanelOpenInLocalOnly => "Local only",
+        L10nKey::PanelOpenInNeedsCli => "CLI required",
+        L10nKey::PanelOpenInUnsupported => "Unsupported",
+        L10nKey::PanelOpenInNoRemoteEditor => "No remote editor",
+        L10nKey::PanelOpenInFailed => "Could not open: {error}",
+        L10nKey::PanelFileManagerWindows => "File Explorer",
+        L10nKey::PanelFileManagerMac => "Finder",
+        L10nKey::PanelFileManagerLinux => "File Manager",
         L10nKey::ScmGroupMerge => "Merge Changes",
         L10nKey::ScmGroupStaged => "Staged Changes",
         L10nKey::ScmGroupChanges => "Changes",
@@ -1576,6 +1577,7 @@ pub fn translate_en(key: L10nKey) -> &'static str {
         L10nKey::CmdNextTab => "Next Tab",
         L10nKey::CmdPreviousTab => "Previous Tab",
         L10nKey::CmdCopyWorkingDirectory => "Copy Working Directory",
+        L10nKey::CmdOpenWorkingDirectory => "Open Working Directory",
         L10nKey::CmdCopySessionId => "Copy Session ID",
         L10nKey::CmdCopySessionIdSubtitle => "the coding agent's own session id",
         L10nKey::CmdForkSession => "Fork Session",

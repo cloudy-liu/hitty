@@ -71,12 +71,9 @@ fn effective_event<'a>(agent: &str, event: &'a str, stdin_json: &str) -> Option<
     {
         return None;
     }
-    if matches!(agent, "copilot" | "grok" | "droid" | "gemini") && event == "notification" {
+    if matches!(agent, "grok" | "droid") && event == "notification" {
         let blocks = stdin_json.contains("elicitation_dialog")
-            || (matches!(agent, "copilot" | "droid") && stdin_json.contains("permission_prompt"))
-            // Gemini's only notification kind so far, but naming it keeps a
-            // future non-blocking one from being read as a block.
-            || (agent == "gemini" && stdin_json.contains("ToolPermission"));
+            || (agent == "droid" && stdin_json.contains("permission_prompt"));
         return blocks.then_some("permission-request");
     }
     Some(event)
@@ -334,14 +331,11 @@ fn ancestor_pids(procs: &[crate::daemon::winproc::Proc]) -> Vec<u32> {
 pub enum HookAgent {
     Claude,
     Codex,
-    Copilot,
     OpenCode,
     Pi,
     Grok,
     OhMyPi,
-    Gemini,
     Droid,
-    Qwen,
     Goose,
     Kimi,
     QoderCLI,
@@ -350,17 +344,14 @@ pub enum HookAgent {
 }
 
 impl HookAgent {
-    pub const ALL: [HookAgent; 15] = [
+    pub const ALL: [HookAgent; 12] = [
         HookAgent::Claude,
         HookAgent::Codex,
-        HookAgent::Copilot,
         HookAgent::OpenCode,
         HookAgent::Pi,
         HookAgent::Grok,
         HookAgent::OhMyPi,
-        HookAgent::Gemini,
         HookAgent::Droid,
-        HookAgent::Qwen,
         HookAgent::Goose,
         HookAgent::Kimi,
         HookAgent::QoderCLI,
@@ -377,20 +368,20 @@ impl HookAgent {
         match agent {
             CLIAgent::Claude => Some(HookAgent::Claude),
             CLIAgent::Codex => Some(HookAgent::Codex),
-            CLIAgent::Copilot => Some(HookAgent::Copilot),
             CLIAgent::OpenCode => Some(HookAgent::OpenCode),
             CLIAgent::Pi => Some(HookAgent::Pi),
             CLIAgent::Grok => Some(HookAgent::Grok),
             CLIAgent::OhMyPi => Some(HookAgent::OhMyPi),
-            CLIAgent::Gemini => Some(HookAgent::Gemini),
             CLIAgent::Droid => Some(HookAgent::Droid),
-            CLIAgent::Qwen => Some(HookAgent::Qwen),
             CLIAgent::Goose => Some(HookAgent::Goose),
             CLIAgent::Kimi => Some(HookAgent::Kimi),
             CLIAgent::QoderCLI => Some(HookAgent::QoderCLI),
             CLIAgent::QoderCLICn => Some(HookAgent::QoderCLICn),
             CLIAgent::CodeBuddy => Some(HookAgent::CodeBuddy),
-            CLIAgent::Aider
+            CLIAgent::Copilot
+            | CLIAgent::Gemini
+            | CLIAgent::Qwen
+            | CLIAgent::Aider
             | CLIAgent::Amp
             | CLIAgent::Cursor
             | CLIAgent::Auggie
@@ -407,13 +398,10 @@ impl HookAgent {
         match self {
             HookAgent::Claude => Some(CLAUDE_HOOK_EVENTS),
             HookAgent::Codex => Some(CODEX_HOOK_EVENTS),
-            HookAgent::Gemini => Some(GEMINI_HOOK_EVENTS),
             HookAgent::Droid => Some(DROID_HOOK_EVENTS),
-            HookAgent::Qwen => Some(QWEN_HOOK_EVENTS),
             HookAgent::QoderCLI | HookAgent::QoderCLICn => Some(QODER_HOOK_EVENTS),
             HookAgent::CodeBuddy => Some(CODEBUDDY_HOOK_EVENTS),
-            HookAgent::Copilot
-            | HookAgent::OpenCode
+            HookAgent::OpenCode
             | HookAgent::Pi
             | HookAgent::Grok
             | HookAgent::OhMyPi
@@ -436,14 +424,11 @@ impl HookAgent {
         match self {
             HookAgent::Claude => "claude",
             HookAgent::Codex => "codex",
-            HookAgent::Copilot => "copilot",
             HookAgent::OpenCode => "opencode",
             HookAgent::Pi => "pi",
             HookAgent::Grok => "grok",
             HookAgent::OhMyPi => "omp",
-            HookAgent::Gemini => "gemini",
             HookAgent::Droid => "droid",
-            HookAgent::Qwen => "qwen",
             HookAgent::Goose => "goose",
             HookAgent::Kimi => "kimi",
             HookAgent::QoderCLI => "qodercli",
@@ -456,14 +441,11 @@ impl HookAgent {
         match self {
             HookAgent::Claude => "Claude Code",
             HookAgent::Codex => "Codex",
-            HookAgent::Copilot => "Copilot CLI",
             HookAgent::OpenCode => "OpenCode",
             HookAgent::Pi => "Pi",
             HookAgent::Grok => "Grok Build",
             HookAgent::OhMyPi => "Oh My Pi",
-            HookAgent::Gemini => "Gemini",
             HookAgent::Droid => "Droid",
-            HookAgent::Qwen => "Qwen Code",
             HookAgent::Goose => "Goose",
             HookAgent::Kimi => "Kimi Code",
             HookAgent::QoderCLI => "Qoder",
@@ -480,7 +462,6 @@ impl HookAgent {
         match self {
             HookAgent::Claude => target.claude_settings_path(),
             HookAgent::Codex => target.under_home(&[".codex", "hooks.json"]),
-            HookAgent::Copilot => target.under_home(&[".copilot", "hooks", OWNED_FILE_STEM_JSON]),
             HookAgent::OpenCode => target.under(
                 &target.xdg_config_dir(),
                 &["opencode", "plugins", OWNED_FILE_STEM_JS],
@@ -492,9 +473,7 @@ impl HookAgent {
             HookAgent::OhMyPi => {
                 target.under_home(&[".omp", "agent", "extensions", "hitty", "index.ts"])
             }
-            HookAgent::Gemini => target.under_home(&[".gemini", "settings.json"]),
             HookAgent::Droid => target.under_home(&[".factory", "settings.json"]),
-            HookAgent::Qwen => target.under_home(&[".qwen", "settings.json"]),
             // The Open Plugins layout, which Goose implements rather than
             // inventing its own: any `.agents/plugins/<name>/hooks/hooks.json`
             // is picked up at startup.
@@ -845,18 +824,6 @@ const CODEX_HOOK_EVENTS: &[(&str, &str)] = &[
     ("Stop", "stop"),
 ];
 
-/// Gemini names the turn boundaries after the agent rather than the user, and
-/// omitting `matcher` matches everything (`hookPlanner.ts`, `!entry.matcher`),
-/// so the bare entries [`hook_map_install`] already writes are enough.
-const GEMINI_HOOK_EVENTS: &[(&str, &str)] = &[
-    ("SessionStart", "session-start"),
-    ("BeforeAgent", "prompt-submit"),
-    ("Notification", "notification"),
-    ("AfterTool", "tool-complete"),
-    ("AfterAgent", "stop"),
-    ("SessionEnd", "session-end"),
-];
-
 const DROID_HOOK_EVENTS: &[(&str, &str)] = &[
     ("SessionStart", "session-start"),
     ("UserPromptSubmit", "prompt-submit"),
@@ -866,24 +833,11 @@ const DROID_HOOK_EVENTS: &[(&str, &str)] = &[
     ("SessionEnd", "session-end"),
 ];
 
-/// Qwen is the only agent here with a first-class permission event, so it needs
-/// none of the notification sniffing in [`effective_event`] — and it gets no
-/// `Notification` hook at all, which would only muddy a status the dedicated
-/// event already reports precisely.
-const QWEN_HOOK_EVENTS: &[(&str, &str)] = &[
-    ("SessionStart", "session-start"),
-    ("UserPromptSubmit", "prompt-submit"),
-    ("PermissionRequest", "permission-request"),
-    ("PostToolUse", "tool-complete"),
-    ("Stop", "stop"),
-    ("SessionEnd", "session-end"),
-];
-
 /// Kimi Code's hooks live as `[[hooks]]` entries in its main `config.toml` —
 /// the same file that holds the user's providers and models — so they go
 /// through the TOML merge strategy rather than a JSON map or an owned file.
-/// Like Qwen it has a first-class permission event, so it needs no
-/// `Notification` hook and none of the sniffing in [`effective_event`].
+/// It has a first-class permission event, so it needs no `Notification` hook
+/// and none of the sniffing in [`effective_event`].
 ///
 /// `Stop` alone does not cover every way a turn ends here: Kimi's own event
 /// reference says `Stop` "does not fire on interrupts, so this event fires
@@ -1276,16 +1230,13 @@ fn enable_codex_hooks_feature() -> Result<(), String> {
 
 fn owned_file_content(target: &HookTarget, agent: HookAgent) -> Option<String> {
     match agent {
-        HookAgent::Copilot => copilot_hooks_json(target),
         HookAgent::OpenCode => opencode_plugin_js(target),
         HookAgent::Pi | HookAgent::OhMyPi => pi_extension_ts(target, agent),
         HookAgent::Grok => grok_hooks_json(target),
         HookAgent::Goose => goose_hooks_json(target),
         HookAgent::Claude
         | HookAgent::Codex
-        | HookAgent::Gemini
         | HookAgent::Droid
-        | HookAgent::Qwen
         | HookAgent::QoderCLI
         | HookAgent::QoderCLICn
         | HookAgent::CodeBuddy
@@ -1364,27 +1315,6 @@ fn owned_file_uninstall(
         dir = d.parent();
     }
     Ok(HookOutcome::Removed)
-}
-
-fn copilot_hooks_json(target: &HookTarget) -> Option<String> {
-    let hook = |event: &str, timeout: u32| {
-        serde_json::json!([{
-            "type": "command",
-            "bash": target.hook_command(HookAgent::Copilot, event),
-            "timeoutSec": timeout,
-        }])
-    };
-    let root = serde_json::json!({
-        "version": 1,
-        "hooks": {
-            "sessionStart": hook("session-start", 5),
-            "userPromptSubmitted": hook("prompt-submit", 5),
-            "agentStop": hook("stop", 10),
-            "sessionEnd": hook("session-end", 5),
-            "notification": hook("notification", 5),
-        }
-    });
-    serde_json::to_string_pretty(&root).ok()
 }
 
 fn grok_hooks_json(target: &HookTarget) -> Option<String> {
@@ -1584,6 +1514,13 @@ mod tests {
                 "{hooked:?} has hooks but no detected agent maps to it"
             );
         }
+        for agent in [CLIAgent::Copilot, CLIAgent::Gemini, CLIAgent::Qwen] {
+            assert_eq!(
+                HookAgent::of_detected(agent),
+                None,
+                "{agent:?} stays detected without hook installation support"
+            );
+        }
     }
 
     #[test]
@@ -1727,10 +1664,8 @@ mod tests {
         let mut events: Vec<&str> = CLAUDE_HOOK_EVENTS
             .iter()
             .chain(CODEX_HOOK_EVENTS)
-            .chain(GEMINI_HOOK_EVENTS)
             .chain(DROID_HOOK_EVENTS)
             .chain(QODER_HOOK_EVENTS)
-            .chain(QWEN_HOOK_EVENTS)
             .chain(GOOSE_HOOK_EVENTS)
             .chain(KIMI_HOOK_EVENTS)
             .chain(CODEBUDDY_HOOK_EVENTS)
@@ -1759,9 +1694,7 @@ mod tests {
         let t = HookTarget::remote(&*host, PathBuf::from("/home/me"));
 
         for (agent, want) in [
-            (HookAgent::Gemini, "/home/me/.gemini/settings.json"),
             (HookAgent::Droid, "/home/me/.factory/settings.json"),
-            (HookAgent::Qwen, "/home/me/.qwen/settings.json"),
             (
                 HookAgent::Goose,
                 "/home/me/.agents/plugins/hitty/hooks/hooks.json",
@@ -1785,9 +1718,7 @@ mod tests {
         let real = HookTarget::remote(&*host, dir.clone());
 
         for agent in [
-            HookAgent::Gemini,
             HookAgent::Droid,
-            HookAgent::Qwen,
             HookAgent::Goose,
             HookAgent::Kimi,
             HookAgent::QoderCLI,
@@ -1987,37 +1918,8 @@ mod tests {
         );
     }
 
-    /// Qwen is the one agent that reports a blocked turn outright, so it must
-    /// not also carry the `Notification` hook the others need — that event fires
-    /// for non-blocking alerts too and would strand the pane on "waiting".
     #[test]
-    fn qwen_reports_permission_requests_natively() {
-        assert!(
-            QWEN_HOOK_EVENTS
-                .iter()
-                .any(|(hook, hitty)| *hook == "PermissionRequest" && *hitty == "permission-request")
-        );
-        assert!(
-            !QWEN_HOOK_EVENTS
-                .iter()
-                .any(|(hook, _)| *hook == "Notification")
-        );
-        assert_eq!(
-            effective_event("qwen", "permission-request", "{}"),
-            Some("permission-request")
-        );
-    }
-
-    #[test]
-    fn gemini_and_droid_notifications_filter_to_permission_requests() {
-        assert_eq!(
-            effective_event(
-                "gemini",
-                "notification",
-                r#"{"notification_type":"ToolPermission"}"#
-            ),
-            Some("permission-request")
-        );
+    fn droid_notifications_filter_to_permission_requests() {
         assert_eq!(
             effective_event(
                 "droid",
@@ -2027,17 +1929,15 @@ mod tests {
             Some("permission-request")
         );
         // A non-blocking alert must not strand the pane on "waiting".
-        for agent in ["gemini", "droid"] {
-            assert_eq!(
-                effective_event(
-                    agent,
-                    "notification",
-                    r#"{"notification_type":"auth_success"}"#
-                ),
-                None,
-                "{agent} reported an idle notification as a block"
-            );
-        }
+        assert_eq!(
+            effective_event(
+                "droid",
+                "notification",
+                r#"{"notification_type":"auth_success"}"#
+            ),
+            None,
+            "droid reported an idle notification as a block"
+        );
     }
 
     #[test]
@@ -2067,23 +1967,7 @@ mod tests {
     }
 
     #[test]
-    fn copilot_notifications_filter_to_permission_requests() {
-        assert_eq!(
-            effective_event("copilot", "notification", r#"{"type":"permission_prompt"}"#),
-            Some("permission-request")
-        );
-        assert_eq!(
-            effective_event(
-                "copilot",
-                "notification",
-                r#"{"type":"elicitation_dialog"}"#
-            ),
-            Some("permission-request")
-        );
-        assert_eq!(
-            effective_event("copilot", "notification", r#"{"type":"turn_summary"}"#),
-            None
-        );
+    fn grok_notifications_filter_to_permission_requests() {
         assert_eq!(
             effective_event(
                 "grok",
@@ -2107,7 +1991,6 @@ mod tests {
             effective_event("claude", "notification", "{}"),
             Some("notification")
         );
-        assert_eq!(effective_event("copilot", "stop", "{}"), Some("stop"));
         assert_eq!(effective_event("grok", "stop", "{}"), Some("stop"));
     }
 
@@ -2231,7 +2114,6 @@ mod tests {
         for (agent, expected) in [
             (HookAgent::Claude, "/home/me/.claude/settings.json"),
             (HookAgent::Codex, "/home/me/.codex/hooks.json"),
-            (HookAgent::Copilot, "/home/me/.copilot/hooks/hitty.json"),
             (
                 HookAgent::OpenCode,
                 "/home/me/.config/opencode/plugins/hitty.js",
@@ -2329,24 +2211,6 @@ mod tests {
         let hook_exe_json = serde_json::to_string(&hook_exe_raw).unwrap();
         let hook_exe = hook_exe_json.trim_matches('"');
 
-        let copilot = copilot_hooks_json(&target).expect("copilot content builds");
-        let parsed: serde_json::Value = serde_json::from_str(&copilot).expect("valid JSON");
-        for event in [
-            "sessionStart",
-            "userPromptSubmitted",
-            "agentStop",
-            "sessionEnd",
-            "notification",
-        ] {
-            assert!(
-                parsed["hooks"][event][0]["bash"]
-                    .as_str()
-                    .is_some_and(|c| c.contains("agent-hook copilot")),
-                "copilot {event} carries the emitter"
-            );
-        }
-        assert!(copilot.contains(hook_exe));
-
         let opencode = opencode_plugin_js(&target).expect("opencode content builds");
         assert!(opencode.contains("agent-hook opencode"));
         assert!(opencode.contains(hook_exe));
@@ -2436,10 +2300,10 @@ mod tests {
         let dir = std::env::temp_dir().join(format!("hitty-owned-test-{}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
         let path = dir.join("hitty.json");
-        let marker = "agent-hook copilot";
+        let marker = "agent-hook grok";
         let host = local_host();
         let t = HookTarget::local(&*host).expect("home resolves in tests");
-        let content = copilot_hooks_json(&t).unwrap();
+        let content = grok_hooks_json(&t).unwrap();
 
         assert_eq!(
             owned_file_state(&t, &path, &content, marker),
@@ -2451,7 +2315,7 @@ mod tests {
             HooksState::Installed
         );
 
-        std::fs::write(&path, content.replace(marker, "agent-hook copilot --old")).unwrap();
+        std::fs::write(&path, content.replace(marker, "agent-hook grok --old")).unwrap();
         assert_eq!(
             owned_file_state(&t, &path, &content, marker),
             HooksState::Outdated
