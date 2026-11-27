@@ -558,6 +558,17 @@ pub fn translate_en(key: L10nKey) -> &'static str {
         L10nKey::SettingsAgentsIntroDesc => {
             "Hooks give panes running these agents live status (working / waiting / done) in the tab bar. Only inside Hitty."
         }
+        L10nKey::SettingsAgentLaunchHeading => "Quick launch commands",
+        L10nKey::SettingsAgentLaunchDesc => {
+            "Command run when launching an agent from a sidebar directory's + button. Leave blank to use the default command."
+        }
+        L10nKey::SettingsAgentLaunchDefault => "Default: {command}",
+        L10nKey::SettingsAgentLaunchReset => "Reset to default command",
+        L10nKey::SettingsAgentLaunchEmpty => "No supported CLI agents were found on PATH.",
+        L10nKey::SettingsAgentHooksHeading => "Status hooks",
+        L10nKey::SettingsSearchAgentLaunchKeywords => {
+            "quick launch command args yolo alias sidebar plus codex claude"
+        }
         L10nKey::SettingsReadingAgentConfig => "Reading this machine's agent config…",
         L10nKey::SettingsStatusNotInstalled => "Not installed",
         L10nKey::SettingsStatusInstalled => "Installed",
@@ -1929,6 +1940,7 @@ pub fn translate_en(key: L10nKey) -> &'static str {
         L10nKey::SidebarUnpinGroup => "Unpin",
         L10nKey::SidebarNewTabHere => "New Tab Here",
         L10nKey::SidebarNewTabIn => "New tab in {name}",
+        L10nKey::SidebarLaunchTerminal => "Terminal",
         L10nKey::SidebarCollapseOthers => "Collapse Others",
         L10nKey::SidebarCollapseAll => "Collapse All",
         L10nKey::SidebarExpandAll => "Expand All",

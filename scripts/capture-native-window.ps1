@@ -17,18 +17,47 @@ Add-Type -AssemblyName System.Drawing
 Add-Type @"
 using System; using System.Runtime.InteropServices;
 public static class WinCap {
+  public delegate bool EnumWindowsProc(IntPtr hWnd, IntPtr lParam);
   [DllImport("user32.dll")] public static extern bool SetProcessDPIAware();
   [DllImport("user32.dll")] public static extern bool PrintWindow(IntPtr hwnd, IntPtr hdc, uint flags);
   [DllImport("user32.dll")] public static extern bool GetWindowRect(IntPtr hwnd, out RECT r);
   [DllImport("user32.dll")] public static extern bool GetClientRect(IntPtr hwnd, out RECT r);
   [DllImport("user32.dll")] public static extern bool PostMessage(IntPtr hWnd, uint Msg, IntPtr wParam, IntPtr lParam);
+  [DllImport("user32.dll")] public static extern bool EnumWindows(EnumWindowsProc lpEnumFunc, IntPtr lParam);
+  [DllImport("user32.dll")] public static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint lpdwProcessId);
+  [DllImport("user32.dll")] public static extern bool IsWindowVisible(IntPtr hWnd);
   [DllImport("dwmapi.dll")] public static extern int DwmGetWindowAttribute(IntPtr hwnd, int attr, out RECT pv, int cb);
   [StructLayout(LayoutKind.Sequential)] public struct RECT { public int L; public int T; public int R; public int B; }
+  public static IntPtr FindMainWindow(int pid) {
+    IntPtr best = IntPtr.Zero;
+    long bestArea = 0;
+    EnumWindows((hwnd, lParam) => {
+      uint winPid = 0;
+      GetWindowThreadProcessId(hwnd, out winPid);
+      if (winPid != (uint)pid || !IsWindowVisible(hwnd)) return true;
+      RECT c;
+      if (!GetClientRect(hwnd, out c)) return true;
+      int w = c.R - c.L;
+      int h = c.B - c.T;
+      if (w < 200 || h < 200) return true;
+      long area = (long)w * (long)h;
+      if (area > bestArea) {
+        bestArea = area;
+        best = hwnd;
+      }
+      return true;
+    }, IntPtr.Zero);
+    return best;
+  }
 }
 "@
 [void][WinCap]::SetProcessDPIAware()
 $hwnd = [IntPtr]::Zero
-for ($i = 0; $i -lt 50 -and $hwnd -eq [IntPtr]::Zero; $i++) { $hwnd = (Get-Process -Id $ProcId).MainWindowHandle; if ($hwnd -eq [IntPtr]::Zero) { Start-Sleep -Milliseconds 200 } }
+for ($i = 0; $i -lt 50 -and $hwnd -eq [IntPtr]::Zero; $i++) {
+  $hwnd = [WinCap]::FindMainWindow($ProcId)
+  if ($hwnd -eq [IntPtr]::Zero) { Start-Sleep -Milliseconds 200 }
+}
+if ($hwnd -eq [IntPtr]::Zero) { $hwnd = (Get-Process -Id $ProcId).MainWindowHandle }
 if ($hwnd -eq [IntPtr]::Zero) { throw "no main window for pid $ProcId" }
 $c = New-Object WinCap+RECT; [void][WinCap]::GetClientRect($hwnd, [ref]$c)
 $x = [int](($c.R - $c.L) / 2); $y = [int](($c.B - $c.T) / 2)

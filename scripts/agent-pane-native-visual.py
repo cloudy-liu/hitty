@@ -9,6 +9,7 @@ asks for hover.
 
 import argparse
 import json
+import os
 import pathlib
 import shutil
 import subprocess
@@ -74,6 +75,12 @@ SCENES = [  # (name, titles, dark, hover pane, zoom, settings page, layout)
     ("sidebar-icon-choices-expanded", False, False, None, False, True, "grid"),
     ("sidebar-icon-choices-clawd-menu", False, False, None, False, True, "grid"),
     ("agent-hooks-settings", False, False, None, False, True, "grid"),
+    ("pinned-empty-sidebar-light", False, False, None, False, False, "pinned-empty"),
+    ("pinned-empty-sidebar-dark", False, True, None, False, False, "pinned-empty"),
+    ("dir-header-plus-menu-light", False, False, None, False, False, "pinned-grouped"),
+    ("dir-header-plus-menu-dark", False, True, None, False, False, "pinned-grouped"),
+    ("agents-quick-launch-settings-light", False, False, None, False, True, "pinned-empty"),
+    ("agents-quick-launch-settings-dark", False, True, None, False, True, "pinned-empty"),
 ]
 # Scenes whose agent panes title themselves with a task, and whether the
 # task-title setting is on: scene name -> (tasks, task_titles).
@@ -136,8 +143,32 @@ def capture_scene(binary, output, phase, scene, scale, activity_reference_secs=N
     ui_font_size = 24 if name.endswith("-large") else 16
     png = output / f"{phase}-{name}.png"
     log = output / f"{phase}-{name}.log"
-    with tempfile.TemporaryDirectory(prefix="hitty-agent-pane-visual-") as temporary:
-        options = pathlib.Path(temporary) / "options.json"
+    with tempfile.TemporaryDirectory(
+        prefix="hitty-agent-pane-visual-",
+        ignore_cleanup_errors=True,
+    ) as temporary:
+        temp_root = pathlib.Path(temporary)
+        options = temp_root / "options.json"
+        pinned_dirs = []
+        proc_env = None
+        is_pinned_launcher_scene = name.startswith((
+            "pinned-empty-sidebar-",
+            "dir-header-plus-menu-",
+            "agents-quick-launch-settings-",
+        ))
+        if is_pinned_launcher_scene:
+            projects_root = temp_root / "projects"
+            for folder in ("hitty", "my-app"):
+                target_dir = projects_root / folder
+                target_dir.mkdir(parents=True, exist_ok=True)
+                pinned_dirs.append(str(target_dir))
+            fake_bin = temp_root / "fake-bin"
+            fake_bin.mkdir(parents=True, exist_ok=True)
+            for shim in ("claude.exe", "codex.cmd", "agy.cmd", "qodercli.exe", "codebuddy.cmd"):
+                (fake_bin / shim).write_text("", encoding="utf-8")
+            proc_env = os.environ.copy()
+            sys_root = os.environ.get("SystemRoot", r"C:\Windows")
+            proc_env["PATH"] = f"{fake_bin};{sys_root}\\System32"
         if layout == "sidebar-activity":
             options.with_name("config.json").write_text(json.dumps({
                 "sidebar_width": sidebar_width, "sidebar_grouping": "none",
@@ -145,6 +176,8 @@ def capture_scene(binary, output, phase, scene, scale, activity_reference_secs=N
                 "theme_follow_system": False, "theme_preset": "dark" if dark else "light",
                 "install_cli_on_path": False,
             }), encoding="utf-8")
+        is_agents_quick_launch = name.startswith("agents-quick-launch-settings-")
+        scene_height = 820 if is_agents_quick_launch else (SETTINGS_HEIGHT if settings else None)
         options.write_text(json.dumps({"output": str(png), "titles": titles, "dark": dark,
                                        "tasks": tasks, "task_titles": task_titles,
                                        "sidebar_product_icons": name.startswith(("sidebar-product-icons", "sidebar-icon-choices")),
@@ -155,11 +188,15 @@ def capture_scene(binary, output, phase, scene, scale, activity_reference_secs=N
                                        "sidebar_width": sidebar_width if layout == "sidebar-activity" else None,
                                        "ui_font_size": ui_font_size,
                                        "zoom": zoom, "settings": settings, "layout": layout, "hold_seconds": 90,
-                                       "height": SETTINGS_HEIGHT if settings else None}), encoding="utf-8")
+                                       "pinned_dirs": pinned_dirs,
+                                       "settings_section": "agents" if is_agents_quick_launch else None,
+                                       "agent_launch_commands": {"codex": "codex --yolo"} if is_agents_quick_launch else {},
+                                       "height": scene_height}), encoding="utf-8")
         with log.open("w", encoding="utf-8") as log_stream:
             process = subprocess.Popen([str(binary), "--config-dir", temporary,
                                         "--agent-pane-visual", str(options)],
                                        stdout=log_stream, stderr=log_stream,
+                                       env=proc_env,
                                        creationflags=subprocess.DETACHED_PROCESS)
             try:
                 deadline = time.monotonic() + 60
@@ -171,7 +208,7 @@ def capture_scene(binary, output, phase, scene, scale, activity_reference_secs=N
                                 f"(New-Object -ComObject WScript.Shell).AppActivate({process.pid})"],
                                check=False, capture_output=True)
                 time.sleep(0.8)
-                if settings and name != "agent-hooks-settings":
+                if settings and name != "agent-hooks-settings" and not is_agents_quick_launch:
                     x, y, notches = SETTINGS_SCROLL
                     subprocess.run(["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File",
                                     str(WHEEL), "-ProcId", str(process.pid), "-X", str(int(x * scale)),
@@ -183,6 +220,16 @@ def capture_scene(binary, output, phase, scene, scale, activity_reference_secs=N
                 if hover is not None:
                     x, y = EDGES[hover]
                     command += ["-MoveTo", f"{int(x * scale)},{int(y * scale)}"]
+                elif name.startswith("dir-header-plus-menu-"):
+                    # Hover the first pinned group header (`hitty`) to reveal [Pin] [+] [...],
+                    # then click the `+` button to open the bottom-start launch menu.
+                    subprocess.run([
+                        "powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File",
+                        str(CAPTURE), "-ProcId", str(process.pid),
+                        "-Out", str(temp_root / "hover.png"),
+                        "-MoveTo", f"{int(120 * scale)},{int(130 * scale)}", "-SettleMs", "500",
+                    ], check=True, capture_output=True)
+                    command += ["-MoveTo", f"{int(194 * scale)},{int(130 * scale)}", "-Click"]
                 elif layout == "sidebar-activity":
                     x, y = (100, 152 if name.endswith("-large") else 132) if "hover" in name else (700, 80)
                     command += ["-MoveTo", f"{int(x * scale)},{int(y * scale)}"]
