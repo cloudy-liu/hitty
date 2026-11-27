@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.5.4 - 2026-11-27
+
+- Open the current working directory from Info and collapse long Agent
+  conversations independently of Outline (cloudy-liu/hitty#67).
+- Reuse a compatible Hitty Server for eligible SSH tabs and reconnect
+  to the same remote terminal after a transport loss (cloudy-liu/hitty#68).
+- Keep pinned directories visible when they have no sessions and launch
+  Agents from the sidebar with configurable commands (cloudy-liu/hitty#70).
+
+See the [release notes](docs/releases/hitty-v0.5.4.md) for scope and
+limitations.
+
 ## v0.5.3 - 2026-11-26
 
 - Show how long a session has been quiet. Track typing, new agent text, and
