@@ -607,11 +607,6 @@ fn settings_search_entries() -> &'static [SearchEntry] {
         },
         SearchEntry {
             section: Agents,
-            title: SettingsAgentCopilotCli,
-            keywords: SettingsSearchCopilotCliKeywords,
-        },
-        SearchEntry {
-            section: Agents,
             title: SettingsAgentOpencode,
             keywords: SettingsSearchOpencodeKeywords,
         },
@@ -629,16 +624,6 @@ fn settings_search_entries() -> &'static [SearchEntry] {
             section: Agents,
             title: SettingsAgentOhMyPi,
             keywords: SettingsSearchOhMyPiKeywords,
-        },
-        SearchEntry {
-            section: Agents,
-            title: SettingsAgentGemini,
-            keywords: SettingsSearchGeminiKeywords,
-        },
-        SearchEntry {
-            section: Agents,
-            title: SettingsAgentQwenCode,
-            keywords: SettingsSearchQwenCodeKeywords,
         },
         SearchEntry {
             section: Agents,
@@ -8441,6 +8426,22 @@ mod tests {
                 show_agent_hook_in_settings(agent),
                 "incorrect Agents search visibility for {:?}",
                 agent.display_name()
+            );
+        }
+        for entry in settings_search_entries()
+            .iter()
+            .filter(|e| e.section == SettingsSection::Agents)
+        {
+            if entry.title == L10nKey::SettingsInstallCliOnPath {
+                continue;
+            }
+            assert!(
+                HookAgent::ALL
+                    .into_iter()
+                    .any(|agent| show_agent_hook_in_settings(agent)
+                        && t(entry.title) == agent.display_name()),
+                "unexpected Agents search entry {:?}",
+                t(entry.title)
             );
         }
     }

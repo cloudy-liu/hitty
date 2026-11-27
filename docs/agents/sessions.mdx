@@ -64,8 +64,9 @@ hooks. Hitty checks the live process's open session log and requires the
 corresponding saved conversation on disk. Two panes in the same directory can
 restore different conversations because each ID comes from its own process.
 
-Cursor, Antigravity (`agy`), Amp, Auggie, Hermes and Vibe have resume commands but
-no built-in hitty hooks to capture new conversation ids. Recognising their process
+Copilot CLI, Gemini, Qwen Code, Cursor, Antigravity (`agy`), Amp, Auggie, Hermes
+and Vibe have resume commands but no built-in hitty hooks to capture new
+conversation ids. Recognising their process
 alone is not enough to identify a conversation. An id already reported to hitty
 is preserved across restarts.
 
