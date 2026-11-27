@@ -284,16 +284,24 @@ pub(crate) fn resolve_persisted_ssh_spec(
         .profile_id
         .as_deref()
         .and_then(|s| uuid::Uuid::parse_str(s).ok())
-        .and_then(|id| cfg.ssh_profiles.iter().find(|p| p.id == id).cloned());
-    match profile {
-        Some(p) => Box::new(build_native_ssh_spec(
-            &p,
-            &cfg.ssh_profiles,
-            &OsCredentialStore,
-            cfg.verify_host_keys,
-        )),
-        None => spec,
-    }
+        .and_then(|id| cfg.ssh_profiles.iter().find(|p| p.id == id))
+        // A managed pane belongs to the original login even if its saved
+        // profile now points elsewhere.
+        .filter(|p| {
+            spec.managed.is_none()
+                || (p.host == spec.host && p.port == spec.port && p.user == spec.user)
+        });
+    let Some(profile) = profile else {
+        return spec;
+    };
+    let mut refreshed = build_native_ssh_spec(
+        profile,
+        &cfg.ssh_profiles,
+        &OsCredentialStore,
+        cfg.verify_host_keys,
+    );
+    refreshed.managed = spec.managed;
+    Box::new(refreshed)
 }
 
 pub(crate) fn build_native_ssh_spec(
@@ -405,6 +413,7 @@ fn build_spec_inner(
             name => name.to_string(),
         }),
         profile_id: Some(profile.id.to_string()),
+        managed: None,
     }
 }
 
@@ -639,6 +648,33 @@ mod tests {
         p.host = host.into();
         p.user = user.into();
         p
+    }
+
+    #[gpui::test]
+    fn restoring_managed_ssh_refreshes_only_the_original_login(cx: &mut gpui::TestAppContext) {
+        let mut saved = profile("build", "build-box", "alice");
+        saved.auth = AuthMode::Agent;
+        let mut connection =
+            build_native_ssh_spec(&saved, &[], &InMemoryCredentialStore::new(), true);
+        connection.managed = Some(crate::daemon::protocol::ManagedSshPane {
+            instance: "server-7".into(),
+            pane_id: 19,
+        });
+
+        cx.update(|cx| {
+            saved.name = "Build renamed".into();
+            let mut config = Config::default();
+            config.ssh_profiles = vec![saved.clone()];
+            cx.set_global(config);
+            let restored = resolve_persisted_ssh_spec(Box::new(connection.clone()), cx);
+            assert_eq!(restored.display_name.as_deref(), Some("Build renamed"));
+            assert_eq!(restored.managed, connection.managed);
+
+            saved.user = "bob".into();
+            cx.global_mut::<Config>().ssh_profiles = vec![saved.clone()];
+            let restored = resolve_persisted_ssh_spec(Box::new(connection.clone()), cx);
+            assert_eq!(*restored, connection);
+        });
     }
 
     #[test]

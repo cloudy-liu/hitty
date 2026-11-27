@@ -22,6 +22,11 @@ use super::forward::RemoteForwardTable;
 use super::handler::ClientHandler;
 use super::{ConnectionKey, SshConnection};
 
+pub(crate) enum Request<'a> {
+    Exec(&'a [u8]),
+    Data(&'a [u8]),
+}
+
 /// How the server answers an `exec` request.
 #[derive(Clone, Copy)]
 pub(crate) enum Exec {
@@ -33,6 +38,7 @@ pub(crate) enum Exec {
         stderr: &'static [u8],
         status: u32,
     },
+    Commands(fn(Request<'_>) -> Option<(Vec<u8>, u32)>),
     LocalShell,
     /// Success and nothing more: a command that never finishes. The server
     /// never closes, so only the client can.
@@ -89,12 +95,15 @@ impl server::Handler for Sshd {
     ) -> Result<(), Self::Error> {
         session.channel_success(channel)?;
         let reply = match self.exec {
-            Exec::Exits => Some((&b"ok\n"[..], &b""[..], 0)),
+            Exec::Exits => Some((b"ok\n".to_vec(), Vec::new(), 0)),
             Exec::Reply {
                 stdout,
                 stderr,
                 status,
-            } => Some((stdout, stderr, status)),
+            } => Some((stdout.to_vec(), stderr.to_vec(), status)),
+            Exec::Commands(reply) => {
+                reply(Request::Exec(command)).map(|(stdout, status)| (stdout, Vec::new(), status))
+            }
             Exec::LocalShell => {
                 let mut command_process = std::process::Command::new("sh");
                 #[cfg(windows)]
@@ -131,10 +140,27 @@ impl server::Handler for Sshd {
             Exec::Hangs => None,
         };
         if let Some((stdout, stderr, status)) = reply {
-            session.data(channel, stdout.to_vec())?;
+            session.data(channel, stdout)?;
             if !stderr.is_empty() {
-                session.extended_data(channel, 1, stderr.to_vec())?;
+                session.extended_data(channel, 1, stderr)?;
             }
+            session.exit_status_request(channel, status)?;
+            session.eof(channel)?;
+            session.close(channel)?;
+        }
+        Ok(())
+    }
+
+    async fn data(
+        &mut self,
+        channel: ChannelId,
+        data: &[u8],
+        session: &mut Session,
+    ) -> Result<(), Self::Error> {
+        if let Exec::Commands(reply) = self.exec
+            && let Some((output, status)) = reply(Request::Data(data))
+        {
+            session.data(channel, output)?;
             session.exit_status_request(channel, status)?;
             session.eof(channel)?;
             session.close(channel)?;
@@ -273,6 +299,7 @@ pub(crate) fn base_spec() -> NativeSshSpec {
         login_script: vec![],
         display_name: None,
         profile_id: None,
+        managed: None,
     }
 }
 

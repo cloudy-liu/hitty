@@ -115,6 +115,10 @@ impl crate::host::server::PaneDirectory for Registry {
         self.get(pane)?.recent_activity()
     }
 
+    fn managed_ssh(&self, pane: u64) -> Option<crate::daemon::protocol::ManagedSshPane> {
+        self.get(pane)?.managed_ssh()
+    }
+
     fn remember_screen_activity(&self, pane: u64, activity: crate::core::machine::AgentActivity) {
         if let Some(pane) = self.get(pane) {
             pane.remember_screen_activity(activity);
@@ -498,10 +502,13 @@ fn hand_over(registry: &Registry, exe: &std::path::Path) -> anyhow::Error {
             None => {
                 // A native-SSH pane's session is cipher state in this process's
                 // memory; the socket would cross and nothing able to speak on
-                // it would. Hanging it up here means the far end sees a close
-                // rather than a connection that has stopped answering.
-                log::info!("pane {} cannot cross a handoff; closing it", pane.id);
-                kill_pane(registry, pane.id);
+                // it would. Detaching closes raw SSH channels cleanly while
+                // leaving server-managed terminals running for reattach.
+                log::info!("pane {} cannot cross a handoff; detaching it", pane.id);
+                if let Some(pane) = registry.remove(pane.id) {
+                    pane.shutdown();
+                }
+                crate::daemon::scrollback::forget(pane.id);
             }
         }
     }

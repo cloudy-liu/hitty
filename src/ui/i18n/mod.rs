@@ -849,6 +849,8 @@ l10n_keys! {
     PanelPortsSubtitle,
     PanelShell,
     PanelSsh,
+    PanelSshConnection,
+    PanelSshShell,
     PanelBranch,
     PanelChangesRow,
     PanelAgentWorking,

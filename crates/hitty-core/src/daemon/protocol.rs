@@ -499,6 +499,13 @@ fn default_true() -> bool {
     true
 }
 
+/// A pane owned by a particular instance of the SSH host's Hitty Server.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct ManagedSshPane {
+    pub instance: String,
+    pub pane_id: u64,
+}
+
 #[derive(Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct NativeSshSpec {
     pub host: String,
@@ -551,6 +558,9 @@ pub struct NativeSshSpec {
     pub display_name: Option<String>,
     #[serde(default)]
     pub profile_id: Option<String>,
+
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub managed: Option<ManagedSshPane>,
 }
 
 /// What a connection test found. The daemon reports the outcome, never the
@@ -624,6 +634,7 @@ impl std::fmt::Debug for NativeSshSpec {
             .field("login_script", &self.login_script)
             .field("display_name", &self.display_name)
             .field("profile_id", &self.profile_id)
+            .field("managed", &self.managed)
             .finish()
     }
 }
@@ -904,6 +915,8 @@ pub enum DaemonMsg {
     SshStatus {
         phase: SshPhase,
     },
+    /// The local daemon's backing pane for a managed SSH terminal.
+    ManagedSsh(ManagedSshPane),
     KnownHostsList(Vec<KnownHostEntry>),
     SshTestResult(SshTestReport),
     SshGitOutput(crate::host::Output),
@@ -990,6 +1003,7 @@ mod kind {
     /// (issue #213). Compact binary selector, like `IMAGE`.
     pub const DELETE_IMAGE: u8 = 61;
     pub const SSH_GIT_OUTPUT: u8 = 62;
+    pub const MANAGED_SSH: u8 = 64;
 }
 
 pub fn write_frame<W: Write>(w: &mut W, kind: u8, payload: &[u8]) -> io::Result<()> {
@@ -1387,6 +1401,7 @@ impl DaemonMsg {
                 write_frame(w, kind::AUTH_PROMPT, &to_json(&(request_id, prompt))?)
             }
             DaemonMsg::SshStatus { phase } => write_frame(w, kind::SSH_STATUS, &to_json(phase)?),
+            DaemonMsg::ManagedSsh(pane) => write_frame(w, kind::MANAGED_SSH, &to_json(pane)?),
             DaemonMsg::KnownHostsList(list) => {
                 write_frame(w, kind::KNOWN_HOSTS_LIST, &to_json(list)?)
             }
@@ -1454,6 +1469,7 @@ impl DaemonMsg {
             kind::SSH_STATUS => DaemonMsg::SshStatus {
                 phase: from_json(&payload)?,
             },
+            kind::MANAGED_SSH => DaemonMsg::ManagedSsh(from_json(&payload)?),
             kind::KNOWN_HOSTS_LIST => DaemonMsg::KnownHostsList(from_json(&payload)?),
             kind::SSH_TEST_RESULT => DaemonMsg::SshTestResult(from_json(&payload)?),
             kind::SSH_GIT_OUTPUT => DaemonMsg::SshGitOutput(from_json(&payload)?),
@@ -1759,6 +1775,10 @@ mod tests {
     fn daemon_roundtrip() {
         let msgs = vec![
             DaemonMsg::Spawned { pane_id: 1 },
+            DaemonMsg::ManagedSsh(ManagedSshPane {
+                instance: "server-7".into(),
+                pane_id: 42,
+            }),
             DaemonMsg::Size(SIZE),
             DaemonMsg::Snapshot(vec![1, 2, 3, 0, 255]),
             DaemonMsg::Output((0u8..=255).collect()),
@@ -2269,6 +2289,7 @@ mod tests {
                 login_script: vec![],
                 display_name: None,
                 profile_id: None,
+                managed: None,
             })),
             forwards: vec![SshForwardRule {
                 kind: SshForwardKind::Local,
@@ -2293,6 +2314,7 @@ mod tests {
             login_script: vec!["tmux attach".into()],
             display_name: Some("prod-web".into()),
             profile_id: Some("uuid-1".into()),
+            managed: None,
         }
     }
 
@@ -2314,6 +2336,18 @@ mod tests {
         assert!(spec.shell_integration);
         assert_eq!(spec.password, None);
         assert!(spec.jump.is_none());
+        assert!(serde_json::to_value(spec).unwrap().get("managed").is_none());
+    }
+
+    #[test]
+    fn native_ssh_spec_preserves_managed_identity_without_secrets() {
+        let mut json = serde_json::to_value(sample_native_spec()).unwrap();
+        let managed = serde_json::json!({ "instance": "server-7", "pane_id": 42 });
+        json["managed"] = managed.clone();
+        let spec: NativeSshSpec = serde_json::from_value(json).unwrap();
+        let restored = serde_json::to_value(spec.without_secrets()).unwrap();
+        assert_eq!(restored["managed"], managed);
+        assert!(restored["password"].is_null());
     }
 
     #[test]

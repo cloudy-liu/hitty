@@ -103,6 +103,22 @@ entirely. It is on for a reason.
 
 Also under Security: **Warn before closing** a live connection, off by default.
 
+## SSH tabs hosted by Hitty Server
+
+From a local workspace, choose a host in the new-tab menu. If that login has
+a compatible Hitty Server, Hitty uses it to run the remote terminal in the
+current workspace. The server reports the running Agent, so its logo and
+status appear in the sidebar while the session stays next to your local tabs.
+
+The terminal stays on the remote server when you close the client or lose
+the connection. Reconnecting attaches to the same running terminal. Closing
+the session explicitly ends its remote terminal. The Info panel shows
+**Hitty Server** for a hosted session or **SSH shell** for an ordinary SSH tab.
+
+Hosts without a compatible installed server open an ordinary SSH shell.
+Profiles with SSH agent forwarding, X11 forwarding, a custom terminal type,
+or shell integration disabled also use a regular SSH shell.
+
 ## Reconnecting
 
 <kbd>⌘ ⇧ R</kbd> — or *SSH: Reconnect* in the palette — restarts the session in

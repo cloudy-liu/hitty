@@ -1188,7 +1188,23 @@ impl HittyApp {
                 };
                 rows.push(InfoRow::text(t(L10nKey::PanelShell), shell));
                 if let Some(ssh) = view.ssh_spec() {
-                    rows.push(InfoRow::text(t(L10nKey::PanelSsh), ssh.host.clone()).copyable());
+                    rows.push(InfoRow::text(t(L10nKey::PanelSsh), ssh.host).copyable());
+                    let connection = if ssh.managed.is_some() {
+                        Some("Hitty Server")
+                    } else if matches!(
+                        view.ssh_phase(),
+                        Some(crate::daemon::protocol::SshPhase::Connected)
+                    ) {
+                        Some(t(L10nKey::PanelSshShell))
+                    } else {
+                        None
+                    };
+                    if let Some(connection) = connection {
+                        rows.push(InfoRow::text(
+                            t(L10nKey::PanelSshConnection),
+                            connection.to_string(),
+                        ));
+                    }
                 }
                 let connected_ssh = view
                     .remote_context()
