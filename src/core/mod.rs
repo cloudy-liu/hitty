@@ -1,6 +1,7 @@
 pub use hitty_core::core::*;
 
 pub mod actions;
+pub mod agent_launcher;
 pub mod agent_prompt;
 #[cfg(target_os = "windows")]
 pub mod aumid;

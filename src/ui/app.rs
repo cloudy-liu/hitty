@@ -994,6 +994,9 @@ pub struct HittyApp {
     /// never touches the filesystem on the UI thread.
     pub(crate) pinned_dir_cache: RefCell<std::collections::HashMap<std::path::PathBuf, bool>>,
     pub(crate) pinned_dir_probes: RefCell<crate::ui::host_ops::InFlight<std::path::PathBuf>>,
+    /// Locally installed CLI agents detected off the UI thread for the sidebar
+    /// directory `+` menu and `Settings -> Agents -> Quick launch commands`.
+    pub(crate) installed_agents: Vec<crate::core::agent_launcher::DetectedAgent>,
     /// Where the active tab's panes were last drawn, which is the frame of
     /// reference a drag's landing is worked out in.
     pub(crate) pane_area: Rc<Cell<Option<Bounds<Pixels>>>>,
@@ -1604,6 +1607,7 @@ impl HittyApp {
             sidebar_activity_refresh: RefCell::new(None),
             pinned_dir_cache: RefCell::new(std::collections::HashMap::new()),
             pinned_dir_probes: RefCell::new(Default::default()),
+            installed_agents: Vec::new(),
             pane_area: Rc::new(Cell::new(None)),
             sidebar_search,
             _sidebar_search_sub: sidebar_search_sub,
@@ -1631,6 +1635,7 @@ impl HittyApp {
         }
         app.refresh_shells(cx);
         if !cfg!(test) {
+            app.refresh_installed_agents(cx);
             app.refresh_open_in_apps(cx);
         }
         cx.on_app_quit(|app, cx| {
@@ -3293,9 +3298,23 @@ impl HittyApp {
     }
 
     pub(crate) fn left_panel_open(&self, cx: &gpui::App) -> bool {
-        matches!(cx.global::<Config>().tab_bar_position, TabBarPosition::Left)
-            && !self.sidebar_collapsed
-            && !self.tabs.is_empty()
+        self.sidebar_open(cx)
+    }
+
+    pub(crate) fn refresh_installed_agents(&mut self, cx: &mut Context<Self>) {
+        cx.spawn(async move |this, cx| {
+            let detected = cx
+                .background_executor()
+                .spawn(async { crate::core::agent_launcher::detect_installed_agents() })
+                .await;
+            let _ = this.update(cx, |app, cx| {
+                if app.installed_agents != detected {
+                    app.installed_agents = detected;
+                    cx.notify();
+                }
+            });
+        })
+        .detach();
     }
 
     pub(crate) fn set_notify_mode(
@@ -3824,6 +3843,16 @@ impl HittyApp {
         self.new_tab_with_cwd(Some(cwd), None, false, window, cx);
     }
 
+    pub(crate) fn new_tab_at_with_command(
+        &mut self,
+        cwd: Option<std::path::PathBuf>,
+        command: String,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        self.new_tab_with_cwd_and_command(cwd, None, Some(command), false, window, cx);
+    }
+
     /// A folder from Explorer, `--open-path`, `hitty <path>`, or a hydrated
     /// window. In-app "new tab here" stays on [`Self::new_tab_at`].
     pub(crate) fn open_path(
@@ -3874,6 +3903,18 @@ impl HittyApp {
         window: &mut Window,
         cx: &mut Context<Self>,
     ) {
+        self.new_tab_with_cwd_and_command(cwd, shell, None, reveal, window, cx);
+    }
+
+    fn new_tab_with_cwd_and_command(
+        &mut self,
+        cwd: Option<std::path::PathBuf>,
+        shell: Option<ShellSpec>,
+        on_ready_command: Option<String>,
+        reveal: bool,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
         if !self.guard_local_spawn(window, cx) {
             return;
         }
@@ -3902,6 +3943,14 @@ impl HittyApp {
                 return;
             }
         };
+        if let Some(cmd) = on_ready_command {
+            match &tab {
+                PaneSlot::Ready(terminal) => terminal.read(cx).run_command_line(&cmd),
+                PaneSlot::Connecting(pending) => {
+                    pending.update(cx, |pending, _| pending.on_ready_command = Some(cmd));
+                }
+            }
+        }
         // Something opened, so whatever the last failure was is stale.
         self.startup_error = None;
         self.remember_active_pane(window, cx);
@@ -4498,7 +4547,7 @@ impl HittyApp {
         // The two surfaces never share a window: the sidebar *is* the tab bar
         // when it is up, and the strip is what stands in for it when it is not.
         let vertical = matches!(cx.global::<Config>().tab_bar_position, TabBarPosition::Left)
-            && !self.tabs.is_empty();
+            && self.sidebar_has_content(cx);
         let viewport = window.viewport_size();
         let pad = gpui_component::window_paddings(window);
         // The band each surface claims, read off the tabs it drew rather than
@@ -4814,6 +4863,7 @@ impl HittyApp {
             leaf.update(cx, |view, cx| view.release_native_git(cx));
             kill_pane_off_thread(leaf.read(cx).pane_route(), leaf.read(cx).pane_id, cx);
         }
+        self.seed_pinned_dir_before_close(&self.tabs[index], cx);
         self.tabs.remove(index);
         // Only losing the renaming tab itself ends the rename — closing an
         // unrelated tab must not throw the half-typed name away (#598).
@@ -5843,6 +5893,7 @@ impl HittyApp {
             self.build_shell_inputs(&mut subs, window, cx);
         let link_file_command_input = self.build_link_file_command_input(&mut subs, window, cx);
         let http_proxy_input = self.build_http_proxy_input(&mut subs, window, cx);
+        let agent_launch_inputs = self.build_agent_launch_inputs(&mut subs, window, cx);
         let scroll_slider = self.build_scroll_slider(&mut subs, window, cx);
         let window_opacity_slider = self.build_window_opacity_slider(&mut subs, window, cx);
         let theme_search = cx.new(|cx| {
@@ -5953,6 +6004,7 @@ impl HittyApp {
             agent_hooks_states: crate::ui::settings::AgentHooksView::Loading,
             agent_hooks_seq: 0,
             agent_hooks_note: None,
+            agent_launch_inputs,
             _subs: subs,
         });
         let search_focus = self
@@ -6348,6 +6400,116 @@ impl HittyApp {
         input
     }
 
+    fn build_agent_launch_inputs(
+        &mut self,
+        subs: &mut Vec<Subscription>,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) -> std::collections::HashMap<String, Entity<InputState>> {
+        use crate::core::agent_launcher::default_command_for;
+        use crate::core::cli_agent::CLIAgent;
+
+        let mut inputs = std::collections::HashMap::with_capacity(CLIAgent::ALL.len());
+        for agent in CLIAgent::ALL {
+            let slug = agent.slug().to_string();
+            let default_cmd = self
+                .installed_agents
+                .iter()
+                .find(|entry| entry.agent == agent)
+                .map(|entry| entry.default_command.clone())
+                .unwrap_or_else(|| default_command_for(agent, None));
+            let value = cx
+                .global::<Config>()
+                .agent_launch_commands
+                .get(&slug)
+                .cloned()
+                .unwrap_or_default();
+            let input = cx.new(|cx| {
+                InputState::new(window, cx)
+                    .placeholder(default_cmd)
+                    .default_value(value)
+            });
+            let commit_slug = slug.clone();
+            subs.push(
+                cx.subscribe_in(&input, window, move |this, _i, ev, _w, cx| match ev {
+                    InputEvent::Change => cx.notify(),
+                    InputEvent::PressEnter { .. } | InputEvent::Blur => {
+                        this.commit_agent_launch_command(&commit_slug, cx);
+                    }
+                    _ => {}
+                }),
+            );
+            inputs.insert(slug, input);
+        }
+        inputs
+    }
+
+    pub(crate) fn commit_agent_launch_command(&mut self, slug: &str, cx: &mut Context<Self>) {
+        let Some(value) = self.active_settings().and_then(|s| {
+            s.agent_launch_inputs
+                .get(slug)
+                .map(|input| input.read(cx).value().trim().to_string())
+        }) else {
+            return;
+        };
+        let cfg = cx.global_mut::<Config>();
+        let changed = if value.is_empty() {
+            cfg.agent_launch_commands.remove(slug).is_some()
+        } else if cfg.agent_launch_commands.get(slug) == Some(&value) {
+            false
+        } else {
+            cfg.agent_launch_commands.insert(slug.to_string(), value);
+            true
+        };
+        if changed {
+            cfg.save();
+            cx.notify();
+        }
+    }
+
+    fn commit_all_agent_launch_commands(&mut self, cx: &mut Context<Self>) {
+        let Some(pending): Option<Vec<(String, String)>> = self.active_settings().map(|s| {
+            s.agent_launch_inputs
+                .iter()
+                .map(|(slug, input)| (slug.clone(), input.read(cx).value().trim().to_string()))
+                .collect()
+        }) else {
+            return;
+        };
+        let cfg = cx.global_mut::<Config>();
+        let mut changed = false;
+        for (slug, value) in pending {
+            if value.is_empty() {
+                changed |= cfg.agent_launch_commands.remove(&slug).is_some();
+            } else if cfg.agent_launch_commands.get(&slug) != Some(&value) {
+                cfg.agent_launch_commands.insert(slug, value);
+                changed = true;
+            }
+        }
+        if changed {
+            cfg.save();
+        }
+    }
+
+    pub(crate) fn reset_agent_launch_command(
+        &mut self,
+        slug: &str,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        if let Some(input) = self
+            .active_settings()
+            .and_then(|s| s.agent_launch_inputs.get(slug).cloned())
+        {
+            input.update(cx, |state, cx| state.set_value("", window, cx));
+        }
+        let cfg = cx.global_mut::<Config>();
+        if cfg.agent_launch_commands.remove(slug).is_some() {
+            cfg.save();
+        }
+        cx.notify();
+    }
+
     fn commit_http_proxy(&mut self, cx: &mut Context<Self>) {
         let Some(value) = self
             .active_settings()
@@ -6446,6 +6608,7 @@ impl HittyApp {
     }
 
     pub(crate) fn close_settings(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        self.commit_all_agent_launch_commands(cx);
         if self.settings.take().is_some() {
             self.focus_active(window, cx);
             cx.notify();
@@ -6935,6 +7098,9 @@ impl HittyApp {
             }
         }
         self.ensure_agent_hooks_loaded(cx);
+        if target == SettingsSection::Agents && !cfg!(test) {
+            self.refresh_installed_agents(cx);
+        }
         cx.notify();
     }
 
@@ -7733,8 +7899,9 @@ impl Render for HittyApp {
         {
             cx.set_active_drag_cursor_style(held, window);
         }
+        self.probe_empty_pinned_dirs(cx);
         let vertical = matches!(cx.global::<Config>().tab_bar_position, TabBarPosition::Left)
-            && !self.tabs.is_empty();
+            && self.sidebar_has_content(cx);
         // Asked through the predicate the right panel sizes itself against —
         // two spellings of "is the rail up" is one more than the layout can
         // afford to have disagree.

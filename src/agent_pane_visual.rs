@@ -58,6 +58,12 @@ struct Options {
     ui_font_size: Option<f32>,
     height: Option<f32>,
     hold_seconds: Option<u64>,
+    #[serde(default)]
+    pinned_dirs: Vec<PathBuf>,
+    #[serde(default)]
+    settings_section: Option<String>,
+    #[serde(default)]
+    agent_launch_commands: std::collections::BTreeMap<String, String>,
 }
 
 struct Fixture {
@@ -138,6 +144,8 @@ pub(crate) fn run(path: &std::ffi::OsStr) {
             crate::register_bundled_fonts(cx);
             let mut config = Config::default();
             let sidebar_activity = options.layout == "sidebar-activity";
+            let pinned_empty = options.layout == "pinned-empty";
+            let pinned_grouped = options.layout == "pinned-grouped";
             let cases = if options.sidebar_icon_fixture {
                 &ICON_CASES
             } else {
@@ -156,6 +164,13 @@ pub(crate) fn run(path: &std::ffi::OsStr) {
             }
             if sidebar_activity {
                 config.sidebar_grouping = crate::core::config::SidebarGrouping::None;
+            } else if pinned_empty || pinned_grouped {
+                config.sidebar_grouping = crate::core::config::SidebarGrouping::RepoOrDirectory;
+                config.sidebar_pinned_groups = options
+                    .pinned_dirs
+                    .iter()
+                    .map(|dir| dir.to_string_lossy().into_owned())
+                    .collect();
             }
             config.tab_bar_position = TabBarPosition::Left;
             // Named as JSON, not as a field: the baseline this fixture is also
@@ -163,6 +178,10 @@ pub(crate) fn run(path: &std::ffi::OsStr) {
             let mut value = serde_json::to_value(&config.0).unwrap();
             value["show_agent_pane_titles"] = serde_json::Value::Bool(options.titles);
             value["show_agent_pane_task_titles"] = serde_json::Value::Bool(options.task_titles);
+            if !options.agent_launch_commands.is_empty() {
+                value["agent_launch_commands"] =
+                    serde_json::to_value(&options.agent_launch_commands).unwrap();
+            }
             let names_key = if value.get("sidebar_agent_names").is_some() {
                 "sidebar_agent_names"
             } else {
@@ -211,6 +230,40 @@ pub(crate) fn run(path: &std::ffi::OsStr) {
                         });
                         let mut streams = Vec::new();
                         owner.update(cx, |app, cx| {
+                            for dir in &options.pinned_dirs {
+                                app.pinned_dir_cache.borrow_mut().insert(dir.clone(), true);
+                            }
+                            if pinned_empty {
+                                cx.notify();
+                                return;
+                            }
+                            if pinned_grouped {
+                                let cwd = options
+                                    .pinned_dirs
+                                    .first()
+                                    .cloned()
+                                    .unwrap_or_else(|| options.output.parent().unwrap().to_path_buf());
+                                let (view, mut stream) = quiet_test_pane(1, window, cx);
+                                DaemonMsg::Cwd(cwd.clone()).encode(&mut stream).unwrap();
+                                DaemonMsg::Output(
+                                    format!(
+                                        "\x1b]0;cmd.exe\x07Microsoft Windows [Version 10.0]\r\n\r\n{}> ",
+                                        cwd.display()
+                                    )
+                                    .into_bytes(),
+                                )
+                                .encode(&mut stream)
+                                .unwrap();
+                                let tab = Tab::new(Pane::leaf(PaneSlot::Ready(view.clone())));
+                                *tab.sidebar_group.borrow_mut() = Some(cwd);
+                                app.tabs.push(tab);
+                                app.active = 0;
+                                app.focus_active(window, cx);
+                                views.push(view);
+                                streams.push(stream);
+                                cx.notify();
+                                return;
+                            }
                             for (index, case) in cases.iter().enumerate() {
                                 let (_, agent, _, screen) = case;
                                 let name = if options.short_title && index == 0 {
@@ -334,7 +387,13 @@ pub(crate) fn run(path: &std::ffi::OsStr) {
                     cx.background_executor()
                         .timer(Duration::from_millis(100))
                         .await;
-                    let ready =
+                    let ready = if pinned_empty {
+                        true
+                    } else if pinned_grouped {
+                        views
+                            .first()
+                            .is_some_and(|view| view.read_with(cx, |view, _| view.title == "cmd.exe"))
+                    } else {
                         views
                             .iter()
                             .zip(cases.iter())
@@ -348,7 +407,8 @@ pub(crate) fn run(path: &std::ffi::OsStr) {
                                 view.read_with(cx, |view, _| {
                                     view.title == title && view.agent() == case.1
                                 })
-                            });
+                            })
+                    };
                     if ready {
                         break;
                     }
@@ -357,15 +417,22 @@ pub(crate) fn run(path: &std::ffi::OsStr) {
                         "agent pane fixture did not settle"
                     );
                 }
+                if options.settings_section.as_deref() == Some("agents") {
+                    // Let off-thread agent PATH discovery finish before opening
+                    // Settings so quick-launch placeholders match detected CLIs.
+                    cx.background_executor()
+                        .timer(Duration::from_millis(400))
+                        .await;
+                }
                 cx.update_window(handle.into(), |_, window, cx| {
                     owner.update(cx, |app, cx| {
                         app.focus_active(window, cx);
                         if options.settings {
-                            app.open_settings_section(
-                                crate::ui::settings::SettingsSection::WindowTabs,
-                                window,
-                                cx,
-                            );
+                            let section = match options.settings_section.as_deref() {
+                                Some("agents") => crate::ui::settings::SettingsSection::Agents,
+                                _ => crate::ui::settings::SettingsSection::WindowTabs,
+                            };
+                            app.open_settings_section(section, window, cx);
                         }
                     });
                     if options.zoom {

@@ -497,6 +497,17 @@ pub fn translate_zh(key: L10nKey) -> Option<&'static str> {
         L10nKey::SettingsAgentsIntroDesc => {
             "hook 让跑这些 agent 的窗格在标签栏实时显示状态（进行中 / 等待中 / 已完成）。仅在 Hitty 内生效。"
         }
+        L10nKey::SettingsAgentLaunchHeading => "快捷启动命令",
+        L10nKey::SettingsAgentLaunchDesc => {
+            "从侧栏目录标题的 + 按钮启动对应 Agent 时执行的命令。留空则使用默认命令。"
+        }
+        L10nKey::SettingsAgentLaunchDefault => "默认：{command}",
+        L10nKey::SettingsAgentLaunchReset => "恢复默认命令",
+        L10nKey::SettingsAgentLaunchEmpty => "未在 PATH 中检测到受支持的 CLI Agent。",
+        L10nKey::SettingsAgentHooksHeading => "状态 Hook",
+        L10nKey::SettingsSearchAgentLaunchKeywords => {
+            "快捷启动 命令 参数 yolo 别名 侧栏 加号 codex claude"
+        }
         L10nKey::SettingsReadingAgentConfig => "正在读取这台机器的 agent 配置…",
         L10nKey::SettingsStatusNotInstalled => "未安装",
         L10nKey::SettingsStatusInstalled => "已安装",
@@ -1828,6 +1839,7 @@ pub fn translate_zh(key: L10nKey) -> Option<&'static str> {
         L10nKey::SidebarUnpinGroup => "取消固定",
         L10nKey::SidebarNewTabHere => "在此新建标签页",
         L10nKey::SidebarNewTabIn => "在 {name} 中新建标签页",
+        L10nKey::SidebarLaunchTerminal => "终端",
         L10nKey::SidebarCollapseOthers => "折叠其他",
         L10nKey::SidebarCollapseAll => "全部折叠",
         L10nKey::SidebarExpandAll => "全部展开",

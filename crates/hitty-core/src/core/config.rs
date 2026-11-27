@@ -420,6 +420,15 @@ pub struct Config {
 
     #[serde(default)]
     pub agent_commands: HashMap<String, String>,
+    /// Per-agent launch command overrides used by the sidebar directory `+`
+    /// menu, keyed by `CLIAgent::slug()` (for example `{"codex": "codex --yolo"}`).
+    /// Omitted or blank entries fall back to the agent's bare default command.
+    #[serde(
+        default,
+        deserialize_with = "de_lenient",
+        skip_serializing_if = "BTreeMap::is_empty"
+    )]
+    pub agent_launch_commands: BTreeMap<String, String>,
     #[serde(default = "default_true")]
     pub restore_agent_sessions: bool,
     /// Give each pane its own shell history instead of one file every pane
@@ -755,6 +764,7 @@ impl Default for Config {
             ssh_profile_frecency: HashMap::new(),
             command_frecency: HashMap::new(),
             agent_commands: HashMap::new(),
+            agent_launch_commands: BTreeMap::new(),
             restore_agent_sessions: true,
             per_pane_history: false,
             quarantined: false,
@@ -933,6 +943,14 @@ impl Config {
         if !SUPPORTED_GUI_LANGUAGES.contains(&self.gui_language.as_str()) {
             self.gui_language = default_gui_language();
         }
+        self.agent_launch_commands = std::mem::take(&mut self.agent_launch_commands)
+            .into_iter()
+            .filter_map(|(slug, command)| {
+                let slug = slug.trim().to_ascii_lowercase();
+                let command = command.trim().to_string();
+                (!slug.is_empty() && !command.is_empty()).then_some((slug, command))
+            })
+            .collect();
     }
 
     pub fn save(&self) {
@@ -2745,5 +2763,33 @@ mod tests {
         let p = config_path("config.json").expect("config path resolves");
         assert!(p.ends_with("config.json"));
         assert_eq!(p.parent(), config_dir_path().as_deref());
+    }
+
+    #[test]
+    fn agent_launch_commands_default_empty_skip_serialization_and_sanitize() {
+        let cfg = Config::default();
+        assert!(cfg.agent_launch_commands.is_empty());
+        let json = serde_json::to_string(&cfg).unwrap();
+        assert!(!json.contains("agent_launch_commands"));
+
+        let mut parsed: Config = serde_json::from_str(
+            r#"{"agent_launch_commands":{" Codex ":" codex --yolo ","claude":"   ","":"ignored"}}"#,
+        )
+        .unwrap();
+        parsed.sanitize();
+        assert_eq!(parsed.agent_launch_commands.len(), 1);
+        assert_eq!(
+            parsed
+                .agent_launch_commands
+                .get("codex")
+                .map(String::as_str),
+            Some("codex --yolo")
+        );
+
+        let lenient: Config =
+            serde_json::from_str(r#"{"font_size": 16.0, "agent_launch_commands": ["not-a-map"]}"#)
+                .expect("a mistyped agent_launch_commands must not break the rest of config.json");
+        assert!(lenient.agent_launch_commands.is_empty());
+        assert_eq!(lenient.font_size, 16.0);
     }
 }

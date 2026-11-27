@@ -773,6 +773,11 @@ fn settings_search_entries() -> &'static [SearchEntry] {
         },
         SearchEntry {
             section: Agents,
+            title: SettingsAgentLaunchHeading,
+            keywords: SettingsSearchAgentLaunchKeywords,
+        },
+        SearchEntry {
+            section: Agents,
             title: SettingsInstallCliOnPath,
             keywords: SettingsSearchCommandLineToolKeywords,
         },
@@ -914,6 +919,7 @@ pub(crate) struct SettingsState {
     pub(crate) agent_hooks_states: AgentHooksView,
     pub(crate) agent_hooks_seq: u64,
     pub(crate) agent_hooks_note: Option<(crate::core::agent_hooks::HookAgent, String)>,
+    pub(crate) agent_launch_inputs: std::collections::HashMap<String, Entity<InputState>>,
     pub(crate) _subs: Vec<Subscription>,
 }
 
@@ -5721,22 +5727,168 @@ impl HittyApp {
         let theme = cx.theme();
         let (foreground, muted_fg) = (theme.foreground, theme.muted_foreground);
         let (success, warning) = (theme.success, theme.warning);
-        let (view, note, selected_host) = match self.active_settings() {
+        let mono_font = theme.mono_font_family.clone();
+        let accent_hit = theme.accent.opacity(0.16);
+        let row_hover = rgb(cx.global::<presets::Surfaces>().window.hover);
+        let (view, note, selected_host, query) = match self.active_settings() {
             Some(s) => (
                 s.agent_hooks_states.clone(),
                 s.agent_hooks_note.clone(),
                 s.agent_hooks_host,
+                s.search.read(cx).value().trim().to_lowercase(),
             ),
-            None => (AgentHooksView::Loading, None, HostId::LOCAL),
+            None => (AgentHooksView::Loading, None, HostId::LOCAL, String::new()),
         };
         let stacked = self.settings_row_under(STACK_ROW_BELOW, cx);
+        let section_has_hits =
+            !query.is_empty() && section_match_count(SettingsSection::Agents, &query) > 0;
+        let launch_section_matches = section_has_hits
+            && row_matches_query(
+                SettingsSection::Agents,
+                t(L10nKey::SettingsAgentLaunchHeading),
+                &query,
+            );
+
         let mut page = v_flex().child(self.section_intro(
-            t(L10nKey::SettingsAgentsIntro),
-            t(L10nKey::SettingsAgentsIntroDesc),
+            t(L10nKey::SettingsAgentLaunchHeading),
+            t(L10nKey::SettingsAgentLaunchDesc),
             cx,
         ));
 
-        page = page.children(self.agent_hooks_machine_picker(selected_host, cx));
+        let launch_agents = crate::core::agent_launcher::settings_launch_agents(
+            &self.installed_agents,
+            cx.global::<Config>(),
+        );
+        if launch_agents.is_empty() {
+            page = page.child(
+                div()
+                    .py_2()
+                    .text_xs()
+                    .text_color(muted_fg)
+                    .child(t(L10nKey::SettingsAgentLaunchEmpty)),
+            );
+        } else {
+            let claude_icon = crate::ui::sidebar_agent_icons::selected_claude_icon(cx);
+            let inputs = self
+                .active_settings()
+                .map(|s| s.agent_launch_inputs.clone())
+                .unwrap_or_default();
+            for entry in launch_agents {
+                let agent = entry.agent;
+                let slug = agent.slug();
+                let Some(input) = inputs.get(slug).cloned() else {
+                    continue;
+                };
+                let has_value = !input.read(cx).value().trim().is_empty();
+                let artwork = crate::ui::sidebar_agent_icons::selected_product_icon(
+                    agent,
+                    &claude_icon,
+                    cx.global::<Config>(),
+                );
+                let default_hint = t_fmt(
+                    L10nKey::SettingsAgentLaunchDefault,
+                    &[("command", &entry.default_command)],
+                );
+                let hit = section_has_hits
+                    && (launch_section_matches
+                        || agent.display_name().to_lowercase().contains(&query)
+                        || entry.default_command.to_lowercase().contains(&query));
+                let miss = section_has_hits && !hit;
+                let reset_slug = slug.to_string();
+                let reset_slot: AnyElement = if has_value {
+                    Button::new(("agent-launch-reset", agent as usize))
+                        .icon(IconName::Close)
+                        .ghost()
+                        .xsmall()
+                        .tooltip(t(L10nKey::SettingsAgentLaunchReset))
+                        .on_click(cx.listener(move |this, _, window, cx| {
+                            this.reset_agent_launch_command(&reset_slug, window, cx);
+                        }))
+                        .into_any_element()
+                } else {
+                    div().w(px(22.)).flex_shrink_0().into_any_element()
+                };
+
+                let labels = h_flex()
+                    .items_center()
+                    .gap_2p5()
+                    .min_w_0()
+                    .child(
+                        div()
+                            .flex_shrink_0()
+                            .size(px(20.))
+                            .flex()
+                            .items_center()
+                            .justify_center()
+                            .child(crate::ui::sidebar_agent_icons::agent_icon(
+                                agent, artwork, 20., cx,
+                            )),
+                    )
+                    .child(
+                        v_flex()
+                            .gap_0p5()
+                            .min_w_0()
+                            .child(
+                                div()
+                                    .text_sm()
+                                    .font_weight(FontWeight::MEDIUM)
+                                    .text_color(foreground)
+                                    .child(agent.display_name()),
+                            )
+                            .child(
+                                div()
+                                    .text_xs()
+                                    .text_color(muted_fg)
+                                    .font_family(mono_font.clone())
+                                    .child(default_hint),
+                            ),
+                    );
+
+                let control = h_flex()
+                    .items_center()
+                    .gap_1p5()
+                    .when(stacked, |c| c.w_full())
+                    .when(!stacked, |c| c.flex_shrink_0())
+                    .child(
+                        div()
+                            .w(px(260.))
+                            .max_w_full()
+                            .when(stacked, |w| w.flex_1())
+                            .font_family(mono_font.clone())
+                            .child(Input::new(&input).small()),
+                    )
+                    .child(reset_slot);
+
+                page = page.child(
+                    div()
+                        .id(("settings-agent-launch", agent as usize))
+                        .flex()
+                        .when(stacked, |row| row.flex_col().items_start().gap_2())
+                        .when(!stacked, |row| {
+                            row.flex_row().items_center().justify_between().gap_8()
+                        })
+                        .py_2()
+                        .px_2p5()
+                        .mx_neg_2p5()
+                        .rounded_lg()
+                        .when(hit, |row| row.bg(accent_hit))
+                        .when(miss, |row| row.opacity(0.45))
+                        .hover(move |h| h.bg(row_hover))
+                        .on_hover(cx.listener(|_this, _hovered, _window, cx| cx.notify()))
+                        .child(labels)
+                        .child(control),
+                );
+            }
+        }
+
+        page = page
+            .child(self.section_rule(cx))
+            .child(self.section_intro(
+                t(L10nKey::SettingsAgentHooksHeading),
+                t(L10nKey::SettingsAgentsIntroDesc),
+                cx,
+            ))
+            .children(self.agent_hooks_machine_picker(selected_host, cx));
 
         // The hook rows describe whichever machine is selected above; the
         // command-line section below is always about this GUI's own host, so it
@@ -8417,6 +8569,17 @@ mod tests {
 
     #[test]
     fn the_agent_search_index_matches_visible_hook_rows() {
+        let non_hook_entries = [
+            L10nKey::SettingsAgentLaunchHeading,
+            L10nKey::SettingsInstallCliOnPath,
+        ];
+        for title in non_hook_entries {
+            assert!(
+                settings_search_entries()
+                    .iter()
+                    .any(|entry| entry.section == SettingsSection::Agents && entry.title == title)
+            );
+        }
         for agent in HookAgent::ALL {
             assert_eq!(
                 settings_search_entries()
@@ -8432,7 +8595,7 @@ mod tests {
             .iter()
             .filter(|e| e.section == SettingsSection::Agents)
         {
-            if entry.title == L10nKey::SettingsInstallCliOnPath {
+            if non_hook_entries.contains(&entry.title) {
                 continue;
             }
             assert!(
@@ -9202,5 +9365,62 @@ mod gpui_tests {
         });
         assert!(prompt_editor);
         assert!(tab_completion, "the completion menu comes back with it");
+    }
+
+    #[gpui::test]
+    fn agents_quick_launch_commands_save_and_reset_in_settings(cx: &mut TestAppContext) {
+        use crate::core::agent_launcher::DetectedAgent;
+        use crate::core::cli_agent::CLIAgent;
+
+        crate::core::config::pin_test_config_dir();
+        let (app, mut vcx) = harness(cx);
+        app.update_in(&mut vcx, |app, window, cx| {
+            app.installed_agents = vec![
+                DetectedAgent {
+                    agent: CLIAgent::Claude,
+                    default_command: "claude".into(),
+                },
+                DetectedAgent {
+                    agent: CLIAgent::Codex,
+                    default_command: "codex".into(),
+                },
+            ];
+            app.open_settings_section(SettingsSection::Agents, window, cx);
+        });
+        vcx.simulate_resize(size(px(1100.), px(800.)));
+        vcx.run_until_parked();
+
+        app.update_in(&mut vcx, |app, window, cx| {
+            let input = app
+                .active_settings()
+                .and_then(|s| s.agent_launch_inputs.get("codex").cloned())
+                .expect("codex input exists");
+            input.update(cx, |state, cx| {
+                state.set_value("codex --yolo", window, cx);
+            });
+            app.commit_agent_launch_command("codex", cx);
+        });
+        vcx.run_until_parked();
+
+        let saved = vcx.update(|_, cx| {
+            cx.global::<Config>()
+                .agent_launch_commands
+                .get("codex")
+                .cloned()
+        });
+        assert_eq!(saved.as_deref(), Some("codex --yolo"));
+
+        app.update_in(&mut vcx, |app, window, cx| {
+            app.reset_agent_launch_command("codex", window, cx);
+        });
+        vcx.run_until_parked();
+
+        let after_reset = vcx.update(|_, cx| {
+            cx.global::<Config>()
+                .agent_launch_commands
+                .get("codex")
+                .cloned()
+        });
+        assert_eq!(after_reset, None);
     }
 }

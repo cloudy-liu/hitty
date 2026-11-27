@@ -144,11 +144,75 @@ struct SidebarInfo {
 }
 
 impl HittyApp {
+    /// Whether the local workspace has at least one verified pinned directory
+    /// that can render as a pinned sidebar section even when zero tabs are open.
+    pub(crate) fn has_visible_pinned_groups(&self, cx: &gpui::App) -> bool {
+        let cfg = cx.global::<Config>();
+        if cfg.sidebar_grouping == SidebarGrouping::None || !self.can_spawn_locally(cx) {
+            return false;
+        }
+        let cache = self.pinned_dir_cache.borrow();
+        cfg.sidebar_pinned_groups.iter().any(|p_str| {
+            !p_str.is_empty()
+                && ssh_hop_group_label(p_str).is_none()
+                && cache.get(Path::new(p_str)) == Some(&true)
+        })
+    }
+
+    /// Whether the left sidebar has either open tabs or pinned local folders to
+    /// display.
+    pub(crate) fn sidebar_has_content(&self, cx: &gpui::App) -> bool {
+        !self.tabs.is_empty() || self.has_visible_pinned_groups(cx)
+    }
+
+    /// Probes pinned local directories before `sidebar_open` is evaluated when
+    /// zero tabs are open, so an empty window with saved pinned folders can
+    /// reveal its sidebar as soon as the off-thread `stat` checks finish.
+    pub(crate) fn probe_empty_pinned_dirs(&self, cx: &mut Context<Self>) {
+        if !self.tabs.is_empty() {
+            return;
+        }
+        let cfg = cx.global::<Config>();
+        if cfg.tab_bar_position != crate::core::config::TabBarPosition::Left
+            || cfg.sidebar_grouping == SidebarGrouping::None
+            || !self.can_spawn_locally(cx)
+            || cfg.sidebar_pinned_groups.is_empty()
+        {
+            return;
+        }
+        let pinned = cfg.sidebar_pinned_groups.clone();
+        self.probe_pinned_dirs(&[], &pinned, cx);
+    }
+
+    /// Seeds `pinned_dir_cache` before removing a tab that belongs to a pinned
+    /// local directory so closing the last tab in that folder never flashes the
+    /// sidebar closed for a frame while waiting for a fresh `stat`.
+    pub(crate) fn seed_pinned_dir_before_close(&self, tab: &crate::ui::app::Tab, cx: &gpui::App) {
+        if !self.can_spawn_locally(cx) {
+            return;
+        }
+        let Some(path) = tab.sidebar_group.borrow().clone() else {
+            return;
+        };
+        if ssh_hop_group_target(&path).is_some() {
+            return;
+        }
+        let key = group_name_key(&Some(path.clone()));
+        if cx
+            .global::<Config>()
+            .sidebar_pinned_groups
+            .iter()
+            .any(|pinned| pinned == &key)
+        {
+            self.pinned_dir_cache.borrow_mut().insert(path, true);
+        }
+    }
+
     /// Whether the tab rail is on screen — the same three conditions `render`
     /// assembles the layout from, in one place the panel opposite can ask.
     pub(crate) fn sidebar_open(&self, cx: &gpui::App) -> bool {
         cx.global::<Config>().tab_bar_position == crate::core::config::TabBarPosition::Left
-            && !self.tabs.is_empty()
+            && self.sidebar_has_content(cx)
             && !self.sidebar_collapsed
     }
 
@@ -1563,25 +1627,44 @@ impl HittyApp {
                             let new_key = section.key.clone();
                             #[cfg(feature = "markdown-visual-tests")]
                             let measured_key = new_key.clone();
-                            let button = Button::new(("sidebar-group-new", group_ix))
-                                .icon(Icon::empty().path("icons/plus.svg"))
-                                .ghost()
-                                .xsmall()
-                                .tooltip(t(L10nKey::SidebarNewTabHere))
-                                .on_click(cx.listener(move |this, _, window, cx| {
-                                    cx.stop_propagation();
-                                    this.new_tab_in_group(new_key.clone(), window, cx);
-                                }));
+                            let launch_agents = self.installed_agents.clone();
+                            let launch_app = dropdown_app.clone();
+                            let button_el: AnyElement = if is_local && !launch_agents.is_empty() {
+                                let claude_icon = claude_product_icon.clone();
+                                Button::new(("sidebar-group-new", group_ix))
+                                    .icon(Icon::empty().path("icons/plus.svg"))
+                                    .ghost()
+                                    .xsmall()
+                                    .tooltip(t(L10nKey::SidebarNewTabHere))
+                                    .dropdown_menu(move |menu, _window, _cx| {
+                                        Self::group_new_tab_menu(
+                                            menu,
+                                            &launch_app,
+                                            new_key.clone(),
+                                            &launch_agents,
+                                            &claude_icon,
+                                        )
+                                    })
+                                    .into_any_element()
+                            } else {
+                                Button::new(("sidebar-group-new", group_ix))
+                                    .icon(Icon::empty().path("icons/plus.svg"))
+                                    .ghost()
+                                    .xsmall()
+                                    .tooltip(t(L10nKey::SidebarNewTabHere))
+                                    .on_click(cx.listener(move |this, _, window, cx| {
+                                        cx.stop_propagation();
+                                        this.new_tab_in_group(new_key.clone(), window, cx);
+                                    }))
+                                    .into_any_element()
+                            };
                             #[cfg(feature = "markdown-visual-tests")]
                             {
-                                crate::terminal_startup::observe_button(
-                                    button.into_any_element(),
-                                    measured_key,
-                                )
+                                crate::terminal_startup::observe_button(button_el, measured_key)
                             }
                             #[cfg(not(feature = "markdown-visual-tests"))]
                             {
-                                button
+                                button_el
                             }
                         })
                     })
@@ -2327,6 +2410,125 @@ impl HittyApp {
             Some(path) => self.new_tab_at(path, window, cx),
             None => self.new_tab(window, cx),
         }
+    }
+
+    fn new_agent_tab_in_group(
+        &mut self,
+        key: Option<PathBuf>,
+        agent: crate::core::cli_agent::CLIAgent,
+        default_command: String,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        if key.as_deref().and_then(ssh_hop_group_target).is_some() {
+            return;
+        }
+        self.unfold_group(&group_name_key(&key), cx);
+        let command = crate::core::agent_launcher::effective_launch_command(
+            agent,
+            &default_command,
+            cx.global::<Config>(),
+        );
+        self.new_tab_at_with_command(key, command, window, cx);
+    }
+
+    fn group_new_tab_menu(
+        mut menu: PopupMenu,
+        app: &gpui::WeakEntity<Self>,
+        key: Option<PathBuf>,
+        agents: &[crate::core::agent_launcher::DetectedAgent],
+        claude_icon: &Option<gpui::ImageSource>,
+    ) -> PopupMenu {
+        menu = menu.min_w(px(176.));
+        let app_term = app.clone();
+        let term_key = key.clone();
+        menu = menu.item(
+            PopupMenuItem::element(|_window, cx| {
+                h_flex()
+                    .items_center()
+                    .gap_2()
+                    .child(
+                        div()
+                            .flex_shrink_0()
+                            .size(px(16.))
+                            .flex()
+                            .items_center()
+                            .justify_center()
+                            .child(
+                                Icon::empty()
+                                    .path("icons/terminal.svg")
+                                    .size(px(14.))
+                                    .text_color(cx.theme().muted_foreground),
+                            ),
+                    )
+                    .child(
+                        div()
+                            .flex_1()
+                            .min_w_0()
+                            .truncate()
+                            .text_sm()
+                            .child(t(L10nKey::SidebarLaunchTerminal)),
+                    )
+            })
+            .on_click(move |_, window, cx| {
+                let _ = app_term.update(cx, |this, cx| {
+                    this.new_tab_in_group(term_key.clone(), window, cx);
+                });
+            }),
+        );
+        if !agents.is_empty() {
+            menu = menu.item(PopupMenuItem::separator());
+            for detected in agents {
+                let agent = detected.agent;
+                let default_command = detected.default_command.clone();
+                let claude = claude_icon.clone();
+                let app_agent = app.clone();
+                let agent_key = key.clone();
+                menu = menu.item(
+                    PopupMenuItem::element(move |_window, cx| {
+                        let artwork = super::sidebar_agent_icons::selected_product_icon(
+                            agent,
+                            &claude,
+                            cx.global::<Config>(),
+                        );
+                        h_flex()
+                            .items_center()
+                            .gap_2()
+                            .child(
+                                div()
+                                    .flex_shrink_0()
+                                    .size(px(16.))
+                                    .flex()
+                                    .items_center()
+                                    .justify_center()
+                                    .child(super::sidebar_agent_icons::agent_icon(
+                                        agent, artwork, 16., cx,
+                                    )),
+                            )
+                            .child(
+                                div()
+                                    .flex_1()
+                                    .min_w_0()
+                                    .truncate()
+                                    .text_sm()
+                                    .child(agent.display_name()),
+                            )
+                    })
+                    .on_click(move |_, window, cx| {
+                        let _ = app_agent.update(cx, |this, cx| {
+                            this.new_agent_tab_in_group(
+                                agent_key.clone(),
+                                agent,
+                                default_command.clone(),
+                                window,
+                                cx,
+                            );
+                        });
+                    }),
+                );
+            }
+        }
+        menu
     }
 
     fn group_header_menu(
@@ -3462,5 +3664,85 @@ mod tests {
         let (short, long) = (p("/app"), p("/x/app"));
         let names = group_names(&[&short, &long]);
         assert_eq!(names, vec!["app", "x/app"]);
+    }
+
+    #[gpui::test]
+    fn zero_session_sidebar_stays_open_for_verified_local_pinned_dirs(
+        cx: &mut gpui::TestAppContext,
+    ) {
+        use crate::core::session::{
+            RemoteRef, RemoteTarget, WindowView, WindowViews, WorkspaceId, WorkspaceStore,
+        };
+        use crate::ui::app::{Tab, test_window::harness};
+        use crate::ui::pane::Pane;
+
+        let (app, mut vcx) = harness(cx);
+        vcx.simulate_resize(size(px(900.), px(600.)));
+
+        app.update(&mut vcx, |app, cx| {
+            let cfg = cx.global_mut::<Config>();
+            cfg.tab_bar_position = crate::core::config::TabBarPosition::Left;
+            cfg.sidebar_grouping = SidebarGrouping::Repo;
+            cfg.sidebar_pinned_groups = vec!["/w/pinned".to_string()];
+            app.tabs.clear();
+            // Before the directory is verified, the empty sidebar stays closed.
+            assert!(!app.sidebar_open(cx));
+            assert!(!app.left_panel_open(cx));
+
+            app.pinned_dir_cache
+                .borrow_mut()
+                .insert(p("/w/pinned"), true);
+            assert!(app.sidebar_open(cx));
+            assert!(app.left_panel_open(cx));
+            cx.notify();
+        });
+        vcx.run_until_parked();
+        assert!(
+            vcx.debug_bounds("session-sidebar").is_some(),
+            "left sidebar must render at 0 tabs when a verified pinned dir exists"
+        );
+
+        // Flat grouping hides directory groups, so 0 tabs hides the sidebar again.
+        app.update(&mut vcx, |app, cx| {
+            cx.global_mut::<Config>().sidebar_grouping = SidebarGrouping::None;
+            assert!(!app.sidebar_open(cx));
+            cx.global_mut::<Config>().sidebar_grouping = SidebarGrouping::RepoOrDirectory;
+            assert!(app.sidebar_open(cx));
+
+            // Closing the last tab in a pinned dir seeds pinned_dir_cache so the
+            // sidebar stays open without waiting for a new stat probe.
+            app.pinned_dir_cache.borrow_mut().clear();
+            let tab = Tab::new(Pane::Empty);
+            *tab.sidebar_group.borrow_mut() = Some(p("/w/pinned"));
+            app.tabs = vec![tab];
+            app.seed_pinned_dir_before_close(&app.tabs[0], cx);
+            app.tabs.clear();
+            assert!(app.sidebar_open(cx));
+
+            // Unpinning the last empty pinned dir at 0 tabs closes the sidebar.
+            app.toggle_pin_group("/w/pinned", cx);
+            assert!(!app.sidebar_open(cx));
+
+            // Remote windows never surface local pinned dirs at 0 tabs.
+            cx.global_mut::<Config>().sidebar_pinned_groups = vec!["/w/pinned".to_string()];
+            app.pinned_dir_cache
+                .borrow_mut()
+                .insert(p("/w/pinned"), true);
+            let remote = WindowView::on_remote(RemoteRef::new(
+                RemoteTarget::Alias {
+                    alias: "build-box".into(),
+                },
+                WorkspaceId::new(),
+            ));
+            app.workspace = remote.id;
+            WorkspaceStore::install_for_test(
+                cx,
+                WindowViews {
+                    views: vec![remote],
+                    active: None,
+                },
+            );
+            assert!(!app.sidebar_open(cx));
+        });
     }
 }

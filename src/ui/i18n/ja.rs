@@ -568,6 +568,19 @@ pub fn translate_ja(key: L10nKey) -> Option<&'static str> {
         L10nKey::SettingsAgentsIntroDesc => {
             "フックにより、これらのエージェントを実行するペインの状態（作業中 / 待機中 / 完了）がタブバーに表示されます。Hitty 内でのみ有効"
         }
+        L10nKey::SettingsAgentLaunchHeading => "クイック起動コマンド",
+        L10nKey::SettingsAgentLaunchDesc => {
+            "サイドバーのディレクトリ見出しにある + ボタンからエージェントを起動するときに実行するコマンド。空欄の場合はデフォルトコマンドを使用します。"
+        }
+        L10nKey::SettingsAgentLaunchDefault => "デフォルト: {command}",
+        L10nKey::SettingsAgentLaunchReset => "デフォルトコマンドに戻す",
+        L10nKey::SettingsAgentLaunchEmpty => {
+            "PATH 上にサポート対象の CLI エージェントが見つかりませんでした。"
+        }
+        L10nKey::SettingsAgentHooksHeading => "ステータスフック",
+        L10nKey::SettingsSearchAgentLaunchKeywords => {
+            "クイック起動 コマンド 引数 yolo エイリアス サイドバー プラス codex claude"
+        }
         L10nKey::SettingsReadingAgentConfig => "このマシンのエージェント設定を読み込んでいます…",
         L10nKey::SettingsStatusNotInstalled => "未インストール",
         L10nKey::SettingsStatusInstalled => "インストール済み",
@@ -2003,6 +2016,7 @@ pub fn translate_ja(key: L10nKey) -> Option<&'static str> {
         L10nKey::SidebarUnpinGroup => "固定を解除",
         L10nKey::SidebarNewTabHere => "ここに新しいタブ",
         L10nKey::SidebarNewTabIn => "{name} に新しいタブ",
+        L10nKey::SidebarLaunchTerminal => "ターミナル",
         L10nKey::SidebarCollapseOthers => "他を折りたたむ",
         L10nKey::SidebarCollapseAll => "すべて折りたたむ",
         L10nKey::SidebarExpandAll => "すべて展開",
