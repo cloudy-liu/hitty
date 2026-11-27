@@ -270,7 +270,6 @@ pub fn normalize_ssh_authority(raw: &str) -> Option<String> {
 pub struct LaunchCommand {
     pub program: PathBuf,
     pub args: Vec<String>,
-    pub is_cmd_script: bool,
 }
 
 /// Picks the primary action for the split button and global shortcut.
@@ -343,7 +342,6 @@ fn macos_open_app(bundle: &Path, arg: String) -> LaunchCommand {
     LaunchCommand {
         program: PathBuf::from("open"),
         args: vec!["-a".into(), bundle.to_string_lossy().into_owned(), arg],
-        is_cmd_script: false,
     }
 }
 
@@ -353,7 +351,6 @@ pub fn build_launch_command(
     location: &OpenLocation,
 ) -> Result<LaunchCommand, OpenInError> {
     let exe = &target.executable;
-    let is_cmd_script = is_windows_cmd_script(exe);
 
     match location {
         OpenLocation::Local(path) => {
@@ -364,7 +361,6 @@ pub fn build_launch_command(
             Ok(LaunchCommand {
                 program: exe.clone(),
                 args: vec![path],
-                is_cmd_script,
             })
         }
         OpenLocation::RemoteSsh { authority, path } => {
@@ -384,7 +380,6 @@ pub fn build_launch_command(
                             format!("ssh-remote+{authority}"),
                             path.clone(),
                         ],
-                        is_cmd_script,
                     })
                 }
                 RemoteSupport::ZedSshUri => {
@@ -395,7 +390,6 @@ pub fn build_launch_command(
                     Ok(LaunchCommand {
                         program: exe.clone(),
                         args: vec![uri],
-                        is_cmd_script,
                     })
                 }
                 RemoteSupport::LocalOnly => Err(OpenInError::LocalOnly(target.app)),
@@ -414,7 +408,6 @@ pub fn build_launch_command(
                     Ok(LaunchCommand {
                         program: exe.clone(),
                         args: vec!["--remote".into(), format!("wsl+{distro}"), path.clone()],
-                        is_cmd_script,
                     })
                 }
                 RemoteSupport::ZedSshUri => Err(OpenInError::UnsupportedLocation(target.app)),
@@ -433,64 +426,10 @@ fn format_zed_ssh_uri(authority: &str, path: &str) -> String {
     }
 }
 
-fn is_windows_cmd_script(path: &Path) -> bool {
-    path.extension()
-        .and_then(OsStr::to_str)
-        .is_some_and(|ext| ext.eq_ignore_ascii_case("cmd") || ext.eq_ignore_ascii_case("bat"))
-}
-
 fn is_macos_app_bundle(path: &Path) -> bool {
     path.extension()
         .and_then(OsStr::to_str)
         .is_some_and(|ext| ext.eq_ignore_ascii_case("app"))
-}
-
-/// Quote a program path and argument list into the single command string
-/// expected by `cmd.exe /D /S /C`.
-///
-/// Trailing backslashes (such as drive roots `D:\`) are doubled before the
-/// closing quote so the downstream `.cmd` script forwarding `%*` into a Windows
-/// CRT parser does not see an escaped quote.
-#[cfg(any(target_os = "windows", test))]
-fn windows_cmd_raw_arg(program: &Path, args: &[String]) -> String {
-    fn quote(s: &str) -> String {
-        let mut out = String::with_capacity(s.len() + 2);
-        out.push('"');
-        let mut backslashes = 0usize;
-        for ch in s.chars() {
-            match ch {
-                '\\' => backslashes += 1,
-                '"' => {
-                    for _ in 0..backslashes * 2 + 1 {
-                        out.push('\\');
-                    }
-                    backslashes = 0;
-                    out.push('"');
-                }
-                _ => {
-                    for _ in 0..backslashes {
-                        out.push('\\');
-                    }
-                    backslashes = 0;
-                    out.push(ch);
-                }
-            }
-        }
-        for _ in 0..backslashes * 2 {
-            out.push('\\');
-        }
-        out.push('"');
-        out
-    }
-
-    let mut parts = Vec::with_capacity(args.len() + 1);
-    parts.push(quote(&program.to_string_lossy()));
-    for arg in args {
-        parts.push(quote(arg));
-    }
-    // `/S` strips the single outer pair of quotes, leaving every inner quoted
-    // path/argument intact even when both contain spaces.
-    format!("\"{}\"", parts.join(" "))
 }
 
 fn spawn_null_io(cmd: &mut Command, program: &Path) -> Result<(), OpenInError> {
@@ -512,31 +451,30 @@ pub fn launch_editor(target: &DetectedApp, location: &OpenLocation) -> Result<()
 }
 
 fn spawn_detached(launch: &LaunchCommand) -> Result<(), OpenInError> {
+    let mut cmd = Command::new(&launch.program);
+    cmd.args(&launch.args);
+
     #[cfg(target_os = "windows")]
     {
         use std::os::windows::process::CommandExt as _;
         const CREATE_NO_WINDOW: u32 = 0x0800_0000;
 
-        let mut cmd = if launch.is_cmd_script {
-            let mut c = Command::new("cmd.exe");
-            c.args(["/D", "/S", "/C"]);
-            c.raw_arg(windows_cmd_raw_arg(&launch.program, &launch.args));
-            c
-        } else {
-            let mut c = Command::new(&launch.program);
-            c.args(&launch.args);
-            c
-        };
+        // Windows can implicitly run batch files through cmd.exe. Directory
+        // and remote authority arguments must reach a native executable.
+        if !launch
+            .program
+            .extension()
+            .is_some_and(|ext| ext.eq_ignore_ascii_case("exe"))
+        {
+            return Err(OpenInError::SpawnFailed {
+                program: launch.program.clone(),
+                reason: "expected a native Windows editor executable".into(),
+            });
+        }
         cmd.creation_flags(CREATE_NO_WINDOW);
-        spawn_null_io(&mut cmd, &launch.program)
     }
 
-    #[cfg(not(target_os = "windows"))]
-    {
-        let mut cmd = Command::new(&launch.program);
-        cmd.args(&launch.args);
-        spawn_null_io(&mut cmd, &launch.program)
-    }
+    spawn_null_io(&mut cmd, &launch.program)
 }
 
 /// Open a local directory in the system file manager.
@@ -610,6 +548,38 @@ struct WindowsSearchRoots<'a> {
     local_programs: Option<&'a Path>,
 }
 
+#[cfg(any(target_os = "windows", test))]
+fn find_windows_editor(
+    roots: &WindowsSearchRoots<'_>,
+    install_dir: &str,
+    executable: &str,
+    launcher: &str,
+) -> Option<PathBuf> {
+    for dir in roots.path_dirs {
+        let candidate = dir.join(executable);
+        if candidate.is_file() {
+            return Some(candidate);
+        }
+        // The PATH entry may be a bin/ directory or a resources/app/bin/
+        // directory. Use the batch launcher only to locate the installation.
+        if dir.join(launcher).is_file()
+            && let Some(candidate) = dir
+                .ancestors()
+                .skip(1)
+                .take(3)
+                .map(|parent| parent.join(executable))
+                .find(|path| path.is_file())
+        {
+            return Some(candidate);
+        }
+    }
+    [roots.local_programs, roots.program_files]
+        .into_iter()
+        .flatten()
+        .map(|root| root.join(install_dir).join(executable))
+        .find(|path| path.is_file())
+}
+
 #[cfg(target_os = "windows")]
 fn detect_one(app: OpenInApp, path_dirs: &[PathBuf]) -> Option<PathBuf> {
     let local_app_data = std::env::var_os("LOCALAPPDATA").map(PathBuf::from);
@@ -631,97 +601,25 @@ fn detect_one(app: OpenInApp, path_dirs: &[PathBuf]) -> Option<PathBuf> {
     };
 
     match app {
-        OpenInApp::VsCode => find_on_path(path_dirs, &["code.cmd", "code.exe"]).or_else(|| {
-            check_files(vec![
-                local_programs
-                    .as_ref()
-                    .map(|d| d.join("Microsoft VS Code").join("bin").join("code.cmd")),
-                program_files
-                    .as_ref()
-                    .map(|d| d.join("Microsoft VS Code").join("bin").join("code.cmd")),
-                local_programs
-                    .as_ref()
-                    .map(|d| d.join("Microsoft VS Code").join("Code.exe")),
-                program_files
-                    .as_ref()
-                    .map(|d| d.join("Microsoft VS Code").join("Code.exe")),
-            ])
-        }),
+        OpenInApp::VsCode => {
+            find_windows_editor(&roots, "Microsoft VS Code", "Code.exe", "code.cmd")
+        }
         OpenInApp::VsCodeInsiders => {
-            find_on_path(path_dirs, &["code-insiders.cmd", "code-insiders.exe"]).or_else(|| {
-                check_files(vec![
-                    local_programs.as_ref().map(|d| {
-                        d.join("Microsoft VS Code Insiders")
-                            .join("bin")
-                            .join("code-insiders.cmd")
-                    }),
-                    program_files.as_ref().map(|d| {
-                        d.join("Microsoft VS Code Insiders")
-                            .join("bin")
-                            .join("code-insiders.cmd")
-                    }),
-                    local_programs.as_ref().map(|d| {
-                        d.join("Microsoft VS Code Insiders")
-                            .join("Code - Insiders.exe")
-                    }),
-                ])
+            find_on_path(path_dirs, &["code-insiders.exe"]).or_else(|| {
+                find_windows_editor(
+                    &roots,
+                    "Microsoft VS Code Insiders",
+                    "Code - Insiders.exe",
+                    "code-insiders.cmd",
+                )
             })
         }
-        OpenInApp::Cursor => find_on_path(path_dirs, &["cursor.cmd", "cursor.exe"]).or_else(|| {
-            check_files(vec![
-                local_programs.as_ref().map(|d| {
-                    d.join("cursor")
-                        .join("resources")
-                        .join("app")
-                        .join("bin")
-                        .join("cursor.cmd")
-                }),
-                local_programs
-                    .as_ref()
-                    .map(|d| d.join("cursor").join("Cursor.exe")),
-                program_files
-                    .as_ref()
-                    .map(|d| d.join("Cursor").join("Cursor.exe")),
-            ])
-        }),
+        OpenInApp::Cursor => find_windows_editor(&roots, "Cursor", "Cursor.exe", "cursor.cmd"),
         OpenInApp::Windsurf => {
-            find_on_path(path_dirs, &["windsurf.cmd", "windsurf.exe"]).or_else(|| {
-                check_files(vec![
-                    local_programs
-                        .as_ref()
-                        .map(|d| d.join("Windsurf").join("bin").join("windsurf.cmd")),
-                    local_programs
-                        .as_ref()
-                        .map(|d| d.join("Windsurf").join("Windsurf.exe")),
-                    program_files
-                        .as_ref()
-                        .map(|d| d.join("Windsurf").join("Windsurf.exe")),
-                ])
-            })
+            find_windows_editor(&roots, "Windsurf", "Windsurf.exe", "windsurf.cmd")
         }
-        OpenInApp::Zed => find_on_path(path_dirs, &["zed.exe", "zed.cmd"]).or_else(|| {
-            check_files(vec![
-                local_programs
-                    .as_ref()
-                    .map(|d| d.join("Zed").join("Zed.exe")),
-                program_files
-                    .as_ref()
-                    .map(|d| d.join("Zed").join("Zed.exe")),
-            ])
-        }),
-        OpenInApp::Qoder => find_on_path(path_dirs, &["qoder.cmd", "qoder.exe"]).or_else(|| {
-            check_files(vec![
-                local_programs
-                    .as_ref()
-                    .map(|d| d.join("Qoder").join("bin").join("qoder.cmd")),
-                local_programs
-                    .as_ref()
-                    .map(|d| d.join("Qoder").join("Qoder.exe")),
-                program_files
-                    .as_ref()
-                    .map(|d| d.join("Qoder").join("Qoder.exe")),
-            ])
-        }),
+        OpenInApp::Zed => find_windows_editor(&roots, "Zed", "Zed.exe", "zed.cmd"),
+        OpenInApp::Qoder => find_windows_editor(&roots, "Qoder", "Qoder.exe", "qoder.cmd"),
         OpenInApp::SublimeText => find_on_path(path_dirs, &["subl.exe"]).or_else(|| {
             check_files(vec![
                 program_files
@@ -732,42 +630,12 @@ fn detect_one(app: OpenInApp, path_dirs: &[PathBuf]) -> Option<PathBuf> {
                     .map(|d| d.join("Sublime Text 3").join("subl.exe")),
             ])
         }),
-        OpenInApp::IntelliJ => detect_jetbrains_windows(
-            &roots,
-            &["idea64.exe", "idea.cmd"],
-            "IntelliJ IDEA",
-            "idea64.exe",
-        ),
-        OpenInApp::CLion => detect_jetbrains_windows(
-            &roots,
-            &["clion64.exe", "clion.cmd"],
-            "CLion",
-            "clion64.exe",
-        ),
-        OpenInApp::RustRover => detect_jetbrains_windows(
-            &roots,
-            &["rustrover64.exe", "rustrover.cmd"],
-            "RustRover",
-            "rustrover64.exe",
-        ),
-        OpenInApp::PyCharm => detect_jetbrains_windows(
-            &roots,
-            &["pycharm64.exe", "pycharm.cmd"],
-            "PyCharm",
-            "pycharm64.exe",
-        ),
-        OpenInApp::WebStorm => detect_jetbrains_windows(
-            &roots,
-            &["webstorm64.exe", "webstorm.cmd"],
-            "WebStorm",
-            "webstorm64.exe",
-        ),
-        OpenInApp::GoLand => detect_jetbrains_windows(
-            &roots,
-            &["goland64.exe", "goland.cmd"],
-            "GoLand",
-            "goland64.exe",
-        ),
+        OpenInApp::IntelliJ => detect_jetbrains_windows(&roots, "IntelliJ IDEA", "idea64.exe"),
+        OpenInApp::CLion => detect_jetbrains_windows(&roots, "CLion", "clion64.exe"),
+        OpenInApp::RustRover => detect_jetbrains_windows(&roots, "RustRover", "rustrover64.exe"),
+        OpenInApp::PyCharm => detect_jetbrains_windows(&roots, "PyCharm", "pycharm64.exe"),
+        OpenInApp::WebStorm => detect_jetbrains_windows(&roots, "WebStorm", "webstorm64.exe"),
+        OpenInApp::GoLand => detect_jetbrains_windows(&roots, "GoLand", "goland64.exe"),
         OpenInApp::FileManager => None,
     }
 }
@@ -775,20 +643,16 @@ fn detect_one(app: OpenInApp, path_dirs: &[PathBuf]) -> Option<PathBuf> {
 #[cfg(any(target_os = "windows", test))]
 fn detect_jetbrains_windows(
     roots: &WindowsSearchRoots<'_>,
-    path_names: &[&str],
     dir_prefix: &str,
     bin_exe: &str,
 ) -> Option<PathBuf> {
-    if let Some(found) = find_on_path(roots.path_dirs, path_names) {
+    if let Some(found) = find_on_path(roots.path_dirs, &[bin_exe]) {
         return Some(found);
     }
-    if let Some(scripts) = roots.toolbox_scripts {
-        for name in path_names {
-            let candidate = scripts.join(name);
-            if candidate.is_file() {
-                return Some(candidate);
-            }
-        }
+    if let Some(scripts) = roots.toolbox_scripts
+        && let Some(found) = find_on_path(&[scripts.to_path_buf()], &[bin_exe])
+    {
+        return Some(found);
     }
     let jb_roots = [
         roots.program_files.map(|d| d.join("JetBrains")),
@@ -1007,8 +871,8 @@ mod tests {
         let installed = vec![
             fake(OpenInApp::IntelliJ, "idea64.exe"),
             fake(OpenInApp::Zed, "zed.exe"),
-            fake(OpenInApp::VsCode, "code.cmd"),
-            fake(OpenInApp::Cursor, "cursor.cmd"),
+            fake(OpenInApp::VsCode, "Code.exe"),
+            fake(OpenInApp::Cursor, "Cursor.exe"),
         ];
         let local = OpenLocation::Local(PathBuf::from(r"D:\gh-prj\hitty"));
         let ssh = OpenLocation::RemoteSsh {
@@ -1109,15 +973,15 @@ mod tests {
     fn launch_command_handles_local_ssh_wsl_and_rejects_invalid_remote() {
         let vscode = fake(
             OpenInApp::VsCode,
-            r"C:\Users\dev\AppData\Local\Programs\Microsoft VS Code\bin\code.cmd",
+            r"C:\Users\dev\AppData\Local\Programs\Microsoft VS Code\Code.exe",
         );
         let local = build_launch_command(
             &vscode,
-            &OpenLocation::Local(PathBuf::from(r"\\?\D:\gh-prj\hitty")),
+            &OpenLocation::Local(PathBuf::from(r"\\?\D:\My Projects\100% done")),
         )
         .unwrap();
-        assert!(local.is_cmd_script);
-        assert_eq!(local.args, vec![r"D:\gh-prj\hitty"]);
+        assert_eq!(local.program, vscode.executable);
+        assert_eq!(local.args, vec![r"D:\My Projects\100% done"]);
 
         let ssh = build_launch_command(
             &vscode,
@@ -1207,18 +1071,39 @@ mod tests {
     }
 
     #[test]
-    fn windows_cmd_quoting_preserves_spaces_and_drive_root_trailing_backslash() {
-        let raw = windows_cmd_raw_arg(
-            Path::new(r"C:\Program Files\Microsoft VS Code\bin\code.cmd"),
-            &[r"D:\My Projects\hitty".into()],
-        );
+    fn windows_editor_detection_resolves_native_executable_from_batch_launcher() {
+        let dir = tempfile::tempdir().unwrap();
+        let bin = dir.path().join("resources").join("app").join("bin");
+        std::fs::create_dir_all(&bin).unwrap();
+        std::fs::write(bin.join("cursor.cmd"), []).unwrap();
+        let roots = WindowsSearchRoots {
+            path_dirs: &[bin],
+            toolbox_scripts: None,
+            program_files: None,
+            local_programs: None,
+        };
         assert_eq!(
-            raw,
-            "\"\"C:\\Program Files\\Microsoft VS Code\\bin\\code.cmd\" \"D:\\My Projects\\hitty\"\""
+            find_windows_editor(&roots, "Cursor", "Cursor.exe", "cursor.cmd"),
+            None
         );
 
-        let drive_root = windows_cmd_raw_arg(Path::new(r"C:\bin\code.cmd"), &[r"D:\".into()]);
-        assert_eq!(drive_root, "\"\"C:\\bin\\code.cmd\" \"D:\\\\\"\"");
+        let executable = dir.path().join("Cursor.exe");
+        std::fs::write(&executable, []).unwrap();
+        assert_eq!(
+            find_windows_editor(&roots, "Cursor", "Cursor.exe", "cursor.cmd"),
+            Some(executable)
+        );
+    }
+
+    #[cfg(target_os = "windows")]
+    #[test]
+    fn windows_editor_launch_requires_a_native_executable() {
+        let launcher = fake(OpenInApp::VsCode, "code.cmd");
+        assert!(matches!(
+            launch_editor(&launcher, &OpenLocation::Local(PathBuf::from(r"D:\work"))),
+            Err(OpenInError::SpawnFailed { program, reason })
+                if program == launcher.executable && reason == "expected a native Windows editor executable"
+        ));
     }
 
     #[test]
@@ -1250,8 +1135,7 @@ mod tests {
             program_files: Some(dir.path()),
             local_programs: None,
         };
-        let found =
-            detect_jetbrains_windows(&roots, &["idea64.exe"], "IntelliJ IDEA", "idea64.exe");
+        let found = detect_jetbrains_windows(&roots, "IntelliJ IDEA", "idea64.exe");
         assert_eq!(
             found,
             Some(
