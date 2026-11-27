@@ -1111,6 +1111,7 @@ l10n_keys! {
     SidebarRenameGroup,
     SidebarPinGroup,
     SidebarUnpinGroup,
+    SidebarRemoveFolder,
     SidebarNewTabHere,
     SidebarNewTabIn,
     SidebarLaunchTerminal,

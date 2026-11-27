@@ -1156,6 +1156,9 @@ fn take_rehydrate(cx: &mut App, client_ws: WorkspaceId, showing: &[TabId]) -> Op
 /// agree there is nothing there. An unprimed mirror knows nothing and answers
 /// no: "I don't know" may never authorize a deletion.
 pub(crate) fn workspace_is_disposable(cx: &App, client_ws: WorkspaceId) -> bool {
+    if !WorkspaceStore::sidebar_folders(cx, client_ws).is_empty() {
+        return false;
+    }
     let Some(state) = cx
         .try_global::<TreeSync>()
         .and_then(|t| t.windows.get(&client_ws))
@@ -2554,6 +2557,7 @@ impl HittyApp {
             LayoutDelta::TabClosed { tab } => {
                 if let Some(index) = index_of(&self.tabs, *tab) {
                     let active_id = self.tabs.get(self.active).map(|t| t.tree_id.get());
+                    self.retain_sidebar_dir_before_close(index, cx);
                     self.tabs.remove(index);
                     self.active = active_id
                         .and_then(|id| index_of(&self.tabs, id))

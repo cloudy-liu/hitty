@@ -553,6 +553,14 @@ fn startup_foreground(
                 .max_by_key(|view| view.last_active)
                 .map(|view| view.id)
         })
+        .or_else(|| {
+            views
+                .views
+                .iter()
+                .filter(|view| !view.is_remote() && !view.sidebar_folders().is_empty())
+                .max_by_key(|view| view.last_active)
+                .map(|view| view.id)
+        })
 }
 
 /// The workspace a launch reopens, if any.
