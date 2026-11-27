@@ -855,6 +855,8 @@ l10n_keys! {
     PanelCwd,
     PanelShell,
     PanelSsh,
+    PanelSshConnection,
+    PanelSshShell,
     PanelBranch,
     PanelChangesRow,
     PanelAgentWorking,

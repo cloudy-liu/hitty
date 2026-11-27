@@ -11,6 +11,8 @@ mod auth;
 mod connect;
 mod handler;
 mod managed;
+mod managed_session;
+pub(crate) use managed_session::ManagedEvent;
 
 #[cfg(test)]
 pub(crate) mod test_support;
@@ -145,7 +147,7 @@ impl SshManager {
         ))
     }
 
-    pub fn spawn_native_session(
+    pub(crate) fn spawn_native_session(
         &'static self,
         pane_id: u64,
         spec: Box<NativeSshSpec>,
@@ -155,6 +157,7 @@ impl SshManager {
         data_tx: tokio::sync::mpsc::Sender<Vec<u8>>,
         cmd_rx: tokio::sync::mpsc::UnboundedReceiver<ChannelCmd>,
         conn_slot: SharedConnection,
+        publish: impl FnMut(ManagedEvent) + Send + 'static,
     ) {
         self.runtime.spawn(async move {
             if let Err(reason) = self
@@ -167,6 +170,7 @@ impl SshManager {
                     data_tx.clone(),
                     cmd_rx,
                     &conn_slot,
+                    publish,
                 )
                 .await
             {
@@ -231,6 +235,7 @@ impl SshManager {
         data_tx: tokio::sync::mpsc::Sender<Vec<u8>>,
         cmd_rx: tokio::sync::mpsc::UnboundedReceiver<ChannelCmd>,
         conn_slot: &SharedConnection,
+        publish: impl FnMut(ManagedEvent) + Send,
     ) -> Result<(), String> {
         broker.status(SshPhase::Connecting);
 
@@ -240,6 +245,47 @@ impl SshManager {
             .map_err(|e| format!("{e}"))?;
 
         *conn_slot.lock().unwrap() = Arc::downgrade(&conn);
+
+        if spec.managed.is_some() || managed_session::can_host(spec) {
+            let mut hosted = self.open_existing_pane_link(&conn).await;
+            if reused && !conn.is_alive() {
+                self.evict_connection(conn.key());
+                let (fresh, _) = self
+                    .open_connection(spec, broker)
+                    .await
+                    .map_err(|e| e.to_string())?;
+                conn = fresh;
+                *conn_slot.lock().unwrap() = Arc::downgrade(&conn);
+                hosted = self.open_existing_pane_link(&conn).await;
+            }
+            match hosted {
+                Ok(Some((link, version))) if managed_session::supports(&version) => {
+                    for rule in &spec.forwards {
+                        self.forwards.establish(pane_id, conn.clone(), rule).await;
+                    }
+                    return managed_session::Session {
+                        manager: self,
+                        spec,
+                        broker,
+                        conn_slot,
+                        cmd_rx,
+                        size,
+                        publish,
+                    }
+                    .run(conn, link, version, remote_start_dir)
+                    .await
+                    .map_err(|e| e.to_string());
+                }
+                result if spec.managed.is_some() => {
+                    return Err(result.err().map_or_else(
+                        || "Hitty Server is unavailable for this session".to_string(),
+                        |e| e.to_string(),
+                    ));
+                }
+                Err(e) => log::debug!("could not open an installed Hitty Server: {e}"),
+                _ => {}
+            }
+        }
 
         broker.status(SshPhase::Connected);
 

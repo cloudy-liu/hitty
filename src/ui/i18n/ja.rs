@@ -1245,6 +1245,8 @@ pub fn translate_ja(key: L10nKey) -> Option<&'static str> {
         L10nKey::PanelCwd => "作業ディレクトリ",
         L10nKey::PanelShell => "シェル",
         L10nKey::PanelSsh => "ssh",
+        L10nKey::PanelSshConnection => "接続方式",
+        L10nKey::PanelSshShell => "SSH シェル",
         L10nKey::PanelBranch => "ブランチ",
         L10nKey::PanelChangesRow => "変更",
         L10nKey::PanelAgentWorking => "作業中",

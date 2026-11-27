@@ -19,6 +19,9 @@ use crate::daemon::protocol::{
 use crate::daemon::shell_integration;
 use crate::daemon::startup_query::{self, StartupQuery};
 
+mod managed_ssh;
+use managed_ssh::ManagedSshProxy;
+
 #[cfg(windows)]
 fn default_prog() -> CommandBuilder {
     CommandBuilder::new(crate::core::shells::windows_default_shell())
@@ -757,6 +760,7 @@ struct PaneState {
     /// live session learned nothing and drew it as an unknown remote — no
     /// "connected" dot, and no warning before closing it.
     ssh_phase: Option<crate::daemon::protocol::SshPhase>,
+    managed_ssh: Option<crate::daemon::protocol::ManagedSshPane>,
     pending_ssh_resume: Option<crate::daemon::protocol::AgentResume>,
     /// What this pane is running, for the machine tree to record. Distinct from
     /// `shell` above, which is the shell-integration state.
@@ -1699,6 +1703,7 @@ impl DaemonPane {
                 osc_title: restored_title,
                 shell: ShellState::default(),
                 ssh_phase: None,
+                managed_ssh: None,
                 pending_ssh_resume: None,
                 shell_spec: spawn.shell.clone(),
                 remote: spawn.remote.clone(),
@@ -1951,6 +1956,7 @@ impl DaemonPane {
                     command: None,
                 },
                 ssh_phase: None,
+                managed_ssh: None,
                 pending_ssh_resume: None,
                 remote: carried.remote,
                 agent: carried.agent,
@@ -2009,6 +2015,7 @@ impl DaemonPane {
             osc_title: None,
             shell: ShellState::default(),
             ssh_phase: None,
+            managed_ssh: spec.managed.clone(),
             pending_ssh_resume: None,
             remote: Some(remote),
             agent: None,
@@ -2056,6 +2063,9 @@ impl DaemonPane {
         });
 
         let death = Arc::new(DeathReporter::new(on_dead));
+        let exit_state = state.clone();
+        death.probe_exit_code(move || exit_state.lock().unwrap().exit_code);
+        let mut proxy = ManagedSshProxy::new(state.clone(), gate.clone(), writer.clone());
 
         let reader = Self::spawn_reader(
             state,
@@ -2084,6 +2094,7 @@ impl DaemonPane {
             bridge.data_tx,
             bridge.cmd_rx,
             connection,
+            move |event| proxy.accept(event),
         );
 
         Ok(pane)
@@ -2450,6 +2461,10 @@ impl DaemonPane {
         agent_state_snapshot(&self.state.lock().unwrap())
     }
 
+    pub(super) fn managed_ssh(&self) -> Option<crate::daemon::protocol::ManagedSshPane> {
+        self.state.lock().unwrap().managed_ssh.clone()
+    }
+
     pub(super) fn recent_activity(&self) -> Option<(Option<AgentActivity>, Option<u64>)> {
         let state = self.state.lock().ok()?;
         Some((state.last_agent_activity, state.last_terminal_activity_ms))
@@ -2613,10 +2628,18 @@ impl DaemonPane {
         if let Some(activity) = activity {
             publish_terminal_activity(self.id, Some(activity));
         }
-        self.write_passive_input(bytes);
+        self.write_to_terminal(bytes);
     }
 
     pub(super) fn write_passive_input(&self, bytes: &[u8]) {
+        if let PaneBackend::NativeSsh(backend) = &self.backend {
+            backend.handle.passive_input(bytes);
+        } else {
+            self.write_to_terminal(bytes);
+        }
+    }
+
+    fn write_to_terminal(&self, bytes: &[u8]) {
         if let Ok(mut writer) = self.writer.lock() {
             let _ = writer.write_all(bytes);
             let _ = writer.flush();
@@ -2658,7 +2681,12 @@ impl DaemonPane {
     }
 
     pub fn resize(&self, size: WinSize) {
-        resize_state(&mut self.state.lock().unwrap(), size);
+        let mut state = self.state.lock().unwrap();
+        // The remote server echoes the size in stream order with its output.
+        if state.managed_ssh.is_none() {
+            resize_state(&mut state, size);
+        }
+        drop(state);
         match &self.backend {
             PaneBackend::Pty(p) => {
                 if let Ok(master) = p.master.lock() {
@@ -2724,7 +2752,11 @@ impl DaemonPane {
 
     /// A daemon restart detaches externally hosted terminals without ending them.
     pub(crate) fn shutdown(&self) {
-        if let Some(hc) = self.pty().and_then(|p| p.hc.as_ref()) {
+        if let PaneBackend::NativeSsh(backend) = &self.backend {
+            if !self.shutting_down.swap(true, Ordering::SeqCst) {
+                backend.handle.detach();
+            }
+        } else if let Some(hc) = self.pty().and_then(|p| p.hc.as_ref()) {
             self.shutting_down.store(true, Ordering::SeqCst);
             hc.preserve();
         } else {
@@ -2742,7 +2774,9 @@ impl DaemonPane {
     }
 
     fn hangup(&self) {
-        self.shutting_down.store(true, Ordering::SeqCst);
+        if self.shutting_down.swap(true, Ordering::SeqCst) {
+            return;
+        }
         match &self.backend {
             PaneBackend::Pty(p) => {
                 if let Some(hc) = &p.hc {
@@ -3159,6 +3193,9 @@ fn replay_state(st: &PaneState, subscriber: &Sender<DaemonMsg>) {
         let _ = subscriber.send(DaemonMsg::SshStatus {
             phase: phase.clone(),
         });
+    }
+    if let Some(backing) = &st.managed_ssh {
+        let _ = subscriber.send(DaemonMsg::ManagedSsh(backing.clone()));
     }
     if st.agent.is_some() {
         let _ = subscriber.send(DaemonMsg::Agent(st.agent));
@@ -6881,6 +6918,7 @@ mod tests {
             osc_title: None,
             shell: ShellState::default(),
             ssh_phase: None,
+            managed_ssh: None,
             pending_ssh_resume: None,
             remote: None,
             agent: None,

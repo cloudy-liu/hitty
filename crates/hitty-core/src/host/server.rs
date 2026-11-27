@@ -34,6 +34,9 @@ pub trait PaneDirectory: Send + Sync {
     ) -> Option<(Option<machine::AgentActivity>, Option<u64>)> {
         None
     }
+    fn managed_ssh(&self, _pane: u64) -> Option<crate::daemon::protocol::ManagedSshPane> {
+        None
+    }
     fn remember_screen_activity(&self, _pane: u64, _activity: machine::AgentActivity) {}
 }
 
@@ -753,7 +756,7 @@ fn run_request(
                 tab,
                 conn.machine_origin,
             )?;
-            conn.catch_up_pane_activity(id)?;
+            conn.catch_up_pane_facts(id)?;
             (ReplyOk::TabTree(Box::new(tab)), Vec::new())
         }
         ControlRequest::TabClose { workspace, tab } => (
@@ -813,7 +816,7 @@ fn run_request(
                 first,
                 conn.machine_origin,
             )?;
-            conn.catch_up_pane_activity(id)?;
+            conn.catch_up_pane_facts(id)?;
             (ReplyOk::Unit, Vec::new())
         }
         ControlRequest::PaneClose { workspace, pane } => (
@@ -852,7 +855,7 @@ fn run_request(
             let id = new.pane;
             conn.machine()?
                 .pane_replace(workspace, old, new, conn.machine_origin)?;
-            conn.catch_up_pane_activity(id)?;
+            conn.catch_up_pane_facts(id)?;
             (ReplyOk::Unit, Vec::new())
         }
 
@@ -956,16 +959,28 @@ impl Conn {
             .ok_or_else(|| io::Error::other("this server does not serve the machine tree"))
     }
 
-    fn catch_up_pane_activity(&self, pane: u64) -> io::Result<()> {
-        // Live activity can arrive before the pane enters the machine tree.
-        if let Some((agent, terminal)) = self
-            .panes
-            .as_ref()
-            .and_then(|p| p.recent_pane_activity(pane))
-            && (agent.is_some() || terminal.is_some())
-        {
-            self.machine()?
-                .note_pane_facts(pane, |p| p.note_activity(agent, terminal));
+    fn catch_up_pane_facts(&self, pane: u64) -> io::Result<()> {
+        // The terminal may already have reported facts before the tab's first
+        // tree transaction registered its local pane record.
+        let Some(directory) = &self.panes else {
+            return Ok(());
+        };
+        let (agent, terminal) = directory.recent_pane_activity(pane).unwrap_or_default();
+        let managed = directory.managed_ssh(pane);
+        if agent.is_some() || terminal.is_some() || managed.is_some() {
+            let machine = self.machine()?;
+            let persist_backing = managed.is_some();
+            machine.note_pane_facts(pane, |record| {
+                record.note_activity(agent, terminal);
+                if let Some(backing) = managed
+                    && let Some(spec) = record.ssh_spec.as_mut()
+                {
+                    spec.managed = Some(backing);
+                }
+            });
+            if persist_backing {
+                machine.flush();
+            }
         }
         Ok(())
     }
