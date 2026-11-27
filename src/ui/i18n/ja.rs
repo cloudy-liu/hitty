@@ -574,7 +574,9 @@ pub fn translate_ja(key: L10nKey) -> Option<&'static str> {
         }
         L10nKey::SettingsAgentLaunchDefault => "デフォルト: {command}",
         L10nKey::SettingsAgentLaunchReset => "デフォルトコマンドに戻す",
-        L10nKey::SettingsAgentLaunchEmpty => "PATH 上にサポート対象の CLI エージェントが見つかりませんでした。",
+        L10nKey::SettingsAgentLaunchEmpty => {
+            "PATH 上にサポート対象の CLI エージェントが見つかりませんでした。"
+        }
         L10nKey::SettingsAgentHooksHeading => "ステータスフック",
         L10nKey::SettingsSearchAgentLaunchKeywords => {
             "クイック起動 コマンド 引数 yolo エイリアス サイドバー プラス codex claude"

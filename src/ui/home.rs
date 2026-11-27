@@ -13,10 +13,10 @@ use crate::ui::app::HittyApp;
 use crate::ui::i18n::{L10nKey, t, t_fmt, t_plural};
 
 const LOGO: [&str; 4] = [
-    " ▄▄▄ ▄▄▄ ▄  ▄ ▄▄▄▄",
-    "  █   █  █  █    █",
-    "  █   █  ▀▄▄█   █",
-    "  ▀▄  ▀▄ ▄▄▄▀  █  ",
+    " ▄    ▄ ▄▄▄ ▄▄▄ ▄  ▄ ",
+    " █▄▄▄ ▄  █   █  █  █ ",
+    " █  █ █  █   █  ▀▄▄█ ",
+    " ▀  ▀ ▀  ▀▄  ▀▄ ▄▄▄▀ ",
 ];
 
 const LOGO_PX: f32 = 20.0;

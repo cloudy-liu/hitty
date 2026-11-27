@@ -65,11 +65,7 @@ pub fn default_command_for(agent: CLIAgent, matched_alias: Option<&str>) -> Stri
 /// Resolves the command executed when launching `agent` from a directory's `+`
 /// menu: a trimmed non-empty entry in `config.agent_launch_commands` overrides
 /// `default_command`, and an empty or missing entry falls back to the default.
-pub fn effective_launch_command(
-    agent: CLIAgent,
-    default_command: &str,
-    config: &Config,
-) -> String {
+pub fn effective_launch_command(agent: CLIAgent, default_command: &str, config: &Config) -> String {
     config
         .agent_launch_commands
         .get(agent.slug())

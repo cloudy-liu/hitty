@@ -2742,14 +2742,16 @@ mod tests {
         parsed.sanitize();
         assert_eq!(parsed.agent_launch_commands.len(), 1);
         assert_eq!(
-            parsed.agent_launch_commands.get("codex").map(String::as_str),
+            parsed
+                .agent_launch_commands
+                .get("codex")
+                .map(String::as_str),
             Some("codex --yolo")
         );
 
-        let lenient: Config = serde_json::from_str(
-            r#"{"font_size": 16.0, "agent_launch_commands": ["not-a-map"]}"#,
-        )
-        .expect("a mistyped agent_launch_commands must not break the rest of config.json");
+        let lenient: Config =
+            serde_json::from_str(r#"{"font_size": 16.0, "agent_launch_commands": ["not-a-map"]}"#)
+                .expect("a mistyped agent_launch_commands must not break the rest of config.json");
         assert!(lenient.agent_launch_commands.is_empty());
         assert_eq!(lenient.font_size, 16.0);
     }
