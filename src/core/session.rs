@@ -124,16 +124,47 @@ impl WorkspaceStore {
             .unwrap_or_default()
     }
 
-    pub fn remember_sidebar_folder(cx: &mut gpui::App, id: WorkspaceId, path: PathBuf) {
+    pub fn remember_sidebar_folders(
+        cx: &mut gpui::App,
+        id: WorkspaceId,
+        paths: impl IntoIterator<Item = PathBuf>,
+    ) -> bool {
+        let Some(store) = Self::try_store(cx) else {
+            return false;
+        };
+        let Some(view) = store.views.get_mut(id) else {
+            return false;
+        };
+        let folders = view.sidebar_folders.get_or_insert_with(Vec::new);
+        let len = folders.len();
+        for path in paths {
+            if path.to_str().is_some() && !folders.contains(&path) {
+                folders.push(path);
+            }
+        }
+        if folders.len() != len {
+            store.views.save();
+            true
+        } else {
+            false
+        }
+    }
+
+    pub fn reorder_sidebar_folders(cx: &mut gpui::App, id: WorkspaceId, order: &[PathBuf]) {
         let Some(store) = Self::try_store(cx) else {
             return;
         };
-        let Some(view) = store.views.get_mut(id) else {
-            return;
-        };
-        let folders = view.sidebar_folders.get_or_insert_with(Vec::new);
-        if !folders.contains(&path) {
-            folders.push(path);
+        if let Some(folders) = store
+            .views
+            .get_mut(id)
+            .and_then(|view| view.sidebar_folders.as_mut())
+        {
+            folders.sort_by_key(|path| {
+                order
+                    .iter()
+                    .position(|folder| folder == path)
+                    .unwrap_or(usize::MAX)
+            });
             store.views.save();
         }
     }

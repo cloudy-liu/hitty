@@ -56,6 +56,7 @@ pub(crate) fn preview(
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub(crate) enum PendingOrder {
     Tabs(Vec<usize>),
+    FolderGroups(Vec<usize>, Vec<std::path::PathBuf>),
     PinnedGroups(Vec<String>),
 }
 
@@ -78,6 +79,20 @@ pub(crate) fn set_pending_pinned(state: &ReorderState, order: Vec<String>) {
 pub(crate) fn clear_pending(state: &ReorderState) {
     if let Some(r) = state.borrow().as_ref() {
         r.pending.borrow_mut().take();
+    }
+}
+
+pub(crate) fn set_pending_folders(
+    state: &ReorderState,
+    tabs: Vec<usize>,
+    folders: Vec<std::path::PathBuf>,
+) {
+    if let Some(r) = state
+        .borrow()
+        .as_ref()
+        .filter(|r| r.surface == Surface::SidebarGroups)
+    {
+        *r.pending.borrow_mut() = Some(PendingOrder::FolderGroups(tabs, folders));
     }
 }
 

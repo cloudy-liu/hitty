@@ -231,10 +231,6 @@ pub(crate) fn run(path: &std::ffi::OsStr) {
                         });
                         let mut streams = Vec::new();
                         owner.update(cx, |app, cx| {
-                            for dir in &options.pinned_dirs {
-                                crate::core::session::WorkspaceStore::remember_sidebar_folder(cx, workspace, dir.clone());
-                                app.sidebar_dir_cache.borrow_mut().insert(dir.clone(), true);
-                            }
                             if pinned_empty {
                                 cx.notify();
                                 return;

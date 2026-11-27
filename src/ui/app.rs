@@ -4904,6 +4904,7 @@ impl HittyApp {
             })
             .collect();
         let remove_host = host.clone();
+        let workspace = self.workspace;
         crate::ui::host_ops::HostOps::run(
             host,
             cx,
@@ -4947,17 +4948,32 @@ impl HittyApp {
                     }
                     let force = wt.dirty;
                     let branch = wt.branch.clone();
+                    let removed_path = wt.path.clone();
                     let _ = this.update_in(cx, |_, window, cx| {
                         crate::ui::host_ops::HostOps::run_in(
                             remove_host,
                             window,
                             cx,
                             move |h| crate::core::worktree::remove(h, &wt, force),
-                            move |_this, result, window, cx| match result {
-                                Ok(()) => window.push_notification(
-                                    t_fmt(L10nKey::AppWorktreeRemoved, &[("branch", &branch)]),
-                                    cx,
-                                ),
+                            move |this, result, window, cx| match result {
+                                Ok(()) => {
+                                    if id.is_local() {
+                                        WorkspaceStore::forget_sidebar_folder(
+                                            cx,
+                                            workspace,
+                                            &removed_path,
+                                        );
+                                        this.sidebar_dir_cache.borrow_mut().remove(&removed_path);
+                                        this.sidebar_dir_probes
+                                            .borrow_mut()
+                                            .invalidate(&removed_path);
+                                        cx.notify();
+                                    }
+                                    window.push_notification(
+                                        t_fmt(L10nKey::AppWorktreeRemoved, &[("branch", &branch)]),
+                                        cx,
+                                    );
+                                }
                                 Err(e) => window.push_notification(
                                     t_fmt(
                                         L10nKey::AppWorktreeRemoveFailed,
@@ -7869,6 +7885,11 @@ impl Render for HittyApp {
                 match order {
                     crate::ui::reorder::PendingOrder::Tabs(order) => {
                         self.apply_tab_order(&order, cx);
+                    }
+                    crate::ui::reorder::PendingOrder::FolderGroups(tabs, folders) => {
+                        WorkspaceStore::reorder_sidebar_folders(cx, self.workspace, &folders);
+                        self.apply_tab_order(&tabs, cx);
+                        cx.notify();
                     }
                     crate::ui::reorder::PendingOrder::PinnedGroups(pinned) => {
                         self.update_config(cx, |cfg| {

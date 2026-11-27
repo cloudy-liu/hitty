@@ -169,9 +169,7 @@ impl HittyApp {
 
     /// Checks directory existence even when there are no tabs to open the rail.
     pub(crate) fn probe_empty_sidebar_dirs(&self, cx: &mut Context<Self>) {
-        if self.tabs.is_empty()
-            && cx.global::<Config>().tab_bar_position == crate::core::config::TabBarPosition::Left
-        {
+        if self.tabs.is_empty() {
             self.probe_sidebar_dirs(&[], cx);
         }
     }
@@ -190,7 +188,7 @@ impl HittyApp {
         }
         self.sidebar_dir_cache.borrow_mut().remove(&path);
         self.sidebar_dir_probes.borrow_mut().invalidate(&path);
-        WorkspaceStore::remember_sidebar_folder(cx, self.workspace, path);
+        WorkspaceStore::remember_sidebar_folders(cx, self.workspace, [path]);
     }
 
     /// Whether the tab rail is on screen — the same three conditions `render`
@@ -274,6 +272,29 @@ impl HittyApp {
         // reveal waits until this frame has finished painting.
         self.schedule_path_open_reveal(window, cx);
         let is_local = self.can_spawn_locally(cx);
+        if is_local && cx.global::<Config>().sidebar_grouping != SidebarGrouping::None {
+            let known = self.sidebar_folders(cx);
+            let missing = keys
+                .iter()
+                .flatten()
+                .filter(|path| {
+                    path.to_str().is_some()
+                        && !path.as_os_str().is_empty()
+                        && ssh_hop_group_target(path).is_none()
+                        && !known.contains(path)
+                })
+                .cloned()
+                .collect::<Vec<_>>();
+            if !missing.is_empty() {
+                let workspace = self.workspace;
+                let app = cx.weak_entity();
+                cx.defer(move |cx| {
+                    if WorkspaceStore::remember_sidebar_folders(cx, workspace, missing) {
+                        let _ = app.update(cx, |_, cx| cx.notify());
+                    }
+                });
+            }
+        }
         let pinned_cfg: Rc<Vec<String>> = Rc::new(self.sidebar_pinned_groups(cx).to_vec());
         self.probe_sidebar_dirs(&keys, cx);
         let sections = self.sidebar_sections(&keys, cx);
@@ -404,9 +425,7 @@ impl HittyApp {
         };
 
         let repo_slots: Vec<usize> = (0..sections.len())
-            .filter(|&ix| {
-                sections[ix].key.is_some() && !sections[ix].pinned && !sections[ix].tabs.is_empty()
-            })
+            .filter(|&ix| sections[ix].key.is_some() && !sections[ix].pinned)
             .filter(rendered)
             .collect();
         let repo_groups = repo_slots.len();
@@ -422,10 +441,19 @@ impl HittyApp {
             .collect();
         let slot_display: Vec<usize> = match &group_preview {
             Some(p) => {
-                if let (Some(from), Some(to)) = (repo_roots.get(p.from), repo_roots.get(p.target))
-                    && let Some(order) = regrouped_order(&keys, from, to)
-                {
-                    reorder::set_pending(&self.reorder, &Surface::SidebarGroups, order);
+                if let (Some(from), Some(to)) = (repo_roots.get(p.from), repo_roots.get(p.target)) {
+                    if is_local
+                        && ssh_hop_group_target(from).is_none()
+                        && ssh_hop_group_target(to).is_none()
+                    {
+                        if let Some((tabs, folders)) =
+                            reordered_local_folder_groups(&sections, from, to)
+                        {
+                            reorder::set_pending_folders(&self.reorder, tabs, folders);
+                        }
+                    } else if let Some(order) = regrouped_order(&keys, from, to) {
+                        reorder::set_pending(&self.reorder, &Surface::SidebarGroups, order);
+                    }
                 }
                 p.order.clone()
             }
@@ -436,13 +464,7 @@ impl HittyApp {
             .filter(|&ix| sections[ix].key.is_none())
             .filter(rendered)
             .collect();
-        let empty_unpinned = (0..sections.len())
-            .filter(|&ix| {
-                sections[ix].key.is_some() && !sections[ix].pinned && sections[ix].tabs.is_empty()
-            })
-            .filter(rendered);
         let unpinned_headed_count = repo_groups
-            + empty_unpinned.clone().count()
             + scratch_slots
                 .iter()
                 .filter(|&&ix| sections[ix].name.is_some())
@@ -459,7 +481,7 @@ impl HittyApp {
                 .into_iter()
                 .map(|slot| (Some((Surface::SidebarGroups, slot)), repo_slots[slot])),
         );
-        blocks.extend(empty_unpinned.chain(scratch_slots).map(|ix| (None, ix)));
+        blocks.extend(scratch_slots.into_iter().map(|ix| (None, ix)));
 
         // `scroll_to_item` indexes direct children of this list. A group block
         // would scroll the whole group, so headers, dividers, and rows are
@@ -1386,7 +1408,7 @@ impl HittyApp {
                     .on_mouse_down(MouseButton::Left, |_, _, cx| cx.stop_propagation())
                     .on_click(cx.listener(move |this, _, window, cx| {
                         cx.stop_propagation();
-                        this.new_tab_at(path.clone(), window, cx);
+                        this.open_sidebar_folder(path.clone(), window, cx);
                     }))
                     .child(
                         div()
@@ -2289,8 +2311,7 @@ impl HittyApp {
     }
 
     fn probe_sidebar_dirs(&self, keys: &[Option<PathBuf>], cx: &mut Context<Self>) {
-        let pending = self
-            .sidebar_folders(cx)
+        let pending = WorkspaceStore::sidebar_folders(cx, self.workspace)
             .iter()
             .filter(|path| !keys.iter().flatten().any(|group| group == *path))
             .filter(|path| !self.sidebar_dir_cache.borrow().contains_key(*path))
@@ -2309,18 +2330,69 @@ impl HittyApp {
                 continue;
             }
             let probe_path = path.clone();
+            let workspace = self.workspace;
             crate::ui::host_ops::HostOps::run(
                 local_host.clone(),
                 cx,
-                move |h| h.stat(&probe_path).map(|m| m.is_dir).unwrap_or(false),
-                move |this, is_dir, cx| {
+                move |h| h.stat(&probe_path).map(|m| m.is_dir),
+                move |this, result, cx| {
                     if this.sidebar_dir_probes.borrow_mut().finish(&path) {
-                        this.sidebar_dir_cache.borrow_mut().insert(path, is_dir);
+                        this.record_sidebar_folder_stat(workspace, &path, &result, cx);
                     }
                     cx.notify();
                 },
             );
         }
+    }
+
+    fn record_sidebar_folder_stat(
+        &self,
+        workspace: crate::core::session::WorkspaceId,
+        path: &Path,
+        result: &std::io::Result<bool>,
+        cx: &mut gpui::App,
+    ) {
+        if matches!(result, Ok(false))
+            || result
+                .as_ref()
+                .is_err_and(|err| err.kind() == std::io::ErrorKind::NotFound)
+        {
+            WorkspaceStore::forget_sidebar_folder(cx, workspace, path);
+            self.sidebar_dir_cache.borrow_mut().remove(path);
+        } else {
+            self.sidebar_dir_cache
+                .borrow_mut()
+                .insert(path.to_path_buf(), matches!(result, Ok(true)));
+        }
+    }
+
+    fn open_sidebar_folder(&self, path: PathBuf, window: &Window, cx: &mut Context<Self>) {
+        use crate::ui::host_ops::HostOps;
+        let host = crate::ui::host_registry::HostRegistry::local(cx);
+        let workspace = self.workspace;
+        let checked = path.clone();
+        HostOps::run_in(
+            host,
+            window,
+            cx,
+            move |host| host.stat(&checked).map(|meta| meta.is_dir),
+            move |app, result, window, cx| {
+                app.record_sidebar_folder_stat(workspace, &path, &result, cx);
+                if app.workspace != workspace {
+                    return;
+                }
+                let error = match result {
+                    Ok(true) => {
+                        app.new_tab_at(path, window, cx);
+                        return;
+                    }
+                    Ok(false) => std::io::ErrorKind::NotADirectory.into(),
+                    Err(error) => error,
+                };
+                HostOps::notify_err(window, cx, &t(L10nKey::SidebarNewTabHere), &error);
+                cx.notify();
+            },
+        );
     }
 
     fn toggle_group_collapsed(&mut self, key: &str, cx: &mut Context<Self>) {
@@ -2767,15 +2839,10 @@ fn sidebar_sections(
     pinned: &[String],
     retained: &[PathBuf],
 ) -> Vec<Section> {
-    let mut active_groups: Vec<PathBuf> = Vec::new();
+    let mut active_groups = retained.to_vec();
     for k in keys.iter().flatten() {
         if !active_groups.contains(k) {
             active_groups.push(k.clone());
-        }
-    }
-    for path in retained {
-        if !active_groups.contains(path) {
-            active_groups.push(path.clone());
         }
     }
     let mut pinned_order: Vec<PathBuf> = Vec::new();
@@ -2900,6 +2967,36 @@ fn reordered_rows(
         }
     }
     Some(out)
+}
+
+fn reordered_local_folder_groups(
+    sections: &[Section],
+    from: &Path,
+    to: &Path,
+) -> Option<(Vec<usize>, Vec<PathBuf>)> {
+    let mut sections = sections.iter().collect::<Vec<_>>();
+    let from = sections
+        .iter()
+        .position(|section| section.key.as_deref() == Some(from))?;
+    let to = sections
+        .iter()
+        .position(|section| section.key.as_deref() == Some(to))?;
+    if from == to {
+        return None;
+    }
+    let moved = sections.remove(from);
+    sections.insert(to, moved);
+    let tabs = sections
+        .iter()
+        .flat_map(|section| section.tabs.iter().copied())
+        .collect();
+    let folders = sections
+        .iter()
+        .filter_map(|section| section.key.as_ref())
+        .filter(|path| ssh_hop_group_target(path).is_none())
+        .cloned()
+        .collect();
+    Some((tabs, folders))
 }
 
 fn reordered_pinned(pinned: &[String], from: &Path, to: &Path) -> Option<Vec<String>> {
@@ -3528,6 +3625,31 @@ mod tests {
     }
 
     #[test]
+    fn an_empty_folder_stays_between_its_neighbors_and_can_move() {
+        let (a, b, c) = (p("/w/alpha"), p("/w/beta"), p("/w/gamma"));
+        let keys = [
+            Some(a.clone()),
+            Some(c.clone()),
+            Some(ssh_hop_group_key("host")),
+        ];
+        let remembered = [a.clone(), b.clone(), c.clone()];
+        let sections = sidebar_sections(&keys, &[], &remembered);
+        assert_eq!(sections[1].key.as_ref(), Some(&b));
+        assert!(sections[1].tabs.is_empty());
+        assert_eq!(sections[3].key, keys[2]);
+        let with_session = [Some(a.clone()), Some(c.clone()), Some(b.clone())];
+        assert_eq!(
+            sidebar_sections(&with_session, &[], &remembered)[1]
+                .key
+                .as_ref(),
+            Some(&b)
+        );
+        let (tabs, folders) = reordered_local_folder_groups(&sections, &b, &c).unwrap();
+        assert_eq!(tabs, [0, 1, 2]);
+        assert_eq!(folders, [a, c, b]);
+    }
+
+    #[test]
     fn reordered_pinned_moves_within_pinned_list() {
         let pinned = vec![
             "/w/alpha".to_string(),
@@ -3749,6 +3871,44 @@ mod tests {
             assert!(vcx.debug_bounds("session-sidebar").is_some());
             assert!(vcx.debug_bounds(placeholder).is_some());
         }
+    }
+
+    #[gpui::test]
+    fn a_folder_stays_open_when_its_session_changes_directories(cx: &mut gpui::TestAppContext) {
+        use crate::core::session::{WindowView, WindowViews};
+        use crate::ui::app::{Tab, test_window::harness};
+        use crate::ui::pane::Pane;
+
+        let first = tempfile::tempdir().unwrap();
+        let second = tempfile::tempdir().unwrap();
+        let (app, mut vcx) = harness(cx);
+        vcx.simulate_resize(size(px(900.), px(600.)));
+        app.update(&mut vcx, |app, cx| {
+            cx.global_mut::<Config>().sidebar_grouping = SidebarGrouping::RepoOrDirectory;
+            WorkspaceStore::install_for_test(
+                cx,
+                WindowViews {
+                    views: vec![WindowView {
+                        id: app.workspace,
+                        ..WindowView::default()
+                    }],
+                    active: Some(app.workspace),
+                },
+            );
+            let tab = Tab::new(Pane::Empty);
+            *tab.sidebar_group.borrow_mut() = Some(first.path().to_path_buf());
+            app.tabs.push(tab);
+            cx.notify();
+        });
+        vcx.run_until_parked();
+        assert!(vcx.debug_bounds("sidebar-tab-row-0").is_some());
+        app.update(&mut vcx, |app, cx| {
+            *app.tabs[0].sidebar_group.borrow_mut() = Some(second.path().to_path_buf());
+            cx.notify();
+        });
+        vcx.run_until_parked();
+        assert!(vcx.debug_bounds("sidebar-ghost-0").is_some());
+        assert!(vcx.debug_bounds("sidebar-tab-row-0").is_some());
     }
 
     #[gpui::test]
