@@ -840,13 +840,10 @@ pub fn translate_ja(key: L10nKey) -> Option<&'static str> {
         }
         L10nKey::SettingsAgentClaudeCode => "Claude Code",
         L10nKey::SettingsAgentCodex => "Codex",
-        L10nKey::SettingsAgentCopilotCli => "Copilot CLI",
         L10nKey::SettingsAgentOpencode => "OpenCode",
         L10nKey::SettingsAgentPi => "Pi",
         L10nKey::SettingsAgentGrokBuild => "Grok Build",
         L10nKey::SettingsAgentOhMyPi => "Oh My Pi",
-        L10nKey::SettingsAgentGemini => "Gemini",
-        L10nKey::SettingsAgentQwenCode => "Qwen Code",
         L10nKey::SettingsAgentKimiCode => "Kimi Code",
         L10nKey::SettingsAgentQoderCLI => "Qoder",
         L10nKey::SettingsAgentCodeBuddy => "CodeBuddy",
@@ -883,9 +880,6 @@ pub fn translate_ja(key: L10nKey) -> Option<&'static str> {
         }
         L10nKey::SettingsSearchCommandLineToolKeywords => {
             "cli Hitty パス シェル コマンド インストール シンボリックリンク ターミナル iterm エージェント スクリプト command line tool"
-        }
-        L10nKey::SettingsSearchCopilotCliKeywords => {
-            "エージェント 統合 フック インストール github copilot agent integration hooks install"
         }
         L10nKey::SettingsSearchCopyOnSelectKeywords => {
             "クリップボード 選択 コピー マウス copy on select clipboard selection yank mouse"
@@ -975,12 +969,6 @@ pub fn translate_ja(key: L10nKey) -> Option<&'static str> {
         }
         L10nKey::SettingsSearchOhMyPiKeywords => {
             "エージェント 統合 拡張 インストール omp oh my pi agent integration extension install"
-        }
-        L10nKey::SettingsSearchGeminiKeywords => {
-            "エージェント 統合 フック インストール gemini google agent integration hooks install"
-        }
-        L10nKey::SettingsSearchQwenCodeKeywords => {
-            "エージェント 統合 フック インストール qwen code agent integration hooks install"
         }
         L10nKey::SettingsSearchKimiCodeKeywords => {
             "エージェント 統合 フック インストール kimi code moonshot agent integration hooks install"
@@ -1232,6 +1220,7 @@ pub fn translate_ja(key: L10nKey) -> Option<&'static str> {
         }
         L10nKey::PanelNoChanges => "未コミットの変更はありません",
         L10nKey::PanelNoChangesHint => "ワーキングツリーはクリーンです",
+        L10nKey::PanelWorkingDirectorySubtitle => "作業ディレクトリ",
         L10nKey::PanelSessionSubtitle => "セッション",
         L10nKey::PanelConversationSubtitle => "会話",
         L10nKey::PanelTurnAltScreenNow => {
@@ -1242,7 +1231,6 @@ pub fn translate_ja(key: L10nKey) -> Option<&'static str> {
         }
         L10nKey::PanelProcessesSubtitle => "プロセス",
         L10nKey::PanelPortsSubtitle => "ポート",
-        L10nKey::PanelCwd => "作業ディレクトリ",
         L10nKey::PanelShell => "シェル",
         L10nKey::PanelSsh => "ssh",
         L10nKey::PanelSshConnection => "接続方式",
@@ -1255,6 +1243,17 @@ pub fn translate_ja(key: L10nKey) -> Option<&'static str> {
         L10nKey::PanelRevealInFinder => "Finder で表示",
         L10nKey::PanelOpenFolder => "フォルダを開く",
         L10nKey::PanelOpenInBrowser => "ブラウザで開く",
+        L10nKey::PanelOpenInApp => "{app} で開く",
+        L10nKey::PanelOpenInChoose => "エディタを選択",
+        L10nKey::PanelOpenInNewTab => "新しいタブで開く",
+        L10nKey::PanelOpenInLocalOnly => "ローカルのみ",
+        L10nKey::PanelOpenInNeedsCli => "CLI が必要",
+        L10nKey::PanelOpenInUnsupported => "非対応",
+        L10nKey::PanelOpenInNoRemoteEditor => "リモート対応エディタなし",
+        L10nKey::PanelOpenInFailed => "開けませんでした: {error}",
+        L10nKey::PanelFileManagerWindows => "エクスプローラー",
+        L10nKey::PanelFileManagerMac => "Finder",
+        L10nKey::PanelFileManagerLinux => "ファイルマネージャー",
         L10nKey::ScmGroupMerge => "マージの競合",
         L10nKey::ScmGroupStaged => "ステージされた変更",
         L10nKey::ScmGroupChanges => "変更",
@@ -1623,6 +1622,7 @@ pub fn translate_ja(key: L10nKey) -> Option<&'static str> {
         L10nKey::CmdNextTab => "次のタブ",
         L10nKey::CmdPreviousTab => "前のタブ",
         L10nKey::CmdCopyWorkingDirectory => "作業ディレクトリをコピー",
+        L10nKey::CmdOpenWorkingDirectory => "作業ディレクトリを開く",
         L10nKey::CmdCopySessionId => "セッション ID をコピー",
         L10nKey::CmdCopySessionIdSubtitle => "コーディングエージェント自身のセッション ID",
         L10nKey::CmdForkSession => "セッションをフォーク",

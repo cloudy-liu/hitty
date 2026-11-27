@@ -24,6 +24,7 @@ actions!(
         CloseOtherTabs,
         CloseTabsToTheRight,
         CopyWorkingDirectory,
+        OpenWorkingDirectory,
         MarkTabUnread,
         ForkAgentSession,
         ForkAgentSessionRight,

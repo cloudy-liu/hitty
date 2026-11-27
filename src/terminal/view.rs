@@ -1568,7 +1568,7 @@ impl TerminalView {
         self.paths_are_local().then(|| self.cwd())?
     }
 
-    fn paths_are_local(&self) -> bool {
+    pub(crate) fn paths_are_local(&self) -> bool {
         self.remote_context().is_none() && self.host_id.is_local()
     }
 

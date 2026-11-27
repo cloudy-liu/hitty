@@ -1,19 +1,29 @@
 use gpui::{AnyElement, Context, Window, div, prelude::*, px, rems};
-use gpui_component::button::Button;
+use gpui_component::button::{Button, ButtonCustomVariant, ButtonVariants as _};
 use gpui_component::input::Input;
+use gpui_component::menu::{DropdownMenu as _, PopupMenuItem};
 use gpui_component::{
-    ActiveTheme as _, Icon, IconName, InteractiveElementExt as _, Sizable as _, h_flex, v_flex,
+    ActiveTheme as _, Disableable as _, Icon, IconName, InteractiveElementExt as _, Sizable as _,
+    WindowExt as _, h_flex, v_flex,
 };
 use std::path::PathBuf;
 
 use crate::core::config::{Config, RightPanelTab};
-use crate::daemon::protocol::PaneProcs;
+use crate::core::open_in::{
+    DetectedApp, OpenInApp, OpenInError, OpenLocation, clean_local_path, detect_installed,
+    format_ssh_authority, normalize_ssh_authority, resolve_primary,
+};
+use crate::daemon::protocol::{NativeSshSpec, PaneProcs, RemoteKind};
 use crate::ui::app::{
     CONTENT_INSET, HittyApp, SECONDARY_BAR_HEIGHT, TILE_GLYPH_XS, TILE_SIZE_SM, TILE_SIZE_XS,
     tile_trailing_inset,
 };
-use crate::ui::i18n::{L10nKey, t};
+use crate::ui::home::key_hint;
+use crate::ui::i18n::{L10nKey, t, t_fmt};
+use crate::ui::open_in_icons;
+use crate::ui::rounding::{CARD_RADIUS, HAIRLINE, RoundedCorners as _, segment_corners};
 use crate::ui::scrollbar::with_vertical_scrollbar;
+use crate::ui::tab_strip::{BUTTON_ICON_SCALE, chord_hint};
 
 pub(crate) const MIN_WIDTH: f32 = 216.;
 
@@ -130,6 +140,166 @@ pub(crate) struct RightPanelState {
     /// countdown is what stops a path that never arrives from being compared
     /// against every row forever.
     pub(crate) tree_reveal: Option<(PathBuf, u8)>,
+    /// Locally installed external editors detected on a background thread.
+    pub(crate) open_in_apps: Vec<DetectedApp>,
+    /// Whether the startup background detection has already been scheduled.
+    pub(crate) open_in_loaded: bool,
+}
+
+const OPEN_IN_BAR_H: f32 = 28.;
+const OPEN_IN_ICON_SIZE: f32 = 15.;
+const OPEN_IN_CHEVRON_W: f32 = 24.;
+const OPEN_IN_CHEVRON_GLYPH: f32 = 11.;
+
+/// Where the "Open in New Tab" shortcut button should spawn a new tab.
+#[derive(Clone)]
+enum NewTabTarget {
+    /// Local or remote-daemon workspace directory spawned via `new_tab_at`.
+    WorkspaceCwd(PathBuf),
+    /// Native SSH pane preserving both the SSH profile and its remote cwd.
+    NativeSsh {
+        cwd: PathBuf,
+        spec: Box<NativeSshSpec>,
+    },
+}
+
+/// Working-directory snapshot extracted from the active pane for the Info
+/// panel's top action block.
+struct InfoCwd {
+    /// Home-abbreviated path shown in the panel.
+    display: String,
+    /// Path copied to the clipboard (native separators on local panes).
+    copy_text: String,
+    /// Where external editors and the file manager should point.
+    location: OpenLocation,
+    /// Target for the "Open in New Tab" button when a tab can inherit this cwd.
+    new_tab: Option<NewTabTarget>,
+}
+
+/// Shared tonal surface fill used by right-panel split controls and message
+/// inputs (half of the ramp's first hover rung so idle chrome stays quiet).
+pub(crate) fn field_fill(sf: crate::ui::presets::Surface) -> u32 {
+    crate::ui::presets::mix(sf.base, sf.hover, 0.5)
+}
+
+fn open_in_menu_half(cx: &gpui::App) -> ButtonCustomVariant {
+    let sf = cx.global::<crate::ui::presets::Surfaces>().sidebar;
+    let clear = gpui::transparent_black();
+    ButtonCustomVariant::new(cx)
+        .color(clear)
+        .foreground(cx.theme().sidebar_foreground)
+        .hover(gpui::rgb(sf.hover).into())
+        .active(gpui::rgb(sf.hover).into())
+}
+
+fn open_in_square_variant(cx: &gpui::App) -> ButtonCustomVariant {
+    let sf = cx.global::<crate::ui::presets::Surfaces>().sidebar;
+    ButtonCustomVariant::new(cx)
+        .color(gpui::rgb(field_fill(sf)).into())
+        .foreground(cx.theme().sidebar_foreground)
+        .hover(gpui::rgb(sf.hover).into())
+        .active(gpui::rgb(sf.pressed).into())
+}
+
+fn open_in_square_button(
+    id: &'static str,
+    icon: Icon,
+    tooltip: &'static str,
+    cx: &gpui::App,
+) -> Button {
+    Button::new(id)
+        .custom(open_in_square_variant(cx))
+        .icon(icon)
+        .with_size(px(14. / BUTTON_ICON_SCALE))
+        .w(px(OPEN_IN_BAR_H))
+        .h(px(OPEN_IN_BAR_H))
+        .rounded(CARD_RADIUS)
+        .tooltip(tooltip)
+}
+
+fn open_in_location_error_label(err: &OpenInError) -> Option<&'static str> {
+    match err {
+        OpenInError::LocalOnly(_) => Some(t(L10nKey::PanelOpenInLocalOnly)),
+        OpenInError::MissingMacosCli(_) => Some(t(L10nKey::PanelOpenInNeedsCli)),
+        OpenInError::UnsupportedLocation(_) => Some(t(L10nKey::PanelOpenInUnsupported)),
+        OpenInError::NotInstalled(_) | OpenInError::SpawnFailed { .. } => None,
+    }
+}
+
+fn format_open_in_error(err: &OpenInError) -> String {
+    if let Some(label) = open_in_location_error_label(err) {
+        return label.to_string();
+    }
+    match err {
+        OpenInError::NotInstalled(app) => open_in_app_name(*app).to_string(),
+        OpenInError::SpawnFailed { program, reason } => format!("{}: {reason}", program.display()),
+        OpenInError::LocalOnly(_)
+        | OpenInError::MissingMacosCli(_)
+        | OpenInError::UnsupportedLocation(_) => String::new(),
+    }
+}
+
+fn open_in_menu_item(
+    app: OpenInApp,
+    checked: bool,
+    supported: bool,
+    hint: Option<String>,
+    location: OpenLocation,
+    app_weak: gpui::WeakEntity<HittyApp>,
+) -> PopupMenuItem {
+    let mut item = PopupMenuItem::element(move |window, cx| {
+        let dark = crate::ui::presets::surface_is_dark(cx.theme().popover);
+        let icon = open_in_icons::render(app, px(OPEN_IN_ICON_SIZE), dark, window);
+        h_flex()
+            .items_center()
+            .gap(px(8.))
+            .w_full()
+            .child(icon)
+            .child(
+                div()
+                    .flex_1()
+                    .min_w_0()
+                    .truncate()
+                    .child(open_in_app_name(app)),
+            )
+            .when_some(hint.clone(), |row, h| {
+                row.child(
+                    div()
+                        .flex_none()
+                        .text_xs()
+                        .text_color(cx.theme().muted_foreground)
+                        .child(h),
+                )
+            })
+    })
+    .checked(checked)
+    .disabled(!supported);
+    if supported {
+        item = item.on_click(move |_, window, cx| {
+            let _ = app_weak.update(cx, |this, cx| {
+                this.open_cwd_with_app(app, &location, true, window, cx);
+            });
+        });
+    }
+    item
+}
+
+fn file_manager_name() -> &'static str {
+    if cfg!(target_os = "macos") {
+        t(L10nKey::PanelFileManagerMac)
+    } else if cfg!(target_os = "windows") {
+        t(L10nKey::PanelFileManagerWindows)
+    } else {
+        t(L10nKey::PanelFileManagerLinux)
+    }
+}
+
+fn open_in_app_name(app: OpenInApp) -> &'static str {
+    app.brand_name().unwrap_or_else(file_manager_name)
+}
+
+fn open_in_primary_label(app: OpenInApp) -> String {
+    t_fmt(L10nKey::PanelOpenInApp, &[("app", open_in_app_name(app))])
 }
 
 /// How many renders a reveal waits for its row to show up. Generous: it costs
@@ -150,8 +320,6 @@ const PROCS_POLL: std::time::Duration = std::time::Duration::from_millis(2000);
 enum InfoValue {
     /// Mono text, truncated from the tail.
     Text(String),
-    /// A filesystem path, shrunk from the head so the leaf survives.
-    Path(String),
     /// `+N −M` in the sidebar's two colours, and a click into the diff
     /// overlay when the setting that governs the sidebar's counts allows it.
     Diff {
@@ -166,13 +334,10 @@ struct InfoRow {
     label: &'static str,
     value: InfoValue,
     /// What this row's copy tile puts on the clipboard, where copying it is
-    /// plausibly what someone wants — a path, a host, a branch. `None` on the
-    /// rows where it is not ("zsh"), because a hover affordance that appears
-    /// on every row teaches nothing about which rows can do something.
+    /// plausibly what someone wants — a host, a branch. `None` on the rows
+    /// where it is not ("zsh"), because a hover affordance that appears on
+    /// every row teaches nothing about which rows can do something.
     copy: Option<String>,
-    /// Set on the working-directory row when the path is on the machine the
-    /// file manager can see, which is the only case Reveal means anything in.
-    reveal: Option<PathBuf>,
 }
 
 impl InfoRow {
@@ -181,13 +346,12 @@ impl InfoRow {
             label,
             value: InfoValue::Text(value),
             copy: None,
-            reveal: None,
         }
     }
 
     fn copyable(mut self) -> Self {
         self.copy = match &self.value {
-            InfoValue::Text(v) | InfoValue::Path(v) => Some(v.clone()),
+            InfoValue::Text(v) => Some(v.clone()),
             _ => None,
         };
         self
@@ -197,9 +361,7 @@ impl InfoRow {
     /// decides the hover fill, so the fill never promises an action the row
     /// does not have.
     fn interactive(&self) -> bool {
-        self.copy.is_some()
-            || self.reveal.is_some()
-            || matches!(self.value, InfoValue::Diff { open: Some(_), .. })
+        self.copy.is_some() || matches!(self.value, InfoValue::Diff { open: Some(_), .. })
     }
 }
 
@@ -581,8 +743,417 @@ impl HittyApp {
             .into_any_element()
     }
 
+    pub(crate) fn refresh_open_in_apps(&mut self, cx: &mut Context<Self>) {
+        if self.right_panel.open_in_loaded {
+            return;
+        }
+        self.right_panel.open_in_loaded = true;
+        cx.spawn(async move |this, cx| {
+            let detected = cx
+                .background_executor()
+                .spawn(async move { detect_installed() })
+                .await;
+            let _ = this.update(cx, |app, cx| {
+                app.right_panel.open_in_apps = detected;
+                cx.notify();
+            });
+        })
+        .detach();
+    }
+
+    pub(crate) fn open_active_cwd(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        let Some(cwd) = self.active_info_cwd(window, cx) else {
+            return;
+        };
+        let preferred = cx
+            .global::<Config>()
+            .open_in_editor
+            .as_deref()
+            .and_then(OpenInApp::from_id);
+        let primary = resolve_primary(&self.right_panel.open_in_apps, preferred, &cwd.location);
+        match primary {
+            Some(app) => self.open_cwd_with_app(app, &cwd.location, false, window, cx),
+            None => window.push_notification(t(L10nKey::PanelOpenInNoRemoteEditor), cx),
+        }
+    }
+
+    fn open_cwd_with_app(
+        &mut self,
+        app: OpenInApp,
+        location: &OpenLocation,
+        remember: bool,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        if remember {
+            let id = app.id().to_string();
+            self.update_config(cx, |cfg| {
+                cfg.open_in_editor = Some(id);
+            });
+        }
+        if let Err(err) =
+            crate::core::open_in::launch(app, &self.right_panel.open_in_apps, location)
+        {
+            let msg = format_open_in_error(&err);
+            log::warn!("open_in {app:?} failed: {err:?}");
+            window.push_notification(t_fmt(L10nKey::PanelOpenInFailed, &[("error", &msg)]), cx);
+        }
+    }
+
+    fn open_cwd_in_new_tab(
+        &mut self,
+        target: NewTabTarget,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        match target {
+            NewTabTarget::WorkspaceCwd(path) => self.new_tab_at(path, window, cx),
+            NewTabTarget::NativeSsh { cwd, spec } => {
+                self.open_native_ssh_tab_at(Some(cwd), spec, window, cx)
+            }
+        }
+    }
+
+    fn active_info_cwd(&self, window: &Window, cx: &gpui::App) -> Option<InfoCwd> {
+        let leaf = self.tabs.get(self.active)?.detail_pane(window, cx)?;
+        let view = leaf.read(cx);
+        let cwd = view.effective_cwd()?;
+        let home = view.display_home(cx);
+
+        if view.paths_are_local() {
+            let cleaned = clean_local_path(&cwd);
+            let display = compact_path(&cleaned, home.as_deref());
+            let copy_text = crate::ui::path_display::native_separators(&cleaned)
+                .display()
+                .to_string();
+            return Some(InfoCwd {
+                display,
+                copy_text,
+                location: OpenLocation::Local(cleaned.clone()),
+                new_tab: Some(NewTabTarget::WorkspaceCwd(cleaned)),
+            });
+        }
+
+        let raw_path = cwd.display().to_string();
+        let compact = compact_path(&cwd, home.as_deref());
+        let ssh_spec = view.ssh_spec();
+        let remote = view.remote_context();
+
+        let (label_prefix, location, new_tab) = if let Some(spec) = ssh_spec {
+            let authority = format_ssh_authority(&spec.user, &spec.host, spec.port);
+            let location = match authority {
+                Some(authority) => OpenLocation::RemoteSsh {
+                    authority,
+                    path: raw_path.clone(),
+                },
+                None => OpenLocation::RemoteUnsupported {
+                    path: raw_path.clone(),
+                },
+            };
+            (
+                Some(spec.host.clone()),
+                location,
+                Some(NewTabTarget::NativeSsh {
+                    cwd: cwd.clone(),
+                    spec,
+                }),
+            )
+        } else if let Some(ctx) = remote {
+            let (label_prefix, location) = match ctx.kind {
+                RemoteKind::Ssh | RemoteKind::NativeSsh => {
+                    let display = ctx.display_target();
+                    let authority = normalize_ssh_authority(&display);
+                    let loc = match &authority {
+                        Some(authority) => OpenLocation::RemoteSsh {
+                            authority: authority.clone(),
+                            path: raw_path.clone(),
+                        },
+                        None => OpenLocation::RemoteUnsupported {
+                            path: raw_path.clone(),
+                        },
+                    };
+                    (authority, loc)
+                }
+                RemoteKind::Wsl => {
+                    let distro = ctx.target.trim().to_string();
+                    if distro.is_empty() {
+                        (
+                            None,
+                            OpenLocation::RemoteUnsupported {
+                                path: raw_path.clone(),
+                            },
+                        )
+                    } else {
+                        (
+                            Some(distro.clone()),
+                            OpenLocation::Wsl {
+                                distro,
+                                path: raw_path.clone(),
+                            },
+                        )
+                    }
+                }
+            };
+            (
+                label_prefix,
+                location,
+                // In-shell `ssh` / `wsl` sessions run inside a local shell;
+                // opening a local tab with the inner remote path would fail.
+                None,
+            )
+        } else {
+            // Pane hosted on a remote workspace daemon without native SSH.
+            (
+                None,
+                OpenLocation::RemoteUnsupported {
+                    path: raw_path.clone(),
+                },
+                Some(NewTabTarget::WorkspaceCwd(cwd)),
+            )
+        };
+
+        let display = match label_prefix.filter(|p| !p.is_empty()) {
+            Some(prefix) => format!("{prefix}:{compact}"),
+            None => compact,
+        };
+        Some(InfoCwd {
+            display,
+            copy_text: raw_path,
+            location,
+            new_tab,
+        })
+    }
+
+    fn render_working_directory_section(
+        &self,
+        cwd: InfoCwd,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) -> AnyElement {
+        let sf = cx.global::<crate::ui::presets::Surfaces>().sidebar;
+        let dark = crate::ui::presets::surface_is_dark(gpui::rgb(sf.base).into());
+        let mono = cx.theme().mono_font_family.clone();
+        let is_remote = cwd.location.is_remote();
+        let preferred = cx
+            .global::<Config>()
+            .open_in_editor
+            .as_deref()
+            .and_then(OpenInApp::from_id);
+        let primary = resolve_primary(&self.right_panel.open_in_apps, preferred, &cwd.location);
+        let (head, leaf) = split_path_leaf(&cwd.display);
+
+        let copy_text = cwd.copy_text.clone();
+        let path_tip = cwd.copy_text.clone();
+        let path_row = h_flex()
+            .id("panel-info-cwd-row")
+            .items_center()
+            .gap(px(4.))
+            .px(px(ROW_INSET))
+            .py(px(2.))
+            .rounded(px(5.))
+            .hover(|s| s.bg(gpui::rgb(sf.hover)))
+            .tooltip(move |window, cx| {
+                gpui_component::tooltip::Tooltip::new(path_tip.clone()).build(window, cx)
+            })
+            .child(
+                h_flex()
+                    .flex_1()
+                    .min_w_0()
+                    .text_size(rems(TEXT_MONO))
+                    .font_family(mono)
+                    .text_color(cx.theme().foreground)
+                    .child(div().min_w_0().flex_shrink(999.).truncate().child(head))
+                    .child(div().min_w_0().flex_shrink(1.).truncate().child(leaf)),
+            )
+            .child(
+                self.info_tile(
+                    "panel-info-cwd-copy",
+                    IconName::Copy,
+                    t(L10nKey::FileTreeContextCopyPath),
+                    cx,
+                )
+                .on_click(move |_, _window, cx| {
+                    cx.write_to_clipboard(gpui::ClipboardItem::new_string(copy_text.clone()));
+                }),
+            );
+
+        let primary_label = primary
+            .map(open_in_primary_label)
+            .unwrap_or_else(|| t(L10nKey::PanelOpenInNoRemoteEditor).to_string());
+        let primary_icon =
+            primary.map(|app| open_in_icons::render(app, px(OPEN_IN_ICON_SIZE), dark, window));
+        let primary_location = cwd.location.clone();
+        let primary_live = primary.is_some();
+        let primary_tip = primary_label.clone();
+
+        let main_half = h_flex()
+            .id("panel-info-open-primary")
+            .debug_selector(|| "panel-info-open-primary".into())
+            .flex_1()
+            .min_w_0()
+            .h_full()
+            .items_center()
+            .gap(px(7.))
+            .px(px(8.))
+            .rounded_corners(segment_corners(0, 2, CARD_RADIUS, HAIRLINE))
+            .when(primary_live, |this| {
+                this.cursor_pointer()
+                    .hover(|s| s.bg(gpui::rgb(sf.hover)))
+                    .tooltip(chord_hint(&primary_tip, "OpenWorkingDirectory", cx))
+                    .on_click(cx.listener(move |this, _, window, cx| {
+                        if let Some(app) = primary {
+                            this.open_cwd_with_app(app, &primary_location, false, window, cx);
+                        }
+                    }))
+            })
+            .children(primary_icon)
+            .child(
+                div()
+                    .flex_1()
+                    .min_w_0()
+                    .truncate()
+                    .text_size(rems(META))
+                    .text_color(if primary_live {
+                        cx.theme().foreground
+                    } else {
+                        cx.theme().muted_foreground
+                    })
+                    .child(primary_label),
+            );
+
+        let menu_apps = self.right_panel.open_in_apps.clone();
+        let menu_empty = is_remote && menu_apps.is_empty();
+        let menu_location = cwd.location.clone();
+        let shortcut_hint = key_hint("OpenWorkingDirectory", cx);
+        let app_weak = cx.entity().downgrade();
+        let chevron_button = Button::new("panel-info-open-menu")
+            .custom(open_in_menu_half(cx))
+            .icon(Icon::new(IconName::ChevronDown))
+            .with_size(px(OPEN_IN_CHEVRON_GLYPH / BUTTON_ICON_SCALE))
+            .w(px(OPEN_IN_CHEVRON_W))
+            .h_full()
+            .rounded_corners(segment_corners(1, 2, CARD_RADIUS, HAIRLINE))
+            .disabled(menu_empty)
+            .tooltip(t(L10nKey::PanelOpenInChoose));
+        let chevron_half: AnyElement = if menu_empty {
+            chevron_button.into_any_element()
+        } else {
+            chevron_button
+                .dropdown_menu_with_anchor(gpui::Anchor::TopRight, move |menu, _window, _cx| {
+                    let mut menu = menu.min_w(px(210.));
+                    for detected in &menu_apps {
+                        let app = detected.app;
+                        let error = detected.location_error(&menu_location);
+                        let supported = error.is_none();
+                        let checked = primary == Some(app);
+                        let hint = if checked {
+                            shortcut_hint.clone()
+                        } else if is_remote {
+                            match &error {
+                                None => app.location_hint(&menu_location).map(str::to_string),
+                                Some(err) => open_in_location_error_label(err).map(str::to_string),
+                            }
+                        } else {
+                            None
+                        };
+                        menu = menu.item(open_in_menu_item(
+                            app,
+                            checked,
+                            supported,
+                            hint,
+                            menu_location.clone(),
+                            app_weak.clone(),
+                        ));
+                    }
+                    if !is_remote {
+                        if !menu_apps.is_empty() {
+                            menu = menu.separator();
+                        }
+                        let checked = primary == Some(OpenInApp::FileManager);
+                        let hint = checked.then(|| shortcut_hint.clone()).flatten();
+                        menu = menu.item(open_in_menu_item(
+                            OpenInApp::FileManager,
+                            checked,
+                            true,
+                            hint,
+                            menu_location.clone(),
+                            app_weak.clone(),
+                        ));
+                    }
+                    menu
+                })
+                .into_any_element()
+        };
+
+        let split = h_flex()
+            .flex_1()
+            .min_w_0()
+            .items_center()
+            .h(px(OPEN_IN_BAR_H))
+            .rounded(CARD_RADIUS)
+            .bg(gpui::rgb(field_fill(sf)))
+            .child(main_half)
+            .child(
+                div()
+                    .flex_none()
+                    .w(HAIRLINE)
+                    .h_full()
+                    .bg(gpui::rgb(sf.base)),
+            )
+            .child(chevron_half);
+
+        let folder_button = (!is_remote).then(|| {
+            let loc = cwd.location.clone();
+            div().flex_none().child(
+                open_in_square_button(
+                    "panel-info-open-folder",
+                    Icon::new(IconName::FolderOpen),
+                    reveal_label(),
+                    cx,
+                )
+                .on_click(cx.listener(move |this, _, window, cx| {
+                    this.open_cwd_with_app(OpenInApp::FileManager, &loc, false, window, cx);
+                })),
+            )
+        });
+
+        let new_tab_button = cwd.new_tab.map(|target| {
+            div().flex_none().child(
+                open_in_square_button(
+                    "panel-info-open-new-tab",
+                    Icon::empty().path("icons/terminal.svg"),
+                    t(L10nKey::PanelOpenInNewTab),
+                    cx,
+                )
+                .on_click(cx.listener(move |this, _, window, cx| {
+                    this.open_cwd_in_new_tab(target.clone(), window, cx);
+                })),
+            )
+        });
+
+        let action_bar = h_flex()
+            .items_center()
+            .gap(px(4.))
+            .px(px(CONTENT_INSET))
+            .pt(px(4.))
+            .pb(px(4.))
+            .child(split)
+            .children(folder_button)
+            .children(new_tab_button);
+
+        v_flex()
+            .child(self.panel_subtitle(t(L10nKey::PanelWorkingDirectorySubtitle), false, None, cx))
+            .child(v_flex().px(px(CONTENT_INSET - ROW_INSET)).child(path_row))
+            .child(action_bar)
+            .into_any_element()
+    }
+
     fn render_panel_info(&mut self, window: &mut Window, cx: &mut Context<Self>) -> AnyElement {
+        if !cfg!(test) {
+            self.refresh_open_in_apps(cx);
+        }
         let title = self.panel_title(t(L10nKey::PanelInfoTitle), None, None, window, cx);
+        let cwd_info = self.active_info_cwd(window, cx);
         let mut rows: Vec<InfoRow> = Vec::new();
         let mut pane_id: Option<u64> = None;
         let mut forwards_pane: Option<u64> = None;
@@ -611,28 +1182,6 @@ impl HittyApp {
                     view.git_status_cwd()
                         .map(|cwd| (view.git_host_id(), cwd.to_path_buf())),
                 );
-                if let Some(cwd) = view.effective_cwd() {
-                    let home = view.display_home(cx);
-                    // Whether this pane's paths are this machine's decides
-                    // both tiles: reveal only means anything on the machine
-                    // the file manager can see, and only a local path may be
-                    // re-spelled with this OS's separators — a remote one is
-                    // already native where it lives.
-                    let local = view.local_cwd().is_some();
-                    rows.push(InfoRow {
-                        label: t(L10nKey::PanelCwd),
-                        value: InfoValue::Path(compact_path(&cwd, home.as_deref())),
-                        // The compacted `~/…` spelling is for reading; what
-                        // goes on the clipboard is the path a shell can use.
-                        copy: Some(match local {
-                            true => crate::ui::path_display::native_separators(&cwd)
-                                .display()
-                                .to_string(),
-                            false => cwd.display().to_string(),
-                        }),
-                        reveal: local.then(|| cwd.clone()),
-                    });
-                }
                 let shell = match view.shell_spec().map(|s| s.program.clone()) {
                     Some(program) => crate::core::shells::default_shell_name(Some(&program)),
                     None => self.default_shell_label(cx),
@@ -690,12 +1239,11 @@ impl HittyApp {
                             .flatten(),
                     },
                     copy: None,
-                    reveal: None,
                 });
             }
         }
 
-        if rows.is_empty() {
+        if cwd_info.is_none() && rows.is_empty() {
             return self.panel_scroll(
                 self.panel_empty(
                     t(L10nKey::PanelNoSession),
@@ -709,6 +1257,10 @@ impl HittyApp {
         let route = forwards_pane.map(|id| self.forward_route(id, cx));
         self.sync_procs(pane_id, route, cx);
 
+        let has_cwd = cwd_info.is_some();
+        let cwd_section =
+            cwd_info.map(|cwd| self.render_working_directory_section(cwd, window, cx));
+
         let label_w = info_label_column(&rows, window, cx);
         // Rows pad themselves back out to `CONTENT_INSET`, so their hover fill
         // bleeds past the text on both sides — the geometry the Source Control
@@ -719,9 +1271,10 @@ impl HittyApp {
         }
 
         let inner = v_flex()
-            .child(self.panel_subtitle(t(L10nKey::PanelSessionSubtitle), false, None, cx))
+            .children(cwd_section)
+            .child(self.panel_subtitle(t(L10nKey::PanelSessionSubtitle), has_cwd, None, cx))
             .child(list)
-            .children(self.turns_section(detail_pane.as_ref(), cx))
+            .children(self.turns_section(detail_pane.as_ref(), true, cx))
             .children(self.procs_section(pane_id, cx))
             .children(self.ports_section(pane_id, local_pane, cx))
             .children(self.forwards_section(forwards_pane, cx))
@@ -747,33 +1300,10 @@ impl HittyApp {
         let mono = cx.theme().mono_font_family.clone();
         let id = gpui::SharedString::from(format!("panel-info-row-{i}"));
         let interactive = row.interactive();
-        let tiles_wide = usize::from(row.reveal.is_some()) + usize::from(row.copy.is_some());
-        // "Copy" is honest on a branch or a host, but on the working directory
-        // it is the file tree's *Copy Path*, and the two live a right-click
-        // apart from each other. Say the same words for the same act.
-        let copy_label = match row.value {
-            InfoValue::Path(_) => t(L10nKey::FileTreeContextCopyPath),
-            _ => t(L10nKey::CmdCopy),
-        };
+        let tiles_wide = usize::from(row.copy.is_some());
+        let copy_label = t(L10nKey::CmdCopy);
 
         let value = match row.value {
-            // A path identifies a pane by its last segment, and plain
-            // truncation eats exactly that: a deep checkout read
-            // "/private/tmp/claude-501…" and told you nothing. Let the head
-            // absorb the shrinking so the leaf survives, the way a file
-            // manager shows a path.
-            InfoValue::Path(v) => {
-                let (head, leaf) = split_path_leaf(&v);
-                h_flex()
-                    .flex_1()
-                    .min_w_0()
-                    .text_size(rems(TEXT_MONO))
-                    .font_family(mono.clone())
-                    .text_color(cx.theme().foreground)
-                    .child(div().min_w_0().flex_shrink(999.).truncate().child(head))
-                    .child(div().min_w_0().flex_shrink(1.).truncate().child(leaf))
-                    .into_any_element()
-            }
             InfoValue::Text(v) => div()
                 .flex_1()
                 .min_w_0()
@@ -859,35 +1389,16 @@ impl HittyApp {
             })
             .child(value);
 
-        let mut tiles = action_strip(&id, sf.hover);
-        let mut has_tiles = false;
-        if let Some(cwd) = row.reveal {
-            has_tiles = true;
-            tiles = tiles.child(
-                self.info_tile(
-                    "panel-info-reveal",
-                    IconName::FolderOpen,
-                    reveal_label(),
-                    cx,
-                )
-                .on_click(move |_, _window, cx| {
-                    cx.reveal_path(&crate::ui::path_display::native_separators(&cwd))
-                }),
-            );
-        }
-        if let Some(text) = row.copy {
-            has_tiles = true;
-            tiles = tiles.child(
+        // A row with nothing to copy gets no strip at all, rather than an empty
+        // one carrying a hover subscription for a button that does not exist.
+        let actions = row.copy.map(|text| {
+            action_strip(&id, sf.hover).child(
                 self.info_tile(("panel-info-copy", i), IconName::Copy, copy_label, cx)
                     .on_click(move |_, _window, cx| {
                         cx.write_to_clipboard(gpui::ClipboardItem::new_string(text.clone()));
                     }),
-            );
-        }
-        // A row with nothing to reveal gets no strip at all, rather than an
-        // empty one carrying a hover subscription for a set of buttons that
-        // does not exist.
-        let actions = has_tiles.then_some(tiles);
+            )
+        });
 
         h_flex()
             .id(id.clone())
@@ -982,9 +1493,12 @@ impl HittyApp {
     /// that turn started in the scrollback — when there is one to go back to.
     ///
     /// Shared by Info and Outline; opening either leaves the session intact.
+    /// In Info (`collapsible == true`), the header acts as a disclosure toggle
+    /// so long conversations can be folded away to reach Processes and Ports.
     pub(crate) fn turns_section(
         &self,
         leaf: Option<&gpui::Entity<crate::terminal::view::TerminalView>>,
+        collapsible: bool,
         cx: &mut Context<Self>,
     ) -> Option<AnyElement> {
         let leaf = leaf?;
@@ -998,14 +1512,94 @@ impl HittyApp {
         if turns.is_empty() {
             return None;
         }
+        let collapsed = collapsible && cx.global::<Config>().info_conversation_collapsed;
+        let sf = cx.global::<crate::ui::presets::Surfaces>().sidebar;
+        let count = turns.len().to_string();
+        let header: AnyElement = if collapsible {
+            let chevron = if collapsed {
+                "icons/chevron-right-thin.svg"
+            } else {
+                "icons/chevron-down-thin.svg"
+            };
+            div()
+                .mt(px(6.))
+                .border_t_1()
+                .border_color(cx.theme().border)
+                .px(px(CONTENT_INSET - ROW_INSET))
+                .pt(px(8.))
+                .pb(px(2.))
+                .child(
+                    h_flex()
+                        .id("panel-info-conversation-toggle")
+                        .debug_selector(|| "panel-info-conversation-toggle".into())
+                        .role(gpui::Role::Button)
+                        .items_center()
+                        .gap(px(5.))
+                        .h(px(22.))
+                        .px(px(ROW_INSET))
+                        .rounded(px(5.))
+                        .cursor_pointer()
+                        .hover(|s| s.bg(gpui::rgb(sf.hover)))
+                        .on_click(cx.listener(|this, _, _window, cx| {
+                            let next = !cx.global::<Config>().info_conversation_collapsed;
+                            this.update_config(cx, |cfg| {
+                                cfg.info_conversation_collapsed = next;
+                            });
+                            cx.notify();
+                        }))
+                        .child(
+                            Icon::empty()
+                                .path(chevron)
+                                .size(px(12.))
+                                .text_color(cx.theme().muted_foreground),
+                        )
+                        .child(
+                            div()
+                                .flex_1()
+                                .min_w_0()
+                                .truncate()
+                                .text_size(rems(HEADING))
+                                .font_weight(gpui::FontWeight::SEMIBOLD)
+                                .text_color(cx.theme().muted_foreground)
+                                .child(t(L10nKey::PanelConversationSubtitle).to_uppercase()),
+                        )
+                        .child(
+                            div()
+                                .flex_none()
+                                .text_size(rems(META_MONO))
+                                .font_family(cx.theme().mono_font_family.clone())
+                                .text_color(cx.theme().muted_foreground.opacity(0.75))
+                                .child(count),
+                        ),
+                )
+                .into_any_element()
+        } else {
+            self.panel_subtitle(
+                t(L10nKey::PanelConversationSubtitle),
+                false,
+                Some(
+                    div()
+                        .pr(px(crate::ui::app::TILE_PAD))
+                        .text_size(rems(META_MONO))
+                        .font_family(cx.theme().mono_font_family.clone())
+                        .text_color(cx.theme().muted_foreground.opacity(0.75))
+                        .child(count)
+                        .into_any_element(),
+                ),
+                cx,
+            )
+        };
+
+        if collapsed {
+            return Some(v_flex().child(header).into_any_element());
+        }
+
         // A full-screen program owns the whole drawing surface, so there is no
         // scrollback under it to land in — while one is up every jump is a
         // no-op, whatever anchor the turn is carrying. An agent that renders
         // that way (Claude Code's `/tui fullscreen`, Codex) puts every row in
         // this section here.
         let alt_now = leaf.read(cx).on_alt_screen();
-        let sf = cx.global::<crate::ui::presets::Surfaces>().sidebar;
-        let count = turns.len().to_string();
         let mut list = v_flex().px(px(CONTENT_INSET - 4.)).py(px(1.)).gap(px(1.));
         for turn in turns {
             let id = turn.id;
@@ -1022,6 +1616,7 @@ impl HittyApp {
             list = list.child(
                 h_flex()
                     .id(gpui::SharedString::from(format!("panel-turn-{id}")))
+                    .debug_selector(move || format!("panel-turn-{id}"))
                     .items_center()
                     .gap(px(8.))
                     .px(px(4.))
@@ -1066,26 +1661,7 @@ impl HittyApp {
                     ),
             );
         }
-        Some(
-            v_flex()
-                .child(
-                    self.panel_subtitle(
-                        t(L10nKey::PanelConversationSubtitle),
-                        true,
-                        Some(
-                            div()
-                                .text_size(rems(META_MONO))
-                                .font_family(cx.theme().mono_font_family.clone())
-                                .text_color(cx.theme().muted_foreground.opacity(0.75))
-                                .child(count)
-                                .into_any_element(),
-                        ),
-                        cx,
-                    ),
-                )
-                .child(list)
-                .into_any_element(),
-        )
+        Some(v_flex().child(header).child(list).into_any_element())
     }
 
     fn procs_section(&self, pane_id: Option<u64>, cx: &mut Context<Self>) -> Option<AnyElement> {
@@ -1486,7 +2062,6 @@ mod tests {
                 }),
             },
             copy: None,
-            reveal: None,
         }
     }
 
@@ -1505,12 +2080,8 @@ mod tests {
             "a copy tile is something to hover for"
         );
         assert!(
-            InfoRow {
-                reveal: Some(std::path::PathBuf::from("/w/repo")),
-                ..InfoRow::text("cwd", "/w/repo".into())
-            }
-            .interactive(),
-            "so is Reveal, even with nothing else on the row"
+            diff(1, 0, true).interactive(),
+            "a clickable diff count also lights up"
         );
     }
 
@@ -1627,6 +2198,126 @@ mod tests {
         assert_eq!(
             (head.as_str(), leaf.as_str()),
             ("\\\\server\\share\\", "dir")
+        );
+    }
+
+    #[gpui::test]
+    fn info_panel_renders_open_in_controls_and_collapses_conversation(
+        cx: &mut gpui::TestAppContext,
+    ) {
+        use crate::core::{
+            cli_agent::{AGENT_EVENT_SENTINEL, CLIAgent},
+            config::{Config, RightPanelTab},
+            open_in::{DetectedApp, OpenInApp},
+        };
+        use crate::daemon::protocol::DaemonMsg;
+        use crate::ui::{
+            app::{Tab, test_window},
+            pane::{Pane, PaneSlot},
+        };
+
+        let dir = tempfile::tempdir().unwrap();
+        let (app, mut vcx) = test_window::harness(cx);
+        let (view, mut stream) = app.update_in(&mut vcx, |app, window, cx| {
+            let (view, stream) = crate::terminal::view::quiet_test_pane(1, window, cx);
+            app.tabs
+                .push(Tab::new(Pane::leaf(PaneSlot::Ready(view.clone()))));
+            app.active = app.tabs.len() - 1;
+            app.right_panel_visible = true;
+            app.right_panel_tab = RightPanelTab::Info;
+            app.right_panel.open_in_loaded = true;
+            app.right_panel.open_in_apps = vec![
+                DetectedApp {
+                    app: OpenInApp::VsCode,
+                    executable: std::path::PathBuf::from("code.cmd"),
+                },
+                DetectedApp {
+                    app: OpenInApp::Cursor,
+                    executable: std::path::PathBuf::from("cursor.cmd"),
+                },
+            ];
+            cx.notify();
+            (view, stream)
+        });
+
+        DaemonMsg::Cwd(dir.path().to_path_buf())
+            .encode(&mut stream)
+            .unwrap();
+        DaemonMsg::Agent(Some(CLIAgent::Claude))
+            .encode(&mut stream)
+            .unwrap();
+        let prompt = format!(
+            "\x1b]777;notify;{AGENT_EVENT_SENTINEL};{{\"v\":1,\"agent\":\"claude\",\"event\":\"prompt-submit\",\"prompt\":\"Check Info panel fold\"}}\x07"
+        );
+        DaemonMsg::Output(prompt.into_bytes())
+            .encode(&mut stream)
+            .unwrap();
+
+        let deadline = std::time::Instant::now() + std::time::Duration::from_secs(10);
+        let (primary_bounds, toggle_bounds) = loop {
+            vcx.run_until_parked();
+            app.update_in(&mut vcx, |_, _, cx| cx.notify());
+            vcx.run_until_parked();
+            if let (Some(p), Some(t)) = (
+                vcx.debug_bounds("panel-info-open-primary"),
+                vcx.debug_bounds("panel-info-conversation-toggle"),
+            ) && view.read_with(&vcx, |v, _| !v.agent_turns().is_empty())
+            {
+                break (p, t);
+            }
+            assert!(
+                std::time::Instant::now() < deadline,
+                "Info open-in control and conversation header did not render"
+            );
+            std::thread::sleep(std::time::Duration::from_millis(10));
+        };
+        assert!(primary_bounds.size.width.as_f32() > 40.);
+        assert!(
+            vcx.debug_bounds("panel-turn-0").is_some(),
+            "turn row renders while conversation is expanded"
+        );
+
+        // Clicking the CONVERSATION header collapses its rows and persists the choice.
+        vcx.simulate_click(toggle_bounds.center(), gpui::Modifiers::none());
+        vcx.run_until_parked();
+        assert!(vcx.read(|cx| cx.global::<Config>().info_conversation_collapsed));
+        assert!(
+            vcx.debug_bounds("panel-turn-0").is_none(),
+            "turn row hides once conversation is collapsed in Info"
+        );
+
+        // Outline shares turns_section but stays expanded even when Info is collapsed.
+        app.update_in(&mut vcx, |app, _, cx| {
+            app.set_right_panel_tab(RightPanelTab::Outline, cx);
+        });
+        vcx.run_until_parked();
+        assert!(
+            vcx.debug_bounds("panel-turn-0").is_some(),
+            "Outline still shows turns while Info conversation is collapsed"
+        );
+
+        // Returning to Info and clicking again restores the turns.
+        app.update_in(&mut vcx, |app, _, cx| {
+            app.set_right_panel_tab(RightPanelTab::Info, cx);
+        });
+        vcx.run_until_parked();
+        let toggle_bounds = vcx
+            .debug_bounds("panel-info-conversation-toggle")
+            .expect("conversation toggle still present while collapsed");
+        vcx.simulate_click(toggle_bounds.center(), gpui::Modifiers::none());
+        vcx.run_until_parked();
+        assert!(!vcx.read(|cx| cx.global::<Config>().info_conversation_collapsed));
+        assert!(
+            vcx.debug_bounds("panel-turn-0").is_some(),
+            "turn row reappears after expanding"
+        );
+
+        let hint = vcx
+            .read(|cx| super::key_hint("OpenWorkingDirectory", cx))
+            .expect("OpenWorkingDirectory shortcut hint");
+        assert!(
+            !hint.contains("secondary-"),
+            "dropdown shortcut hint must be display-formatted, got {hint}"
         );
     }
 }

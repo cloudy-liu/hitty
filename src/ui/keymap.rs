@@ -274,6 +274,7 @@ pub(crate) fn default_bindings() -> Vec<(&'static str, &'static str)> {
         ("CloseOtherTabs", ""),
         ("CloseTabsToTheRight", ""),
         ("CopyWorkingDirectory", ""),
+        ("OpenWorkingDirectory", "secondary-alt-o"),
         ("MarkTabUnread", ""),
         ("ForkAgentSession", ""),
         ("ForkAgentSessionRight", ""),
@@ -541,6 +542,10 @@ fn authored_entry(action: &str) -> Option<(CommandGroup, String)> {
         "CopyWorkingDirectory" => (
             CommandGroup::TabsPanes,
             t(L10nKey::CmdCopyWorkingDirectory).to_string(),
+        ),
+        "OpenWorkingDirectory" => (
+            CommandGroup::TabsPanes,
+            t(L10nKey::CmdOpenWorkingDirectory).to_string(),
         ),
         "MarkTabUnread" => (
             CommandGroup::TabsPanes,
@@ -1050,6 +1055,7 @@ fn make_binding(action: &str, keystroke: &str) -> Option<KeyBinding> {
         "CloseOtherTabs" => KeyBinding::new(keystroke, CloseOtherTabs, None),
         "CloseTabsToTheRight" => KeyBinding::new(keystroke, CloseTabsToTheRight, None),
         "CopyWorkingDirectory" => KeyBinding::new(keystroke, CopyWorkingDirectory, None),
+        "OpenWorkingDirectory" => KeyBinding::new(keystroke, OpenWorkingDirectory, None),
         "MarkTabUnread" => KeyBinding::new(keystroke, MarkTabUnread, None),
         "ForkAgentSession" => KeyBinding::new(keystroke, ForkAgentSession, None),
         "ForkAgentSessionRight" => KeyBinding::new(keystroke, ForkAgentSessionRight, None),

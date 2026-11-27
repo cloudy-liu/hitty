@@ -76,18 +76,24 @@ impl<F: FnMut(ManagedEvent) + Send> Session<'_, F> {
                 (self.publish)(ManagedEvent::Frame(msg));
             })
             .await;
-            match end {
-                DriveEnd::Exited | DriveEnd::Detached => return Ok(()),
-                DriveEnd::KillRequested(result) => return result,
+            let closing = match end {
+                DriveEnd::Exited | DriveEnd::Detached | DriveEnd::KillRequested(Ok(())) => {
+                    return Ok(());
+                }
+                DriveEnd::KillRequested(Err(error)) => {
+                    log::debug!("retrying close of managed SSH pane {}: {error}", id.pane_id);
+                    true
+                }
                 DriveEnd::Disconnected(error) => {
                     log::debug!("managed SSH pane {} disconnected: {error}", id.pane_id);
-                    if !conn.is_alive() {
-                        self.manager.evict_connection(conn.key());
-                    }
+                    false
                 }
+            };
+            if !conn.is_alive() {
+                self.manager.evict_connection(conn.key());
             }
 
-            let Some((next_conn, next_link)) = self.recover(&id).await? else {
+            let Some((next_conn, next_link)) = self.recover(&id, closing).await? else {
                 return Ok(());
             };
             conn = next_conn;
@@ -98,56 +104,73 @@ impl<F: FnMut(ManagedEvent) + Send> Session<'_, F> {
     async fn recover(
         &mut self,
         id: &ManagedSshPane,
+        mut closing: bool,
     ) -> anyhow::Result<Option<(Arc<SshConnection>, RemoteLink)>> {
         *self.conn_slot.lock().unwrap() = std::sync::Weak::new();
         let mut wait = Duration::from_millis(500);
-        let mut closing = false;
         loop {
             self.broker.status(SshPhase::Connecting);
-            let result = {
-                let reconnect = reattach(self.manager, self.spec, self.broker, id, self.size, wait);
-                tokio::pin!(reconnect);
-                loop {
-                    tokio::select! {
-                        result = &mut reconnect => break result,
-                        command = self.cmd_rx.recv() => match command {
-                            Some(ChannelCmd::Close) => closing = true,
-                            Some(ChannelCmd::Detach) | None => return Ok(None),
-                            Some(ChannelCmd::Resize(size)) => self.size = size,
-                            // Keystrokes typed during a disconnection must not
-                            // run later when an Agent has changed its prompt.
-                            Some(ChannelCmd::Data(_) | ChannelCmd::PassiveInput(_)) => {}
-                        },
-                    }
-                }
+            let reconnect = reattach(self.manager, self.spec, self.broker, id, self.size, wait);
+            let Some(result) =
+                reconnect_or_detach(reconnect, &mut self.cmd_rx, &mut self.size, &mut closing)
+                    .await
+            else {
+                return Ok(None);
             };
 
-            match result {
-                Ok((conn, mut link, frame)) => {
-                    if closing {
-                        managed::send(
-                            &mut link,
-                            ClientMsg::Kill {
-                                pane_id: id.pane_id,
-                            },
-                        )
-                        .await?;
-                        return Ok(None);
+            let error = match result {
+                Ok((_, mut link, _)) if closing => {
+                    match managed::send(
+                        &mut link,
+                        ClientMsg::Kill {
+                            pane_id: id.pane_id,
+                        },
+                    )
+                    .await
+                    {
+                        Ok(()) => return Ok(None),
+                        Err(error) => error,
                     }
+                }
+                Ok((conn, mut link, frame)) => {
                     managed::send(&mut link, ClientMsg::Resize(self.size)).await?;
                     *self.conn_slot.lock().unwrap() = Arc::downgrade(&conn);
                     (self.publish)(ManagedEvent::Replay(self.size));
                     (self.publish)(ManagedEvent::Frame(frame));
                     return Ok(Some((conn, link)));
                 }
-                Err(error) if closing || pane_is_gone(&error) => return Err(error),
-                Err(error) => {
-                    self.broker.status(SshPhase::Failed {
-                        reason: error.to_string(),
-                    });
-                    wait = (wait * 2).min(Duration::from_secs(10));
+                Err(error) if pane_is_gone(&error) => {
+                    return if closing { Ok(None) } else { Err(error) };
                 }
-            }
+                Err(error) => error,
+            };
+            self.broker.status(SshPhase::Failed {
+                reason: error.to_string(),
+            });
+            wait = (wait * 2).min(Duration::from_secs(10));
+        }
+    }
+}
+
+async fn reconnect_or_detach<T>(
+    reconnect: impl Future<Output = T>,
+    commands: &mut mpsc::UnboundedReceiver<ChannelCmd>,
+    size: &mut WinSize,
+    closing: &mut bool,
+) -> Option<T> {
+    tokio::pin!(reconnect);
+    loop {
+        tokio::select! {
+            result = &mut reconnect => return Some(result),
+            // Losing the local tab or its command sender must not cancel
+            // a remote Kill that the user has already requested.
+            command = commands.recv(), if !*closing => match command {
+                Some(ChannelCmd::Close) => *closing = true,
+                Some(ChannelCmd::Detach) | None => return None,
+                Some(ChannelCmd::Resize(latest)) => *size = latest,
+                // Input typed during a disconnect could reach a new Agent prompt.
+                Some(ChannelCmd::Data(_) | ChannelCmd::PassiveInput(_)) => {}
+            },
         }
     }
 }
@@ -214,6 +237,39 @@ mod tests {
     use super::*;
     use crate::daemon::protocol::{FEATURE_PASSIVE_INPUT, FEATURE_RESIZE_ECHO};
     use crate::daemon::ssh::test_support::base_spec;
+
+    #[tokio::test]
+    async fn close_survives_the_tab_disappearing_during_reconnect() {
+        let (tx, mut commands) = mpsc::unbounded_channel();
+        tx.send(ChannelCmd::Close).unwrap();
+        drop(tx);
+        let mut size = WinSize {
+            cols: 80,
+            rows: 24,
+            cell_w: 8,
+            cell_h: 16,
+        };
+        let mut closing = false;
+        let first_attempt = async {
+            tokio::time::sleep(Duration::from_millis(1)).await;
+            Err::<(), _>("temporary network failure")
+        };
+        assert_eq!(
+            reconnect_or_detach(first_attempt, &mut commands, &mut size, &mut closing).await,
+            Some(Err("temporary network failure"))
+        );
+        assert!(closing);
+        assert_eq!(
+            reconnect_or_detach(
+                async { Ok::<_, &str>(()) },
+                &mut commands,
+                &mut size,
+                &mut closing
+            )
+            .await,
+            Some(Ok(()))
+        );
+    }
 
     #[test]
     fn can_host_requires_default_terminal_environment() {

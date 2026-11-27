@@ -207,6 +207,17 @@ pub struct Config {
     pub right_panel_width: f32,
     #[serde(default, deserialize_with = "de_lenient")]
     pub right_panel_tab: RightPanelTab,
+    /// Last-chosen editor (or `"file-manager"`) for opening a session's working
+    /// directory from the Info panel and the `OpenWorkingDirectory` action.
+    #[serde(
+        default,
+        deserialize_with = "de_lenient",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub open_in_editor: Option<String>,
+    /// Whether the Conversation section in the Info panel is collapsed.
+    #[serde(default, deserialize_with = "de_lenient")]
+    pub info_conversation_collapsed: bool,
     /// Global, not per-overlay — the same call VS Code's
     /// `diffEditor.renderSideBySide` makes.
     #[serde(default, deserialize_with = "de_lenient")]
@@ -688,6 +699,8 @@ impl Default for Config {
             right_panel_visible: false,
             right_panel_width: default_right_panel_width(),
             right_panel_tab: RightPanelTab::Info,
+            open_in_editor: None,
+            info_conversation_collapsed: false,
             diff_view: DiffViewMode::Split,
             document_layout: DocumentLayout::default(),
             document_ratio: default_document_ratio(),
@@ -2700,6 +2713,30 @@ mod tests {
         assert_eq!(cfg.custom_shells.len(), 1);
         assert_eq!(cfg.custom_shells[0].program, "wsl.exe");
         assert_eq!(cfg.custom_shells[0].args, ["-d", "Ubuntu"]);
+    }
+
+    #[test]
+    fn open_in_editor_and_info_conversation_collapsed_round_trip_leniently() {
+        let defaults = Config::default();
+        assert_eq!(defaults.open_in_editor, None);
+        assert!(!defaults.info_conversation_collapsed);
+
+        let mut cfg = Config::default();
+        cfg.open_in_editor = Some("cursor".into());
+        cfg.info_conversation_collapsed = true;
+        let json = serde_json::to_string(&cfg).unwrap();
+        let back: Config = serde_json::from_str(&json).unwrap();
+        assert_eq!(back.open_in_editor.as_deref(), Some("cursor"));
+        assert!(back.info_conversation_collapsed);
+
+        // Wrong types fall back to defaults instead of rejecting the whole file.
+        let bad: Config = serde_json::from_str(
+            r#"{"font_size": 16.0, "open_in_editor": 42, "info_conversation_collapsed": "yes"}"#,
+        )
+        .expect("bad open-in/fold types must fall back leniently");
+        assert_eq!(bad.font_size, 16.0);
+        assert_eq!(bad.open_in_editor, None);
+        assert!(!bad.info_conversation_collapsed);
     }
 
     #[test]
