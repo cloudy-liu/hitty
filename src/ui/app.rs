@@ -990,10 +990,10 @@ pub struct HittyApp {
     pub(crate) strip_slots: Rc<RefCell<Vec<Bounds<Pixels>>>>,
     pub(crate) sidebar_slots: Rc<RefCell<Vec<Bounds<Pixels>>>>,
     pub(crate) sidebar_activity_refresh: RefCell<Option<(i64, gpui::Task<()>)>>,
-    /// Off-thread `stat` results for empty pinned sidebar groups so render
+    /// Off-thread `stat` results for empty sidebar groups so render
     /// never touches the filesystem on the UI thread.
-    pub(crate) pinned_dir_cache: RefCell<std::collections::HashMap<std::path::PathBuf, bool>>,
-    pub(crate) pinned_dir_probes: RefCell<crate::ui::host_ops::InFlight<std::path::PathBuf>>,
+    pub(crate) sidebar_dir_cache: RefCell<std::collections::HashMap<std::path::PathBuf, bool>>,
+    pub(crate) sidebar_dir_probes: RefCell<crate::ui::host_ops::InFlight<std::path::PathBuf>>,
     /// Locally installed CLI agents detected off the UI thread for the sidebar
     /// directory `+` menu and `Settings -> Agents -> Quick launch commands`.
     pub(crate) installed_agents: Vec<crate::core::agent_launcher::DetectedAgent>,
@@ -1605,8 +1605,8 @@ impl HittyApp {
             strip_slots: Rc::new(RefCell::new(Vec::new())),
             sidebar_slots: Rc::new(RefCell::new(Vec::new())),
             sidebar_activity_refresh: RefCell::new(None),
-            pinned_dir_cache: RefCell::new(std::collections::HashMap::new()),
-            pinned_dir_probes: RefCell::new(Default::default()),
+            sidebar_dir_cache: RefCell::new(std::collections::HashMap::new()),
+            sidebar_dir_probes: RefCell::new(Default::default()),
             installed_agents: Vec::new(),
             pane_area: Rc::new(Cell::new(None)),
             sidebar_search,
@@ -4863,7 +4863,7 @@ impl HittyApp {
             leaf.update(cx, |view, cx| view.release_native_git(cx));
             kill_pane_off_thread(leaf.read(cx).pane_route(), leaf.read(cx).pane_id, cx);
         }
-        self.seed_pinned_dir_before_close(&self.tabs[index], cx);
+        self.retain_sidebar_dir_before_close(index, cx);
         self.tabs.remove(index);
         // Only losing the renaming tab itself ends the rename — closing an
         // unrelated tab must not throw the half-typed name away (#598).
@@ -4904,6 +4904,7 @@ impl HittyApp {
             })
             .collect();
         let remove_host = host.clone();
+        let workspace = self.workspace;
         crate::ui::host_ops::HostOps::run(
             host,
             cx,
@@ -4947,17 +4948,32 @@ impl HittyApp {
                     }
                     let force = wt.dirty;
                     let branch = wt.branch.clone();
+                    let removed_path = wt.path.clone();
                     let _ = this.update_in(cx, |_, window, cx| {
                         crate::ui::host_ops::HostOps::run_in(
                             remove_host,
                             window,
                             cx,
                             move |h| crate::core::worktree::remove(h, &wt, force),
-                            move |_this, result, window, cx| match result {
-                                Ok(()) => window.push_notification(
-                                    t_fmt(L10nKey::AppWorktreeRemoved, &[("branch", &branch)]),
-                                    cx,
-                                ),
+                            move |this, result, window, cx| match result {
+                                Ok(()) => {
+                                    if id.is_local() {
+                                        WorkspaceStore::forget_sidebar_folder(
+                                            cx,
+                                            workspace,
+                                            &removed_path,
+                                        );
+                                        this.sidebar_dir_cache.borrow_mut().remove(&removed_path);
+                                        this.sidebar_dir_probes
+                                            .borrow_mut()
+                                            .invalidate(&removed_path);
+                                        cx.notify();
+                                    }
+                                    window.push_notification(
+                                        t_fmt(L10nKey::AppWorktreeRemoved, &[("branch", &branch)]),
+                                        cx,
+                                    );
+                                }
                                 Err(e) => window.push_notification(
                                     t_fmt(
                                         L10nKey::AppWorktreeRemoveFailed,
@@ -7870,6 +7886,11 @@ impl Render for HittyApp {
                     crate::ui::reorder::PendingOrder::Tabs(order) => {
                         self.apply_tab_order(&order, cx);
                     }
+                    crate::ui::reorder::PendingOrder::FolderGroups(tabs, folders) => {
+                        WorkspaceStore::reorder_sidebar_folders(cx, self.workspace, &folders);
+                        self.apply_tab_order(&tabs, cx);
+                        cx.notify();
+                    }
                     crate::ui::reorder::PendingOrder::PinnedGroups(pinned) => {
                         self.update_config(cx, |cfg| {
                             cfg.sidebar_pinned_groups = pinned;
@@ -7899,7 +7920,7 @@ impl Render for HittyApp {
         {
             cx.set_active_drag_cursor_style(held, window);
         }
-        self.probe_empty_pinned_dirs(cx);
+        self.probe_empty_sidebar_dirs(cx);
         let vertical = matches!(cx.global::<Config>().tab_bar_position, TabBarPosition::Left)
             && self.sidebar_has_content(cx);
         // Asked through the predicate the right panel sizes itself against —

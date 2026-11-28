@@ -3,22 +3,55 @@ pub use hitty_core::core::session::{
     WindowView, WindowViews, WorkspaceId,
 };
 pub use hitty_core::host::HostId;
+use std::path::{Path, PathBuf};
 
 pub struct WorkspaceStore {
     views: WindowViews,
+    first_local_folders: Vec<PathBuf>,
 }
 
 impl gpui::Global for WorkspaceStore {}
 
 impl WorkspaceStore {
     pub fn init(cx: &mut gpui::App) {
-        let views = WindowViews::load().unwrap_or_default();
-        cx.set_global(Self { views });
+        let mut views = WindowViews::load().unwrap_or_default();
+        // Older profiles recorded folder membership in the global pin list.
+        // Seed missing lists once, including the first local workspace when
+        // there is no saved local view. An existing list may be empty by choice.
+        let legacy_folders = cx
+            .try_global::<crate::core::config::Config>()
+            .map(|cfg| cfg.sidebar_pinned_groups.as_slice())
+            .unwrap_or_default()
+            .iter()
+            .filter(|path| !path.is_empty() && !path.starts_with("ssh:"))
+            .map(PathBuf::from)
+            .collect::<Vec<_>>();
+        let mut local = views
+            .views
+            .iter_mut()
+            .filter(|view| !view.is_remote())
+            .peekable();
+        let first_local_folders = if local.peek().is_none() {
+            legacy_folders
+        } else {
+            for view in local {
+                view.sidebar_folders
+                    .get_or_insert_with(|| legacy_folders.clone());
+            }
+            Vec::new()
+        };
+        cx.set_global(Self {
+            views,
+            first_local_folders,
+        });
     }
 
     #[cfg(test)]
     pub fn install_for_test(cx: &mut gpui::App, views: WindowViews) {
-        cx.set_global(Self { views });
+        cx.set_global(Self {
+            views,
+            first_local_folders: Vec::new(),
+        });
     }
 
     pub fn all(cx: &gpui::App) -> &WindowViews {
@@ -70,6 +103,9 @@ impl WorkspaceStore {
                 store.views.views.last_mut().expect("just pushed")
             }
         };
+        if !view.is_remote() && !store.first_local_folders.is_empty() {
+            view.sidebar_folders = Some(std::mem::take(&mut store.first_local_folders));
+        }
         view.open = true;
         view.synced = false;
         let claimed = view.id;
@@ -79,6 +115,75 @@ impl WorkspaceStore {
         }
         store.views.save();
         claimed
+    }
+
+    pub fn sidebar_folders(cx: &gpui::App, id: WorkspaceId) -> &[PathBuf] {
+        Self::all(cx)
+            .get(id)
+            .map(WindowView::sidebar_folders)
+            .unwrap_or_default()
+    }
+
+    pub fn remember_sidebar_folders(
+        cx: &mut gpui::App,
+        id: WorkspaceId,
+        paths: impl IntoIterator<Item = PathBuf>,
+    ) -> bool {
+        let Some(store) = Self::try_store(cx) else {
+            return false;
+        };
+        let Some(view) = store.views.get_mut(id) else {
+            return false;
+        };
+        let folders = view.sidebar_folders.get_or_insert_with(Vec::new);
+        let len = folders.len();
+        for path in paths {
+            if path.to_str().is_some() && !folders.contains(&path) {
+                folders.push(path);
+            }
+        }
+        if folders.len() != len {
+            store.views.save();
+            true
+        } else {
+            false
+        }
+    }
+
+    pub fn reorder_sidebar_folders(cx: &mut gpui::App, id: WorkspaceId, order: &[PathBuf]) {
+        let Some(store) = Self::try_store(cx) else {
+            return;
+        };
+        if let Some(folders) = store
+            .views
+            .get_mut(id)
+            .and_then(|view| view.sidebar_folders.as_mut())
+        {
+            folders.sort_by_key(|path| {
+                order
+                    .iter()
+                    .position(|folder| folder == path)
+                    .unwrap_or(usize::MAX)
+            });
+            store.views.save();
+        }
+    }
+
+    pub fn forget_sidebar_folder(cx: &mut gpui::App, id: WorkspaceId, path: &Path) {
+        let Some(store) = Self::try_store(cx) else {
+            return;
+        };
+        let Some(folders) = store
+            .views
+            .get_mut(id)
+            .and_then(|view| view.sidebar_folders.as_mut())
+        else {
+            return;
+        };
+        if let Some(index) = folders.iter().position(|folder| folder == path) {
+            folders.remove(index);
+            store.views.save();
+        }
     }
 
     pub fn record_geometry(

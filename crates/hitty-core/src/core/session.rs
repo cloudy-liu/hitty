@@ -375,6 +375,9 @@ pub struct WindowView {
     pub label: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub subject: Option<String>,
+    /// Local folders kept in this workspace after their last session closes.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub sidebar_folders: Option<Vec<PathBuf>>,
     /// A reference mirrored off its machine's own listing at connect time —
     /// this client has never opened it. Launch restore skips these (its clock
     /// is another client's activity, not ours); opening one clears the mark.
@@ -392,12 +395,17 @@ impl Default for WindowView {
             host: None,
             label: None,
             subject: None,
+            sidebar_folders: Some(Vec::new()),
             synced: false,
         }
     }
 }
 
 impl WindowView {
+    pub fn sidebar_folders(&self) -> &[PathBuf] {
+        self.sidebar_folders.as_deref().unwrap_or_default()
+    }
+
     pub fn touch(&mut self) {
         self.last_active = now_secs();
     }

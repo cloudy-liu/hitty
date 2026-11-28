@@ -220,9 +220,10 @@ pub(crate) fn run(path: &std::ffi::OsStr) {
                     },
                     |window, cx| {
                         crate::ui::theme::apply_theme(Some(window), cx);
+                        let workspace = crate::core::session::WorkspaceStore::claim(cx, None);
                         let owner = cx.new(|cx| {
                             HittyApp::with_session(
-                                None,
+                                Some(workspace),
                                 Some(crate::core::session::Session::default()),
                                 window,
                                 cx,
@@ -230,9 +231,6 @@ pub(crate) fn run(path: &std::ffi::OsStr) {
                         });
                         let mut streams = Vec::new();
                         owner.update(cx, |app, cx| {
-                            for dir in &options.pinned_dirs {
-                                app.pinned_dir_cache.borrow_mut().insert(dir.clone(), true);
-                            }
                             if pinned_empty {
                                 cx.notify();
                                 return;
